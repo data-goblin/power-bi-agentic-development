@@ -1,0 +1,26 @@
+{
+  "name": "power-bi-agentic-development",
+  "version": "0.1.0",
+  "description": "Skills and tools for agentic Power BI development including Best Practice Analyzer rules.",
+  "author": {
+    "name": "Kurt Buhler"
+  },
+  "keywords": ["power-bi", "tabular-editor", "bpa", "best-practice-analyzer", "semantic-model", "tmdl"],
+  "plugins": [
+    {
+      "name": "power-bi-agentic-development",
+      "description": "Agentic development tools for Power BI semantic models.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/bpa-rules"
+      ],
+      "commands": [
+        "./commands"
+      ],
+      "agents": [
+        "./agents"
+      ]
+    }
+  ]
+}
