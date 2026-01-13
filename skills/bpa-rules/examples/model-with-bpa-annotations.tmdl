@@ -1,0 +1,101 @@
+/// Example TMDL model file showing BPA annotation patterns
+/// This is a reference example - not a complete model definition
+
+model ExampleModel
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+
+/// Extended properties from Tabular Editor
+extendedProperty TabularEditor_DeploymentMetadata = {"User":"developer","Time":"2026-01-13T10:00:00"}
+
+/// Serialization options
+annotation TabularEditor_SerializeOptions = {"IgnoreInferredObjects":true,"IgnoreInferredProperties":true}
+
+
+/// =============================================================
+/// BPA ANNOTATION: Ignore specific rules for this model
+/// =============================================================
+/// Use when rules are not applicable or cause known false positives
+/// Format: JSON object with RuleIDs array
+
+annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["DAX_DIVISION_COLUMNS","META_AVOID_FLOAT","PERF_UNUSED_MEASURES"]}
+
+
+/// =============================================================
+/// BPA ANNOTATION: External rule files
+/// =============================================================
+/// Reference shared rule collections from URLs
+/// Multiple URLs supported in the array
+
+annotation BestPracticeAnalyzer_ExternalRuleFiles = ["https://raw.githubusercontent.com/TabularEditor/BestPracticeRules/master/BPARules-standard-lax.json"]
+
+
+/// =============================================================
+/// BPA ANNOTATION: Inline custom rules
+/// =============================================================
+/// Define model-specific rules directly in the model
+/// Full JSON array of rule definitions
+
+annotation BestPracticeAnalyzer =
+		[
+		  {
+		    "ID": "CUSTOM_UDF_DESCRIPTION",
+		    "Name": "User-defined functions must have descriptions",
+		    "Category": "Governance",
+		    "Description": "All UDFs require documentation for maintainability.",
+		    "Severity": 2,
+		    "Scope": "UserDefinedFunction",
+		    "Expression": "string.IsNullOrWhitespace(Description)",
+		    "FixExpression": "Description = \"TODO: Document this function\"",
+		    "CompatibilityLevel": 1470
+		  },
+		  {
+		    "ID": "CUSTOM_MEASURE_PREFIX",
+		    "Name": "KPI measures should have prefix",
+		    "Category": "Naming Conventions",
+		    "Description": "Key performance indicator measures should start with 'KPI_' prefix.",
+		    "Severity": 1,
+		    "Scope": "Measure",
+		    "Expression": "DisplayFolder.Contains(\"KPI\") and not Name.StartsWith(\"KPI_\")",
+		    "FixExpression": null,
+		    "CompatibilityLevel": 1200
+		  },
+		  {
+		    "ID": "CUSTOM_NO_HARDCODED_DATES",
+		    "Name": "Avoid hardcoded dates in DAX",
+		    "Category": "Governance",
+		    "Description": "Hardcoded dates should be replaced with parameters or TODAY()/NOW().",
+		    "Severity": 2,
+		    "Scope": "Measure, CalculatedColumn",
+		    "Expression": "RegEx.IsMatch(Expression, @\"DATE\\s*\\(\\s*20[0-9]{2}\\s*,\")",
+		    "FixExpression": null,
+		    "Remarks": "Detects DATE(20XX, patterns which suggest hardcoded years"
+		  }
+		]
+
+
+/// =============================================================
+/// OBJECT-LEVEL BPA ANNOTATION
+/// =============================================================
+/// Individual objects can ignore specific rules
+/// Placed as annotation on the object itself
+
+/// Example table definition
+table Sales
+	lineageTag: 12345678-1234-1234-1234-123456789012
+
+	/// This measure intentionally has no description - ignore the rule
+	measure 'Internal Calculation' =
+			SUM(Sales[Amount])
+		isHidden
+		lineageTag: 87654321-4321-4321-4321-210987654321
+		annotation BestPracticeAnalyzer_Ignore = {"RuleIDs":["META_MEASURE_NO_DESCRIPTION"]}
+
+	/// Standard visible measure - rules apply normally
+	measure 'Total Sales' =
+			SUM(Sales[Amount])
+		description: Total sales amount across all transactions.
+		formatString: $#,##0
+		displayFolder: Revenue
+		lineageTag: 11111111-2222-3333-4444-555555555555

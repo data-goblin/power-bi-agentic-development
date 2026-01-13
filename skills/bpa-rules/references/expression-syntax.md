@@ -318,6 +318,152 @@ Delete()
 **CrossFilteringBehavior:**
 `OneDirection`, `BothDirections`, `Automatic`
 
+## DAX Token Analysis (Tokenize)
+
+The `Tokenize()` method parses DAX expressions into tokens for precise analysis.
+
+### Basic Usage
+
+```csharp
+// Check if expression uses division operator (not dividing by literal)
+Tokenize().Any(Type = DIV and Next.Type <> INTEGER_LITERAL and Next.Type <> REAL_LITERAL)
+
+// Check for specific function usage
+Tokenize().Any(Type = FUNCTION and Text = "CALCULATE")
+
+// Find FILTER(ALL(...)) pattern
+Tokenize().Any(Type = FUNCTION and Text = "FILTER" and Next.Next.Type = FUNCTION and Next.Next.Text = "ALL")
+```
+
+### Token Types
+
+Common token types available in `Tokenize()`:
+
+| Token Type | Description |
+|------------|-------------|
+| `FUNCTION` | DAX function name |
+| `COLUMN_OR_MEASURE` | Column or measure reference |
+| `TABLE` | Table reference |
+| `INTEGER_LITERAL` | Integer constant |
+| `REAL_LITERAL` | Decimal constant |
+| `STRING_LITERAL` | String constant |
+| `DIV` | Division operator `/` |
+| `MULT` | Multiplication operator `*` |
+| `PLUS` | Addition operator `+` |
+| `MINUS` | Subtraction operator `-` |
+| `EQ` | Equals operator `=` |
+| `OPEN_PARENS` | Opening parenthesis `(` |
+| `CLOSE_PARENS` | Closing parenthesis `)` |
+| `COMMA` | Comma separator `,` |
+
+### Token Properties
+
+```csharp
+Type        // Token type (see table above)
+Text        // Actual text of the token
+Next        // Next token in sequence
+Previous    // Previous token in sequence
+```
+
+### Examples
+
+```csharp
+// Detect division by variable (not constant)
+Tokenize().Any(Type = DIV and Next.Type <> INTEGER_LITERAL and Next.Type <> REAL_LITERAL)
+
+// Find SUMX usage
+Tokenize().Any(Type = FUNCTION and Text = "SUMX")
+
+// Find nested CALCULATE
+Tokenize().Count(Type = FUNCTION and Text = "CALCULATE") > 1
+
+// Detect IF with three arguments (potential for SWITCH)
+Tokenize().Any(Type = FUNCTION and Text = "IF")
+```
+
+
+## DependsOn Collection
+
+The `DependsOn` property provides dependency analysis for measures and calculated columns.
+
+### Structure
+
+```csharp
+DependsOn.Any()                              // Has any dependencies
+DependsOn.Any(Key.ObjectType = "Column")     // Depends on columns
+DependsOn.Any(Key.ObjectType = "Measure")    // Depends on measures
+DependsOn.Any(Key.ObjectType = "Table")      // Depends on tables
+```
+
+### Checking Qualification
+
+```csharp
+// Column references should be fully qualified
+DependsOn.Any(Key.ObjectType = "Column" and Value.Any(not FullyQualified))
+
+// Measure references should NOT be fully qualified
+DependsOn.Any(Key.ObjectType = "Measure" and Value.Any(FullyQualified))
+```
+
+### Value Properties
+
+Each dependency entry has a `Value` collection with properties:
+
+```csharp
+FullyQualified    // Is the reference fully qualified (e.g., 'Table'[Column])
+```
+
+
+## ReferencedBy Collection
+
+The `ReferencedBy` property shows what objects reference the current object.
+
+### Common Uses
+
+```csharp
+// Not referenced by anything
+ReferencedBy.Count = 0
+
+// Referenced by visible measures
+ReferencedBy.AllMeasures.Any(not IsHidden)
+
+// Referenced by roles (RLS)
+ReferencedBy.Roles.Any()
+
+// Check for orphaned hidden objects
+(IsHidden or Table.IsHidden) and
+not ReferencedBy.AllMeasures.Any(not IsHidden) and
+not ReferencedBy.AllColumns.Any(not IsHidden)
+```
+
+### Sub-collections
+
+```csharp
+ReferencedBy.AllMeasures      // All measures referencing this
+ReferencedBy.AllColumns       // All columns referencing this
+ReferencedBy.AllTables        // All tables referencing this
+ReferencedBy.Roles            // Security roles referencing this
+```
+
+
+## OuterIt Reference
+
+When using nested LINQ expressions, `outerIt` refers to the outer object.
+
+### Examples
+
+```csharp
+// Check if column is used in any relationship from this table
+Model.Relationships.Any(FromColumn = outerIt)
+
+// Check if table has any measure with empty description
+Measures.Any(string.IsNullOrWhitespace(outerIt.Description))
+
+// Multiple relationships between same tables
+Model.Relationships.Count(FromTable = OuterIt.FromTable and ToTable = OuterIt.ToTable) > 1
+```
+
+
 ## Tips
 
 1. **Test incrementally** - Build complex expressions step by step
@@ -325,3 +471,5 @@ Delete()
 3. **Handle nulls** - Use `string.IsNullOrWhitespace()` for strings
 4. **Consider inheritance** - Column checks apply to all column types
 5. **Performance** - Complex expressions slow BPA scanning
+6. **Use Tokenize() for DAX analysis** - More precise than string matching
+7. **Prefer DependsOn over string matching** - Handles edge cases correctly

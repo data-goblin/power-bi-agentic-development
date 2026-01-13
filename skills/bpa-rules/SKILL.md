@@ -163,14 +163,36 @@ For complete annotation patterns, see `references/tmdl-annotations.md`.
 For detailed syntax and patterns, consult:
 
 - **`references/rule-schema.md`** - Complete BPA rule JSON schema and field descriptions
-- **`references/expression-syntax.md`** - Dynamic LINQ expression syntax and TOM properties
+- **`references/expression-syntax.md`** - Dynamic LINQ expression syntax, TOM properties, Tokenize(), DependsOn, ReferencedBy
 - **`references/tmdl-annotations.md`** - BPA annotations in TMDL format
+
+### Example Files
+
+Working examples in `examples/`:
+
+- **`examples/comprehensive-rules.json`** - 30+ production-ready rules across all categories
+- **`examples/model-with-bpa-annotations.tmdl`** - TMDL file showing all annotation patterns
+
+### Scripts
+
+Utility scripts in `scripts/`:
+
+- **`scripts/validate_rules.py`** - Validate BPA rule JSON files for schema compliance
+
+### Related Commands
+
+- **`/suggest-rule`** - Generate BPA rules from descriptions
+
+### Related Agents
+
+- **`bpa-expression-helper`** - Debug and improve BPA expressions
 
 ### External References
 
 - [Tabular Editor BPA Documentation](https://docs.tabulareditor.com/common/using-bpa.html)
 - [BPA Rules Repository](https://github.com/TabularEditor/BestPracticeRules)
 - [Sample Rules Expressions](https://docs.tabulareditor.com/common/using-bpa-sample-rules-expressions.html)
+- [Power BI Semantic Model Checklist](https://data-goblins.com/dataset-checklist)
 
 ## Example Rules
 
@@ -203,8 +225,3 @@ For detailed syntax and patterns, consult:
   "FixExpression": "Delete()"
 }
 ```
-
-<!--
-SKELETON: This skill requires population of reference files.
-See references/ directory for files to complete.
--->
