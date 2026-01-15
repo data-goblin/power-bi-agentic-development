@@ -42,7 +42,7 @@ BPA rules can exist in multiple locations (evaluated in order of priority):
 | **URL** | Any valid URL (e.g., `https://raw.githubusercontent.com/TabularEditor/BestPracticeRules/master/BPARules-standard.json`) | Remote rule collections loaded from web |
 | **Rules within current model** | `Model.SetAnnotation("BestPracticeAnalyzer", ...)` | Rules embedded in model.bim via annotation |
 | **Rules for local user** | `%LocalAppData%\TabularEditor3\BPARules.json` | User-specific rules on Windows |
-| **Rules on local machine** | `%ProgramData%\TabularEditor\BPARules.json` | Machine-wide rules for all users |
+| **Rules on local machine** | `%ProgramData%\TabularEditor3\BPARules.json` | Machine-wide rules for all users |
 
 **File format:** All locations use the same JSON array format containing rule objects.
 
