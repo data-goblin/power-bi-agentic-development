@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/TabularEditor/TabularEditor3/RecentServers.json",
+  "title": "Tabular Editor 3 Recent Servers",
+  "description": "Schema for Tabular Editor 3 server connection history. Tracks recently connected Analysis Services, Power BI, and Fabric servers.",
+  "$comment": "Version 1.0.0 - Schema location is temporary until schemas repo is available.",
+  "type": "object",
+  "properties": {
+    "RecentHistory": {
+      "type": "array",
+      "description": "List of recent server connections.",
+      "items": {
+        "$ref": "#/definitions/ServerConnection"
+      }
+    },
+    "Recent": {
+      "$ref": "#/definitions/ServerConnection",
+      "description": "Most recently used server connection."
+    }
+  },
+  "definitions": {
+    "ServerConnection": {
+      "type": "object",
+      "description": "Server connection configuration.",
+      "required": ["ServerName"],
+      "properties": {
+        "ServerName": {
+          "type": "string",
+          "description": "Server connection string (Power BI workspace, Azure AS, SSAS, etc.).",
+          "examples": [
+            "powerbi://api.powerbi.com/v1.0/myorg/WorkspaceName",
+            "asazure://eastus.asazure.windows.net/servername",
+            "localhost"
+          ]
+        },
+        "AuthenticationMode": {
+          "type": "integer",
+          "description": "Authentication mode: 0 = Integrated, 1 = Azure AD Interactive, 2 = Service Principal.",
+          "enum": [0, 1, 2]
+        },
+        "Username": {
+          "type": "string",
+          "description": "Username for authentication (if applicable)."
+        },
+        "Mode": {
+          "type": "integer",
+          "description": "Connection mode."
+        },
+        "StatusBarColor": {
+          "type": "string",
+          "description": "RGBA color for status bar indicator (format: 'A, R, G, B').",
+          "pattern": "^\\d+,\\s*\\d+,\\s*\\d+,\\s*\\d+$"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "RecentHistory": [
+        {
+          "ServerName": "powerbi://api.powerbi.com/v1.0/myorg/MyWorkspace",
+          "AuthenticationMode": 1,
+          "Username": "",
+          "Mode": 0,
+          "StatusBarColor": "0, 255, 255, 254"
+        }
+      ],
+      "Recent": {
+        "ServerName": "powerbi://api.powerbi.com/v1.0/myorg/MyWorkspace",
+        "AuthenticationMode": 1,
+        "Username": "",
+        "Mode": 0,
+        "StatusBarColor": "0, 255, 255, 254"
+      }
+    }
+  ]
+}

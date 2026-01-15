@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/TabularEditor/TabularEditor3/RecentFiles.json",
+  "title": "Tabular Editor 3 Recent Files",
+  "description": "Schema for Tabular Editor 3 recent files history. Tracks recently opened scripts, queries, diagrams, pivot grids, and models.",
+  "$comment": "Version 1.0.0 - Schema location is temporary until schemas repo is available.",
+  "type": "object",
+  "properties": {
+    "RecentFiles": {
+      "type": "array",
+      "description": "List of recently opened file paths (scripts, queries, diagrams, etc.).",
+      "items": {
+        "type": "string",
+        "description": "File path to a recently opened file."
+      }
+    },
+    "PinnedFiles": {
+      "type": "array",
+      "description": "List of pinned file paths that persist at the top of recent files.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "RecentModels": {
+      "type": "array",
+      "description": "List of recently opened model paths (.bim, .pbit, .vpax, TMDL folders, etc.).",
+      "items": {
+        "type": "string",
+        "description": "Path to a recently opened model."
+      }
+    },
+    "PinnedModels": {
+      "type": "array",
+      "description": "List of pinned model paths that persist at the top of recent models.",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "examples": [
+    {
+      "RecentFiles": [
+        "C:\\Scripts\\format-measures.csx",
+        "C:\\Queries\\sales-query.dax",
+        "C:\\Diagrams\\model-diagram.te3diag"
+      ],
+      "PinnedFiles": [],
+      "RecentModels": [
+        "C:\\Models\\SalesModel.bim",
+        "C:\\Models\\TMDL\\definition\\model.tmdl"
+      ],
+      "PinnedModels": []
+    }
+  ]
+}

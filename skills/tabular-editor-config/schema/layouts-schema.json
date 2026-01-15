@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/TabularEditor/TabularEditor3/Layouts.json",
+  "title": "Tabular Editor 3 Layouts Configuration",
+  "description": "Schema for Tabular Editor 3 window layout configurations. Stores panel arrangements, docking positions, and menu customizations.",
+  "$comment": "Version 1.0.0 - Schema location is temporary until schemas repo is available.",
+  "type": "object",
+  "required": ["Version", "Layouts"],
+  "properties": {
+    "Version": {
+      "type": "integer",
+      "description": "Schema version for the layouts file format.",
+      "minimum": 1
+    },
+    "Layouts": {
+      "type": "array",
+      "description": "Array of saved layout configurations.",
+      "items": {
+        "type": "object",
+        "required": ["Name"],
+        "properties": {
+          "Name": {
+            "type": "string",
+            "description": "Name of the layout configuration."
+          },
+          "Panels": {
+            "type": "array",
+            "description": "Array of panel configurations.",
+            "items": {
+              "$ref": "#/definitions/Panel"
+            }
+          },
+          "Bars": {
+            "type": "array",
+            "description": "Toolbar configurations.",
+            "items": {
+              "$ref": "#/definitions/Bar"
+            }
+          },
+          "Menus": {
+            "type": "array",
+            "description": "Menu customizations.",
+            "items": {
+              "$ref": "#/definitions/Menu"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Panel": {
+      "type": "object",
+      "properties": {
+        "Type": {
+          "type": "string",
+          "description": "Panel type identifier.",
+          "enum": [
+            "TabularExplorer", "BestPracticeAnalyzer", "GitChanges", "Messages",
+            "ModelProcessing", "VertiPaqAnalyzer", "ManageMacros", "QuickEditor",
+            "PerspectiveEditor", "MetadataTranslationEditor", "DaxOptimizer",
+            "DaxPackageManager", "DaxDependencies", "FindReplace", "CalendarEditor",
+            "WhatsNew", "PropertyGrid"
+          ]
+        },
+        "Dock": {
+          "type": "string",
+          "description": "Docking position.",
+          "enum": ["Left", "Right", "Top", "Bottom", "Float"]
+        },
+        "Mode": {
+          "type": "string",
+          "description": "Panel mode.",
+          "enum": ["Tabbed", "Split"]
+        },
+        "Visibility": {
+          "type": "string",
+          "description": "Panel visibility state.",
+          "enum": ["Visible", "Hidden", "AutoHide"]
+        },
+        "SizeFactor": {
+          "type": "number",
+          "description": "Relative size factor (0-1).",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "TabbedDocumentGroup": {
+          "type": "integer",
+          "description": "Tabbed document group index."
+        },
+        "DockedAsTabbedDocument": {
+          "type": "boolean",
+          "description": "Whether panel is docked as a tabbed document."
+        },
+        "SavedTabbed": {
+          "type": "boolean",
+          "description": "Whether panel was previously tabbed."
+        },
+        "Children": {
+          "type": "array",
+          "description": "Child panels.",
+          "items": {
+            "$ref": "#/definitions/Panel"
+          }
+        },
+        "FloatPosition": {
+          "$ref": "#/definitions/FloatPosition"
+        }
+      }
+    },
+    "FloatPosition": {
+      "type": "object",
+      "description": "Position and size for floating panels.",
+      "properties": {
+        "Top": { "type": "integer" },
+        "Left": { "type": "integer" },
+        "Width": { "type": "integer" },
+        "Height": { "type": "integer" }
+      }
+    },
+    "Bar": {
+      "type": "object",
+      "properties": {
+        "Bar": { "type": "string", "description": "Toolbar identifier." },
+        "Caption": { "type": "string", "description": "Toolbar caption." },
+        "Col": { "type": "integer", "description": "Column position." },
+        "Row": { "type": "integer", "description": "Row position." },
+        "Links": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "Menu": {
+      "type": "object",
+      "properties": {
+        "Menu": { "type": "string", "description": "Menu identifier." },
+        "Links": {
+          "type": "array",
+          "description": "Menu item modifications.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "Item": { "type": "string" },
+              "Change": { "type": "string", "enum": ["Added", "Removed"] },
+              "Caption": { "type": "string" },
+              "BeginGroup": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

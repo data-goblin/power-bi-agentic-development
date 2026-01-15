@@ -1,0 +1,270 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/TabularEditor/TabularEditor3/UiPreferences.json",
+  "title": "Tabular Editor 3 UI Preferences",
+  "description": "Schema for Tabular Editor 3 UI preferences. Stores window settings, editor configurations, keyboard shortcuts, and find/replace options.",
+  "$comment": "Version 1.0.0 - Schema location is temporary until schemas repo is available.",
+  "type": "object",
+  "properties": {
+    "ShowToolbarsOnFloatingWindows": { "type": "boolean" },
+    "FindReplaceDialogOpacity": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "UseCompactPaths": { "type": "boolean" },
+    "RecentFiles": {
+      "type": "integer",
+      "description": "Number of recent files to remember."
+    },
+    "RecentModels": {
+      "type": "integer",
+      "description": "Number of recent models to remember."
+    },
+    "RecentServers": {
+      "type": "integer",
+      "description": "Number of recent servers to remember."
+    },
+    "ShowWhatsNew": { "type": "boolean" },
+    "HideInactiveToolbars": { "type": "boolean" },
+    "HideInactiveMenus": { "type": "boolean" },
+    "HideVersionNumber": { "type": "boolean" },
+    "HideModelSourceDetails": { "type": "boolean" },
+    "ShowFullMenus": { "type": "boolean" },
+    "ShowFullMenusAfterDelay": { "type": "boolean" },
+    "LargeIcons": { "type": "boolean" },
+    "ShowScreenTipsInToolbars": { "type": "boolean" },
+    "ShowShortcutInScreenTips": { "type": "boolean" },
+    "MenuAnimationType": {
+      "type": "string",
+      "enum": ["None", "Fade", "Slide", "System"]
+    },
+    "LockMenusAndToolbars": { "type": "boolean" },
+    "Skin": {
+      "type": "string",
+      "description": "UI skin/theme name."
+    },
+    "SkinPalette": { "type": "string" },
+    "Language": {
+      "type": "string",
+      "description": "UI language code.",
+      "examples": ["en-US", "de-DE", "fr-FR", "zh-CN", "ja-JP"]
+    },
+    "WorkspaceSerializationVersion": { "type": "integer" },
+    "RememberWindowBounds": { "type": "boolean" },
+    "RememberWindowState": { "type": "boolean" },
+    "MainWindowState": {
+      "type": "string",
+      "enum": ["Normal", "Minimized", "Maximized"]
+    },
+    "MainWindowRectangle": {
+      "type": "object",
+      "properties": {
+        "X": { "type": "integer" },
+        "Y": { "type": "integer" },
+        "W": { "type": "integer" },
+        "H": { "type": "integer" }
+      }
+    },
+    "DaxscillaPreferences": {
+      "type": "object",
+      "description": "DAX editor (Daxscilla) preferences.",
+      "properties": {
+        "CodeActions": {
+          "type": "object",
+          "properties": {
+            "Enabled": { "type": "boolean" },
+            "VariablePrefix": { "type": "string" },
+            "ExtensionColumnPrefix": { "type": "string" },
+            "VariableApplyCasing": { "type": "boolean" },
+            "VariableCasingAfterPrefix": { "type": "string" }
+          }
+        },
+        "UseSqlBiDaxFormatter": { "type": "boolean" },
+        "DaxFunctionDocumentationUrl": { "type": "string" },
+        "CodeAssistPreferences": {
+          "type": "object",
+          "properties": {
+            "PreselectFromPastUsage": { "type": "boolean" },
+            "ShowCalltips": { "type": "boolean" },
+            "CalltipsMode": { "type": "string" },
+            "CalltipPosition": { "type": "string" },
+            "KpiAutoCompleteMode": { "type": "string" },
+            "AutoCompleteFilterMode": { "type": "string" },
+            "AutoBraceEnabled": { "type": "boolean" },
+            "WrapSelection": { "type": "boolean" },
+            "AutoIndentNewline": { "type": "boolean" },
+            "AutoFormatOnClose": { "type": "boolean" },
+            "CorrectObjectCasing": { "type": "boolean" },
+            "CorrectKeywordFunctionCasing": { "type": "boolean" },
+            "KeywordsCasing": { "type": "string", "enum": ["Upper", "Lower", "Default"] },
+            "FunctionsCasing": { "type": "string", "enum": ["Upper", "Lower", "Default"] },
+            "AutoDaxFormatting": { "type": "boolean" },
+            "FixQualifiers": { "type": "boolean" },
+            "AutoFormatEnabled": { "type": "boolean" },
+            "ShowAutoComplete": { "type": "boolean" },
+            "AutoCompleteMode": { "type": "string" },
+            "AutoCompleteHandleDelete": { "type": "boolean" },
+            "AsyncAutoCompleteParsing": { "type": "boolean" },
+            "ShowNotRecommendedFunctions": { "type": "boolean" }
+          }
+        },
+        "FormattingOptions": {
+          "type": "object",
+          "properties": {
+            "AlwaysPrefixExtensionColumns": { "type": "boolean" },
+            "AlwaysQuoteTables": { "type": "boolean" },
+            "IndentWidth": { "type": "integer" },
+            "LongFormatMaxChars": { "type": "integer" },
+            "NewLineAfterFunction": { "type": "boolean" },
+            "NewLineBeforeOperator": { "type": "boolean" },
+            "ParenthesisSpacing": { "type": "boolean" },
+            "RemoveExtraLineBreaks": { "type": "boolean" },
+            "ShortFormatMaxChars": { "type": "integer" },
+            "SpaceAfterFunction": { "type": "boolean" },
+            "UseTabs": { "type": "boolean" }
+          }
+        },
+        "DaxLocale": { "type": "string" },
+        "UseHyphenComments": { "type": "boolean" },
+        "UseTabs": { "type": "boolean" },
+        "DefineObject_IncludeCommentHeader": { "type": "boolean" },
+        "QueryDefineObject_IncludeCommentHeader": { "type": "boolean" },
+        "SemanticEngineFeatureOverrides": { "type": "object" },
+        "ShowWarningUnusedVariable": { "type": "boolean" },
+        "DaxFormatterDefault": { "type": "string", "enum": ["Short", "Long"] },
+        "SortItemsInDaxScript": { "type": "boolean" },
+        "VisibleWhitespace": { "type": "boolean" },
+        "VisibleLineNumbers": { "type": "boolean" },
+        "VisibleCodeFolding": { "type": "boolean" },
+        "IndentationGuides": { "type": "boolean" }
+      }
+    },
+    "SqlEditorPreferences": {
+      "type": "object",
+      "description": "SQL editor preferences.",
+      "properties": {
+        "VisibleWhitespace": { "type": "boolean" },
+        "VisibleLineNumbers": { "type": "boolean" },
+        "VisibleCodeFolding": { "type": "boolean" },
+        "UseTabs": { "type": "boolean" },
+        "IndentationGuides": { "type": "boolean" }
+      }
+    },
+    "MEditorPreferences": {
+      "type": "object",
+      "description": "M/Power Query editor preferences.",
+      "properties": {
+        "VisibleWhitespace": { "type": "boolean" },
+        "VisibleLineNumbers": { "type": "boolean" },
+        "VisibleCodeFolding": { "type": "boolean" },
+        "UseTabs": { "type": "boolean" },
+        "IndentationGuides": { "type": "boolean" }
+      }
+    },
+    "CSharpEditorPreferences": {
+      "type": "object",
+      "description": "C# script editor preferences.",
+      "properties": {
+        "VisibleWhitespace": { "type": "boolean" },
+        "VisibleLineNumbers": { "type": "boolean" },
+        "VisibleCodeFolding": { "type": "boolean" },
+        "UseTabs": { "type": "boolean" },
+        "IndentationGuides": { "type": "boolean" }
+      }
+    },
+    "EditorPreferences": {
+      "type": "object",
+      "description": "General editor preferences.",
+      "properties": {
+        "MultiPaste": { "type": "boolean" },
+        "ShowIndicatorsOnScrollBar": { "type": "boolean" },
+        "WordWrap": { "type": "boolean" },
+        "WordWrapIndicators": { "type": "string" },
+        "WordWrapIndicatorEnd": { "type": "boolean" },
+        "WordWrapIndicatorStart": { "type": "boolean" },
+        "WordWrapIndicatorMargin": { "type": "boolean" }
+      }
+    },
+    "DebuggerPreferences": {
+      "type": "object",
+      "description": "DAX debugger preferences.",
+      "properties": {
+        "IncludeTableExpressionsInLocals": { "type": "boolean" },
+        "IncludeFunctionArgsInLocals": { "type": "boolean" },
+        "PopupWatchInspector": { "type": "boolean" },
+        "PopupLocalsInspector": { "type": "boolean" }
+      }
+    },
+    "KeyboardCustomizations": {
+      "type": "object",
+      "description": "Custom keyboard shortcuts.",
+      "properties": {
+        "Custom": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "array", "items": { "type": "string" } }
+            ]
+          }
+        }
+      }
+    },
+    "FindReplaceSettings": {
+      "type": "object",
+      "description": "Find and replace dialog settings.",
+      "properties": {
+        "MatchCase": { "type": "boolean" },
+        "WholeWord": { "type": "boolean" },
+        "AllowBackslash": { "type": "boolean" },
+        "AllowRegex": { "type": "boolean" },
+        "FindMru": {
+          "type": "array",
+          "description": "Most recently used search terms.",
+          "items": { "type": "string" }
+        },
+        "MaxRecentItems": { "type": "integer" }
+      }
+    },
+    "ExplorerSettings": {
+      "type": "object",
+      "description": "Model Explorer view settings.",
+      "properties": {
+        "ShowInfoColumns": { "type": "boolean" },
+        "ShowHiddenObjects": { "type": "boolean" },
+        "ShowMeasures": { "type": "boolean" },
+        "ShowHierarchies": { "type": "boolean" },
+        "ShowColumns": { "type": "boolean" },
+        "ShowPartitions": { "type": "boolean" },
+        "ShowCalendars": { "type": "boolean" },
+        "ShowDisplayFolders": { "type": "boolean" },
+        "ShowNamespaces": { "type": "boolean" },
+        "ShowEntireBranchWhenFiltering": { "type": "boolean" },
+        "AlwaysShowDeleteWarning": { "type": "boolean" },
+        "InfoColumns": { "type": "object" },
+        "LockColumnWidths": { "type": "boolean" },
+        "ShowTableGroups": { "type": "boolean" },
+        "HighlightRelationships": { "type": "boolean" },
+        "CurrencyFormatSettings": { "type": "object" }
+      }
+    },
+    "PerspectiveEditorSettings": {
+      "type": "object",
+      "properties": {
+        "ShowHiddenObjects": { "type": "boolean" }
+      }
+    },
+    "MetadataTranslationEditorSettings": {
+      "type": "object",
+      "properties": {
+        "ShowHiddenObjects": { "type": "boolean" }
+      }
+    },
+    "OneTimeMessages": {
+      "type": "object",
+      "description": "Tracking for one-time notification messages.",
+      "additionalProperties": { "type": "boolean" }
+    }
+  }
+}

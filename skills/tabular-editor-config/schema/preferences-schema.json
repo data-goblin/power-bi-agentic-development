@@ -1,0 +1,211 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/TabularEditor/TabularEditor3/Preferences.json",
+  "title": "Tabular Editor 3 Preferences",
+  "description": "Schema for Tabular Editor 3 application preferences. Stores deployment settings, data browsing options, TMDL configuration, and proxy settings.",
+  "$comment": "Version 1.0.0 - Schema location is temporary until schemas repo is available.",
+  "type": "object",
+  "properties": {
+    "Version": {
+      "type": "integer",
+      "description": "Schema version for the preferences file format."
+    },
+    "AppVersion": {
+      "type": "string",
+      "description": "Tabular Editor version that created this preferences file.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "DaxOptimizer": {
+      "type": "object",
+      "description": "DAX Optimizer settings.",
+      "properties": {
+        "ObfuscateVpax": { "type": "boolean" }
+      }
+    },
+    "Deployment": {
+      "type": "object",
+      "description": "Default deployment settings.",
+      "properties": {
+        "DeployDataSources": { "type": "boolean" },
+        "DeployPartitions": { "type": "boolean" },
+        "DeployRefreshPolicyPartitions": { "type": "boolean" },
+        "DeployModelRoles": { "type": "boolean" },
+        "DeployModelRoleMembers": { "type": "boolean" },
+        "DeploySharedExpressions": { "type": "boolean" }
+      }
+    },
+    "Defaults": {
+      "type": "object",
+      "description": "Default settings for new models.",
+      "properties": {
+        "NewModelCL": {
+          "type": "integer",
+          "description": "Default compatibility level for new models."
+        },
+        "UseLatestDefault": { "type": "boolean" },
+        "NewModelUseWorkspace": { "type": "boolean" }
+      }
+    },
+    "DataBrowsing": {
+      "type": "object",
+      "description": "Data browsing and query settings.",
+      "properties": {
+        "AutoRefreshDataPreview": { "type": "boolean" },
+        "AutoRefreshPivotGrid": { "type": "boolean" },
+        "PivotCustomizationShowAllFields": { "type": "boolean" },
+        "PivotHeaderWordWrap": { "type": "boolean" },
+        "WarnIfPivotGridFieldsMismatch": { "type": "boolean" },
+        "AlwaysShowPivotGridFieldList": { "type": "boolean" },
+        "PivotCustomizationDefaultLayout": { "type": "string" },
+        "AutoExecuteDaxQuery": { "type": "boolean" },
+        "DirectQueryMaxRows": { "type": "integer" },
+        "DaxQueryMaxRows": { "type": "integer" },
+        "DaxQuerySmartSelection": { "type": "boolean" },
+        "KeepFilteringAndSortingDaxQuery": { "type": "string" }
+      }
+    },
+    "PbiEndpointBaseUrl": {
+      "type": "string",
+      "description": "Power BI API endpoint URL.",
+      "format": "uri"
+    },
+    "FabricEndpointBaseUrl": {
+      "type": "string",
+      "description": "Microsoft Fabric API endpoint URL.",
+      "format": "uri"
+    },
+    "PbiDefaultAuthMode": {
+      "type": "string",
+      "description": "Default authentication mode for Power BI connections.",
+      "enum": ["Integrated", "UsernamePassword", "ServicePrincipal"]
+    },
+    "DefaultSaveMode": {
+      "type": "string",
+      "description": "Default format when saving models.",
+      "enum": ["TMDL", "BIM", "Folder"]
+    },
+    "DaxFormatterRequestTimeout": {
+      "type": "integer",
+      "description": "Timeout in milliseconds for DAX Formatter requests."
+    },
+    "DaxFormatterConsent": { "type": "boolean" },
+    "CheckForUpdatesOnStartup": { "type": "boolean" },
+    "CheckForUpdatesMajorOnly": { "type": "boolean" },
+    "VertiPaqAnalyzerIncludeTom": { "type": "boolean" },
+    "VertiPaqAnalyzerReadStatsFromData": { "type": "boolean" },
+    "VertiPaqAnalyzerDirectLakeExtractionMode": {
+      "type": "string",
+      "enum": ["Full", "Partial", "None"]
+    },
+    "VertiPaqAnalyzerReadStatsFromDQ": { "type": "boolean" },
+    "VertiPaqAnalyzerSampleRI": { "type": "integer" },
+    "VertiPaqAnalyzerColumnBatchSize": { "type": "integer" },
+    "CollectTelemetry": { "type": "boolean" },
+    "FormulaFixup": { "type": "boolean" },
+    "FormulaFixupOnPaste": { "type": "boolean" },
+    "PbiModelsAddDaxLineBreak": { "type": "boolean" },
+    "PbiModelsAddDaxLineBreakMultiLineOnly": { "type": "boolean" },
+    "AllowUnsupportedPBIFeatures": { "type": "boolean" },
+    "HidePBIAutoDateTimeWarnings": { "type": "boolean" },
+    "WarnWhenMetadataOutOfSync": { "type": "boolean" },
+    "ChangeDetectionOnLocalServers": { "type": "boolean" },
+    "AutoRefreshTomTree": { "type": "boolean" },
+    "BackgroundBpa": { "type": "boolean" },
+    "BuiltInBpaRules": {
+      "type": "string",
+      "enum": ["Enable", "Disable"]
+    },
+    "DisabledBuiltInRuleIds": {
+      "type": "array",
+      "description": "List of disabled built-in BPA rule IDs.",
+      "items": { "type": "string" }
+    },
+    "DataRefreshNotification": { "type": "boolean" },
+    "SaveBackupLocation": { "type": "string" },
+    "AnnotateDeploymentMetadata": { "type": "boolean" },
+    "SendErrorReports": { "type": "boolean" },
+    "SchemaCompare_IgnoreImport": { "type": "boolean" },
+    "SchemaCompare_IgnoreDataTypeChanges": { "type": "boolean" },
+    "SchemaCompare_IgnoreDescriptionChanges": { "type": "boolean" },
+    "SchemaCompare_IgnoreDecimalToDoubleChanges": { "type": "boolean" },
+    "DirectLake_AutoRefreshSave": { "type": "boolean" },
+    "PrioritizeAnalysisServicesSchemaDetector": { "type": "boolean" },
+    "IgnoreLineageTags": { "type": "boolean" },
+    "IgnoreInferredObjects": { "type": "boolean" },
+    "IgnoreInferredProperties": { "type": "boolean" },
+    "IgnoreTimestamps": { "type": "boolean" },
+    "IgnorePrivacySettings": { "type": "boolean" },
+    "IncludeSensitive": { "type": "boolean" },
+    "IgnoreIncrementalRefreshPartitions": { "type": "boolean" },
+    "SplitMultilineStrings": { "type": "boolean" },
+    "SortArrays": { "type": "boolean" },
+    "UsePbixFileNameWhenSavingToDisk": { "type": "boolean" },
+    "CreateUserOptionsForNewModels": { "type": "boolean" },
+    "ProxyType": {
+      "type": "string",
+      "enum": ["None", "System", "Manual"]
+    },
+    "ProxyBypassList": { "type": "string" },
+    "ProxyUseDefaultCredentials": { "type": "boolean" },
+    "ProxyAddress": { "type": "string" },
+    "ProxyBypassOnLocal": { "type": "boolean" },
+    "ProxyUser": { "type": "string" },
+    "ProxyPasswordEncrypted": { "type": "string" },
+    "SaveToFolder_PrefixFiles": { "type": "boolean" },
+    "SaveToFolder_LocalRelationships": { "type": "boolean" },
+    "SaveToFolder_LocalPerspectives": { "type": "boolean" },
+    "SaveToFolder_LocalTranslations": { "type": "boolean" },
+    "SaveToFolder_UseRecommendedSettings": { "type": "boolean" },
+    "SaveToFolder_UseTmdl": { "type": "boolean" },
+    "SaveToFolder_Levels": {
+      "type": "array",
+      "description": "Folder structure levels for Save to Folder.",
+      "items": { "type": "string" }
+    },
+    "TmdlOptions": {
+      "type": "object",
+      "description": "TMDL serialization options.",
+      "properties": {
+        "IncludeRefs": { "type": "boolean" },
+        "CasingStyle": { "type": "string", "enum": ["CamelCase", "PascalCase", "LowerCase"] },
+        "ExpressionTrimStyle": { "type": "string" },
+        "NewLineStyle": { "type": "string", "enum": ["SystemDefault", "Windows", "Unix"] },
+        "Encoding": { "type": "string", "enum": ["UTF8", "UTF8BOM", "ASCII"] },
+        "BaseIndentationLevel": { "type": "integer" },
+        "SpacesIndentation": { "type": "integer" }
+      }
+    },
+    "Copy_IncludeTranslations": { "type": "boolean" },
+    "Copy_IncludePerspectives": { "type": "boolean" },
+    "Copy_IncludeRLS": { "type": "boolean" },
+    "Copy_IncludeOLS": { "type": "boolean" },
+    "Perspectives_InheritForNewObjects": { "type": "boolean" },
+    "Perspectives_InheritForRelocatedObjects": { "type": "boolean" },
+    "Perspectives_InheritTableAdd": { "type": "boolean" },
+    "Perspectives_InheritTableRemove": { "type": "boolean" },
+    "View_DisplayFolders": { "type": "boolean" },
+    "View_HiddenObjects": { "type": "boolean" },
+    "View_AllObjectTypes": { "type": "boolean" },
+    "View_SortAlphabetically": { "type": "boolean" },
+    "View_Measures": { "type": "boolean" },
+    "View_Columns": { "type": "boolean" },
+    "View_Hierarchies": { "type": "boolean" },
+    "View_Partitions": { "type": "boolean" },
+    "View_MetadataInformation": { "type": "boolean" },
+    "View_ColumnPreferences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "Name": { "type": "string" },
+          "Width": { "type": "integer" },
+          "Visible": { "type": "boolean" }
+        }
+      }
+    },
+    "BackupOnSave": { "type": "boolean" },
+    "ShouldBackupOnSave": { "type": "boolean" },
+    "BackupOnDeploy": { "type": "boolean" },
+    "ShouldBackupOnDeploy": { "type": "boolean" }
+  }
+}
