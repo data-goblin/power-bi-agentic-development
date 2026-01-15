@@ -1,6 +1,6 @@
 ---
 name: bpa-rules
-description: This skill should be used when the user asks to "create a BPA rule", "write a Best Practice Analyzer rule", "improve a BPA expression", "fix expression for BPA", "analyze BPA annotations", "check model for best practices", or mentions Tabular Editor BPA rules. Provides guidance for creating, improving, and understanding Best Practice Analyzer rules for Power BI semantic models.
+description: This skill should be used when the user asks to "create a BPA rule", "write a Best Practice Analyzer rule", "improve a BPA expression", "fix expression for BPA", "analyze BPA annotations", "check model for best practices", "audit BPA rules", "discover BPA rules", "list all BPA rules", "validate BPA rules", or mentions Tabular Editor BPA rules. Provides guidance for creating, improving, auditing, and understanding Best Practice Analyzer rules for Power BI semantic models.
 ---
 
 # Best Practice Analyzer Rules
@@ -17,6 +17,7 @@ Activate automatically when tasks involve:
 - Understanding BPA annotations in TMDL files
 - Analyzing a semantic model against best practices
 - Converting ad-hoc checks into reusable BPA rules
+- Auditing or discovering all BPA rules across sources (built-in, URL, model, user, machine)
 
 ## Critical
 
@@ -43,6 +44,48 @@ BPA rules can exist in multiple locations (evaluated in order of priority):
 | **Rules within current model** | See below | Rules embedded in model metadata |
 | **Rules for local user** | `%LocalAppData%\TabularEditor3\BPARules.json` | User-specific rules on Windows |
 | **Rules on local machine** | `%ProgramData%\TabularEditor3\BPARules.json` | Machine-wide rules for all users |
+
+### Built-in Rules (TE3 Only)
+
+Tabular Editor 3 includes built-in BPA rules embedded in the application. These are **not** stored as separate JSON files but are compiled into the DLLs.
+
+**Configuration:** `%LocalAppData%\TabularEditor3\Preferences.json`
+- `BuiltInBpaRules`: `"Enable"` | `"Disable"` | `"EnableWithWarnings"`
+- `DisabledBuiltInRuleIds`: Array of rule IDs to disable
+
+**Built-in Rule IDs:**
+
+| ID | Category | Description |
+|----|----------|-------------|
+| `TE3_BUILT_IN_DATA_COLUMN_SOURCE` | Schema | Data column source validation |
+| `TE3_BUILT_IN_EXPRESSION_REQUIRED` | Schema | Expression required for calculated objects |
+| `TE3_BUILT_IN_AVOID_PROVIDER_PARTITIONS_STRUCTURED` | Data Sources | Avoid provider partitions with structured sources |
+| `TE3_BUILT_IN_SET_ISAVAILABLEINMDX_FALSE` | Performance | Set IsAvailableInMdx to false for non-MDX columns |
+| `TE3_BUILT_IN_DATE_TABLE_EXISTS` | Schema | Date table should exist |
+| `TE3_BUILT_IN_MANY_TO_MANY_SINGLE_DIRECTION` | Relationships | Many-to-many should use single direction |
+| `TE3_BUILT_IN_RELATIONSHIP_SAME_DATATYPE` | Relationships | Relationship columns should have same data type |
+| `TE3_BUILT_IN_AVOID_INVALID_CHARACTERS_NAMES` | Naming | Avoid invalid characters in names |
+| `TE3_BUILT_IN_AVOID_INVALID_CHARACTERS_DESCRIPTIONS` | Metadata | Avoid invalid characters in descriptions |
+| `TE3_BUILT_IN_SET_ISAVAILABLEINMDX_TRUE_NECESSARY` | Performance | Set IsAvailableInMdx true only when necessary |
+| `TE3_BUILT_IN_REMOVE_UNUSED_DATA_SOURCES` | Maintenance | Remove unused data sources |
+| `TE3_BUILT_IN_VISIBLE_TABLES_NO_DESCRIPTION` | Metadata | Visible tables should have descriptions |
+| `TE3_BUILT_IN_VISIBLE_COLUMNS_NO_DESCRIPTION` | Metadata | Visible columns should have descriptions |
+| `TE3_BUILT_IN_VISIBLE_MEASURES_NO_DESCRIPTION` | Metadata | Visible measures should have descriptions |
+| `TE3_BUILT_IN_VISIBLE_CALCULATION_GROUPS_NO_DESCRIPTION` | Metadata | Visible calculation groups should have descriptions |
+| `TE3_BUILT_IN_VISIBLE_UDF_NO_DESCRIPTION` | Metadata | Visible UDFs should have descriptions |
+| `TE3_BUILT_IN_PERSPECTIVES_NO_OBJECTS` | Schema | Perspectives should contain objects |
+| `TE3_BUILT_IN_CALCULATION_GROUPS_NO_ITEMS` | Schema | Calculation groups should have items |
+| `TE3_BUILT_IN_TRIM_OBJECT_NAMES` | Naming | Object names should be trimmed |
+| `TE3_BUILT_IN_FORMAT_STRING_COLUMNS` | Formatting | Columns should have format strings |
+| `TE3_BUILT_IN_TRANSLATE_DISPLAY_FOLDERS` | Translations | Display folders should be translated |
+| `TE3_BUILT_IN_TRANSLATE_DESCRIPTIONS` | Translations | Descriptions should be translated |
+| `TE3_BUILT_IN_TRANSLATE_VISIBLE_NAMES` | Translations | Visible names should be translated |
+| `TE3_BUILT_IN_TRANSLATE_HIERARCHY_LEVELS` | Translations | Hierarchy levels should be translated |
+| `TE3_BUILT_IN_TRANSLATE_PERSPECTIVES` | Translations | Perspectives should be translated |
+| `TE3_BUILT_IN_SPECIFY_APPLICATION_NAME` | Metadata | Specify application name |
+| `TE3_BUILT_IN_POWERBI_LATEST_COMPATIBILITY` | Compatibility | Use latest Power BI compatibility level |
+
+**Note:** This list is extracted from TE3 v3.25.0 Preferences.json. Built-in rules are not documented separately by Tabular Editor.
 
 **Model-embedded rules** can be stored in two formats:
 
@@ -273,9 +316,22 @@ Working examples in `examples/`:
 
 ### Scripts
 
-Utility scripts in `scripts/`:
+Utility scripts:
 
+- **`/scripts/bpa_rules_audit.py`** - Comprehensive BPA rules audit across all sources (built-in, URL, model, user, machine). Supports Windows, WSL, and macOS with Parallels. Outputs ASCII report and JSON export.
 - **`scripts/validate_rules.py`** - Validate BPA rule JSON files for schema compliance
+
+**Audit Script Usage:**
+```bash
+# Basic audit
+python scripts/bpa_rules_audit.py /path/to/model
+
+# Export to JSON
+python scripts/bpa_rules_audit.py /path/to/model --json output.json
+
+# Quiet mode (summary only)
+python scripts/bpa_rules_audit.py /path/to/model --quiet
+```
 
 ### Related Commands
 
