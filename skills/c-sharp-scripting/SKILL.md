@@ -155,63 +155,32 @@ Model.Tables.Select(t => t.Name)
 
 Detailed documentation for each object type in `object-types/`:
 
-### Core Objects
-- `model.md` - Model-level operations and properties
 - `tables.md` - Table CRUD, properties, partitions
 - `columns.md` - Column types, properties, sorting
 - `measures.md` - Measure creation, formatting, organization
 - `relationships.md` - Relationship management
-
-### Calculations
 - `calculation-groups.md` - Calculation groups and items
-- `functions.md` - DAX User-Defined Functions (UDFs)
-- `shared-expressions.md` - M/DAX shared expressions
-
-### Organization
-- `display-folders.md` - Folder organization patterns
-- `format-strings.md` - Number and date formatting
-- `format-dax.md` - DAX code formatting
-
-### Security & Localization
 - `roles.md` - Roles, RLS, OLS configuration
-- `perspectives.md` - Perspective management
-- `cultures.md` - Translations/localization
 
-### Advanced
-- `hierarchies.md` - User-defined hierarchies
-- `partitions.md` - Partition management, incremental refresh
-- `kpis.md` - KPI objects (legacy)
-- `bulk-operations.md` - Batch operation patterns
+## Example Scripts
 
-## Sample Scripts
+Example scripts organized by category in `examples/`:
 
-Sample scripts organized by category in `samples/`:
-
-### Tables & Structure
-- `tables/` - Add, modify, delete tables
-- `columns/` - Column properties and organization
-- `relationships/` - Relationship management
-- `partitions/` - Incremental refresh setup
+### Structure & Organization
+- `columns/` - Column properties, hiding, data types
+- `relationships/` - Relationship creation and management
+- `display-folders/` - Organize objects into folders
+- `format-strings/` - Currency, percentage, date formats
 
 ### Measures & Calculations
-- `measures/` - Measure CRUD operations
-- `calculation-groups/` - Time intelligence, currency conversion
-- `functions/` - DAX UDFs (compatibility level 1702+)
-- `shared-expressions/` - M/DAX expressions
-
-### Formatting
-- `format-dax/` - Format DAX in measures, columns, RLS
-- `format-strings/` - Currency, percentage, date formats
-- `display-folders/` - Organize objects into folders
+- `measures/` - Measure CRUD and time intelligence
+- `calculation-groups/` - Time intelligence calc groups
 
 ### Security
-- `roles/` - Role and member management
-- Configure RLS filters, OLS restrictions
+- `roles/` - Role and RLS configuration
 
-### Model Operations
-- `model/` - Refresh, backup, restore
-- `evaluate-dax/` - Execute DAX queries from scripts
-- `bulk-operations/` - Multi-object operations
+### Bulk Operations
+- `bulk-operations/` - Model initialization, batch updates
 
 ## Common Workflows
 
@@ -335,7 +304,7 @@ if(Model.Tables.Contains("Sales")) {
 
 ### Reference Files
 - `object-types/` - Detailed API docs per object type
-- `samples/` - Working script examples
+- `examples/` - Working script examples
 
 ### External References
 - [Tabular Editor Advanced Scripting](https://docs.tabulareditor.com/te2/Advanced-Scripting.html)

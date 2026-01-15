@@ -16,7 +16,9 @@
         "./skills/bpa-rules",
         "./skills/c-sharp-macros",
         "./skills/c-sharp-scripting",
-        "./skills/tabular-editor-config"
+        "./skills/tabular-editor-cli",
+        "./skills/tabular-editor-config",
+        "./skills/te-docs"
       ],
       "commands": [
         "./commands"

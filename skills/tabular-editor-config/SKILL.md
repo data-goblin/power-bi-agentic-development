@@ -1,6 +1,6 @@
 ---
-name: tabular-editor-user-options
-description: This skill should be used when the user asks about ".tmuo files", "Tabular Editor user options", "workspace database settings", "deployment preferences", "data source overrides", "table import settings", or "per-model TE3 configuration". Provides guidance for understanding and configuring Tabular Editor 3 user options files.
+name: tabular-editor-config
+description: This skill should be used when the user asks about ".tmuo files", "Tabular Editor user options", "TE3 preferences", "Preferences.json", "UiPreferences.json", "Layouts.json", "workspace database settings", "deployment preferences", "data source overrides", "keyboard shortcuts", "DAX editor settings", "TMDL options", or "per-model TE3 configuration". Provides guidance for understanding and configuring Tabular Editor 3 configuration files including application preferences and model-level user options.
 ---
 
 # Tabular Editor User Options (.tmuo)

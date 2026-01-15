@@ -2,6 +2,7 @@
 name: bpa-expression-helper
 description: Use this agent to help debug, improve, or explain BPA rule expressions. Invoke when users ask to "fix my BPA expression", "why isn't my rule working", "help with Dynamic LINQ", or need assistance writing complex BPA rule expressions.
 tools: Read, Grep, Glob
+color: cyan
 ---
 
 # BPA Expression Helper Agent

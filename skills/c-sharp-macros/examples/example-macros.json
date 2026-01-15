@@ -1,0 +1,36 @@
+{
+  "Actions": [
+    {
+      "Id": 1,
+      "Name": "Format all DAX objects in the model",
+      "Enabled": "true",
+      "Execute": "\n// Format all DAX measures in the model\nvar _measures = Model.AllMeasures;\n_measures.FormatDax();\n\n// Loop through calculation groups & items\nint _counter = 0;\nforeach (var _calcgroup in Model.CalculationGroups)\n{\n    foreach (var _item in _calcgroup.CalculationItems)\n    {\n        _counter = _counter + 1;\n        _item.Expression = \"\\n\" + FormatDax(_item.Expression, shortFormat: true);\n    }\n}\n\n// Loop through calculated tables\nforeach (var _tables in Model.Tables)\n{\n    if (Convert.ToString(_tables.Columns[0].Type) == \"CalculatedTableColumn\")\n    {\n        _tables.Partitions[0].Expression = \"\\n\" + FormatDax(_tables.Partitions[0].Expression, shortFormat: true);\n    }\n}\nint _nrtables = Model.Tables.Where(_tables => Convert.ToString(_tables.Columns[0].Type) == \"CalculatedTableColumn\").Count();\n\n// Loop through calculated columns\nforeach (var _columns in Model.AllColumns)\n{\n    if (Convert.ToString(_columns.Type) == \"Calculated\")\n    {\n        (_columns as CalculatedColumn).Expression = \"\\n\" + FormatDax((_columns as CalculatedColumn).Expression, shortFormat: true);\n    }\n}\nint _nrcolumns = Model.AllColumns.Where(_columns => Convert.ToString(_columns.Type) == \"Calculated\").Count();\n\nInfo(\"Formatted \" + _measures.Count() + \" measures, \" + _counter + \" calc items, \" + _nrtables + \" calc tables & \" + _nrcolumns + \" calc columns.\");",
+      "Tooltip": "Format All The Things",
+      "ValidContexts": "Model"
+    },
+    {
+      "Id": 2,
+      "Name": "Create Measures - Sum of Column",
+      "Enabled": "true",
+      "Execute": "\n// Creates a SUM measure for every currently selected column and hide the column.\nvar _agg = \"Sum\";\n\nforeach(var c in Selected.Columns)\n{\n    var m = Model.Tables[0].AddMeasure(\n        \"Total \" + c.Name,\n        _agg.ToUpper() + \"(\" + c.DaxObjectFullName + \")\",\n        \"\\\\Measures\\\\\" + _agg\n    );\n    m.FormatString = \"#,##0\";\n    m.Description = \"This measure is the \" + _agg + \" of column \" + c.DaxObjectFullName;\n    c.IsHidden = true;\n    c.SummarizeBy = AggregateFunction.None;\n    c.DisplayFolder = \"\\\\Columns\\\\0. Facts\";\n}",
+      "Tooltip": "Creates SUM measures for selected columns, hiding the original columns.",
+      "ValidContexts": "Column"
+    },
+    {
+      "Id": 3,
+      "Name": "Create Field Parameter",
+      "Enabled": "true",
+      "Execute": "// Select measures or columns to use as field parameters (hold CTRL for multiple).\nvar name = \"Parameter\";\n\nif(Selected.Columns.Count == 0 && Selected.Measures.Count == 0) throw new Exception(\"No columns or measures selected!\");\n\n// Construct the DAX for the calculated table based on the current selection:\nvar objects = Selected.Columns.Any() ? Selected.Columns.Cast<ITabularTableObject>() : Selected.Measures;\nvar dax = \"{\\n    \" + string.Join(\",\\n    \", objects.Select((c,i) => string.Format(\"(\\\"{0}\\\", NAMEOF('{1}'[{0}]), {2})\", c.Name, c.Table.Name, i))) + \"\\n}\";\n\n// Add the calculated table to the model:\nvar table = Model.AddCalculatedTable(name, dax);\n\n// Rename columns and set properties\nvar nameColumn = table.Columns[\"Value1\"] as CalculatedTableColumn;\nvar fieldColumn = table.Columns[\"Value2\"] as CalculatedTableColumn;\nvar orderColumn = table.Columns[\"Value3\"] as CalculatedTableColumn;\n\nnameColumn.IsNameInferred = false;\nnameColumn.Name = name;\nfieldColumn.IsNameInferred = false;\nfieldColumn.Name = name + \" Fields\";\norderColumn.IsNameInferred = false;\norderColumn.Name = name + \" Order\";\n\n// Set properties for field parameters to work\nnameColumn.SortByColumn = orderColumn;\nnameColumn.GroupByColumns.Add(fieldColumn);\nfieldColumn.SortByColumn = orderColumn;\nfieldColumn.SetExtendedProperty(\"ParameterMetadata\", \"{\\\"version\\\":3,\\\"kind\\\":2}\", ExtendedPropertyType.Json);\nfieldColumn.IsHidden = true;\norderColumn.IsHidden = true;",
+      "Tooltip": "Create Field Parameter from selected measures/columns",
+      "ValidContexts": "Measure, Column"
+    },
+    {
+      "Id": 4,
+      "Name": "Set model TMDL annotation for Fabric Git integration",
+      "Enabled": "true",
+      "Execute": "Model.SetAnnotation(\"__PBI_ServiceStoredInTmdl\", \"1\");",
+      "Tooltip": "Sets annotation required for Fabric Git integration",
+      "ValidContexts": "Model"
+    }
+  ]
+}

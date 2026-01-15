@@ -64,7 +64,7 @@
           },
           "ValidContexts": {
             "description": "Context(s) where this macro appears in right-click menus. Can be single value or comma-separated list.",
-            "oneOf": [
+            "anyOf": [
               {
                 "type": "string",
                 "enum": [
