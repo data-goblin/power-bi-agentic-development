@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Skills and tools for agentic Power BI development including Best Practice Analyzer rules, C# scripting, and Tabular Editor integration.",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "plugins": [
     {

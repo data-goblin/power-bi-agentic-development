@@ -1,6 +1,6 @@
 {
   "name": "power-bi-agentic-development",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Skills and tools for agentic Power BI development including Best Practice Analyzer rules, C# scripting, and Tabular Editor integration.",
   "author": {
     "name": "Kurt Buhler"
