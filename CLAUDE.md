@@ -37,5 +37,6 @@ Test skills by:
 
 ## References
 
-- [Tabular Editor BPA Docs](https://docs.tabulareditor.com/common/using-bpa.html)
+- [Tabular Editor BPA Docs](https://docs.tabulareditor.com/getting-started/bpa.html)
 - [BPA Rules Repository](https://github.com/TabularEditor/BestPracticeRules)
+- Local TE Docs: `/Users/klonk/Desktop/Git/TabularEditorDocs/` (use te-docs skill for search)

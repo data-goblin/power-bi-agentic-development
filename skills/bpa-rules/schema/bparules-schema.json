@@ -1,0 +1,200 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/TabularEditor/TabularEditor/blob/master/TabularEditor/BestPracticeAnalyzer/BestPracticeRule.cs",
+  "title": "Tabular Editor Best Practice Rules",
+  "description": "Schema for Tabular Editor Best Practice Analyzer rule collections. Based on TabularEditor source code RuleScope enum.",
+  "$comment": "Version 1.0.1 - Schema location is temporary until schemas repo is available.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "ID",
+      "Name",
+      "Severity",
+      "Scope",
+      "Expression"
+    ],
+    "properties": {
+      "ID": {
+        "type": "string",
+        "description": "Unique identifier for the rule. Convention: Use uppercase with underscores (e.g., 'PERF_AVOID_FLOATING_POINT').",
+        "minLength": 1,
+        "pattern": "^[A-Z0-9_]+$",
+        "examples": [
+          "PERF_AVOID_FLOATING_POINT",
+          "META_MEASURE_NO_DESCRIPTION",
+          "DAX_DIVISION_WITHOUT_ERROR_HANDLING"
+        ]
+      },
+      "Name": {
+        "type": "string",
+        "description": "Human-readable name of the rule displayed in the UI.",
+        "minLength": 1,
+        "examples": [
+          "Avoid floating point data types",
+          "Measure has no description"
+        ]
+      },
+      "Category": {
+        "type": "string",
+        "description": "Optional category for grouping related rules. Common categories: Performance, Maintenance, Formatting, Error Prevention, DAX Expressions, Naming Conventions, Metadata, Model Layout, Governance.",
+        "examples": [
+          "Performance",
+          "Maintenance",
+          "Formatting",
+          "Error Prevention",
+          "DAX Expressions",
+          "Naming Conventions",
+          "Metadata",
+          "Model Layout",
+          "Governance"
+        ]
+      },
+      "Description": {
+        "type": "string",
+        "description": "Detailed explanation of the rule and why it matters. Supports placeholders: %object% (fully qualified DAX reference), %objectname% (just the name), %objecttype% (type of object).",
+        "examples": [
+          "Floating point data types should be avoided as they may cause rounding errors.",
+          "The %objecttype% '%objectname%' is missing a description."
+        ]
+      },
+      "Severity": {
+        "type": "integer",
+        "description": "Severity level: 1 = Low (suggestion), 2 = Medium (warning), 3 = High (error/must fix).",
+        "minimum": 1,
+        "maximum": 3,
+        "default": 1
+      },
+      "Scope": {
+        "description": "Object type(s) this rule applies to. Multiple scopes can be combined with commas. Uses RuleScope enum values from TabularEditor.",
+        "oneOf": [
+          {
+            "type": "string",
+            "enum": [
+              "Model",
+              "Table",
+              "Measure",
+              "Hierarchy",
+              "Level",
+              "Relationship",
+              "Perspective",
+              "Culture",
+              "Partition",
+              "ProviderDataSource",
+              "DataColumn",
+              "CalculatedColumn",
+              "CalculatedTable",
+              "CalculatedTableColumn",
+              "KPI",
+              "StructuredDataSource",
+              "Variation",
+              "NamedExpression",
+              "ModelRole",
+              "TablePermission",
+              "CalculationGroup",
+              "CalculationItem",
+              "ModelRoleMember"
+            ]
+          },
+          {
+            "type": "string",
+            "description": "Multiple scopes separated by commas (with optional spaces). 'Column' expands to DataColumn,CalculatedColumn,CalculatedTableColumn for backwards compatibility.",
+            "pattern": "^\\s*(Model|Table|Measure|Hierarchy|Level|Relationship|Perspective|Culture|Partition|ProviderDataSource|DataColumn|CalculatedColumn|CalculatedTable|CalculatedTableColumn|KPI|StructuredDataSource|Variation|NamedExpression|ModelRole|TablePermission|CalculationGroup|CalculationItem|ModelRoleMember|Column|DataSource)(\\s*,\\s*(Model|Table|Measure|Hierarchy|Level|Relationship|Perspective|Culture|Partition|ProviderDataSource|DataColumn|CalculatedColumn|CalculatedTable|CalculatedTableColumn|KPI|StructuredDataSource|Variation|NamedExpression|ModelRole|TablePermission|CalculationGroup|CalculationItem|ModelRoleMember|Column|DataSource))*\\s*$",
+            "examples": [
+              "DataColumn, CalculatedColumn, CalculatedTableColumn",
+              "Measure, CalculatedColumn",
+              "Column"
+            ]
+          }
+        ]
+      },
+      "Expression": {
+        "type": "string",
+        "description": "Dynamic LINQ expression that returns true for objects violating the rule. Has access to all TOM properties of the scoped object type. Use 'outerIt' to reference parent object in LINQ methods.",
+        "minLength": 1,
+        "examples": [
+          "DataType = \"Double\"",
+          "string.IsNullOrWhitespace(Description)",
+          "IsHidden and ReferencedBy.Count = 0",
+          "Expression.Contains(\"CALCULATE\") and not Expression.Contains(\"FILTER\")",
+          "Columns.Any(not Name.StartsWith(outerIt.Name))"
+        ]
+      },
+      "FixExpression": {
+        "type": "string",
+        "description": "Optional Dynamic LINQ expression to automatically fix violations. Typically property assignments. Use Delete() for removals.",
+        "examples": [
+          "FormatString = \"#,##0\"",
+          "IsHidden = true",
+          "Description = \"TODO: Add description\"",
+          "Delete()"
+        ]
+      },
+      "CompatibilityLevel": {
+        "type": "integer",
+        "description": "Minimum model compatibility level required. Rule is skipped for models below this level. Common values: 1200 (SSAS 2016), 1400 (SSAS 2017), 1500 (Calc Groups), 1600 (SQL 2022), 1609+ (Power BI).",
+        "minimum": 1200,
+        "default": 1200,
+        "examples": [
+          1200,
+          1400,
+          1500,
+          1600
+        ]
+      },
+      "Remarks": {
+        "type": "string",
+        "description": "Optional additional notes or context about the rule.",
+        "examples": [
+          "This rule may have false positives for measures used only in report visuals.",
+          "Consider disabling for legacy models."
+        ]
+      },
+      "Source": {
+        "type": "string",
+        "description": "Source identifier for the rule collection (used by standard rules from repositories).",
+        "examples": [
+          "standard\\Performance",
+          "standard\\DAX Expressions"
+        ]
+      }
+    },
+    "additionalProperties": false
+  },
+  "examples": [
+    [
+      {
+        "ID": "PERF_AVOID_FLOATING_POINT",
+        "Name": "Avoid floating point data types",
+        "Category": "Performance",
+        "Description": "Floating point data types should be avoided as they may cause rounding errors and consume more memory than decimal or integer types.",
+        "Severity": 2,
+        "Scope": "DataColumn, CalculatedColumn, CalculatedTableColumn",
+        "Expression": "DataType = \"Double\"",
+        "CompatibilityLevel": 1200
+      },
+      {
+        "ID": "META_MEASURE_NO_DESCRIPTION",
+        "Name": "Measure has no description",
+        "Category": "Metadata",
+        "Description": "The measure '%objectname%' is missing a description. Descriptions help users understand the purpose of measures.",
+        "Severity": 1,
+        "Scope": "Measure",
+        "Expression": "not IsHidden and string.IsNullOrWhitespace(Description)",
+        "CompatibilityLevel": 1200
+      },
+      {
+        "ID": "PERF_HIDDEN_UNUSED_COLUMN",
+        "Name": "Remove hidden columns not used anywhere",
+        "Category": "Performance",
+        "Description": "Hidden columns with no references waste memory and should be removed.",
+        "Severity": 3,
+        "Scope": "DataColumn, CalculatedColumn, CalculatedTableColumn",
+        "Expression": "(IsHidden or Table.IsHidden) and ReferencedBy.Count = 0 and not UsedInRelationships.Any() and not UsedInSortBy.Any() and not UsedInHierarchies.Any()",
+        "FixExpression": "Delete()",
+        "CompatibilityLevel": 1200,
+        "Remarks": "Be cautious with this rule as it may flag columns used only in report visuals."
+      }
+    ]
+  ]
+}

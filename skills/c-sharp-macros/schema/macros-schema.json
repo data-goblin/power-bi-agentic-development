@@ -1,0 +1,154 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://docs.tabulareditor.com/features/creating-macros.html",
+  "title": "Tabular Editor Macros",
+  "description": "Schema for Tabular Editor 3 MacroActions.json file (stored in %LocalAppData%/TabularEditor3/)",
+  "$comment": "Version 1.0.0 - Schema location is temporary until schemas repo is available.",
+  "type": "object",
+  "required": [
+    "Actions"
+  ],
+  "properties": {
+    "Actions": {
+      "type": "array",
+      "description": "Collection of macro action definitions",
+      "items": {
+        "type": "object",
+        "required": [
+          "Execute"
+        ],
+        "properties": {
+          "Id": {
+            "type": "integer",
+            "description": "Unique identifier for the macro. Use -1 for auto-assignment on first load by TE3.",
+            "default": -1
+          },
+          "Name": {
+            "type": "string",
+            "description": "Display name shown in menus. Use backslash (\\) to create folder hierarchy (e.g., 'Formatting\\Format DAX').",
+            "minLength": 1,
+            "examples": [
+              "Format DAX",
+              "Formatting\\Format Numeric Measures",
+              "Create\\New Calculation Group"
+            ]
+          },
+          "Enabled": {
+            "type": "string",
+            "description": "C# expression that returns bool, determining when macro is enabled. Has access to Selected, Model objects.",
+            "default": "true",
+            "examples": [
+              "true",
+              "Selected.Measures.Any()",
+              "Selected.Table != null",
+              "Model.Tables.Any(t => !t.IsHidden)"
+            ]
+          },
+          "Execute": {
+            "type": "string",
+            "description": "C# script code executed when macro runs. Has access to Selected, Model, and full scripting API.",
+            "minLength": 1,
+            "examples": [
+              "foreach(var m in Selected.Measures) { m.FormatDax(); }",
+              "var cg = Model.AddCalculationGroup(\"New CG\");",
+              "Info(\"Hello from macro!\");"
+            ]
+          },
+          "Tooltip": {
+            "type": "string",
+            "description": "Tooltip text shown when hovering over the macro in the UI.",
+            "examples": [
+              "Formats DAX expressions for selected measures",
+              "Creates a new calculation group with default item"
+            ]
+          },
+          "ValidContexts": {
+            "description": "Context(s) where this macro appears in right-click menus. Can be single value or comma-separated list.",
+            "oneOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "None",
+                  "Model",
+                  "Tables",
+                  "DataSources",
+                  "Perspectives",
+                  "Translations",
+                  "Roles",
+                  "Relationships",
+                  "PartitionCollection",
+                  "Expressions",
+                  "TablePermission",
+                  "Functions",
+                  "Table",
+                  "Measure",
+                  "Column",
+                  "Hierarchy",
+                  "Level",
+                  "Partition",
+                  "Relationship",
+                  "DataSource",
+                  "Role",
+                  "Perspective",
+                  "Translation",
+                  "KPI",
+                  "CalculatedColumn",
+                  "CalculationItem",
+                  "CalculatedTable",
+                  "CalculationGroup",
+                  "Expression",
+                  "RoleMember",
+                  "FolderOrSingularObject",
+                  "SingularObjects"
+                ]
+              },
+              {
+                "type": "string",
+                "description": "Multiple contexts separated by comma and optional space",
+                "pattern": "^(None|Model|Tables|DataSources|Perspectives|Translations|Roles|Relationships|PartitionCollection|Expressions|TablePermission|Functions|Table|Measure|Column|Hierarchy|Level|Partition|Relationship|DataSource|Role|Perspective|Translation|KPI|CalculatedColumn|CalculationItem|CalculatedTable|CalculationGroup|Expression|RoleMember|FolderOrSingularObject|SingularObjects)(\\s*,\\s*(None|Model|Tables|DataSources|Perspectives|Translations|Roles|Relationships|PartitionCollection|Expressions|TablePermission|Functions|Table|Measure|Column|Hierarchy|Level|Partition|Relationship|DataSource|Role|Perspective|Translation|KPI|CalculatedColumn|CalculationItem|CalculatedTable|CalculationGroup|Expression|RoleMember|FolderOrSingularObject|SingularObjects))*$",
+                "examples": [
+                  "Table, Measure",
+                  "Model, Tables",
+                  "Measure, CalculatedColumn"
+                ]
+              }
+            ],
+            "default": "SingularObjects"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "Actions": [
+        {
+          "Id": 0,
+          "Name": "Formatting\\Format DAX",
+          "Enabled": "Selected.Measures.Any()",
+          "Execute": "foreach(var m in Selected.Measures) { m.FormatDax(); }",
+          "Tooltip": "Formats DAX expressions for selected measures",
+          "ValidContexts": "Measure"
+        },
+        {
+          "Id": 1,
+          "Name": "Create\\Calculation Group",
+          "Enabled": "true",
+          "Execute": "var cg = Model.AddCalculationGroup(\"New Calculation Group\"); cg.AddCalculationItem(\"Default\", \"SELECTEDMEASURE()\");",
+          "Tooltip": "Creates a new calculation group with a default item",
+          "ValidContexts": "Model, Tables"
+        },
+        {
+          "Id": 2,
+          "Name": "Metadata\\Add Descriptions",
+          "Enabled": "Selected.Measures.Any(m => string.IsNullOrEmpty(m.Description))",
+          "Execute": "foreach(var m in Selected.Measures.Where(m => string.IsNullOrEmpty(m.Description))) { m.Description = \"TODO: Add description\"; }",
+          "Tooltip": "Adds placeholder descriptions to measures without one",
+          "ValidContexts": "Measure, Table"
+        }
+      ]
+    }
+  ]
+}

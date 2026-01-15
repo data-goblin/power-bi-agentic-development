@@ -25,17 +25,39 @@ Activate automatically when tasks involve:
 - Ensure FixExpression does not cause data loss or break the model
 - Consider CompatibilityLevel when using newer TOM properties
 
+## About BPA rules
+
+- BPA rules define automatic tests for semantic models in Power BI and Fabric for QA/QC
+- BPA rules are used by Tabular Editor 2, 3, CLI, or Fabric notebooks
+- Rule expressions are defined in C# for Tabular Editor or Python for Fabric Notebooks
+- BPA rules are better defined and used by Tabular Editor because they are actionable with ability to ignore or fix, and they are integrated with the IDE
+
 ## Quick Reference
 
 ### Rule JSON Structure
+
+BPA rules have the following fields:
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `ID` | Yes | string | Unique identifier for the rule (e.g., `META_MEASURE_NO_DESC`) |
+| `Name` | Yes | string | Human-readable name displayed in UI |
+| `Category` | No | string | Rule grouping (e.g., `Performance`, `DAX Expressions`, `Metadata`) |
+| `Description` | No | string | Explanation of why the rule matters. Supports placeholders: `%object%`, `%objectname%`, `%objecttype%` |
+| `Severity` | Yes | int | Priority level: `1` (Low), `2` (Medium), `3` (High) |
+| `Scope` | Yes | string | Comma-separated list of object types the rule applies to |
+| `Expression` | Yes | string | Dynamic LINQ expression evaluated against scoped objects; returns `true` for violations |
+| `FixExpression` | No | string | Dynamic LINQ expression to auto-fix violations (e.g., `IsHidden = true`) |
+| `CompatibilityLevel` | No | int | Minimum model compatibility level required for the rule to apply |
+| `Remarks` | No | string | Additional notes or context about the rule |
 
 ```json
 {
   "ID": "RULE_PREFIX_NAME",
   "Name": "Human-readable rule name",
-  "Category": "Performance|Formatting|Metadata|DAX Expressions|Naming Conventions",
-  "Description": "Explanation of why this rule matters",
-  "Severity": 1,
+  "Category": "Performance|Formatting|Metadata|DAX Expressions|Naming Conventions|Governance",
+  "Description": "Explanation of why this rule matters for %objecttype% '%objectname%'",
+  "Severity": 2,
   "Scope": "Measure, CalculatedColumn, Table",
   "Expression": "DynamicLINQ expression returning true for violations",
   "FixExpression": "PropertyName = Value",
@@ -43,36 +65,63 @@ Activate automatically when tasks involve:
 }
 ```
 
-### Common Scopes
+### Valid Scope Values
 
-| Scope | Description |
-|-------|-------------|
-| `Model` | The entire model |
-| `Table` | Tables (including calculated tables) |
-| `Column` | All columns |
-| `CalculatedColumn` | Calculated columns only |
-| `Measure` | Measures |
-| `Hierarchy` | Hierarchies |
-| `Relationship` | Relationships |
-| `Partition` | Partitions |
-| `DataSource` | Data sources |
-| `Role` | Security roles |
-| `Perspective` | Perspectives |
-| `Culture` | Cultures/translations |
-| `CalculationGroup` | Calculation groups |
-| `CalculationItem` | Calculation items |
-| `UserDefinedFunction` | DAX UDFs |
-| `Calendar` | Calendar tables |
+All valid scope values from the `RuleScope` enum (can be combined with commas):
+
+| Scope | TOM Type | Description |
+|-------|----------|-------------|
+| `Model` | Model | The entire semantic model |
+| `Table` | Table | Regular tables (excludes calculated tables) |
+| `CalculatedTable` | CalculatedTable | Tables defined by DAX expressions |
+| `Measure` | Measure | DAX measures |
+| `DataColumn` | DataColumn | Columns from data source |
+| `CalculatedColumn` | CalculatedColumn | Columns defined by DAX |
+| `CalculatedTableColumn` | CalculatedTableColumn | Columns in calculated tables |
+| `Hierarchy` | Hierarchy | User-defined hierarchies |
+| `Level` | Level | Hierarchy levels |
+| `Relationship` | SingleColumnRelationship | Table relationships |
+| `Partition` | Partition | Table partitions |
+| `Perspective` | Perspective | Model perspectives |
+| `Culture` | Culture | Translations/cultures |
+| `KPI` | KPI | Key Performance Indicators |
+| `CalculationGroup` | CalculationGroupTable | Calculation group tables |
+| `CalculationItem` | CalculationItem | Items within calculation groups |
+| `ProviderDataSource` | ProviderDataSource | Legacy/provider data sources |
+| `StructuredDataSource` | StructuredDataSource | M/Power Query data sources |
+| `NamedExpression` | NamedExpression | Shared M expressions |
+| `ModelRole` | ModelRole | Security roles |
+| `ModelRoleMember` | ModelRoleMember | Members of security roles |
+| `TablePermission` | TablePermission | RLS table permissions |
+| `Variation` | Variation | Column variations |
+
+**Backwards compatibility:** `Column` expands to `DataColumn, CalculatedColumn, CalculatedTableColumn`; `DataSource` expands to `ProviderDataSource`
 
 ### Severity Levels
 
-| Level | Meaning |
-|-------|---------|
-| 1 | Informational / suggestion |
-| 2 | Warning / should fix |
-| 3 | Error / must fix |
+| Level | Name | Meaning |
+|-------|------|---------|
+| 1 | Low | Informational suggestion, minor improvement |
+| 2 | Medium | Warning, should fix for quality |
+| 3 | High | Error, must fix for correctness |
+
+### Compatibility Levels
+
+The `CompatibilityLevel` field specifies the minimum model version required. Rules only apply if the model's compatibility level >= the rule's level.
+
+| Level | Platform | Features Introduced |
+|-------|----------|---------------------|
+| 1200 | AAS/SSAS 2016 | JSON metadata format, base TOM |
+| 1400 | AAS/SSAS 2017 | Detail rows, object-level security, ragged hierarchies |
+| 1500 | AAS/SSAS 2019 | Calculation groups |
+| 1600 | SQL Server 2022 | Enhanced AS features |
+| 1609+ | Power BI / Fabric | Power BI-specific features (dynamic format strings, field parameters, etc.) |
+
+**Note:** Power BI Desktop models typically use 1550-1700+ depending on features used. Use `Model.Database.CompatibilityLevel` in expressions to check the model's level.
 
 ### Category Prefixes
+
+Common ID prefix conventions:
 
 | Prefix | Category |
 |--------|----------|
@@ -82,6 +131,9 @@ Activate automatically when tasks involve:
 | `NAME_` | Naming Conventions |
 | `LAYOUT_` | Model Layout |
 | `FORMAT_` | Formatting |
+| `ERR_` | Error Prevention |
+| `GOV_` | Governance |
+| `MAINT_` | Maintenance |
 
 ## Expression Syntax Overview
 
@@ -162,7 +214,8 @@ For complete annotation patterns, see `references/tmdl-annotations.md`.
 
 For detailed syntax and patterns, consult:
 
-- **`references/rule-schema.md`** - Complete BPA rule JSON schema and field descriptions
+- **`schema/bparules-schema.json`** - JSON Schema for validating BPA rule files (Draft-07) *(temporary location)*
+- **`references/rule-schema.md`** - Human-readable BPA rule field descriptions
 - **`references/expression-syntax.md`** - Dynamic LINQ expression syntax, TOM properties, Tokenize(), DependsOn, ReferencedBy
 - **`references/tmdl-annotations.md`** - BPA annotations in TMDL format
 
@@ -189,9 +242,12 @@ Utility scripts in `scripts/`:
 
 ### External References
 
-- [Tabular Editor BPA Documentation](https://docs.tabulareditor.com/common/using-bpa.html)
+- [Tabular Editor BPA Getting Started](https://docs.tabulareditor.com/getting-started/bpa.html)
+- [Tabular Editor BPA View](https://docs.tabulareditor.com/features/views/bpa-view.html)
+- [BPA Sample Rule Expressions](https://docs.tabulareditor.com/features/using-bpa-sample-rules-expressions.html)
+- [TabularEditor BPA Source Code](https://github.com/TabularEditor/TabularEditor/tree/master/TabularEditor/BestPracticeAnalyzer)
 - [BPA Rules Repository](https://github.com/TabularEditor/BestPracticeRules)
-- [Sample Rules Expressions](https://docs.tabulareditor.com/common/using-bpa-sample-rules-expressions.html)
+- [TabularEditor Docs Repository](https://github.com/TabularEditor/TabularEditorDocs)
 - [Power BI Semantic Model Checklist](https://data-goblins.com/dataset-checklist)
 
 ## Example Rules
