@@ -40,9 +40,16 @@ BPA rules can exist in multiple locations (evaluated in order of priority):
 |----------|---------------|-------------|
 | **Built-in Best Practices** | Internal to TE3 | Default rules bundled with Tabular Editor 3 |
 | **URL** | Any valid URL (e.g., `https://raw.githubusercontent.com/TabularEditor/BestPracticeRules/master/BPARules-standard.json`) | Remote rule collections loaded from web |
-| **Rules within current model** | `Model.SetAnnotation("BestPracticeAnalyzer", ...)` | Rules embedded in model.bim via annotation |
+| **Rules within current model** | See below | Rules embedded in model metadata |
 | **Rules for local user** | `%LocalAppData%\TabularEditor3\BPARules.json` | User-specific rules on Windows |
 | **Rules on local machine** | `%ProgramData%\TabularEditor3\BPARules.json` | Machine-wide rules for all users |
+
+**Model-embedded rules** can be stored in two formats:
+
+| Format | Location | Syntax |
+|--------|----------|--------|
+| **model.bim** (JSON) | `model.annotations` array | `{ "name": "BestPracticeAnalyzer", "value": "[{...rules...}]" }` |
+| **TMDL** | `model.tmdl` file | `annotation BestPracticeAnalyzer = [{...rules...}]` |
 
 **File format:** All locations use the same JSON array format containing rule objects.
 

@@ -5,7 +5,7 @@
   "author": {
     "name": "Kurt Buhler"
   },
-  "keywords": ["power-bi", "tabular-editor", "bpa", "best-practice-analyzer", "semantic-model", "tmdl"],
+  "keywords": ["power-bi", "tabular-editor", "bpa", "best-practice-analyzer", "semantic-model", "tmdl", "csharp", "macros", "tom"],
   "plugins": [
     {
       "name": "power-bi-agentic-development",
@@ -13,7 +13,10 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "./skills/bpa-rules"
+        "./skills/bpa-rules",
+        "./skills/c-sharp-macros",
+        "./skills/c-sharp-scripting",
+        "./skills/tabular-editor-config"
       ],
       "commands": [
         "./commands"
