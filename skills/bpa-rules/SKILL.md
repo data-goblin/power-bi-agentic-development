@@ -57,21 +57,22 @@ BPA rules can exist in multiple locations (evaluated in order of priority):
 
 ### Cross-Platform Access (macOS/Linux)
 
-When working on macOS or Linux with Tabular Editor installed in a Windows VM (e.g., Parallels, VMware, VirtualBox):
+When working on macOS or Linux with Tabular Editor installed in a Windows VM:
 
-1. **VM must be running** - The Windows filesystem is only accessible when the VM is active
-2. **Shared folders** - Check the VM's shared folder mount points for Windows paths
-3. **Parallels on macOS** - Windows drives typically mount at:
-   ```
-   /Users/<username>/Library/Parallels/Windows Disks/{VM-UUID}/[C] <DiskName>.hidden/
-   ```
-   - User-level: `Users/<WinUser>/AppData/Local/TabularEditor3/BPARules.json`
-   - Machine-level: `ProgramData/TabularEditor3/BPARules.json`
+**Parallels on macOS:**
+```
+/Users/<macUser>/Library/Parallels/Windows Disks/{VM-UUID}/[C] <DiskName>.hidden/
+```
 
-4. **VMware Fusion** - Check `/Volumes/` for mounted Windows drives
-5. **WSL on Windows** - Access via `/mnt/c/Users/<username>/AppData/Local/TabularEditor3/`
+Full paths to BPA rules:
+- **User-level:** `<ParallelsRoot>/Users/<WinUser>/AppData/Local/TabularEditor3/BPARules.json`
+- **Machine-level:** `<ParallelsRoot>/ProgramData/TabularEditor3/BPARules.json`
 
-**Note:** If paths appear empty, ensure the Windows VM is running and shared filesystem access is enabled.
+**Other platforms:**
+- **VMware Fusion** - Check `/Volumes/` for mounted Windows drives
+- **WSL on Windows** - `/mnt/c/Users/<username>/AppData/Local/TabularEditor3/`
+
+**Note:** The VM must be running for the filesystem to be accessible. If paths appear empty, start the Windows VM first.
 
 ## Quick Reference
 
