@@ -93,13 +93,15 @@
               "TablePermission",
               "CalculationGroup",
               "CalculationItem",
-              "ModelRoleMember"
+              "ModelRoleMember",
+              "Calendar",
+              "UserDefinedFunction"
             ]
           },
           {
             "type": "string",
             "description": "Multiple scopes separated by commas (with optional spaces). 'Column' expands to DataColumn,CalculatedColumn,CalculatedTableColumn for backwards compatibility.",
-            "pattern": "^\\s*(Model|Table|Measure|Hierarchy|Level|Relationship|Perspective|Culture|Partition|ProviderDataSource|DataColumn|CalculatedColumn|CalculatedTable|CalculatedTableColumn|KPI|StructuredDataSource|Variation|NamedExpression|ModelRole|TablePermission|CalculationGroup|CalculationItem|ModelRoleMember|Column|DataSource)(\\s*,\\s*(Model|Table|Measure|Hierarchy|Level|Relationship|Perspective|Culture|Partition|ProviderDataSource|DataColumn|CalculatedColumn|CalculatedTable|CalculatedTableColumn|KPI|StructuredDataSource|Variation|NamedExpression|ModelRole|TablePermission|CalculationGroup|CalculationItem|ModelRoleMember|Column|DataSource))*\\s*$",
+            "pattern": "^\\s*(Model|Table|Measure|Hierarchy|Level|Relationship|Perspective|Culture|Partition|ProviderDataSource|DataColumn|CalculatedColumn|CalculatedTable|CalculatedTableColumn|KPI|StructuredDataSource|Variation|NamedExpression|ModelRole|TablePermission|CalculationGroup|CalculationItem|ModelRoleMember|Calendar|UserDefinedFunction|Column|DataSource)(\\s*,\\s*(Model|Table|Measure|Hierarchy|Level|Relationship|Perspective|Culture|Partition|ProviderDataSource|DataColumn|CalculatedColumn|CalculatedTable|CalculatedTableColumn|KPI|StructuredDataSource|Variation|NamedExpression|ModelRole|TablePermission|CalculationGroup|CalculationItem|ModelRoleMember|Calendar|UserDefinedFunction|Column|DataSource))*\\s*$",
             "examples": [
               "DataColumn, CalculatedColumn, CalculatedTableColumn",
               "Measure, CalculatedColumn",
@@ -132,7 +134,7 @@
       },
       "CompatibilityLevel": {
         "type": "integer",
-        "description": "Minimum model compatibility level required. Rule is skipped for models below this level. Common values: 1200 (SSAS 2016), 1400 (SSAS 2017), 1500 (Calc Groups), 1600 (SQL 2022), 1609+ (Power BI).",
+        "description": "Minimum model compatibility level required. Rule is skipped for models below this level. Common values: 1200 (SSAS 2016), 1400 (SSAS 2017), 1500 (Calc Groups), 1560+ (Power BI), 1600 (SQL 2022), 1702 (current Power BI).",
         "minimum": 1200,
         "default": 1200,
         "examples": [

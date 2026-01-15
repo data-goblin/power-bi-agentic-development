@@ -32,6 +32,22 @@ Activate automatically when tasks involve:
 - Rule expressions are defined in C# for Tabular Editor or Python for Fabric Notebooks
 - BPA rules are better defined and used by Tabular Editor because they are actionable with ability to ignore or fix, and they are integrated with the IDE
 
+## File Locations
+
+BPA rules can exist in multiple locations (evaluated in order of priority):
+
+| Location | Path / Source | Description |
+|----------|---------------|-------------|
+| **Built-in Best Practices** | Internal to TE3 | Default rules bundled with Tabular Editor 3 |
+| **URL** | Any valid URL (e.g., `https://raw.githubusercontent.com/TabularEditor/BestPracticeRules/master/BPARules-standard.json`) | Remote rule collections loaded from web |
+| **Rules within current model** | `Model.SetAnnotation("BestPracticeAnalyzer", ...)` | Rules embedded in model.bim via annotation |
+| **Rules for local user** | `%LocalAppData%\TabularEditor3\BPARules.json` | User-specific rules on Windows |
+| **Rules on local machine** | `%ProgramData%\TabularEditor\BPARules.json` | Machine-wide rules for all users |
+
+**File format:** All locations use the same JSON array format containing rule objects.
+
+**Priority:** When the same rule ID exists in multiple locations, rules are merged with local rules taking precedence over remote/built-in rules.
+
 ## Quick Reference
 
 ### Rule JSON Structure
@@ -94,6 +110,8 @@ All valid scope values from the `RuleScope` enum (can be combined with commas):
 | `ModelRoleMember` | ModelRoleMember | Members of security roles |
 | `TablePermission` | TablePermission | RLS table permissions |
 | `Variation` | Variation | Column variations |
+| `Calendar` | Calendar | Calendar/date tables |
+| `UserDefinedFunction` | UserDefinedFunction | DAX user-defined functions |
 
 **Backwards compatibility:** `Column` expands to `DataColumn, CalculatedColumn, CalculatedTableColumn`; `DataSource` expands to `ProviderDataSource`
 
@@ -114,10 +132,11 @@ The `CompatibilityLevel` field specifies the minimum model version required. Rul
 | 1200 | AAS/SSAS 2016 | JSON metadata format, base TOM |
 | 1400 | AAS/SSAS 2017 | Detail rows, object-level security, ragged hierarchies |
 | 1500 | AAS/SSAS 2019 | Calculation groups |
+| 1560+ | Power BI | Power BI-specific features begin |
 | 1600 | SQL Server 2022 | Enhanced AS features |
-| 1609+ | Power BI / Fabric | Power BI-specific features (dynamic format strings, field parameters, etc.) |
+| 1702 | Power BI / Fabric | Current Power BI compatibility level (dynamic format strings, field parameters, DAX UDFs, etc.) |
 
-**Note:** Power BI Desktop models typically use 1550-1700+ depending on features used. Use `Model.Database.CompatibilityLevel` in expressions to check the model's level.
+**Note:** Power BI models use 1560+ with current level at 1702. Use `Model.Database.CompatibilityLevel` in expressions to check the model's level.
 
 ### Category Prefixes
 

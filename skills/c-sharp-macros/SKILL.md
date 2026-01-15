@@ -30,7 +30,17 @@ Activate automatically when tasks involve:
 - They appear in right-click context menus based on ValidContexts
 - Macros can automate repetitive tasks like formatting DAX, creating measures, etc.
 - The Enabled expression controls when a macro is available
-- Macros are stored in MacroActions.json in the local app data folder
+
+## File Location
+
+| Platform | Path |
+|----------|------|
+| **Windows** | `%LocalAppData%\TabularEditor3\MacroActions.json` |
+| **Expanded** | `C:\Users\<Username>\AppData\Local\TabularEditor3\MacroActions.json` |
+
+**Note:** There is only one macro file per user. Macros are not stored per-model or per-machine.
+
+**Sharing macros:** To share macros across a team, export MacroActions.json and distribute via version control. Team members merge into their local file. Consider using symlinks for synchronized sharing.
 
 ## Quick Reference
 
@@ -220,7 +230,7 @@ foreach(var c in Model.AllColumns.Where(c =>
 - [Tabular Editor Creating Macros](https://docs.tabulareditor.com/features/creating-macros.html)
 - [Tabular Editor Macros View](https://docs.tabulareditor.com/features/views/macros-view.html)
 - [C# Scripts and Macros](https://docs.tabulareditor.com/getting-started/cs-scripts-and-macros.html)
-- [Tabular Editor Script Library](https://docs.tabulareditor.com/csharp-script-library/)
+- [Tabular Editor Script Library](https://docs.tabulareditor.com/features/CSharpScripts/csharp-script-library.html)
 - [Supported File Types](https://docs.tabulareditor.com/references/supported-files.html#macroactionsjson)
 
 ## Example Macros

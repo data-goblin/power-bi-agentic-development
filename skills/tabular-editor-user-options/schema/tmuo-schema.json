@@ -1,0 +1,343 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://docs.tabulareditor.com/references/user-options.html",
+  "title": "Tabular Editor User Options",
+  "description": "Schema for Tabular Editor 3 user options file (.tmuo) that stores user-specific settings per model",
+  "$comment": "Version 1.0.0 - Schema location is temporary until schemas repo is available.",
+  "type": "object",
+  "properties": {
+    "UseWorkspace": {
+      "type": "boolean",
+      "description": "Whether to use a workspace database for this model. When true, TE3 deploys metadata to workspace on load."
+    },
+    "WorkspaceConnection": {
+      "description": "Connection string for the workspace database server. Can be plain string or encrypted object.",
+      "oneOf": [
+        {
+          "type": "string",
+          "examples": [
+            "localhost",
+            "provider=MSOLAP;data source=localhost"
+          ]
+        },
+        {
+          "$ref": "#/$defs/encryptedCredential"
+        }
+      ]
+    },
+    "WorkspaceDatabase": {
+      "type": "string",
+      "description": "Name of the workspace database. Should be unique per developer and model to avoid conflicts.",
+      "examples": [
+        "MyModel_Workspace_JohnDoe",
+        "AdventureWorks_Dev_20240115"
+      ]
+    },
+    "Deployment": {
+      "type": "object",
+      "description": "Deployment preferences for this model.",
+      "properties": {
+        "TargetConnectionString": {
+          "description": "Target server connection string for deployment.",
+          "oneOf": [
+            {
+              "type": "string",
+              "examples": [
+                "powerbi://api.powerbi.com/v1.0/myorg/MyWorkspace"
+              ]
+            },
+            {
+              "$ref": "#/$defs/encryptedCredential"
+            }
+          ]
+        },
+        "TargetDatabase": {
+          "type": "string",
+          "description": "Target database name for deployment.",
+          "examples": [
+            "Sales Analytics",
+            "MyModel"
+          ]
+        },
+        "TargetCredentials": {
+          "type": "object",
+          "description": "Credentials for the target server.",
+          "properties": {
+            "UserName": {
+              "type": "string"
+            },
+            "EncryptedPassword": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "DeployDataSources": {
+          "type": "boolean",
+          "description": "Whether to deploy data source definitions.",
+          "default": false
+        },
+        "DeployPartitions": {
+          "type": "boolean",
+          "description": "Whether to deploy partition definitions.",
+          "default": false
+        },
+        "DeployRefreshPolicyPartitions": {
+          "type": "boolean",
+          "description": "Whether to deploy incremental refresh policy partitions.",
+          "default": true
+        },
+        "DeployModelRoles": {
+          "type": "boolean",
+          "description": "Whether to deploy security roles.",
+          "default": true
+        },
+        "DeployModelRoleMembers": {
+          "type": "boolean",
+          "description": "Whether to deploy role members.",
+          "default": false
+        },
+        "DeploySharedExpressions": {
+          "type": "boolean",
+          "description": "Whether to deploy shared M expressions (named expressions).",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "DataSourceOverrides": {
+      "type": "object",
+      "description": "Data source overrides keyed by data source name. Used to override connections for workspace database.",
+      "additionalProperties": {
+        "$ref": "#/$defs/dataSourceOverride"
+      }
+    },
+    "TableImportSettings": {
+      "type": "object",
+      "description": "Table import settings keyed by table name or data source identifier. Used for Import Tables feature.",
+      "additionalProperties": {
+        "$ref": "#/$defs/tableImportSetting"
+      }
+    },
+    "RefreshOverrides": {
+      "type": "object",
+      "description": "Advanced refresh override profiles keyed by profile name.",
+      "additionalProperties": {
+        "$ref": "#/$defs/refreshOverrideProfile"
+      }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "encryptedCredential": {
+      "type": "object",
+      "description": "Encrypted credential object using Windows User Key.",
+      "properties": {
+        "ConnectionString": {
+          "type": "string"
+        },
+        "EncryptedCredentials": {
+          "type": "string"
+        },
+        "Encryption": {
+          "type": "string",
+          "const": "UserKey"
+        },
+        "EncryptedString": {
+          "type": "string"
+        }
+      }
+    },
+    "encryptedValue": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "Encryption": {
+              "type": "string",
+              "const": "UserKey"
+            },
+            "EncryptedString": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "Encryption",
+            "EncryptedString"
+          ]
+        }
+      ]
+    },
+    "dataSourceOverride": {
+      "type": "object",
+      "description": "Override settings for a specific data source.",
+      "properties": {
+        "ImpersonationMode": {
+          "type": "string",
+          "enum": [
+            "Default",
+            "ImpersonateAccount",
+            "ImpersonateAnonymous",
+            "ImpersonateCurrentUser",
+            "ImpersonateServiceAccount",
+            "ImpersonateUnattendedAccount"
+          ],
+          "default": "Default"
+        },
+        "Username": {
+          "type": "string"
+        },
+        "ConnectionString": {
+          "$ref": "#/$defs/encryptedValue"
+        },
+        "Password": {
+          "$ref": "#/$defs/encryptedValue"
+        },
+        "AccountKey": {
+          "$ref": "#/$defs/encryptedValue"
+        },
+        "PrivacySetting": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "tableImportSetting": {
+      "type": "object",
+      "description": "Import settings for a specific table or data source.",
+      "properties": {
+        "ServerType": {
+          "type": "string",
+          "enum": [
+            "Sql",
+            "Oracle",
+            "Odbc",
+            "OleDb",
+            "Snowflake",
+            "Dataflow",
+            "PostgreSql",
+            "MySql",
+            "MariaDb",
+            "Db2",
+            "Databricks",
+            "OneLake"
+          ],
+          "description": "Type of database server for native query imports."
+        },
+        "UserId": {
+          "type": "string",
+          "description": "Username for authentication."
+        },
+        "Password": {
+          "$ref": "#/$defs/encryptedValue",
+          "description": "Password for authentication."
+        },
+        "Server": {
+          "type": "string",
+          "description": "Server hostname or address."
+        },
+        "Database": {
+          "type": "string",
+          "description": "Database name."
+        },
+        "Authentication": {
+          "type": "integer",
+          "description": "Authentication type (0 = default)."
+        },
+        "Options": {
+          "type": "object",
+          "description": "Additional server-specific options.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "refreshOverrideProfile": {
+      "type": "object",
+      "description": "A refresh override profile containing scope-specific overrides.",
+      "properties": {
+        "Overrides": {
+          "type": "array",
+          "description": "Collection of override specifications.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "Scope": {
+                "type": "object",
+                "description": "Object scope these overrides apply to.",
+                "properties": {
+                  "database": {
+                    "type": "string"
+                  },
+                  "table": {
+                    "type": "string"
+                  },
+                  "partition": {
+                    "type": "string"
+                  },
+                  "column": {
+                    "type": "string"
+                  }
+                }
+              },
+              "DataSources": {
+                "type": "array",
+                "description": "Data source overrides for this scope."
+              },
+              "Partitions": {
+                "type": "array",
+                "description": "Partition source overrides."
+              },
+              "Columns": {
+                "type": "array",
+                "description": "Column source overrides."
+              },
+              "Expressions": {
+                "type": "array",
+                "description": "Named expression overrides."
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "UseWorkspace": true,
+      "WorkspaceConnection": "localhost",
+      "WorkspaceDatabase": "MyModel_Workspace_JohnDoe",
+      "Deployment": {
+        "TargetConnectionString": "powerbi://api.powerbi.com/v1.0/myorg/Production",
+        "TargetDatabase": "Sales Analytics",
+        "DeployDataSources": false,
+        "DeployPartitions": false,
+        "DeployRefreshPolicyPartitions": true,
+        "DeployModelRoles": true,
+        "DeployModelRoleMembers": false,
+        "DeploySharedExpressions": true
+      },
+      "DataSourceOverrides": {
+        "SQL Server DW": {
+          "ImpersonationMode": "ImpersonateServiceAccount",
+          "ConnectionString": "Data Source=dev-server;Initial Catalog=DevDW"
+        }
+      },
+      "TableImportSettings": {
+        "Sales": {
+          "ServerType": "Sql",
+          "UserId": "sqladmin",
+          "Password": {
+            "Encryption": "UserKey",
+            "EncryptedString": "..."
+          }
+        }
+      }
+    }
+  ]
+}

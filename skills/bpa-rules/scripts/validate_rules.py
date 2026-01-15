@@ -41,13 +41,14 @@ OPTIONAL_FIELDS = ["Category", "Description", "FixExpression", "CompatibilityLev
 
 VALID_SEVERITIES = [1, 2, 3]
 
-# From TabularEditor RuleScope enum
+# From TabularEditor RuleScope (TE3 UI confirmed)
 VALID_SCOPES = [
     "Model", "Table", "Measure", "Hierarchy", "Level", "Relationship",
     "Perspective", "Culture", "Partition", "ProviderDataSource", "DataColumn",
     "CalculatedColumn", "CalculatedTable", "CalculatedTableColumn", "KPI",
     "StructuredDataSource", "Variation", "NamedExpression", "ModelRole",
     "TablePermission", "CalculationGroup", "CalculationItem", "ModelRoleMember",
+    "Calendar", "UserDefinedFunction",
     # Backwards compatibility aliases
     "Column", "DataSource"
 ]

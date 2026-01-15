@@ -2,7 +2,7 @@
 
 ## Overview
 
-Claude Code plugin for agentic Power BI development. Primary skill: BPA (Best Practice Analyzer) rules for Tabular Editor.
+Claude Code plugin for agentic Power BI development including skills, subagents, commands, and other primitives for Claude Code and Cowork to work better with Power BI and Fabric.
 
 ## Skills
 
