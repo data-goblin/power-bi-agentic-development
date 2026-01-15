@@ -78,4 +78,4 @@ The docs site underwent a major reorganization. This file maps old URLs to new p
 
 ## Source
 
-Full redirect mapping is in `/Users/klonk/Desktop/Git/TabularEditorDocs/redirects.json`
+Full redirect mapping is in `<DOCS_PATH>/redirects.json` (in your local TabularEditorDocs clone)

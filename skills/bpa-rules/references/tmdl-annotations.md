@@ -106,7 +106,7 @@ model SpaceParts
     defaultPowerBIDataSourceVersion: powerBI_V3
     discourageImplicitMeasures
 
-extendedProperty TabularEditor_DeploymentMetadata = {"User":"klonk","Time":"2026-01-12T16:38:05"}
+extendedProperty TabularEditor_DeploymentMetadata = {"User":"developer","Time":"2024-01-15T10:30:00"}
 
 annotation TabularEditor_SerializeOptions = {"IgnoreInferredObjects":true}
 

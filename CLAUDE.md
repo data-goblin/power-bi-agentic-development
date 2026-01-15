@@ -39,4 +39,4 @@ Test skills by:
 
 - [Tabular Editor BPA Docs](https://docs.tabulareditor.com/getting-started/bpa.html)
 - [BPA Rules Repository](https://github.com/TabularEditor/BestPracticeRules)
-- Local TE Docs: `/Users/klonk/Desktop/Git/TabularEditorDocs/` (use te-docs skill for search)
+- Local TE Docs: Clone [TabularEditorDocs](https://github.com/TabularEditor/TabularEditorDocs) locally and use tabular-editor-docs skill for search

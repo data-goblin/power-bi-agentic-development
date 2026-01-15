@@ -1,11 +1,12 @@
 ---
-name: te-docs
+name: tabular-editor-docs
 description: This skill should be used when the user asks about "Tabular Editor documentation", "TE docs", "how to do X in Tabular Editor", "Tabular Editor features", "TE3 features", "C# scripts in Tabular Editor", "DAX scripts", "workspace mode", or needs to search Tabular Editor documentation. Provides efficient local search of TabularEditorDocs repository instead of unreliable web fetching.
 ---
 
 # Tabular Editor Documentation Search
 
 Efficient local search of Tabular Editor documentation using the cloned TabularEditorDocs repository.
+
 
 ## Why Local Search
 
@@ -16,17 +17,44 @@ The Tabular Editor docs site (docs.tabulareditor.com) has URL redirect issues th
 - **Complete** - Full access to all documentation
 - **Searchable** - Grep across entire doc corpus
 
-## Local Repository Location
 
-```
-/Users/klonk/Desktop/Git/TabularEditorDocs/
+## Setup
+
+### 1. Clone the Repository
+
+Clone the TabularEditorDocs repository to a local directory:
+
+**Windows (PowerShell):**
+```powershell
+git clone https://github.com/TabularEditor/TabularEditorDocs.git C:\Git\TabularEditorDocs
 ```
 
-### Directory Structure
+**macOS/Linux:**
+```bash
+git clone https://github.com/TabularEditor/TabularEditorDocs.git ~/Git/TabularEditorDocs
+```
+
+### 2. Configure Path (Optional)
+
+Set environment variable `TABULAR_EDITOR_DOCS` to your clone location:
+
+**Windows (PowerShell):**
+```powershell
+$env:TABULAR_EDITOR_DOCS = "C:\Git\TabularEditorDocs"
+# Or set permanently via System Properties > Environment Variables
+```
+
+**macOS/Linux:**
+```bash
+export TABULAR_EDITOR_DOCS=~/Git/TabularEditorDocs
+```
+
+
+## Directory Structure
 
 | Path | Content |
 |------|---------|
-| `content/features/` | Feature documentation (BPA, DAX scripts, C# scripts, etc.) |
+| `content/features/` | Feature documentation (BPA, DAX scripts, C# scripts) |
 | `content/getting-started/` | Onboarding and setup guides |
 | `content/how-tos/` | Task-specific guides |
 | `content/tutorials/` | Step-by-step tutorials |
@@ -34,31 +62,42 @@ The Tabular Editor docs site (docs.tabulareditor.com) has URL redirect issues th
 | `content/kb/` | Knowledge base articles (BPA rules, errors) |
 | `content/troubleshooting/` | Problem resolution guides |
 
-## Search Patterns
+
+## Search Commands
+
+Replace `<DOCS_PATH>` with your clone location (e.g., `C:\Git\TabularEditorDocs` on Windows or `~/Git/TabularEditorDocs` on macOS/Linux).
 
 ### Basic Topic Search
 
+**Cross-platform (ripgrep):**
 ```bash
-rg -i "topic" /Users/klonk/Desktop/Git/TabularEditorDocs/content/ --type md
+rg -i "topic" <DOCS_PATH>/content --type md
 ```
 
 ### Search with Context
 
 ```bash
-rg -i "topic" /Users/klonk/Desktop/Git/TabularEditorDocs/content/ --type md -C 3
+rg -i "topic" <DOCS_PATH>/content --type md -C 3
 ```
 
 ### Search Specific Section
 
 ```bash
-rg -i "topic" /Users/klonk/Desktop/Git/TabularEditorDocs/content/features/ --type md
+rg -i "topic" <DOCS_PATH>/content/features --type md
 ```
 
 ### Find Files by Name
 
-```bash
-find /Users/klonk/Desktop/Git/TabularEditorDocs/content/ -name "*bpa*" -type f
+**Windows (PowerShell):**
+```powershell
+Get-ChildItem -Path <DOCS_PATH>\content -Filter "*bpa*" -Recurse -File
 ```
+
+**macOS/Linux:**
+```bash
+find <DOCS_PATH>/content -name "*bpa*" -type f
+```
+
 
 ## Common Search Targets
 
@@ -71,6 +110,7 @@ find /Users/klonk/Desktop/Git/TabularEditorDocs/content/ -name "*bpa*" -type f
 | Preferences | `content/references/preferences.md` | `rg -i "setting-name" content/references/` |
 | Shortcuts | `content/references/shortcuts3.md` | Read file directly |
 | Release notes | `content/references/release-notes/` | `rg -i "feature" content/references/release-notes/` |
+
 
 ## URL Resolution
 
@@ -85,11 +125,12 @@ The docs site underwent a major reorganization. Use `references/url-redirects.md
 | `/te2/*.html` | Various (check redirects) |
 | `/onboarding/*.html` | `/getting-started/*.html` |
 
+
 ## Workflow
 
 ### When User Asks About TE Feature
 
-1. Search local docs: `rg -i "feature-name" /Users/klonk/Desktop/Git/TabularEditorDocs/content/ --type md -l`
+1. Search local docs: `rg -i "feature-name" <DOCS_PATH>/content --type md -l`
 2. Read relevant file(s)
 3. Synthesize answer from documentation
 
@@ -106,6 +147,7 @@ The docs site underwent a major reorganization. Use `references/url-redirects.md
 2. Read multiple related files
 3. Combine information in response
 
+
 ## Knowledge Base Articles
 
 The `content/kb/` directory contains detailed articles on specific topics:
@@ -115,26 +157,28 @@ The `content/kb/` directory contains detailed articles on specific topics:
 
 Search KB for specific issues:
 ```bash
-rg -i "error description" /Users/klonk/Desktop/Git/TabularEditorDocs/content/kb/ --type md
+rg -i "error description" <DOCS_PATH>/content/kb --type md
 ```
 
-## Scripts
 
-### Update Local Docs
+## Updating Local Docs
 
-To ensure docs are current:
+Keep your local clone current:
+
+**Windows (PowerShell):**
+```powershell
+Push-Location <DOCS_PATH>
+git pull origin main
+Pop-Location
+```
+
+**macOS/Linux:**
 ```bash
-cd /Users/klonk/Desktop/Git/TabularEditorDocs && git pull
+cd <DOCS_PATH> && git pull origin main
 ```
 
-## Additional Resources
 
-### Reference Files
-
-- **`references/url-redirects.md`** - Complete URL redirect mapping from old to new paths
-- **`references/doc-structure.md`** - Detailed documentation structure and file purposes
-
-### Key Documentation Files
+## Key Documentation Files
 
 For common topics, read these files directly:
 
@@ -146,3 +190,12 @@ For common topics, read these files directly:
 | C# script library | `content/features/CSharpScripts/csharp-script-library.md` |
 | DAX scripts | `content/features/dax-scripts.md` |
 | Preferences | `content/references/preferences.md` |
+| Advanced Scripting | `content/how-tos/Advanced-Scripting.md` |
+
+
+## Additional Resources
+
+### Reference Files
+
+- **`references/url-redirects.md`** - Complete URL redirect mapping from old to new paths
+- **`references/doc-structure.md`** - Detailed documentation structure and file purposes

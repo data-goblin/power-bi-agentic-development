@@ -18,7 +18,7 @@
         "./skills/c-sharp-scripting",
         "./skills/tabular-editor-cli",
         "./skills/tabular-editor-config",
-        "./skills/te-docs"
+        "./skills/tabular-editor-docs"
       ],
       "commands": [
         "./commands"

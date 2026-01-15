@@ -1,6 +1,6 @@
 # TabularEditorDocs Repository Structure
 
-Local path: `/Users/klonk/Desktop/Git/TabularEditorDocs/`
+Clone path: `<DOCS_PATH>` (configure via environment variable `TABULAR_EDITOR_DOCS` or use your local clone location)
 
 ## Top-Level Structure
 
