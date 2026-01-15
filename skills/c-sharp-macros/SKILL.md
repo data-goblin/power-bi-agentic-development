@@ -42,6 +42,24 @@ Activate automatically when tasks involve:
 
 **Sharing macros:** To share macros across a team, export MacroActions.json and distribute via version control. Team members merge into their local file. Consider using symlinks for synchronized sharing.
 
+### Cross-Platform Access (macOS/Linux)
+
+When working on macOS or Linux with Tabular Editor installed in a Windows VM:
+
+**Parallels on macOS:**
+```
+/Users/<macUser>/Library/Parallels/Windows Disks/{VM-UUID}/[C] <DiskName>.hidden/
+```
+
+Full path to MacroActions.json:
+- `<ParallelsRoot>/Users/<WinUser>/AppData/Local/TabularEditor3/MacroActions.json`
+
+**Other platforms:**
+- **VMware Fusion** - Check `/Volumes/` for mounted Windows drives
+- **WSL on Windows** - `/mnt/c/Users/<username>/AppData/Local/TabularEditor3/`
+
+**Note:** The VM must be running for the filesystem to be accessible.
+
 ## Quick Reference
 
 ### Macro JSON Structure

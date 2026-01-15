@@ -47,6 +47,25 @@ TMUO files are stored **alongside the model file** with a user-specific name:
 - Credentials are encrypted with Windows User Key - cannot be shared between users
 - Each developer creates their own .tmuo automatically when opening the model
 
+### Cross-Platform Access (macOS/Linux)
+
+When working on macOS or Linux with models stored on a Windows VM:
+
+**Parallels on macOS:**
+```
+/Users/<macUser>/Library/Parallels/Windows Disks/{VM-UUID}/[C] <DiskName>.hidden/
+```
+
+TMUO files will be alongside models in Windows directories, e.g.:
+- `<ParallelsRoot>/Users/<WinUser>/Documents/Models/MyModel.bim`
+- `<ParallelsRoot>/Users/<WinUser>/Documents/Models/MyModel.<WinUser>.tmuo`
+
+**Other platforms:**
+- **VMware Fusion** - Check `/Volumes/` for mounted Windows drives
+- **WSL on Windows** - `/mnt/c/Users/<username>/...`
+
+**Note:** The VM must be running for the filesystem to be accessible.
+
 ## Quick Reference
 
 ### TMUO JSON Structure
