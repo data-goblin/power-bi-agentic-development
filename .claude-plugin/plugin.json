@@ -1,31 +1,22 @@
 {
   "name": "power-bi-agentic-development",
   "version": "0.1.0",
-  "description": "Skills and tools for agentic Power BI development including Best Practice Analyzer rules.",
+  "description": "Skills and tools for agentic Power BI development including Best Practice Analyzer rules, C# scripting, and Tabular Editor integration.",
   "author": {
     "name": "Kurt Buhler"
   },
-  "keywords": ["power-bi", "tabular-editor", "bpa", "best-practice-analyzer", "semantic-model", "tmdl", "csharp", "macros", "tom"],
-  "plugins": [
-    {
-      "name": "power-bi-agentic-development",
-      "description": "Agentic development tools for Power BI semantic models.",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./skills/bpa-rules",
-        "./skills/c-sharp-macros",
-        "./skills/c-sharp-scripting",
-        "./skills/tabular-editor-cli",
-        "./skills/tabular-editor-config",
-        "./skills/tabular-editor-docs"
-      ],
-      "commands": [
-        "./commands"
-      ],
-      "agents": [
-        "./agents"
-      ]
-    }
+  "homepage": "https://data-goblins.com",
+  "repository": "https://github.com/data-goblin/power-bi-agentic-development",
+  "license": "MIT",
+  "keywords": [
+    "power-bi",
+    "tabular-editor",
+    "bpa",
+    "best-practice-analyzer",
+    "semantic-model",
+    "tmdl",
+    "csharp",
+    "macros",
+    "tom"
   ]
 }
