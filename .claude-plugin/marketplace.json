@@ -9,7 +9,7 @@
   },
   "plugins": [
     {
-      "name": "power-bi-agentic-development",
+      "name": "tabular-editor",
       "description": "Agentic development tools for Power BI semantic models with Tabular Editor.",
       "source": "./"
     }

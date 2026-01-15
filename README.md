@@ -16,13 +16,11 @@
 
 ```bash
 # Add marketplace source (if not already added)
-/plugin marketplace add data-goblin/power-bi-agentic-development
+claude plugin marketplace add data-goblin/power-bi-agentic-development
 
 # Install the plugin
-/plugin install power-bi-agentic-development@data-goblin
+claude plugin install tabular-editor@power-bi-agentic-development
 ```
-
-Or: `/plugin` > Browse Plugins > Select marketplace
 
 
 ## What's Included
