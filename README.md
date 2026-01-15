@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.1.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-0.2.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/tabular_editor-2%20%7C%203-orange" alt="Tabular Editor">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
 </p>
@@ -49,6 +49,12 @@ Or: `/plugin` > Browse Plugins > Select marketplace
 | Agent | Description |
 |-------|-------------|
 | `bpa-expression-helper` | Debug and improve BPA rule expressions |
+
+### Scripts
+
+| Script | Description |
+|--------|-------------|
+| `bpa_rules_audit.py` | Comprehensive audit of BPA rules across all sources (built-in, URL, model, user, machine) |
 
 
 ## Requirements
