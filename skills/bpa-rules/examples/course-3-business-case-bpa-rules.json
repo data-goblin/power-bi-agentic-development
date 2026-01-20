@@ -1,0 +1,105 @@
+[
+  {
+    "ID": "RULE1",
+    "Name": "Table name should be the same as the view name.",
+    "Category": "Formatting",
+    "Description": "This rule checks if the table's name is in the list of allowed names according to the business rules.",
+    "Severity": 4,
+    "Scope": "Table",
+    "Expression": "    Name != \"Brands\"\r\nand Name != \"Budget Rate\"\r\nand Name != \"Customers\"\r\nand Name != \"Employees\"\r\nand Name != \"Exchange Rate\"\r\nand Name != \"Invoice Document Type\"\r\nand Name != \"Order Document Type\"\r\nand Name != \"Order Status\"\r\nand Name != \"Products\"\r\nand Name != \"Regions\"\r\nand Name != \"Budget\"\r\nand Name != \"Forecast\"\r\nand Name != \"Invoices\"\r\nand Name != \"Orders\"",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "RULE2",
+    "Name": "Avoid 'Remove Duplicates' in Power Query",
+    "Category": "Data quality",
+    "Description": "'Remove Duplicates' can result in unintentional filtering of data.",
+    "Severity": 3,
+    "Scope": "Partition",
+    "Expression": "Expression.Contains(\"Table.Distinct\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "RULE3",
+    "Name": "Avoid Auto-DateTime tables",
+    "Category": "Performance",
+    "Description": "Auto datetime tables should be removed as they take up unnecessary space. Instead, set up your own date table and date hierarchy fields.",
+    "Severity": 3,
+    "Scope": "CalculatedTable",
+    "Expression": "Name.Contains(\"DateTableTemplate_\") or Name.Contains(\"LocalDateTable_\")",
+    "FixExpression": "Delete()",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "RULE4",
+    "Name": "Limit the number of columns to < 12",
+    "Category": "Performance",
+    "Description": "Try to not include too many columns.",
+    "Severity": 2,
+    "Scope": "Table",
+    "Expression": "Columns.Count() > 11",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "RULE5",
+    "Name": "Avoid bi-directional or many-to-many relationships",
+    "Category": "Performance",
+    "Description": "Many-to-Many and Bi-directional relationships can cause model ambiguity and should be used with caution.",
+    "Severity": 3,
+    "Scope": "Relationship",
+    "Expression": "(\r\nToCardinality == \"Many\"\r\nand\r\nFromCardinality == \"Many\"\r\n)\r\nor\r\nCrossFilteringBehavior == \"BothDirections\"",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "RULE6",
+    "Name": "Do not use floating point data types",
+    "Category": "Performance",
+    "Description": "Floating point datatypes can cause unexpected results when evaluating values close to 0 or have excessive precision. Use Currency / Fixed Decimal Number (decimal) instead.",
+    "Severity": 3,
+    "Scope": "DataColumn, CalculatedColumn, CalculatedTableColumn",
+    "Expression": "DataType == \"Double\"",
+    "FixExpression": "DataType = DataType.Decimal",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "RULE7",
+    "Name": "Redundant Columns",
+    "Category": "Performance",
+    "Description": "Avoid including multiple instances of the same columns in different tables.",
+    "Severity": 5,
+    "Scope": "DataColumn, CalculatedColumn, CalculatedTableColumn",
+    "Expression": "UsedInRelationships.Any() == false\r\nand\r\n!(Name == \"Month\" or Name == \"Quarter\" or Name == \"Year\")\r\nand\r\nModel.AllColumns.Any(\r\n    Name == current.Name\r\n    and Table.Name != current.Table.Name\r\n    and Table.UsedInRelationships.Any(\r\n        FromTable.Name == current.Table.Name\r\n    )\r\n)\r\n",
+    "FixExpression": "Delete()",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "RULE8",
+    "Name": "Avoid Joins / 'Merges' in Power Query",
+    "Category": "Performance",
+    "Description": "Merges are expensive operations which can greatly reduce refresh times in import models. Instead, consider how this can be addressed in the model design or data source.",
+    "Severity": 5,
+    "Scope": "Partition",
+    "Expression": "Expression.Contains(\"Table.NestedJoin\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "RULE9",
+    "Name": "Fields not organized in display folders",
+    "Category": "Formatting",
+    "Description": "Fields should be organized into display folders to make the model more organized and usable.",
+    "Severity": 2,
+    "Scope": "Measure, Hierarchy, DataColumn, CalculatedColumn, CalculatedTableColumn",
+    "Expression": "DisplayFolder = \"\"",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "RULE10",
+    "Name": "Provide format string and description for all visible measures",
+    "Category": "Formatting",
+    "Description": "Visible measures should have their Format String property assigned and a concise Description explaining the measure's purpose.",
+    "Severity": 1,
+    "Scope": "Measure",
+    "Expression": "IsVisible \nand string.IsNullOrWhitespace(FormatString) and DataType != DataType.String or Description == \"\"",
+    "CompatibilityLevel": 1200
+  }
+]

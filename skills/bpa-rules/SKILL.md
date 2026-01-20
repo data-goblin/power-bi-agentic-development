@@ -26,6 +26,106 @@ Activate automatically when tasks involve:
 - Ensure FixExpression does not cause data loss or break the model
 - Consider CompatibilityLevel when using newer TOM properties
 
+## Tabular Editor Compatibility
+
+BPA rule files must follow specific formatting requirements for Tabular Editor to load them correctly. Files that don't follow these rules may show empty rule collections or fail to load entirely.
+
+### Line Endings (CRLF Required)
+
+Tabular Editor on Windows requires **Windows line endings (CRLF, `\r\n`)**. Files with Unix line endings (LF only) will fail to load or show empty rule collections.
+
+To convert a file to CRLF:
+```bash
+# macOS/Linux
+sed -i 's/$/\r/' rules.json
+
+# Or use the validation script
+python scripts/validate_rules.py --fix rules.json
+```
+
+### File Paths
+
+When adding rule files in Tabular Editor:
+- **Use absolute paths** (e.g., `C:\BPARules\my-rules.json`)
+- **Avoid relative paths** with `..\..\..` - TE may fail to resolve these
+- URLs work reliably (e.g., `https://raw.githubusercontent.com/...`)
+
+### JSON Format Requirements
+
+**No extra properties:** TE's JSON parser is strict. Only use allowed fields:
+- `ID`, `Name`, `Category`, `Description`, `Severity`, `Scope`, `Expression`
+- `FixExpression`, `CompatibilityLevel`, `Source`, `Remarks`
+
+**Avoid these patterns:**
+```json
+// BAD: _comment fields not allowed
+{ "_comment": "Section header", "ID": "RULE1", ... }
+
+// BAD: Runtime fields (TE adds these, don't include them)
+{ "ID": "RULE1", "ObjectCount": 0, "ErrorMessage": null, ... }
+
+// GOOD: FixExpression can be null or omitted
+{ "ID": "RULE1", "FixExpression": null, ... }
+{ "ID": "RULE1", "Name": "...", "Severity": 2, "Scope": "Measure", "Expression": "..." }
+```
+
+**Note:** `FixExpression: null` is valid. `ErrorMessage` and `ObjectCount` are runtime fields that TE adds - do not include them in rule definitions.
+
+### Regex Expression Syntax
+
+When using `RegEx.IsMatch()` in expressions:
+
+**No `@` prefix:** Do not use C# verbatim string prefix
+```csharp
+// BAD: @ prefix not supported
+RegEx.IsMatch(Expression, @"FILTER\s*\(\s*ALL")
+
+// GOOD: Standard escaping
+RegEx.IsMatch(Expression, "FILTER\\s*\\(\\s*ALL")
+```
+
+**No RegexOptions parameter:** TE doesn't support the options parameter
+```csharp
+// BAD: RegexOptions not supported
+RegEx.IsMatch(Name, "^DATE$", RegexOptions.IgnoreCase)
+
+// GOOD: Use inline flag or pattern only
+RegEx.IsMatch(Name, "(?i)^DATE$")
+RegEx.IsMatch(Name, "^(DATE|date|Date)$")
+```
+
+### Correct Scope Names
+
+Use the exact scope names from the TOM enum. Common mistakes:
+
+| Wrong | Correct |
+|-------|---------|
+| `Role` | `ModelRole` |
+| `Member` | `ModelRoleMember` |
+| `Expression` | `NamedExpression` |
+| `DataSource` | `ProviderDataSource` or `StructuredDataSource` |
+
+**Note:** `Column` is valid as a backwards-compatible alias for `DataColumn, CalculatedColumn, CalculatedTableColumn`.
+
+### Validation Script
+
+Use the validation script to check and fix TE compatibility issues:
+
+```bash
+# Check for issues
+python scripts/validate_rules.py rules.json
+
+# Auto-fix issues (CRLF, remove nulls, remove _comment)
+python scripts/validate_rules.py --fix rules.json
+```
+
+The script checks:
+- Line endings (CRLF)
+- No `_comment` fields
+- No `null` values for optional fields
+- Valid scope names
+- Expression syntax warnings
+
 ## About BPA rules
 
 - BPA rules define automatic tests for semantic models in Power BI and Fabric for QA/QC
@@ -363,8 +463,7 @@ python scripts/bpa_rules_audit.py /path/to/model --quiet
   "Description": "All measures should have descriptions for documentation.",
   "Severity": 2,
   "Scope": "Measure",
-  "Expression": "string.IsNullOrWhitespace(Description)",
-  "FixExpression": null
+  "Expression": "string.IsNullOrWhitespace(Description)"
 }
 ```
 

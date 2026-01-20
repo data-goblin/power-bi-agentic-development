@@ -1,0 +1,102 @@
+[
+  {
+    "ID": "PQ_AVOID_TABLE_DISTINCT",
+    "Name": "Avoid Table.Distinct in Power Query",
+    "Category": "Data Quality",
+    "Description": "Table.Distinct removes duplicate rows but can mask data quality issues in the source. Consider fixing duplicates at the source or implementing explicit duplicate handling logic.",
+    "Severity": 2,
+    "Scope": "Partition",
+    "Expression": "Expression.Contains(\"Table.Distinct\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "PQ_AVOID_REMOVE_DUPLICATES",
+    "Name": "Avoid Table.RemoveDuplicates in Power Query",
+    "Category": "Data Quality",
+    "Description": "Table.RemoveDuplicates can result in unintentional filtering of data and may mask underlying data quality issues.",
+    "Severity": 2,
+    "Scope": "Partition",
+    "Expression": "Expression.Contains(\"Table.RemoveDuplicates\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "PQ_DUPLICATE_DETECTION_COMPREHENSIVE",
+    "Name": "Avoid all duplicate removal operations in Power Query",
+    "Category": "Data Quality",
+    "Description": "Duplicate removal operations (Table.Distinct, Table.RemoveDuplicates) can hide data quality issues. Consider fixing duplicates at the source.",
+    "Severity": 2,
+    "Scope": "Partition",
+    "Expression": "Expression.Contains(\"Table.Distinct\") or Expression.Contains(\"Table.RemoveDuplicates\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "PQ_AVOID_TABLE_NESTEDJOIN",
+    "Name": "Avoid Table.NestedJoin in Power Query",
+    "Category": "Performance",
+    "Description": "Table.NestedJoin is an expensive operation that can significantly increase refresh times in import models. Consider performing joins at the source or using model relationships.",
+    "Severity": 3,
+    "Scope": "Partition",
+    "Expression": "Expression.Contains(\"Table.NestedJoin\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "PQ_AVOID_TABLE_JOIN",
+    "Name": "Avoid Table.Join in Power Query",
+    "Category": "Performance",
+    "Description": "Table.Join is an expensive operation that can greatly reduce refresh performance in import models. Consider pushing joins to the source query or using model relationships.",
+    "Severity": 3,
+    "Scope": "Partition",
+    "Expression": "Expression.Contains(\"Table.Join\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "PQ_AVOID_FUZZY_JOINS",
+    "Name": "Avoid fuzzy join operations in Power Query",
+    "Category": "Performance",
+    "Description": "Fuzzy join operations (Table.FuzzyJoin, Table.FuzzyNestedJoin) are extremely expensive and can cause severe refresh performance issues.",
+    "Severity": 3,
+    "Scope": "Partition",
+    "Expression": "Expression.Contains(\"Table.FuzzyJoin\") or Expression.Contains(\"Table.FuzzyNestedJoin\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "PQ_MERGE_OPERATIONS_COMPREHENSIVE",
+    "Name": "Avoid all merge/join operations in Power Query",
+    "Category": "Performance",
+    "Description": "All merge and join operations are expensive and significantly impact refresh performance in import models. Push joins to the data source or use model relationships.",
+    "Severity": 3,
+    "Scope": "Partition",
+    "Expression": "Expression.Contains(\"Table.Join\") or Expression.Contains(\"Table.NestedJoin\") or Expression.Contains(\"Table.FuzzyJoin\") or Expression.Contains(\"Table.FuzzyNestedJoin\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "PQ_TABLE_COMBINE_WITH_DISTINCT",
+    "Name": "Review Table.Combine with subsequent distinct operations",
+    "Category": "Performance",
+    "Description": "Combining tables followed by duplicate removal may indicate overlapping data sources or data quality issues.",
+    "Severity": 2,
+    "Scope": "Partition",
+    "Expression": "Expression.Contains(\"Table.Combine\") and (Expression.Contains(\"Table.Distinct\") or Expression.Contains(\"Table.RemoveDuplicates\"))",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "PQ_BUFFER_BEFORE_JOINS",
+    "Name": "Table.Buffer used before join operations",
+    "Category": "Performance",
+    "Description": "Table.Buffer forces full table evaluation before joins. Review whether buffering is necessary and beneficial.",
+    "Severity": 1,
+    "Scope": "Partition",
+    "Expression": "Expression.Contains(\"Table.Buffer\") and (Expression.Contains(\"Table.Join\") or Expression.Contains(\"Table.NestedJoin\"))",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "PQ_EXPAND_AFTER_NESTEDJOIN",
+    "Name": "Table.ExpandTableColumn after nested joins",
+    "Category": "Performance",
+    "Description": "Table.ExpandTableColumn following Table.NestedJoin indicates a merge operation. Consider performing this join at the source or using model relationships.",
+    "Severity": 2,
+    "Scope": "Partition",
+    "Expression": "Expression.Contains(\"Table.NestedJoin\") and Expression.Contains(\"Table.ExpandTableColumn\")",
+    "CompatibilityLevel": 1200
+  }
+]

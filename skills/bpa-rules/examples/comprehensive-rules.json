@@ -1,332 +1,312 @@
 [
-  {
-    "_comment": "=== DAX EXPRESSIONS ===",
-    "ID": "DAX_COLUMNS_FULLY_QUALIFIED",
-    "Name": "Column references should be fully qualified",
-    "Category": "DAX Expressions",
-    "Description": "Using fully qualified column references makes it easier to distinguish between column and measure references, and also helps avoid certain errors.",
-    "Severity": 2,
-    "Scope": "Measure, CalculatedColumn, CalculatedTable, KPI",
-    "Expression": "DependsOn.Any(Key.ObjectType = \"Column\" and Value.Any(not FullyQualified))",
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "DAX_MEASURES_UNQUALIFIED",
-    "Name": "Measure references should be unqualified",
-    "Category": "DAX Expressions",
-    "Description": "Measure references should not include the table name prefix. This makes DAX more readable and distinguishes measures from columns.",
-    "Severity": 2,
-    "Scope": "Measure, CalculatedColumn, CalculatedTable, KPI",
-    "Expression": "DependsOn.Any(Key.ObjectType = \"Measure\" and Value.Any(FullyQualified))",
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "DAX_DIVISION_COLUMNS",
-    "Name": "Avoid division (use DIVIDE function instead)",
-    "Category": "DAX Expressions",
-    "Description": "Using the DIVIDE function handles division by zero gracefully. The / operator will return an error when dividing by zero.",
-    "Severity": 3,
-    "Scope": "Measure, CalculatedColumn, CalculatedTable",
-    "Expression": "Tokenize().Any(Type = DIV and Next.Type <> INTEGER_LITERAL and Next.Type <> REAL_LITERAL)",
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "DAX_AVOID_IFERROR",
-    "Name": "Avoid using IFERROR",
-    "Category": "DAX Expressions",
-    "Description": "IFERROR can mask real errors. Use specific error handling or fix the root cause instead.",
-    "Severity": 2,
-    "Scope": "Measure, CalculatedColumn",
-    "Expression": "Expression.IndexOf(\"IFERROR\", StringComparison.OrdinalIgnoreCase) >= 0",
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "DAX_TODO",
-    "Name": "Revisit TODO expressions",
-    "Category": "DAX Expressions",
-    "Description": "DAX expressions containing TODO comments should be reviewed and completed before deployment.",
-    "Severity": 1,
-    "Scope": "Measure, Partition, CalculatedColumn, CalculatedTable",
-    "Expression": "Expression.IndexOf(\"TODO\", StringComparison.OrdinalIgnoreCase) >= 0",
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "DAX_AVOID_FILTER_ALL",
-    "Name": "Avoid FILTER with ALL in iterators",
-    "Category": "DAX Expressions",
-    "Description": "Using FILTER(ALL(...)) in iterators like SUMX can cause performance issues. Consider using CALCULATE with filters instead.",
-    "Severity": 2,
-    "Scope": "Measure, CalculatedColumn",
-    "Expression": "RegEx.IsMatch(Expression, @\"FILTER\\s*\\(\\s*ALL\\s*\\(\")",
-    "CompatibilityLevel": 1200
-  },
-
-  {
-    "_comment": "=== METADATA ===",
-    "ID": "META_MEASURE_NO_DESCRIPTION",
-    "Name": "Measure has no description",
-    "Category": "Metadata",
-    "Description": "All measures should have descriptions to help report authors understand their purpose.",
-    "Severity": 2,
-    "Scope": "Measure",
-    "Expression": "string.IsNullOrWhitespace(Description)",
-    "FixExpression": null
-  },
-  {
-    "ID": "META_COLUMN_NO_DESCRIPTION",
-    "Name": "Visible column has no description",
-    "Category": "Metadata",
-    "Description": "Visible columns should have descriptions to help users understand the data.",
-    "Severity": 1,
-    "Scope": "DataColumn, CalculatedColumn",
-    "Expression": "IsVisible and string.IsNullOrWhitespace(Description)",
-    "FixExpression": null
-  },
-  {
-    "ID": "META_AVOID_FLOAT",
-    "Name": "Do not use floating point data types",
-    "Category": "Metadata",
-    "Description": "Floating point (Double) data types can cause precision issues. Use Decimal for financial calculations.",
-    "Severity": 3,
-    "Scope": "DataColumn, CalculatedColumn, CalculatedTableColumn",
-    "Expression": "DataType = \"Double\"",
-    "FixExpression": "DataType = DataType.Decimal",
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "META_SUMMARIZE_NONE",
-    "Name": "Don't summarize numeric columns",
-    "Category": "Metadata",
-    "Description": "Numeric columns should have SummarizeBy set to None to prevent implicit measures.",
-    "Severity": 1,
-    "Scope": "DataColumn, CalculatedColumn, CalculatedTableColumn",
-    "Expression": "IsVisible and SummarizeBy <> \"None\" and (DataType = \"Double\" or DataType = \"Decimal\" or DataType = \"Int64\")",
-    "FixExpression": "SummarizeBy = AggregateFunction.None",
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "META_DISABLE_ATTRIBUTE_HIERARCHIES",
-    "Name": "Disable attribute hierarchies to decrease processing",
-    "Category": "Metadata",
-    "Description": "Hidden columns not used in hierarchies, sort-by, or variations should have IsAvailableInMDX set to false.",
-    "Severity": 2,
-    "Scope": "DataColumn",
-    "Expression": "not IsVisible and IsAvailableInMDX and not UsedInHierarchies.Any() and not UsedInVariations.Any() and not UsedInSortBy.Any()",
-    "FixExpression": "IsAvailableInMDX = false",
-    "CompatibilityLevel": 1400
-  },
-  {
-    "ID": "META_TABLE_NO_DESCRIPTION",
-    "Name": "Table has no description",
-    "Category": "Metadata",
-    "Description": "All tables should have descriptions documenting their purpose and data source.",
-    "Severity": 1,
-    "Scope": "Table",
-    "Expression": "IsVisible and string.IsNullOrWhitespace(Description)",
-    "FixExpression": null
-  },
-
-  {
-    "_comment": "=== PERFORMANCE ===",
-    "ID": "PERF_UNUSED_COLUMNS",
-    "Name": "Remove unused columns",
-    "Category": "Performance",
-    "Description": "Hidden columns with no references consume memory without benefit. Review before deletion.",
-    "Severity": 2,
-    "Scope": "DataColumn, CalculatedColumn, CalculatedTableColumn",
-    "Expression": "not IsVisible and ReferencedBy.Count = 0 and (not UsedInRelationships.Any()) and (not UsedInSortBy.Any()) and (not UsedInHierarchies.Any()) and (not UsedInVariations.Any())",
-    "FixExpression": "Delete()",
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "PERF_UNUSED_MEASURES",
-    "Name": "Remove unused measures",
-    "Category": "Performance",
-    "Description": "Hidden measures with no references may be candidates for removal.",
-    "Severity": 1,
-    "Scope": "Measure",
-    "Expression": "not IsVisible and ReferencedBy.Count = 0",
-    "FixExpression": "Delete()",
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "PERF_AVOID_BIDIR_RELATIONSHIPS",
-    "Name": "Avoid bi-directional relationships",
-    "Category": "Performance",
-    "Description": "Bi-directional relationships can cause ambiguity and performance issues. Use single direction when possible.",
-    "Severity": 2,
-    "Scope": "Relationship",
-    "Expression": "CrossFilteringBehavior = CrossFilteringBehavior.BothDirections",
-    "FixExpression": null,
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "PERF_TOO_MANY_COLUMNS",
-    "Name": "Table has too many columns",
-    "Category": "Performance",
-    "Description": "Tables with more than 100 columns may indicate over-denormalization or need for refactoring.",
-    "Severity": 2,
-    "Scope": "Table",
-    "Expression": "Columns.Count > 100",
-    "FixExpression": null
-  },
-  {
-    "ID": "PERF_TOO_MANY_CALC_COLUMNS",
-    "Name": "Table has many calculated columns",
-    "Category": "Performance",
-    "Description": "Calculated columns are computed during processing and stored in memory. Consider using measures instead.",
-    "Severity": 2,
-    "Scope": "Table",
-    "Expression": "Columns.Count(ObjectType = \"CalculatedColumn\") > 10",
-    "FixExpression": null
-  },
-
-  {
-    "_comment": "=== MODEL LAYOUT ===",
-    "ID": "LAYOUT_HIDE_FK_COLUMNS",
-    "Name": "Hide foreign key columns",
-    "Category": "Model Layout",
-    "Description": "Foreign key columns used in relationships should be hidden from end users.",
-    "Severity": 1,
-    "Scope": "DataColumn, CalculatedColumn, CalculatedTableColumn",
-    "Expression": "IsVisible and Model.Relationships.Any(FromColumn = outerIt)",
-    "FixExpression": "IsHidden = true",
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "LAYOUT_MEASURES_IN_DISPLAY_FOLDERS",
-    "Name": "Organize measures in display folders",
-    "Category": "Model Layout",
-    "Description": "Tables with more than 10 visible measures should organize them in display folders.",
-    "Severity": 1,
-    "Scope": "Table",
-    "Expression": "Measures.Count(IsVisible and string.IsNullOrEmpty(DisplayFolder)) > 10",
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "LAYOUT_COLUMNS_IN_DISPLAY_FOLDERS",
-    "Name": "Organize columns and hierarchies in display folders",
-    "Category": "Model Layout",
-    "Description": "Tables with more than 10 visible columns/hierarchies should organize them in display folders.",
-    "Severity": 1,
-    "Scope": "Table",
-    "Expression": "Columns.Count(IsVisible and string.IsNullOrEmpty(DisplayFolder)) + Hierarchies.Count(IsVisible and string.IsNullOrEmpty(DisplayFolder)) > 10",
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "LAYOUT_VISIBLE_MEASURE_NO_FOLDER",
-    "Name": "Visible measure not in display folder",
-    "Category": "Model Layout",
-    "Description": "Visible measures should be organized in display folders for easier navigation.",
-    "Severity": 1,
-    "Scope": "Measure",
-    "Expression": "IsVisible and string.IsNullOrEmpty(DisplayFolder)",
-    "FixExpression": null
-  },
-
-  {
-    "_comment": "=== NAMING CONVENTIONS ===",
-    "ID": "NAME_UPPERCASE_FIRST_LETTER",
-    "Name": "Names must start with uppercase letter",
-    "Category": "Naming Conventions",
-    "Description": "Visible objects should have names starting with an uppercase letter for consistency.",
-    "Severity": 2,
-    "Scope": "Table, Measure, DataColumn, CalculatedColumn, Hierarchy",
-    "Expression": "IsVisible and char.IsLower(Name[0])",
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "NAME_NO_SPECIAL_CHARS",
-    "Name": "Names should not contain special characters",
-    "Category": "Naming Conventions",
-    "Description": "Object names should avoid special characters except spaces, underscores, and hyphens.",
-    "Severity": 2,
-    "Scope": "Table, Measure, DataColumn, CalculatedColumn",
-    "Expression": "RegEx.IsMatch(Name, \"[^a-zA-Z0-9 _\\-()%]\")",
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "NAME_RELATIONSHIP_COLUMNS_MATCH",
-    "Name": "Relationship column names should match",
-    "Category": "Naming Conventions",
-    "Description": "For clarity, columns on both sides of a relationship should have the same or similar names.",
-    "Severity": 2,
-    "Scope": "Relationship",
-    "Expression": "(Model.Relationships.Count(FromTable = OuterIt.FromTable and ToTable = OuterIt.ToTable) = 1 and FromColumn.Name <> ToColumn.Name)",
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "NAME_AVOID_RESERVED_WORDS",
-    "Name": "Avoid DAX reserved words in names",
-    "Category": "Naming Conventions",
-    "Description": "Using DAX reserved words in object names can cause confusion and require escaping.",
-    "Severity": 2,
-    "Scope": "Table, Measure, DataColumn, CalculatedColumn",
-    "Expression": "RegEx.IsMatch(Name, \"^(DATE|TIME|YEAR|MONTH|DAY|HOUR|MINUTE|SECOND|NOW|TODAY|TRUE|FALSE|BLANK)$\", RegexOptions.IgnoreCase)",
-    "CompatibilityLevel": 1200
-  },
-
-  {
-    "_comment": "=== FORMATTING ===",
-    "ID": "FORMAT_NUMERIC_COLUMNS",
-    "Name": "Provide format string for visible numeric columns",
-    "Category": "Formatting",
-    "Description": "Numeric columns should have format strings to control display in reports.",
-    "Severity": 2,
-    "Scope": "DataColumn, CalculatedColumn, CalculatedTableColumn",
-    "Expression": "IsVisible and string.IsNullOrWhitespace(FormatString) and (DataType = \"Int64\" or DataType = \"Double\" or DataType = \"Decimal\")",
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "FORMAT_NUMERIC_MEASURES",
-    "Name": "Provide format string for visible numeric measures",
-    "Category": "Formatting",
-    "Description": "Numeric measures should have format strings to control display in reports.",
-    "Severity": 2,
-    "Scope": "Measure",
-    "Expression": "IsVisible and string.IsNullOrWhitespace(FormatString) and (DataType = \"Int64\" or DataType = \"Double\" or DataType = \"Decimal\")",
-    "CompatibilityLevel": 1200
-  },
-  {
-    "ID": "FORMAT_PERCENTAGE_MEASURES",
-    "Name": "Percentage measures should use percentage format",
-    "Category": "Formatting",
-    "Description": "Measures representing percentages should use a percentage format string.",
-    "Severity": 1,
-    "Scope": "Measure",
-    "Expression": "(Name.EndsWith(\"%\") or Name.EndsWith(\"Percent\") or Name.EndsWith(\"Percentage\") or Name.EndsWith(\"Rate\")) and not FormatString.Contains(\"%\")",
-    "CompatibilityLevel": 1200
-  },
-
-  {
-    "_comment": "=== GOVERNANCE ===",
-    "ID": "GOV_NO_HARDCODED_VALUES",
-    "Name": "Avoid hardcoded values in DAX",
-    "Category": "Governance",
-    "Description": "Hardcoded numeric values in DAX should be moved to parameters or calculated tables for maintainability.",
-    "Severity": 1,
-    "Scope": "Measure",
-    "Expression": "RegEx.IsMatch(Expression, @\"[^\\d]\\d{4,}[^\\d]\")",
-    "Remarks": "Checks for numbers with 4+ digits that might be hardcoded years, thresholds, etc."
-  },
-  {
-    "ID": "GOV_ROLE_HAS_MEMBERS",
-    "Name": "Security role has no members defined",
-    "Category": "Governance",
-    "Description": "Security roles without members may indicate incomplete configuration.",
-    "Severity": 1,
-    "Scope": "Role",
-    "Expression": "Model.Roles.Any() and TablePermissions.Count = 0",
-    "Remarks": "Review role configuration before deployment."
-  },
-  {
-    "ID": "GOV_MODEL_HAS_DATA_SOURCE",
-    "Name": "Model has no data source configured",
-    "Category": "Governance",
-    "Description": "Model should have at least one data source defined.",
-    "Severity": 3,
-    "Scope": "Model",
-    "Expression": "DataSources.Count = 0 and Tables.Any(Partitions.Any(SourceType = \"M\"))",
-    "CompatibilityLevel": 1200
-  }
-]
+    {
+        "ID": "DAX_COLUMNS_FULLY_QUALIFIED",
+        "Name": "Column references should be fully qualified",
+        "Category": "DAX Expressions",
+        "Description": "Using fully qualified column references makes it easier to distinguish between column and measure references, and also helps avoid certain errors.",
+        "Severity": 2,
+        "Scope": "Measure, CalculatedColumn, CalculatedTable, KPI",
+        "Expression": "DependsOn.Any(Key.ObjectType = \"Column\" and Value.Any(not FullyQualified))",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "DAX_MEASURES_UNQUALIFIED",
+        "Name": "Measure references should be unqualified",
+        "Category": "DAX Expressions",
+        "Description": "Measure references should not include the table name prefix. This makes DAX more readable and distinguishes measures from columns.",
+        "Severity": 2,
+        "Scope": "Measure, CalculatedColumn, CalculatedTable, KPI",
+        "Expression": "DependsOn.Any(Key.ObjectType = \"Measure\" and Value.Any(FullyQualified))",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "DAX_DIVISION_COLUMNS",
+        "Name": "Avoid division (use DIVIDE function instead)",
+        "Category": "DAX Expressions",
+        "Description": "Using the DIVIDE function handles division by zero gracefully. The / operator will return an error when dividing by zero.",
+        "Severity": 3,
+        "Scope": "Measure, CalculatedColumn, CalculatedTable",
+        "Expression": "Tokenize().Any(Type = DIV and Next.Type <> INTEGER_LITERAL and Next.Type <> REAL_LITERAL)",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "DAX_AVOID_IFERROR",
+        "Name": "Avoid using IFERROR",
+        "Category": "DAX Expressions",
+        "Description": "IFERROR can mask real errors. Use specific error handling or fix the root cause instead.",
+        "Severity": 2,
+        "Scope": "Measure, CalculatedColumn",
+        "Expression": "Expression.IndexOf(\"IFERROR\", StringComparison.OrdinalIgnoreCase) >= 0",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "DAX_TODO",
+        "Name": "Revisit TODO expressions",
+        "Category": "DAX Expressions",
+        "Description": "DAX expressions containing TODO comments should be reviewed and completed before deployment.",
+        "Severity": 1,
+        "Scope": "Measure, Partition, CalculatedColumn, CalculatedTable",
+        "Expression": "Expression.IndexOf(\"TODO\", StringComparison.OrdinalIgnoreCase) >= 0",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "DAX_AVOID_FILTER_ALL",
+        "Name": "Avoid FILTER with ALL in iterators",
+        "Category": "DAX Expressions",
+        "Description": "Using FILTER(ALL(...)) in iterators like SUMX can cause performance issues. Consider using CALCULATE with filters instead.",
+        "Severity": 2,
+        "Scope": "Measure, CalculatedColumn",
+        "Expression": "RegEx.IsMatch(Expression, \"FILTER\\s*\\(\\s*ALL\\s*\\(\")",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "META_MEASURE_NO_DESCRIPTION",
+        "Name": "Measure has no description",
+        "Category": "Metadata",
+        "Description": "All measures should have descriptions to help report authors understand their purpose.",
+        "Severity": 2,
+        "Scope": "Measure",
+        "Expression": "string.IsNullOrWhitespace(Description)"
+    },
+    {
+        "ID": "META_COLUMN_NO_DESCRIPTION",
+        "Name": "Visible column has no description",
+        "Category": "Metadata",
+        "Description": "Visible columns should have descriptions to help users understand the data.",
+        "Severity": 1,
+        "Scope": "DataColumn, CalculatedColumn",
+        "Expression": "IsVisible and string.IsNullOrWhitespace(Description)"
+    },
+    {
+        "ID": "META_AVOID_FLOAT",
+        "Name": "Do not use floating point data types",
+        "Category": "Metadata",
+        "Description": "Floating point (Double) data types can cause precision issues. Use Decimal for financial calculations.",
+        "Severity": 3,
+        "Scope": "DataColumn, CalculatedColumn, CalculatedTableColumn",
+        "Expression": "DataType = \"Double\"",
+        "FixExpression": "DataType = DataType.Decimal",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "META_SUMMARIZE_NONE",
+        "Name": "Don't summarize numeric columns",
+        "Category": "Metadata",
+        "Description": "Numeric columns should have SummarizeBy set to None to prevent implicit measures.",
+        "Severity": 1,
+        "Scope": "DataColumn, CalculatedColumn, CalculatedTableColumn",
+        "Expression": "IsVisible and SummarizeBy <> \"None\" and (DataType = \"Double\" or DataType = \"Decimal\" or DataType = \"Int64\")",
+        "FixExpression": "SummarizeBy = AggregateFunction.None",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "META_DISABLE_ATTRIBUTE_HIERARCHIES",
+        "Name": "Disable attribute hierarchies to decrease processing",
+        "Category": "Metadata",
+        "Description": "Hidden columns not used in hierarchies, sort-by, or variations should have IsAvailableInMDX set to false.",
+        "Severity": 2,
+        "Scope": "DataColumn",
+        "Expression": "not IsVisible and IsAvailableInMDX and not UsedInHierarchies.Any() and not UsedInVariations.Any() and not UsedInSortBy.Any()",
+        "FixExpression": "IsAvailableInMDX = false",
+        "CompatibilityLevel": 1400
+    },
+    {
+        "ID": "META_TABLE_NO_DESCRIPTION",
+        "Name": "Table has no description",
+        "Category": "Metadata",
+        "Description": "All tables should have descriptions documenting their purpose and data source.",
+        "Severity": 1,
+        "Scope": "Table",
+        "Expression": "IsVisible and string.IsNullOrWhitespace(Description)"
+    },
+    {
+        "ID": "PERF_UNUSED_COLUMNS",
+        "Name": "Remove unused columns",
+        "Category": "Performance",
+        "Description": "Hidden columns with no references consume memory without benefit. Review before deletion.",
+        "Severity": 2,
+        "Scope": "DataColumn, CalculatedColumn, CalculatedTableColumn",
+        "Expression": "not IsVisible and ReferencedBy.Count = 0 and (not UsedInRelationships.Any()) and (not UsedInSortBy.Any()) and (not UsedInHierarchies.Any()) and (not UsedInVariations.Any())",
+        "FixExpression": "Delete()",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "PERF_UNUSED_MEASURES",
+        "Name": "Remove unused measures",
+        "Category": "Performance",
+        "Description": "Hidden measures with no references may be candidates for removal.",
+        "Severity": 1,
+        "Scope": "Measure",
+        "Expression": "not IsVisible and ReferencedBy.Count = 0",
+        "FixExpression": "Delete()",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "PERF_AVOID_BIDIR_RELATIONSHIPS",
+        "Name": "Avoid bi-directional relationships",
+        "Category": "Performance",
+        "Description": "Bi-directional relationships can cause ambiguity and performance issues. Use single direction when possible.",
+        "Severity": 2,
+        "Scope": "Relationship",
+        "Expression": "CrossFilteringBehavior = CrossFilteringBehavior.BothDirections",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "PERF_TOO_MANY_COLUMNS",
+        "Name": "Table has too many columns",
+        "Category": "Performance",
+        "Description": "Tables with more than 100 columns may indicate over-denormalization or need for refactoring.",
+        "Severity": 2,
+        "Scope": "Table",
+        "Expression": "Columns.Count > 100"
+    },
+    {
+        "ID": "PERF_TOO_MANY_CALC_COLUMNS",
+        "Name": "Table has many calculated columns",
+        "Category": "Performance",
+        "Description": "Calculated columns are computed during processing and stored in memory. Consider using measures instead.",
+        "Severity": 2,
+        "Scope": "Table",
+        "Expression": "Columns.Count(ObjectType = \"CalculatedColumn\") > 10"
+    },
+    {
+        "ID": "LAYOUT_HIDE_FK_COLUMNS",
+        "Name": "Hide foreign key columns",
+        "Category": "Model Layout",
+        "Description": "Foreign key columns used in relationships should be hidden from end users.",
+        "Severity": 1,
+        "Scope": "DataColumn, CalculatedColumn, CalculatedTableColumn",
+        "Expression": "IsVisible and Model.Relationships.Any(FromColumn = outerIt)",
+        "FixExpression": "IsHidden = true",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "LAYOUT_MEASURES_IN_DISPLAY_FOLDERS",
+        "Name": "Organize measures in display folders",
+        "Category": "Model Layout",
+        "Description": "Tables with more than 10 visible measures should organize them in display folders.",
+        "Severity": 1,
+        "Scope": "Table",
+        "Expression": "Measures.Count(IsVisible and string.IsNullOrEmpty(DisplayFolder)) > 10",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "LAYOUT_COLUMNS_IN_DISPLAY_FOLDERS",
+        "Name": "Organize columns and hierarchies in display folders",
+        "Category": "Model Layout",
+        "Description": "Tables with more than 10 visible columns/hierarchies should organize them in display folders.",
+        "Severity": 1,
+        "Scope": "Table",
+        "Expression": "Columns.Count(IsVisible and string.IsNullOrEmpty(DisplayFolder)) + Hierarchies.Count(IsVisible and string.IsNullOrEmpty(DisplayFolder)) > 10",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "LAYOUT_VISIBLE_MEASURE_NO_FOLDER",
+        "Name": "Visible measure not in display folder",
+        "Category": "Model Layout",
+        "Description": "Visible measures should be organized in display folders for easier navigation.",
+        "Severity": 1,
+        "Scope": "Measure",
+        "Expression": "IsVisible and string.IsNullOrEmpty(DisplayFolder)"
+    },
+    {
+        "ID": "NAME_UPPERCASE_FIRST_LETTER",
+        "Name": "Names must start with uppercase letter",
+        "Category": "Naming Conventions",
+        "Description": "Visible objects should have names starting with an uppercase letter for consistency.",
+        "Severity": 2,
+        "Scope": "Table, Measure, DataColumn, CalculatedColumn, Hierarchy",
+        "Expression": "IsVisible and char.IsLower(Name[0])",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "NAME_NO_SPECIAL_CHARS",
+        "Name": "Names should not contain special characters",
+        "Category": "Naming Conventions",
+        "Description": "Object names should avoid special characters except spaces, underscores, and hyphens.",
+        "Severity": 2,
+        "Scope": "Table, Measure, DataColumn, CalculatedColumn",
+        "Expression": "RegEx.IsMatch(Name, \"[^a-zA-Z0-9 _\\-()%]\")",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "NAME_RELATIONSHIP_COLUMNS_MATCH",
+        "Name": "Relationship column names should match",
+        "Category": "Naming Conventions",
+        "Description": "For clarity, columns on both sides of a relationship should have the same or similar names.",
+        "Severity": 2,
+        "Scope": "Relationship",
+        "Expression": "(Model.Relationships.Count(FromTable = OuterIt.FromTable and ToTable = OuterIt.ToTable) = 1 and FromColumn.Name <> ToColumn.Name)",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "NAME_AVOID_RESERVED_WORDS",
+        "Name": "Avoid DAX reserved words in names",
+        "Category": "Naming Conventions",
+        "Description": "Using DAX reserved words in object names can cause confusion and require escaping.",
+        "Severity": 2,
+        "Scope": "Table, Measure, DataColumn, CalculatedColumn",
+        "Expression": "RegEx.IsMatch(Name, \"^(DATE|TIME|YEAR|MONTH|DAY|HOUR|MINUTE|SECOND|NOW|TODAY|TRUE|FALSE|BLANK)$\")",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "FORMAT_NUMERIC_COLUMNS",
+        "Name": "Provide format string for visible numeric columns",
+        "Category": "Formatting",
+        "Description": "Numeric columns should have format strings to control display in reports.",
+        "Severity": 2,
+        "Scope": "DataColumn, CalculatedColumn, CalculatedTableColumn",
+        "Expression": "IsVisible and string.IsNullOrWhitespace(FormatString) and (DataType = \"Int64\" or DataType = \"Double\" or DataType = \"Decimal\")",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "FORMAT_NUMERIC_MEASURES",
+        "Name": "Provide format string for visible numeric measures",
+        "Category": "Formatting",
+        "Description": "Numeric measures should have format strings to control display in reports.",
+        "Severity": 2,
+        "Scope": "Measure",
+        "Expression": "IsVisible and string.IsNullOrWhitespace(FormatString) and (DataType = \"Int64\" or DataType = \"Double\" or DataType = \"Decimal\")",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "FORMAT_PERCENTAGE_MEASURES",
+        "Name": "Percentage measures should use percentage format",
+        "Category": "Formatting",
+        "Description": "Measures representing percentages should use a percentage format string.",
+        "Severity": 1,
+        "Scope": "Measure",
+        "Expression": "(Name.EndsWith(\"%\") or Name.EndsWith(\"Percent\") or Name.EndsWith(\"Percentage\") or Name.EndsWith(\"Rate\")) and not FormatString.Contains(\"%\")",
+        "CompatibilityLevel": 1200
+    },
+    {
+        "ID": "GOV_NO_HARDCODED_VALUES",
+        "Name": "Avoid hardcoded values in DAX",
+        "Category": "Governance",
+        "Description": "Hardcoded numeric values in DAX should be moved to parameters or calculated tables for maintainability.",
+        "Severity": 1,
+        "Scope": "Measure",
+        "Expression": "RegEx.IsMatch(Expression, \"[^\\d]\\d{4,}[^\\d]\")",
+        "Remarks": "Checks for numbers with 4+ digits that might be hardcoded years, thresholds, etc."
+    },
+    {
+        "ID": "GOV_ROLE_HAS_MEMBERS",
+        "Name": "Security role has no members defined",
+        "Category": "Governance",
+        "Description": "Security roles without members may indicate incomplete configuration.",
+        "Severity": 1,
+        "Scope": "ModelRole",
+        "Expression": "Model.Roles.Any() and TablePermissions.Count = 0",
+        "Remarks": "Review role configuration before deployment."
+    },
+    {
+        "ID": "GOV_MODEL_HAS_DATA_SOURCE",
+        "Name": "Model has no data source configured",
+        "Category": "Governance",
+        "Description": "Model should have at least one data source defined.",
+        "Severity": 3,
+        "Scope": "Model",
+        "Expression": "DataSources.Count = 0 and Tables.Any(Partitions.Any(SourceType = \"M\"))",
+        "CompatibilityLevel": 1200
+    }
+]
