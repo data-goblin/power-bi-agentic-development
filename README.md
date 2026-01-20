@@ -1,7 +1,7 @@
 <h1 align="center">power-bi-agentic-development</h1>
 
 <p align="center">
-  Skills and tools for agentic Power BI semantic model development with Tabular Editor
+  Skills and tools for agentic Power BI development
 </p>
 
 <p align="center">
@@ -18,12 +18,12 @@
 # Add marketplace source (if not already added)
 claude plugin marketplace add data-goblin/power-bi-agentic-development
 
-# Install the plugin
+# Install a plugin
 claude plugin install tabular-editor@power-bi-agentic-development
 ```
 
 
-## What's Included
+## What's Included (v0.2.0)
 
 ### Skills
 
