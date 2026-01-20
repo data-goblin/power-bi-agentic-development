@@ -76,6 +76,22 @@ Complete reference set of BPA rules covering:
 - Formatting
 - Governance
 
+### microsoft-analysis-services-rules.json
+
+**77 official BPA rules** from the Microsoft Analysis Services repository, maintained by Michael Kovalsky (Fabric CAT team). This is the industry-standard rule set used by Power BI developers worldwide.
+
+**Source:** [microsoft/Analysis-Services/BestPracticeRules](https://github.com/microsoft/Analysis-Services/tree/master/BestPracticeRules)
+
+**Categories covered:**
+- **Performance (25 rules):** Data types, relationships, aggregations, query folding, Direct Query optimization
+- **DAX Expressions (17 rules):** Column/measure references, DIVIDE function, IFERROR avoidance, filter syntax
+- **Error Prevention (9 rules):** Source columns, expressions, data type mismatches, invalid characters
+- **Maintenance (9 rules):** Unused columns/measures, referential integrity, descriptions
+- **Naming Conventions (4 rules):** Object names, partition names, special characters
+- **Formatting (18 rules):** Format strings, data categories, hiding conventions, primary/foreign keys
+
+**Note:** Some rules require Vertipaq Analyzer annotations. Run the script at [elegantbi.com/post/vertipaqintabulareditor](https://www.elegantbi.com/post/vertipaqintabulareditor) first to enable cardinality-based rules.
+
 ## Usage
 
 Import these rule sets into Tabular Editor via:
