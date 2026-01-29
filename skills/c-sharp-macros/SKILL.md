@@ -251,6 +251,103 @@ foreach(var c in Model.AllColumns.Where(c =>
 - [Tabular Editor Script Library](https://docs.tabulareditor.com/features/CSharpScripts/csharp-script-library.html)
 - [Supported File Types](https://docs.tabulareditor.com/references/supported-files.html#macroactionsjson)
 
+
+## Advanced Macro Patterns
+
+### Overview
+
+When building macros that execute DAX queries, you'll encounter patterns for embedding DAX in C#, handling query results, building dynamic queries from user selections, and optimizing performance.
+
+These patterns are applicable to any macro that queries or manipulates semantic model data.
+
+**Source**: Extracted from production macro development at https://github.com/vdvoorder/tabular-editor-macros
+
+### Core Patterns
+
+#### Embedding DAX in C#
+
+See `references/dax-in-csharp.md` for patterns including:
+- Verbatim strings with escaped quotes
+- String interpolation with `DaxObjectFullName`
+- Multi-line string building for complex queries
+- InvariantCulture for number formatting
+
+**Key principle**: Use `@""` for DAX strings, escape inner quotes with `""`, use `DaxObjectFullName` for table/column references.
+
+#### Handling DAX Results
+
+See `references/dax-results-handling.md` for patterns including:
+- DBNull checking before type conversion (critical - DAX BLANK maps to DBNull)
+- Column name format (DAX returns names with brackets: `"[ColumnName]"`)
+- Building output DataTables with proper types
+- Conditional column addition based on pre-scanning
+
+**Key principle**: Always check `row["[Column]"] == DBNull.Value` before `Convert.ToXxx()`.
+
+#### Dynamic Query Construction
+
+See `references/dynamic-queries.md` for patterns including:
+- Selection-aware query building (columns vs tables vs measures)
+- Same-table validation for multi-column operations
+- Building UNION queries from multiple ROW() expressions
+- Type-conditional queries (Boolean columns need FORMAT wrapper for MINX/MAXX)
+- Error resilience per object
+
+**Key principle**: Build DAX dynamically from TOM metadata, validate selections, handle type-specific edge cases.
+
+#### Performance Optimization
+
+See `references/performance-patterns.md` for patterns including:
+- **Counter-intuitive**: Multiple separate `EvaluateDax()` calls outperform batched UNION queries
+- TopN sampling for large tables (10-100x speedup)
+- Stopwatch timing for user feedback
+- Pre-scanning to skip unnecessary expensive calculations
+- Phased execution (cheap operations first)
+
+**Key principle**: Measure, don't guess. DAX engine parallelizes separate queries better than it parallelizes subqueries.
+
+### Quick Reference
+
+```csharp
+// Pattern: Safe DAX result handling
+var result = EvaluateDax(dax) as System.Data.DataTable;
+if (result == null || result.Rows.Count == 0) return;
+
+foreach (System.Data.DataRow row in result.Rows)
+{
+    // Always check for DBNull
+    long value = row["[Column]"] == DBNull.Value
+        ? 0
+        : Convert.ToInt64(row["[Column]"]);
+}
+
+// Pattern: Dynamic query from selection
+foreach (var col in Selected.Columns)
+{
+    string dax = $@"
+    ROW(
+        ""Column"", ""{col.Name}"",
+        ""Count"", COUNTROWS({col.Table.DaxObjectFullName})
+    )";
+
+    var colResult = EvaluateDax(dax);
+    // Process result
+}
+
+// Pattern: Boolean column handling
+string minExpr = IsBooleanColumn(col)
+    ? $@"MINX({table}, FORMAT({column}, ""True/False""))"
+    : $@"MINX({table}, {column})";
+```
+
+### Common Edge Cases
+
+1. **Boolean columns**: MINX/MAXX don't support Boolean directly - wrap with `FORMAT([Column], "True/False")`
+2. **DBNull values**: Always check before type conversion
+3. **Column names in results**: Include brackets: `row["[ColumnName]"]`
+4. **Number formatting in DAX**: Use `InvariantCulture` to avoid culture-dependent decimal separators
+5. **Same-table requirement**: Many operations require all selected columns from same table
+
 ## Example Macros
 
 ### Format Numeric Measures
