@@ -16,6 +16,16 @@ Skill for suggesting, improving, and understanding BPA rules for Power BI semant
 - Parse BPA annotations from TMDL files
 - Validate rule syntax and scope
 
+### tmdl-authoring
+
+Skill for authoring and editing TMDL (Tabular Model Definition Language) files directly in PBIP projects.
+
+**Capabilities:**
+- TMDL syntax rules (tab indentation, `///` descriptions vs `//` comments, name quoting)
+- Column and measure property definitions with valid values
+- Data quality patterns (summarizeBy rules, formatString patterns, PBI_FormatHint)
+- SQLBI naming conventions for tables, columns, measures, and display folders
+
 ## Development
 
 ### Versioning

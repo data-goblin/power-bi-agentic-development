@@ -35,6 +35,7 @@ claude plugin install tabular-editor@power-bi-agentic-development
 | `tabular-editor-cli` | Tabular Editor CLI usage and automation |
 | `tabular-editor-config` | TE3 config files (TMUO, preferences, BPA settings) |
 | `tabular-editor-docs` | Local search of Tabular Editor documentation |
+| `tmdl-authoring` | TMDL syntax rules, column/measure definitions, naming conventions |
 
 ### Commands
 
@@ -96,6 +97,16 @@ Manage Tabular Editor configuration files:
 - Preferences JSON schema
 - BPA rule file locations
 - Workspace connections
+
+
+### TMDL Authoring (`tmdl-authoring`)
+
+Author and edit TMDL files directly in PBIP projects:
+- Syntax rules (indentation, `///` descriptions, `//` comments)
+- Name quoting rules (when to quote vs. not)
+- Column and measure property reference
+- Data quality patterns (summarizeBy, formatString)
+- SQLBI naming conventions
 
 
 ## Related Projects
