@@ -16,6 +16,17 @@ Skill for suggesting, improving, and understanding BPA rules for Power BI semant
 - Parse BPA annotations from TMDL files
 - Validate rule syntax and scope
 
+### pbip-project-operations
+
+Skill for project-level operations on Power BI Project (PBIP) files.
+
+**Capabilities:**
+- PBIP project structure and file type reference
+- Cascading table, measure, and column renames across all affected locations
+- Project forking workflows (copy, rename folders, update entry points)
+- Report visual JSON Entity/Property/queryRef pattern reference
+- Post-rename verification with grep strategies
+
 ## Development
 
 ### Versioning

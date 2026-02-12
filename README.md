@@ -35,6 +35,7 @@ claude plugin install tabular-editor@power-bi-agentic-development
 | `tabular-editor-cli` | Tabular Editor CLI usage and automation |
 | `tabular-editor-config` | TE3 config files (TMUO, preferences, BPA settings) |
 | `tabular-editor-docs` | Local search of Tabular Editor documentation |
+| `pbip-project-operations` | PBIP project structure, cascading renames, project forking |
 
 ### Commands
 
@@ -96,6 +97,16 @@ Manage Tabular Editor configuration files:
 - Preferences JSON schema
 - BPA rule file locations
 - Workspace connections
+
+
+### PBIP Project Operations (`pbip-project-operations`)
+
+Manage Power BI Project (PBIP) files at the project level:
+- PBIP project structure and file types
+- Cascading table, measure, and column renames (~10-12 locations each)
+- Project forking workflows
+- Report visual JSON Entity/Property/queryRef patterns
+- Post-rename verification strategies
 
 
 ## Related Projects
