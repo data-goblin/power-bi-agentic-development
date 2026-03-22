@@ -7,7 +7,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/version-0.5.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/tabular_editor-2%20%7C%203-orange" alt="Tabular Editor">
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
+  <img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="License">
 </p>
 
 ---
@@ -26,6 +26,10 @@ claude plugin marketplace add data-goblin/power-bi-agentic-development
 claude plugin install tabular-editor@power-bi-agentic-development
 claude plugin install pbi-desktop@power-bi-agentic-development
 claude plugin install pbip@power-bi-agentic-development
+
+# From the Fabric CLI marketplace (separate repo)
+claude plugin marketplace add data-goblin/fabric-cli-plugin
+claude plugin install fabric-cli-plugin@fabric-cli-plugin
 ```
 
 
