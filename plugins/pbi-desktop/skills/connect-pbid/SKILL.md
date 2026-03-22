@@ -225,6 +225,13 @@ while ($reader.Read()) {
 $reader.Close()
 ```
 
+### DAX Rules
+
+- **Always fully qualify column references** with single-quoted table names: `'Sales'[Amount]`, not `[Amount]`. Unqualified columns cause ambiguity errors.
+- Table names with spaces or special characters must be single-quoted: `'D&D 5E Monsters'[CR]`
+- String literals in DAX use double quotes, escaped as `""` inside PowerShell here-strings
+- Measure references are unqualified: `[Total Revenue]`
+
 ### Query Patterns
 
 ```powershell
