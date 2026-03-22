@@ -16,11 +16,7 @@
     {
       "name": "pbi-desktop",
       "description": "Connect to Power BI Desktop's local Analysis Services instance to enumerate models, query with DAX, refresh data, and modify metadata via TOM. No MCP server required.",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./skills/connect-pbid"
-      ]
+      "source": "./"
     }
   ]
 }
