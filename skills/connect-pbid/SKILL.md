@@ -31,7 +31,7 @@ Activate automatically when tasks involve:
 
 - Power BI Desktop must be open with a model loaded before connecting; if there are errors it is likely due to a "thin report" connected to a remote model
 - The local Analysis Services instance only accepts connections from `localhost`
-- Multiple PBI Desktop files open means multiple `msmdsrv.exe` processes on different ports
+- Multiple PBI Desktop files open means multiple `msmdsrv.exe` processes on different ports. Connect to each port, read `$server.Databases[0].Name`, and ask the user which model to work with if more than one is found
 - Always use a timeout of 60000ms or higher for PowerShell commands via Bash
 - **Shell escaping**: When calling PowerShell from Bash (e.g., on macOS or WSL), use **single quotes** for the outer `-Command` argument so Bash does not interpret `$env:TEMP`, `$server`, etc. as shell variables. Double quotes cause `$` variables to be eaten by Bash before PowerShell sees them:
   ```bash
