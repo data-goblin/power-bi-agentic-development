@@ -245,9 +245,7 @@ All modifications require a TOM connection (section 3). Call `$model.SaveChanges
 
 For full CRUD examples of every object type, see [tom-object-types.md](./references/tom-object-types.md).
 
-**Summary of supported operations:**
-
-This is not a comprehensive list. You should check the Microsoft Documentation for a full list of additional operations and object types.
+**Common object types and their TOM collections** (not exhaustive -- see [Microsoft TOM API docs](https://learn.microsoft.com/en-us/dotnet/api/microsoft.analysisservices.tabular) for the full namespace):
 
 | Object | Collection | Create | Read | Update | Delete |
 |--------|-----------|--------|------|--------|--------|
