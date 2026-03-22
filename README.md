@@ -22,8 +22,9 @@ To install these skills in Claude Code, enter the following commands in the term
 # Add marketplace source (if not already added)
 claude plugin marketplace add data-goblin/power-bi-agentic-development
 
-# Install a plugin
+# Install plugins
 claude plugin install tabular-editor@power-bi-agentic-development
+claude plugin install pbi-desktop@power-bi-agentic-development
 ```
 
 
