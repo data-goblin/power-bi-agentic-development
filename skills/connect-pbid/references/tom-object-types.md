@@ -855,3 +855,85 @@ $model.SaveChanges()
 ```
 
 This persists all pending modifications in a single transaction. If validation fails, the entire batch is rolled back and an error is thrown with details.
+
+
+## Refresh After Modifications
+
+`SaveChanges()` persists metadata, but the VertiPaq engine may need a refresh to materialize the changes:
+
+| What was added/changed | Required refresh |
+|------------------------|-----------------|
+| Measure (DAX expression) | `calculate` -- recalculates DAX without re-querying source |
+| Calculated column | `calculate` -- evaluates DAX expression and populates column |
+| Calculated table | `calculate` -- evaluates DAX partition expression |
+| Regular table / data column | `full` -- re-queries the data source and loads data |
+| Partition M expression change | `full` on that partition/table |
+| Relationship (new or modified) | `calculate` -- engine re-evaluates cross-filter propagation |
+| Column/measure rename, folder, format | None -- metadata-only, visible immediately |
+| Role / perspective / culture | None -- metadata-only |
+
+```powershell
+# After adding a calculated table or calculated column
+$model.RequestRefresh([Microsoft.AnalysisServices.Tabular.RefreshType]::Calculate)
+$model.SaveChanges()
+
+# After adding a regular table with a data source
+$model.Tables["NewTable"].RequestRefresh([Microsoft.AnalysisServices.Tabular.RefreshType]::Full)
+$model.SaveChanges()
+```
+
+
+## Validating Changes with DAX Queries
+
+After modifying the model, always validate that changes work as expected. Use ADOMD.NET DAX queries to confirm.
+
+### Verify a New Measure
+
+After adding a DAX measure, query it to confirm the expression evaluates correctly:
+
+```powershell
+$cmd.CommandText = "EVALUATE ROW(""@Result"", [New Measure Name])"
+# If this returns an error, the DAX expression is invalid
+# Check for division by zero, missing column references, circular dependencies
+```
+
+### Verify a Relationship
+
+Test a new relationship by grouping a column from the "many" side and aggregating from the "one" side (or vice versa). If the relationship works, the aggregation will respect the filter context:
+
+```powershell
+# Relationship: Sales[CustomerID] -> Customers[CustomerID]
+# Group by customer name (from side), aggregate sales amount (to side)
+$cmd.CommandText = "EVALUATE SUMMARIZECOLUMNS('Customers'[Name], ""@TotalSales"", SUM('Sales'[Amount]))"
+# If this returns one row per customer with correct totals, the relationship is working
+# If all rows show the same total, the relationship is inactive or misconfigured
+```
+
+### Check for Referential Integrity Violations Before Creating a Relationship
+
+Before creating a relationship, check if the "many" side has values not present in the "one" side. Orphaned keys cause blank rows in reports and can indicate data quality issues:
+
+```powershell
+# Find values in Sales[CustomerID] that don't exist in Customers[CustomerID]
+$cmd.CommandText = @"
+EVALUATE
+FILTER(
+    DISTINCT('Sales'[CustomerID]),
+    NOT 'Sales'[CustomerID] IN VALUES('Customers'[CustomerID])
+)
+"@
+# If this returns rows, those are orphaned keys -- they will produce blank rows in visuals
+# Fix the source data or set RelyOnReferentialIntegrity = true (skips the check, assumes clean data)
+```
+
+### Verify a Calculated Table or Column Exists
+
+After creating a calculated table or column and running a `calculate` refresh, confirm it was materialized:
+
+```powershell
+# Check row count of a calculated table
+$cmd.CommandText = "EVALUATE ROW(""@RowCount"", COUNTROWS('CalculatedTableName'))"
+
+# Check a calculated column has values
+$cmd.CommandText = "EVALUATE TOPN(5, SELECTCOLUMNS('Table', ""@Col"", 'Table'[CalculatedColumnName]))"
+```
