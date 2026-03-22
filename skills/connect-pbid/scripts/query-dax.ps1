@@ -4,7 +4,7 @@
 #
 # Examples:
 #   .\query-dax.ps1 -Port 53706 -Query "EVALUATE TOPN(5, 'Sales')"
-#   .\query-dax.ps1 -Port 53706 -Query "EVALUATE SUMMARIZECOLUMNS('Date'[Year], ""Total"", SUM('Sales'[Amount]))"
+#   .\query-dax.ps1 -Port 53706 -Query "EVALUATE SUMMARIZECOLUMNS('Date'[Year], ""@Total"", SUM('Sales'[Amount]))"
 #   .\query-dax.ps1 -Port 53706 -Query "EVALUATE ROW(""Count"", COUNTROWS('Sales'))"
 #   .\query-dax.ps1 -Port 53706 -Query "SELECT * FROM `$SYSTEM.TMSCHEMA_MEASURES"
 

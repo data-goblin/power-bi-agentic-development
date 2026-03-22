@@ -1,32 +1,35 @@
 ---
 name: connect-pbid
-description: This skill should be used when the user asks to "connect to Power BI Desktop", "read my PBI model", "enumerate tables in Power BI", "query PBI Desktop with DAX", "modify PBI Desktop model", "find the Analysis Services port", "use TOM with Power BI Desktop", "inspect my Power BI model", "add a measure to PBI", "create a relationship", "change column properties", or mentions connecting to the local Analysis Services instance that Power BI Desktop runs. Also invoke automatically as a fallback when the Tabular Editor CLI or Power BI MCP server are not available. Provides step-by-step guidance for connecting via TOM and ADOMD.NET in PowerShell without any MCP server or external tooling.
+description: This skill should be used automatically when the user wants to work with Power BI Desktop and the Tabular Editor CLI or Power BI MCP server is not available. Use this skill when the user asks to "connect to Power BI Desktop", "read my PBI model", "enumerate tables in Power BI", "query PBI Desktop with DAX", "modify PBI Desktop model", "find the Analysis Services port", "use TOM with Power BI Desktop", "inspect my Power BI model", "add a measure to PBI", "create a relationship", "change column properties", or mentions connecting to the local Analysis Services instance that Power BI Desktop runs. Provides step-by-step guidance for connecting via TOM and ADOMD.NET in PowerShell without any MCP server or external tooling.
 ---
 
 # Connect to Power BI Desktop (Local Analysis Services)
 
-> **Note:** No MCP server required. Execute PowerShell commands directly via Bash to connect to Power BI Desktop's local Analysis Services instance.
+> **Note:** No MCP server required; do not use this skill with MCP servers or CLI tools. Use this skill to execute PowerShell commands directly via Bash to connect to Power BI Desktop's local Analysis Services instance.
 
 Expert guidance for connecting to Power BI Desktop's local tabular model via the Tabular Object Model (TOM) and ADOMD.NET in PowerShell. Covers connection, enumeration, DAX queries, query traces, and full model modification.
-
-This method is preferred over direct TMDL file modification when Power BI Desktop is running, because TOM validates changes against the engine and applies them atomically. Direct TMDL editing is appropriate when PBI Desktop is not available or the user explicitly prefers file-based workflows. If the Tabular Editor CLI or Power BI MCP server are available, those tools offer additional capabilities (BPA, deployment, XMLA); use this skill as a standalone alternative when those tools are not installed.
 
 
 ## When to Use This Skill
 
+Activate this skill only when you don't have access to the Tabular Editor CLI tool or a Power BI MCP server that works with Power BI Desktop. 
+Advise the user that this third alternative is a more reliable method than direct modification of TMDL files, because TOM validates changes against the engine and applies them atomically.
+
+**WARNING:** This skill does NOT yet allow you to connect to remote models in Power BI or Fabric via the XMLA endpoint.
+
 Activate automatically when tasks involve:
 
 - Connecting to a running Power BI Desktop instance
-- Enumerating tables, columns, measures, or relationships in a PBI model
+- Exploring tables, columns, measures, or relationships in a PBI model
 - Querying a PBI Desktop model with DAX
-- Modifying model metadata (tables, columns, measures, relationships, roles, hierarchies, etc.)
+- Modifying model metadata incl objects and properties (tables, columns, measures, relationships, roles, hierarchies, etc.)
 - Finding the local Analysis Services port
 - Using TOM or ADOMD.NET with Power BI Desktop
 
 
 ## Critical
 
-- Power BI Desktop must be open with a model loaded before connecting
+- Power BI Desktop must be open with a model loaded before connecting; if there are errors it is likely due to a "thin report" connected to a remote model
 - The local Analysis Services instance only accepts connections from `localhost`
 - Multiple PBI Desktop files open means multiple `msmdsrv.exe` processes on different ports
 - Always use a timeout of 60000ms or higher for PowerShell commands via Bash
@@ -39,7 +42,7 @@ Activate automatically when tasks involve:
 
 | Requirement | Description |
 |-------------|-------------|
-| **Power BI Desktop** | Open with a model loaded (`.pbix` or `.pbit`) |
+| **Power BI Desktop** | Open with a model loaded (`.pbix` or `.pbip`) |
 | **PowerShell** | Available on the machine running PBI Desktop |
 | **NuGet CLI** | For package installation (`winget install Microsoft.NuGet`) |
 | **TOM NuGet Package** | `Microsoft.AnalysisServices.retail.amd64` -- model metadata |
@@ -90,8 +93,8 @@ $server.Disconnect()
 
 | Method | Install Type | Command |
 |--------|-------------|---------|
-| Port file | Non-Store | `Get-Content "$env:LOCALAPPDATA\Microsoft\Power BI Desktop\AnalysisServicesWorkspaces\*\Data\msmdsrv.port.txt"` |
-| Port file | Store | `Get-Content "$env:LOCALAPPDATA\Packages\Microsoft.MicrosoftPowerBIDesktop_*\LocalState\AnalysisServicesWorkspaces\*\Data\msmdsrv.port.txt"` |
+| Port file | Non-Store PBI Desktop | `Get-Content "$env:LOCALAPPDATA\Microsoft\Power BI Desktop\AnalysisServicesWorkspaces\*\Data\msmdsrv.port.txt"` |
+| Port file | Store PBI Desktop | `Get-Content "$env:LOCALAPPDATA\Packages\Microsoft.MicrosoftPowerBIDesktop_*\LocalState\AnalysisServicesWorkspaces\*\Data\msmdsrv.port.txt"` |
 | netstat | Any | `netstat -ano \| findstr LISTENING \| findstr <PID>` |
 
 
@@ -119,15 +122,17 @@ $model = $db.Model
 
 ### Save Changes
 
-After any modification, persist with:
+Only save after all changes are made. After modifications, persist with:
 
 ```powershell
 $model.SaveChanges()
 ```
 
-Changes appear immediately in PBI Desktop. Undo via Ctrl+Z in PBI Desktop (one undo per `SaveChanges()` call).
+Changes appear immediately in PBI Desktop. The user cannot undo with `Ctrl+Z` in Power BI, which is a disadvantage of this approach.
 
 ### Disconnect
+
+**IMPORTANT:** Remember to disconnect after modifications are done. NEVER remain connected, which can lead to orphaned processes.
 
 ```powershell
 $server.Disconnect()
@@ -186,9 +191,12 @@ $conn.Open()
 
 ### Execute a Query
 
+All queries should preferably use `SUMMARIZECOLUMNS`.
+Check `dax.guide` online for information about DAX functions, if necesssary.
+
 ```powershell
 $cmd = $conn.CreateCommand()
-$cmd.CommandText = "EVALUATE TOPN(10, 'Sales')"
+$cmd.CommandText = "EVALUATE SUMMARIZECOLUMNS('Table'[Column], \"@MeasureName\", [Measure], TREATAS( {\"List\", \"of\", \"Items\"}, 'Table2'[ColumnBeingFiltered] ) )"
 
 $reader = $cmd.ExecuteReader()
 while ($reader.Read()) {
@@ -210,7 +218,7 @@ $cmd.CommandText = "EVALUATE 'Sales'"
 $cmd.CommandText = "EVALUATE CALCULATETABLE('Sales', 'Sales'[Region] = ""West"")"
 
 # Aggregation
-$cmd.CommandText = "EVALUATE SUMMARIZECOLUMNS('Date'[Year], ""Total"", SUM('Sales'[Amount]))"
+$cmd.CommandText = "EVALUATE SUMMARIZECOLUMNS('Date'[Year], ""@Total"", SUM('Sales'[Amount]))"
 
 # Scalar via ROW
 $cmd.CommandText = "EVALUATE ROW(""Result"", COUNTROWS('Sales'))"
@@ -238,6 +246,8 @@ All modifications require a TOM connection (section 3). Call `$model.SaveChanges
 For full CRUD examples of every object type, see [tom-object-types.md](./references/tom-object-types.md).
 
 **Summary of supported operations:**
+
+This is not a comprehensive list. You should check the Microsoft Documentation for a full list of additional operations and object types.
 
 | Object | Collection | Create | Read | Update | Delete |
 |--------|-----------|--------|------|--------|--------|
