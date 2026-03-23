@@ -13,14 +13,40 @@
 
 ## Quick Methods
 
-**Fastest:** Use `pbir model` to list fields from a connected report:
+**Fastest -- `pbir model`** (if pbir CLI available):
 
 ```bash
 pbir model "Report.Report" -d              # All tables, columns, measures
 pbir model "Report.Report" -d -t Sales     # Filter to specific table
 ```
 
-**Alternative:** Use `te` or `fab` to query the published model directly (see commands below)
+**Alternative -- `te`** (if Tabular Editor CLI available):
+
+```bash
+te query -q "SELECT [Name] FROM $SYSTEM.TMSCHEMA_TABLES WHERE NOT [IsHidden]" -s "Workspace" -d "Model"
+te query -q "SELECT [TableID], [ExplicitName] FROM $SYSTEM.TMSCHEMA_COLUMNS WHERE NOT [IsHidden]" -s "Workspace" -d "Model"
+te query -q "SELECT [TableID], [Name], [Expression] FROM $SYSTEM.TMSCHEMA_MEASURES" -s "Workspace" -d "Model"
+```
+
+**Fallback -- `fab`** (if only Fabric CLI available):
+
+```bash
+# Get workspace and model IDs
+WS_ID=$(fab get "ws.Workspace" -q "id" | tr -d '"')
+MODEL_ID=$(fab get "ws.Workspace/Model.SemanticModel" -q "id" | tr -d '"')
+
+# List tables
+fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/executeQueries" \
+  -X post -i '{"queries":[{"query":"EVALUATE INFO.TABLES()"}]}'
+
+# List columns for a table
+fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/executeQueries" \
+  -X post -i '{"queries":[{"query":"EVALUATE INFO.COLUMNS()"}]}'
+
+# Get distinct values for a column (for filters)
+fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/executeQueries" \
+  -X post -i "{\"queries\":[{\"query\":\"EVALUATE VALUES('Date'[Calendar Year (ie 2021)])\"}]}"
+```
 
 ## Finding Fields in Published Models
 
