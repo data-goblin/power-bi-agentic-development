@@ -66,29 +66,34 @@ Report-level filters that apply to all pages.
 **See**: [filter-pane.md](./filter-pane.md) for complete filter documentation
 
 ### resourcePackages
-External resources used by the report (images, custom visuals, etc.).
 
-**Type**: Array
-**Contains**: Resource package definitions
+Registers themes, images, and other resources used by the report. Files live in `StaticResources/`.
 
-**Example:**
 ```json
 "resourcePackages": [
   {
-    "resourcePackage": {
-      "name": "RegisteredResources",
-      "type": 1,
-      "items": [
-        {
-          "name": "logo.png",
-          "path": "logo.png",
-          "dataUri": "data:image/png;base64,..."
-        }
-      ]
-    }
+    "name": "SharedResources",
+    "type": "SharedResources",
+    "items": [
+      {"name": "CY24SU10", "path": "BaseThemes/CY24SU10.json", "type": "BaseTheme"}
+    ]
+  },
+  {
+    "name": "RegisteredResources",
+    "type": "RegisteredResources",
+    "items": [
+      {"name": "MyTheme.json", "path": "MyTheme.json", "type": "CustomTheme"},
+      {"name": "logo15640660799959338.png", "path": "logo15640660799959338.png", "type": "Image"}
+    ]
   }
 ]
 ```
+
+- `SharedResources` -- built-in Microsoft base themes (`StaticResources/SharedResources/BaseThemes/`)
+- `RegisteredResources` -- custom themes and images (`StaticResources/RegisteredResources/`)
+- Item types: `"BaseTheme"`, `"CustomTheme"`, `"Image"`
+- Every image and custom theme file must be registered here to be referenced in pages/visuals
+- See [images.md](./images.md) for image usage patterns
 
 ### settings
 Report-wide settings and options.

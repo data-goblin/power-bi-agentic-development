@@ -218,6 +218,7 @@ Two reference types for connecting to semantic models:
 - **`references/wallpaper.md`** -- Report wallpaper/canvas background
 - **`references/filter-pane.md`** -- Filter pane formatting
 - **`references/sort-visuals.md`** -- Visual sort configuration
+- **`references/images.md`** -- Static images, base64 in themes, SVG measures
 - **`references/report-extensions.md`** -- reportExtensions.json format
 
 **Semantic model integration:**
