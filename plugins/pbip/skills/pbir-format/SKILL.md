@@ -14,7 +14,7 @@ Skill that teaches Claude about the Power BI Enhanced Report (PBIR) JSON format 
 - **Check examples:** Check [examples](./examples/) for a valid report
 - **Take a backup:** Make a copy of the report before modifying it
 - **PBIX vs PBIP vs PBIR:** So long as report metadata is in PBIR format, you can work with any of these formats. PBIX is just a zip file; unzip and rezip to work with it. You shouldn't work with PBIT (Power BI Template) file types. Note that PBIP and PBIX contain PBIR, but you can also have a "thin" report that is PBIR only.
-- **Validate often:** Any time you change a JSON file you **must** validate it *IMMEDIATELY* after the modification to avoid "breaking" changes with `<claude put code here>`
+- **Validate often:** Any time you change a JSON file you **must** validate it *IMMEDIATELY* after the modification to avoid "breaking" changes with `jq empty <file.json>`
 - **Valid JSON vs. Rendering JSON:** Just because something is valid JSON doesn't mean it will render. A visual might not render if the bound field is invalid (missing, wrong table, or misspelled) in the visual.json, if the visual elements are cropped by their container, if a model performance issue causes the dax query to time out, if a model data quality issue results in (Blank) or empty values, etc. You can use tools like the chrome or chrome devTools MCP server to check whether a visual rendered if the report was published to Power BI, but it's often faster to just ask the user to check in Power BI Desktop or the browser.
 - **Hierarchical formatting cascade:** In Power BI reports, formatting is determined by the following order of operations: defaults --> Theme wildcards (*) --> Theme visualTypes --> bespoke visual.json configuration. Theme overwrites defaults, visualType overrides wildcards in themes, and visual.json overrides all theme formatting. It's preferable to put as much of the formatting in the theme as possible over bespoke visual.json formatting because then changes only need to happen in one place
 - **PBIR files are strict JSON:** No comments allowed
@@ -82,7 +82,7 @@ Here are some core rules to follow:
 - Reports should have a title at the top. The title can be a textbox or it can be part of the background image. Ensure the textbox is sufficiently tall to render the text (24-28 pt)
 - The most important information in cards or KPIs should be in the top, as well as possibly small or simple line / bar charts, or slicers
 - There should not be more than 2-3 slicers on the page, and there shouldn't be macguyvered "slicer panes"; use the goddamn filter pane you savage animal
-- Key breakdowns can be in the middel and left of teh chart
+- Key breakdowns can be in the middle and left of the page
 - Tables and matrixes can be on the right side of the page, or at the bottom. Occasionally, tables and matrixes can span the full page, but this is a bad practice, especially if there are more than 3-6 columns in the table or matrix
 - Custom visuals (with Deneb, python, R, or with the pbiviz custom visuals) should be used instead of SVG visuals or heavily "macguyvered" core visuals... within reason. Sometimes a macguyvered visual or a simple SVG can be more elegant, but you want to avoid technical debt and unnecessary complexity
 - Report extensions (thin report measures and visual calculations) should only be used if absolutely necessary over model measures
