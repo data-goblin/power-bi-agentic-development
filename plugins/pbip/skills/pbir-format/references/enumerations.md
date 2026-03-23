@@ -6,6 +6,8 @@
 
 This document lists valid string values for properties that accept enumerations.
 
+Note that this is not an exhaustive list. Please pull the schema files directly to understand the schema if you need a comprehensive overview.
+
 ## Visual Types
 
 Valid `visualType` values (from theme.visualStyles):

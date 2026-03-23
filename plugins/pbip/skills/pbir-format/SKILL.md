@@ -7,6 +7,8 @@ description: "This skill should be used when the user asks about 'PBIR format', 
 
 Read-only reference for Power BI Enhanced Report (PBIR) JSON format idiosyncrasies -- structure, expression syntax, formatting patterns, and schema rules.
 
+**PBIR files are strict JSON -- no comments allowed (not JSONC/JSONL).**
+
 ## Report Structure
 
 ```

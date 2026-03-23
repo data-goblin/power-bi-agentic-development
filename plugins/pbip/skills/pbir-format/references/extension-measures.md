@@ -4,7 +4,18 @@
 
 Extension measures are DAX measures defined in `reportExtensions.json` that exist **only in the report layer**, not in the semantic model. They are also called "thin report measures" or "report-level measures."
 
-**Key concept:** Extension measures enable you to centralize formatting logic in DAX without modifying the semantic model, following the pattern described in SQLBI's "Re-using visual formatting in and across Power BI reports."
+They are useful for the following: 
+- Report-specific calculations that don't need to be re-used in other reports and therefore shouldn't be in the model
+- Centralizing formatting logic in DAX rather than custom bespoke formatting split over many visuals. This might be better as a model measure if this must be re-used across multiple reports.
+- 
+
+They are **not** useful in the following scenarios:
+- Report-specific calculations or logic for a single visual. This is better done with a DAX visual calculation (visicalc, viz calc)
+- Calculations or logic (including conditional formatting logic) that must apply to multiple reports. This is better done with model measures.
+- Objects that must be in-memory (i.e. used as a category or filter). This obviously must be done in the model.
+
+> [!NOTE] You can always consider creating a composite model if you need special logic or calculations that apply to a subset of reports
+
 
 ## Why Use Extension Measures
 
@@ -15,14 +26,14 @@ Extension measures are DAX measures defined in `reportExtensions.json` that exis
 - Manual updates when logic changes
 - Inconsistency when logic differs between visuals
 
-**Solution:** Define formatting logic once in an extension measure, reference it everywhere.
+**Solution:** Define formatting logic once in an extension or model measure, reference it everywhere. That way, if you want to change the logic, you only do it once. Ideally, however, you should refrence theme semantic colors like "bad", "good", etc. rather than custom hex colors such as "#171717" or "#FAFAFA".
 
 **Benefits:**
 1. **Centralized logic** - Change formatting rules in one place
 2. **No model changes** - No semantic model permissions or refresh needed
-3. **Version control friendly** - Stored in reportExtensions.json alongside visual definitions
-4. **Reusable** - Same measure drives colors, sizes, transparency across visuals
-5. **Theme integration** - Can reference theme colors while maintaining conditional logic
+3. **Version control friendly-ish** - Stored in reportExtensions.json alongside visual definitions. Not ideal, but better than nothing, I guess...
+4. **Reusable** - Same measure drives colors, sizes, transparency, and even text across visuals
+5. **Theme integration** - Can reference theme colors which centralize colors while the extension measures centralize the conditional logic
 
 ### When to Use Extension Measures vs Model Measures
 
@@ -78,6 +89,10 @@ If you move all extension measures to the semantic model (e.g., from `reportExte
           "name": "MeasureName",
           "dataType": "Text",
           "expression": "DAX expression",
+          "formatString": "#,0.00",
+          "displayFolder": "Formatting\\Colors",
+          "description": "What this measure does",
+          "hidden": false,
           "references": {
             "measures": [...]
           }
@@ -181,7 +196,9 @@ The `__field_index.md` contains:
 
 ### Using Entities for Extension Measures
 
-**Pick an existing entity** from the field index to host your extension measures:
+"Entities" in the PBIR visual JSON are table names. To discover table names, you need to read the model metadata, either directly (if TMDL files) or using supporting tools like the `te` CLI, an MCP server, or directly connecting to and enumerating the model open in Power BI Desktop by using the `connect-pbir` skill
+
+**Pick an existing table / entity** from the field index to host your extension measures:
 
 **Option 1: Use a measure-heavy table**
 ```json
@@ -201,12 +218,15 @@ The `__field_index.md` contains:
 }
 ```
 
-**Option 2: Use a dedicated formatting table (if one exists)**
+**Option 2 (PREFERRED): Use a dedicated measures or reporting objects table (if one exists)**
+
+If none exists, you might want to advise the user to create a new table or calculated table specifically for extension measures that is hidden. This ensures organization and makes it easier to find/use these measures from the 
+
 ```json
 {
   "entities": [
     {
-      "name": "_Measures",  // ← If model has a measures table
+      "name": "__ExtensionMeasures",  // ← If model has a table like deez nuts
       "measures": [
         {
           "name": "KPI Color",
@@ -219,13 +239,9 @@ The `__field_index.md` contains:
 }
 ```
 
-**Common entity naming patterns:**
-- `_Measures` - Generic measure table
-- `_Helpers` - Helper/utility table
-- `KPIs` - KPI-specific measures
-- `Formatting` - Formatting logic (rare but exists in some models)
 
-**If no dedicated measure table exists:** Use the primary fact table (e.g., `Sales`, `Orders`, `Transactions`).
+**If no dedicated measure table exists:** Then you should ask the user where the measure should go.
+
 
 ### Checking Current reportExtensions.json
 
@@ -243,13 +259,16 @@ Example output:
 
 These are existing entities from the model that already host extension measures.
 
+**IMPORTANT:** You might want to advise the user to organize these extension measures under a dedicated table for organizational purposes.
+
+
 ## Creating Extension Measures
 
 ### Basic Formatting Measure
 
 **Step 1: Identify existing entity from model**
 
-Check `__field_index.md` or current reportExtensions.json to find available entities. For this example, we'll use `Budget` (an existing table in the model).
+Check reportExtensions.json to find available entities. For this example, we'll use `__ExtensionMeasures`.
 
 **Step 2: Define in reportExtensions.json:**
 
@@ -259,12 +278,14 @@ Check `__field_index.md` or current reportExtensions.json to find available enti
   "name": "extension",
   "entities": [
     {
-      "name": "Budget",  // ← MUST be existing entity from semantic model
+      "name": "__ExtensionMeasures",
       "measures": [
         {
           "name": "Status Color",
-          "dataType": "Text",  // ← MUST be "Text" for color formatting
-          "expression": "IF([Revenue] >= [Target], \"good\", \"bad\")"
+          "dataType": "Text",  // ← MUST be "Text" for conditional formatting measures
+          "expression": "IF([Revenue] >= [Target], \"good\", \"bad\")",
+          "displayFolder": "Formatting",
+          "description": "Returns theme color name based on revenue vs target"
         }
       ]
     }
