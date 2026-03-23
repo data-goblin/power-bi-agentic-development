@@ -20,8 +20,20 @@
 - `visibility`: "AlwaysVisible", "HiddenInViewMode"
 - `filterConfig`: Page-level filters
 - `pageBinding`: Parameter bindings for Q&A
-- `visualInteractions`: Cross-visual interaction settings
+- `visualInteractions`: Cross-visual interaction overrides (see below)
 - `objects`: Formatting objects for page-level formatting
+
+### visualInteractions
+
+Override default cross-filtering between visuals on this page:
+
+```json
+"visualInteractions": [
+  {"source": "slicer_visual_name", "target": "chart_visual_name", "type": "NoFilter"}
+]
+```
+
+Types: `"NoFilter"` (disable cross-filter), `"Filter"`, `"Highlight"`.
 
 ### Page Canvas Alignment
 
@@ -250,7 +262,15 @@ python3 scripts/set-background-image.py theme ./report.pbip ./image.png --scalin
 - `displayOption` MUST be a STRING (`"FitToPage"`, `"FitToWidth"`, `"ActualSize"`), NOT an integer
 - Preferred page size: **1920 x 1080** (width x height)
 - Always check existing page.json files for correct schema format before creating new pages
-- Always check deployment-status.md after making changes to verify success
+
+### Common Page Sizes
+
+| Type | Width | Height |
+|------|-------|--------|
+| Default | 1280 | 720 |
+| Large (preferred) | 1920 | 1080 |
+| Tooltip | 320 | 240 |
+| Letter portrait | 816 | 1056 |
 
 ## Key Learnings
 

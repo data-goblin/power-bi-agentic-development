@@ -239,6 +239,46 @@ These are **not** functional measures - they're metadata artifacts. The actual v
 | **Reference** | `Schema: "extension"` | `NativeVisualCalculation` |
 | **Use case** | Time intelligence, conditional formatting | Running totals, moving averages, latest values |
 
+## Multiple Entity Groups
+
+A single report can have multiple entity groups:
+
+```json
+"entities": [
+  {"name": "_Formatting", "measures": [...]},
+  {"name": "_KPIs", "measures": [...]}
+]
+```
+
+## Cross-Extension References
+
+To reference a measure in a DIFFERENT extension entity, add `"schema": "extension"` to the reference:
+
+```json
+"references": {
+  "measures": [
+    {"entity": "Sales", "name": "Revenue"},
+    {"schema": "extension", "entity": "_Formatting", "name": "Other Ext Measure"}
+  ]
+}
+```
+
+Self-entity references do NOT need `"schema"`. Use `{"unrecognizedReferences": true}` for broken/placeholder measures only.
+
+## Measure Properties Reference
+
+| Property | Required | Description |
+|----------|----------|-------------|
+| name | Yes | Unique across semantic model AND other extensions |
+| dataType | Yes | `Text`, `Integer`, `Double`, `Boolean`, `Date`, `DateTime` |
+| expression | Yes | DAX expression |
+| references | Yes* | Must list ALL measures referenced in the DAX expression |
+| formatString | No | VBA format string (e.g. `"#,##0.00"`) |
+| displayFolder | No | Display folder path |
+| description | No | Documentation string |
+| hidden | No | Boolean to hide measure from field list |
+| annotations | No | Name-value pairs for metadata |
+
 ## Best Practices
 
 ### Report measures

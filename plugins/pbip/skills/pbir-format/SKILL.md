@@ -100,6 +100,27 @@ Six patterns for referencing fields in queries and expressions:
 | shape / actionButton | (none -- uses objects for shape/icon config) |
 | scriptVisual | Values |
 
+### Projection Properties
+
+Each projection in `queryState` supports:
+
+| Property | Description |
+|----------|-------------|
+| `queryRef` | Fully qualified reference (`Table.Field`) -- used internally |
+| `nativeQueryRef` | Display label shown in visual |
+| `displayName` | Override display name (optional) |
+| `active` | Whether hierarchy level is expanded (optional, boolean) |
+
+## Visual Position
+
+```json
+"position": {"x": 100, "y": 50, "z": 1000, "width": 400, "height": 300, "tabOrder": 0}
+```
+
+- `x`, `y` -- top-left corner in pixels (can be fractional)
+- `z` -- layer order (higher = front); observed values: 0, 1000, 4000, 8000, 15000
+- `tabOrder` -- keyboard navigation order (can differ from z)
+
 ## objects vs visualContainerObjects
 
 Both live inside `visual` (not root level of visual.json):
@@ -120,6 +141,18 @@ Three distinct patterns:
 3. **Conditional (rule-based)** -- Explicit comparison conditions with `ComparisonKind` (0=Equal, 1=GreaterThan, 2=GreaterThanOrEqual, 3=LessThanOrEqual, 4=LessThan). Cases evaluated in order; first match wins. Optional `DefaultValue`.
 
 Per-point formatting (e.g. per-bar colors) requires a two-entry array with `matchingOption: 1`. A single-entry array or `matchingOption: 0` applies the same value to all points.
+
+### Selector Types
+
+| Type | Syntax | Purpose |
+|------|--------|---------|
+| (none) | No `selector` key | Applies to entire visual |
+| metadata | `{"metadata": "Sales.Revenue"}` | Specific column/measure |
+| id | `{"id": "default"}` | Named instance |
+| dataViewWildcard | `{"data": [{"dataViewWildcard": {"matchingOption": 1}}]}` | Per-point formatting |
+| scopeId | `{"data": [{"scopeId": {"Comparison": {...}}}]}` | Specific data point value |
+
+matchingOption: `0` = identities + totals, `1` = per data point, `2` = totals only. Selectors can be combined.
 
 ## Theme Inheritance
 
