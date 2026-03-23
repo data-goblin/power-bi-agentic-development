@@ -58,9 +58,15 @@ All formatting values in visual.json / page.json use `expr` wrappers with type-s
 
 Both `D` and `L` work for whole numbers. Use `D` for font sizes and floating-point contexts, `L` for integer-only contexts (pixel counts, ComparisonKind values).
 
+**Gotchas:** `transparency` uses `D` normally but `L` inside `dropShadow`. `labelPrecision` always uses `L` but `labelDisplayUnits` always uses `D`.
+
+**String escaping:** Single quotes within string literals are doubled: `"'here''s some text'"`. Font families with fallback chains use triple-quote escaping: `"'''Segoe UI Semibold'', helvetica, sans-serif'"`.
+
+**Filter SourceRef gotcha:** In filter `Where` conditions, SourceRef uses `"Source": "alias"` (referencing the alias defined in `From`), NOT `"Entity"`. This differs from query projections which use `"Entity"`.
+
 ## Field Reference Patterns
 
-Five patterns for referencing fields in queries and expressions:
+Six patterns for referencing fields in queries and expressions:
 
 | Pattern | Syntax |
 |---------|--------|
@@ -69,6 +75,7 @@ Five patterns for referencing fields in queries and expressions:
 | Measure (extension) | `{"Measure": {"Expression": {"SourceRef": {"Schema": "extension", "Entity": "Table"}}, "Property": "Measure"}}` |
 | Aggregation | `{"Aggregation": {"Expression": {"Column": {"Expression": {"SourceRef": {"Entity": "Table"}}, "Property": "Col"}}, "Function": 0}}` |
 | Hierarchy level | `{"HierarchyLevel": {"Expression": {"Hierarchy": {"Expression": {"SourceRef": {"Entity": "Table"}}, "Hierarchy": "Name"}}, "Level": "Level"}}` |
+| SparklineData | `{"SparklineData": {"Measure": {"Measure": {...}}, "Groupings": [{"Column": {...}}]}}` |
 
 **Aggregation function codes:** 0=SUM, 1=AVG, 2=COUNT, 3=MIN, 4=MAX, 5=DISTINCTCOUNT
 
@@ -77,16 +84,20 @@ Five patterns for referencing fields in queries and expressions:
 | Visual Type | Query Roles |
 |-------------|-------------|
 | card | Values |
+| cardVisual (new card) | Data |
 | tableEx | Values |
 | slicer | Values |
+| advancedSlicerVisual | Values |
 | pieChart | Category, Y |
 | lineChart | Category, Y (also Y2 for combo) |
+| areaChart / stackedAreaChart | Category, Y |
 | clusteredBarChart | Category, Y |
 | clusteredColumnChart | Category, Y |
 | pivotTable | Rows, Columns, Values |
 | kpi | Indicator, Goal, Goals, TrendLine |
 | scatterChart | Category, X, Y, Size |
-| textbox | (none) |
+| textbox | (none -- uses objects.general.paragraphs) |
+| shape / actionButton | (none -- uses objects for shape/icon config) |
 | scriptVisual | Values |
 
 ## objects vs visualContainerObjects
