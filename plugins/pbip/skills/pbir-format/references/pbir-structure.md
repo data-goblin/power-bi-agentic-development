@@ -2,48 +2,65 @@
 
 Power BI reports in PBIR format use a directory structure for version control and programmatic manipulation.
 
+**Preferred tooling:** Use the `pbir` CLI to create and modify PBIR files when available. If it is not installed, the agent can directly read and write the JSON files.
+
+**Schemas update frequently** -- Microsoft updates PBIR schemas roughly monthly. Always check the `$schema` URL in existing files to match the version the report is using. Do not upgrade schema versions unless intentional.
+
 ## Directory Layout
 
 ```
 Report.Report/
-├── .pbi/
-│   └── localSettings.json          # Local editor settings
-├── definition/
-│   ├── report.json                 # Report-level metadata
-│   ├── definition.pbir             # Dataset connection
-│   ├── reportExtensions.json       # Extension/thin measures (optional)
-│   └── pages/
-│       └── {page-guid}/
-│           ├── page.json           # Page layout, size, background
-│           └── visuals/
-│               └── {visual-name-or-guid}/
-│                   └── visual.json  # Visual definition
-├── StaticResources/               # Themes, images, custom visuals
-│   ├── SharedResources/
-│   │   └── BaseThemes/
-│   │       └── CY24SU10.json      # Base theme
-│   └── RegisteredResources/
-│       └── CustomTheme*.json      # Custom themes
-└── Report.pbip                     # Container metadata (parent level)
++-- .pbi/
+|   +-- localSettings.json                # Local editor settings (gitignored)
++-- .platform                             # Fabric Git integration metadata
++-- definition.pbir                       # Semantic model connection (byPath or byConnection)
++-- mobileState.json                      # Mobile layout (no external editing)
++-- semanticModelDiagramLayout.json       # Model diagrams (no external editing)
++-- CustomVisuals/                        # Private custom visuals (optional)
++-- definition/
+|   +-- version.json                      # REQUIRED -- PBIR version metadata
+|   +-- report.json                       # REQUIRED -- theme, filters, settings
+|   +-- reportExtensions.json             # OPTIONAL -- extension measures (report-level DAX)
+|   +-- pages/
+|   |   +-- pages.json                    # Page order and active page
+|   |   +-- [PageName]/                   # Letters, digits, underscores, hyphens ONLY
+|   |       +-- page.json                 # Page metadata, dimensions, interactions
+|   |       +-- visuals/
+|   |           +-- [VisualName]/         # Letters, digits, underscores, hyphens ONLY
+|   |               +-- visual.json       # Visual definition
+|   |               +-- mobile.json       # Mobile layout (optional)
+|   +-- bookmarks/                        # OPTIONAL
+|       +-- bookmarks.json                # Bookmark order and groups
+|       +-- [id].bookmark.json            # Individual bookmark state
++-- StaticResources/
+    +-- SharedResources/
+    |   +-- BaseThemes/
+    |       +-- CY25SU11.json             # Microsoft base theme (name changes monthly)
+    +-- RegisteredResources/              # Custom themes, images
 ```
+
+**Note:** `definition.pbir` is at the report root, NOT inside `definition/`. The `Report.pbip` container file lives at the parent project level, outside `Report.Report/`.
 
 ## Key Files
 
-### Report.pbip (Container)
-Container metadata at parent level:
+### definition.pbir
+
+Two variants for connecting to semantic models:
+
+**byPath (local PBIP project):**
 ```json
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json",
-  "version": "1.0",
-  "artifacts": [
-    {"report": {"path": "Report.Report"}}
-  ],
-  "settings": {"enableAutoRecovery": true}
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/1.0.0/schema.json",
+  "version": "4.0",
+  "datasetReference": {
+    "byPath": {
+      "path": "../MyModel.SemanticModel"
+    }
+  }
 }
 ```
 
-### definition.pbir
-Dataset connection info:
+**byConnection (remote/thin report):**
 ```json
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json",
@@ -56,71 +73,134 @@ Dataset connection info:
 }
 ```
 
-### report.json
-Report-level properties:
+### version.json
+
 ```json
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/1.2.0/schema.json",
-  "config": {
-    "version": "5.43",
-    "themeCollection": {"baseTheme": {"name": "CY24SU10"}},
-    "activeSectionIndex": 0
-  },
-  "reportId": "{guid}"
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/versionMetadata/1.0.0/schema.json",
+  "version": "2.0.0"
 }
 ```
 
-### page.json
-Page layout and settings:
+Format: `major.minor.0` -- both properties required.
+
+### report.json
+
+Report-level theme, filters, settings, and resource packages:
 ```json
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/1.2.0/schema.json",
-  "name": "{page-guid}",
-  "displayName": "Page Name",
-  "width": 1920,
-  "height": 1080,
-  "config": {
-    "layouts": [
-      {
-        "id": 0,
-        "displayOption": {"scalingType": "Fit"},
-        "width": 1920,
-        "height": 1080
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/2.1.0/schema.json",
+  "themeCollection": {
+    "baseTheme": {
+      "name": "CY25SU11",
+      "reportVersionAtImport": "5.59",
+      "type": "SharedResources"
+    }
+  },
+  "objects": {
+    "outspacePane": [{
+      "properties": {
+        "visible": {"expr": {"Literal": {"Value": "false"}}},
+        "expanded": {"expr": {"Literal": {"Value": "true"}}}
       }
-    ]
-  }
+    }]
+  },
+  "settings": {
+    "useStylableVisualContainerHeader": true,
+    "useEnhancedTooltips": true,
+    "defaultDrillFilterOtherVisuals": true
+  },
+  "resourcePackages": [
+    {
+      "name": "SharedResources",
+      "type": "SharedResources",
+      "items": [{"name": "CY25SU11", "path": "BaseThemes/CY25SU11.json", "type": "BaseTheme"}]
+    }
+  ]
+}
+```
+
+**Note:** Newer reports use an object form for `reportVersionAtImport` instead of a string:
+```json
+"reportVersionAtImport": {"visual": "2.4.0", "report": "3.0.0", "page": "2.3.0"}
+```
+
+### page.json
+
+Page metadata, dimensions, and visual interactions:
+```json
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+  "name": "77e770be04c64c0c6938",
+  "displayName": "Overview",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280,
+  "visualInteractions": [
+    {
+      "source": "slicer_visual_name",
+      "target": "chart_visual_name",
+      "type": "NoFilter"
+    }
+  ]
 }
 ```
 
 ### visual.json
-Visual definition with query and formatting:
+
+Visual definition with query, objects, and position:
 ```json
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.2.0/schema.json",
-  "name": "visual_name",
-  "position": {"x": 0, "y": 0, "z": 0, "width": 500, "height": 300},
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "sales_line_chart",
+  "position": {"x": 28, "y": 152, "z": 0, "width": 500, "height": 300, "tabOrder": 0},
   "visual": {
     "visualType": "lineChart",
-    "query": {...},
-    "objects": {...}
+    "query": {
+      "queryState": {
+        "Category": {"projections": [...]},
+        "Y": {"projections": [...]}
+      },
+      "sortDefinition": {"sort": [...], "isDefaultSort": true}
+    },
+    "objects": {},
+    "visualContainerObjects": {},
+    "drillFilterOtherVisuals": true
   }
 }
 ```
 
-### reportExtensions.json
-Extension/thin measures defined at report level:
+### pages.json
+
+Page ordering and active page:
 ```json
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtensions/1.2.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.0.0/schema.json",
+  "pageOrder": ["77e770be04c64c0c6938", "Overview", "Details"],
+  "activePageName": "77e770be04c64c0c6938"
+}
+```
+
+### reportExtensions.json
+
+Extension measures (report-level DAX). See `extension-measures.md` for full details.
+```json
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json",
   "name": "extension",
   "entities": [
     {
-      "name": "_Formatting Measures",
+      "name": "_Formatting",
       "measures": [
         {
-          "name": "ColorMeasure",
+          "name": "Bar Color",
           "dataType": "Text",
-          "expression": "IF([Value] < 0, \"#D64550\", \"#118DFF\")"
+          "expression": "IF([Value] < 0, \"#D64550\", \"#118DFF\")",
+          "references": {
+            "measures": [
+              {"entity": "Sales", "name": "Value"}
+            ]
+          }
         }
       ]
     }
@@ -128,123 +208,54 @@ Extension/thin measures defined at report level:
 }
 ```
 
-**Note:** This file is **optional**. If you have no extension measures, delete the file entirely. An empty file with `"entities": []` will cause Power BI Desktop to fail during deserialization. See `extension-measures.md` for details.
-
-## Exporting Reports
-
-### Using dg (Data Goblins CLI)
-```bash
-# Export report to PBIP format
-dg report export "workspace" "reportname" ./output
-
-# Exports to ./output/reportname/reportname.Report/
-```
-
-### Using Fabric CLI (fab)
-```bash
-# Get definition as JSON
-fab get "Workspace.Workspace/Report.Report" -q "definition"
-
-# Use fabric-report-mcp tools for full export
-```
-
-### Using fabric-report-mcp
-Python MCP server with export tools - see `/Users/klonk/Desktop/Git/fabric-report-mcp/`.
-
-## Importing/Updating Reports
-
-### Direct File Manipulation
-1. Export report with `dg report export`
-2. Edit files (visual.json, page.json, etc.)
-3. Validate JSON: `jq empty file.json`
-4. Import with `fab import "Workspace.Workspace/Report.Report" -i ./Report.Report -f`
-
-### Programmatic Updates
-Use Fabric REST API:
-```bash
-# Update report definition
-fab api -X post "workspaces/{ws-id}/reports/{report-id}/updateDefinition" -i definition.json
-```
+**Critical:** `references.measures` must list ALL measures referenced in the DAX expression. If no extension measures exist, DELETE the file entirely -- an empty `"entities": []` causes Power BI Desktop to fail.
 
 ## Renaming Folders for Better Readability
 
-By default, PBIR uses 20-character GUID identifiers for page and visual folder names. These can be renamed to human-readable names for easier navigation.
+By default, PBIR uses 20-character hex identifiers for page and visual folder names. These can be renamed to human-readable names.
 
 ### Before Renaming
 
-```yaml
-Report.Report/
-├── definition/
-│   ├── pages/
-│   │   ├── 0c32c81bce347402001e/              # Page folder with GUID
-│   │   │   ├── visuals/
-│   │   │   │   ├── 813f79373a8c773c4d24/      # Visual folder with GUID
-│   │   │   │   │   └── visual.json            # visualType: "advancedSlicerVisual"
-│   │   │   │   ├── a2b5c8d1e4f7g9h2j5k8/      # Visual folder with GUID
-│   │   │   │   │   └── visual.json            # visualType: "lineChart"
-│   │   │   │   └── d7e9f2a5b8c1d4e7f0a3/      # Visual folder with GUID
-│   │   │   │       └── visual.json            # visualType: "kpi"
-│   │   │   └── page.json                      # displayName: "Alternatives"
-│   │   └── pages.json
-│   └── report.json
+```
+definition/pages/
+  0c32c81bce347402001e/
+    page.json                          # displayName: "Alternatives"
+    visuals/
+      813f79373a8c773c4d24/visual.json # visualType: "advancedSlicerVisual"
+      a2b5c8d1e4f7g9h2j5k8/visual.json # visualType: "lineChart"
 ```
 
 ### After Renaming
 
-```yaml
-Report.Report/
-├── definition/
-│   ├── pages/
-│   │   ├── Alternatives/                      # RENAMED: Uses displayName from page.json
-│   │   │   ├── visuals/
-│   │   │   │   ├── advancedSlicerVisual_Month/  # RENAMED: visualType + field
-│   │   │   │   │   └── visual.json              # name property unchanged
-│   │   │   │   ├── lineChart_Sales/             # RENAMED: visualType + field
-│   │   │   │   │   └── visual.json              # name property unchanged
-│   │   │   │   └── kpi_Revenue/                 # RENAMED: visualType + field
-│   │   │   │       └── visual.json              # name property unchanged
-│   │   │   └── page.json                        # name property unchanged
-│   │   └── pages.json
-│   └── report.json
+```
+definition/pages/
+  Alternatives/
+    page.json                                    # name property unchanged
+    visuals/
+      advancedSlicerVisual_Month/visual.json     # name property unchanged
+      lineChart_Sales/visual.json                # name property unchanged
 ```
 
-**Important:**
-- Folder names can be changed
+**Rules:**
+- Folder names can be changed freely (letters, digits, underscores, hyphens only)
 - JSON filenames (`visual.json`, `page.json`) must remain unchanged
-- The `name` property inside JSON files must remain unchanged (still contains GUID)
-- Power BI Desktop preserves renamed folders when saving
+- The `name` property inside JSON files must remain unchanged
+- Power BI Desktop preserves renamed folders on save
+- Restart Power BI Desktop after renaming
 
 ## Best Practices
 
-1. **Version Control**
-   - Commit PBIR directories to Git
-   - Use meaningful visual names (not GUIDs)
-   - Document extension measures
-
-2. **File Naming**
-   - Use descriptive visual names: `sales_line_chart` not `a1b2c3d4`
-   - Group related visuals with prefixes
-
-3. **Validation**
-   - Always validate JSON: `jq empty visual.json`
-   - Check schema URLs are accessible
-   - Test in Power BI Desktop after programmatic changes
-
-4. **Extension Measures**
-   - Keep formatting logic in extension measures
-   - Prefix measure table names with `_`
-   - Document measure purpose in comments
-
-5. **Themes**
-   - Store themes in SharedResources for reuse
-   - Use RegisteredResources for report-specific themes
-   - Reference theme name in report.json
+1. **Version Control** -- commit PBIR directories to Git; use meaningful visual/page folder names
+2. **Folder Naming** -- use descriptive names: `sales_line_chart` not `a1b2c3d4`; group related visuals with prefixes
+3. **Validation** -- always validate JSON (`jq empty visual.json`); test in Power BI Desktop after programmatic changes
+4. **Extension Measures** -- keep formatting logic in extension measures; use the `description` property to document purpose
+5. **Themes** -- `SharedResources` for base themes; `RegisteredResources` for custom themes and images
 
 ## Common Patterns
 
 ### Find All Visuals of Type
 ```bash
-find ./Report.Report/definition/pages -name "visual.json" -exec grep -l '"visualType": "lineChart"' {} \;
+rg -l '"visualType": "lineChart"' --glob "visual.json" ./Report.Report/
 ```
 
 ### Extract Visual Names
@@ -257,27 +268,21 @@ find ./Report.Report/definition/pages -name "visual.json" -exec jq -r '.name' {}
 find ./Report.Report/definition/pages -name "visual.json" -exec jq -r '.. | .Measure? | select(.) | "\(.Expression.SourceRef.Entity).\(.Property)"' {} \; | sort -u
 ```
 
-### Update Property Across All Visuals
-```bash
-for visual in $(find ./Report.Report/definition/pages -name "visual.json"); do
-  jq '.visual.objects.title[0].properties.fontSize.expr.Literal.Value = "14D"' $visual > tmp && mv tmp $visual
-done
-```
-
 ## Troubleshooting
 
 **Report won't open after edits:**
-- Validate all JSON files
-- Check schema versions match
-- Verify GUIDs are consistent
+- Validate all JSON files (`jq empty <file>`)
+- Check `$schema` versions match what the report was using
+- Verify the `name` property inside JSON files wasn't accidentally changed
 - Test with minimal changes first
 
 **Conditional formatting not applying:**
-- Check measure exists in model or reportExtensions.json
-- Verify selector type (dataViewWildcard vs metadata)
+- Check measure exists in semantic model or `reportExtensions.json`
+- Verify `references.measures` lists all DAX dependencies
+- Verify selector type (`dataViewWildcard` vs `metadata`)
 - Ensure measure returns correct data type (hex string for colors)
 
 **Visual position wrong:**
-- Check x, y, width, height in visual.json
-- Verify z-order (layering)
-- Check page dimensions in page.json
+- Check `x`, `y`, `width`, `height` in position object
+- Verify `z` for layering order
+- Check page dimensions in `page.json`
