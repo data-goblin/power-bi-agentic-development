@@ -23,7 +23,7 @@ Both are referenced in `report.json`:
       "type": "SharedResources"
     },
     "customTheme": {
-      "name": "OrderLinesReport9945950948030648.json",
+      "name": "ThemeName.json",
       "type": "RegisteredResources"
     }
   }
