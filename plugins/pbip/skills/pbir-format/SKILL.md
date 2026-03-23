@@ -50,7 +50,11 @@ Report.Report/
     +-- SharedResources/BaseThemes/        # Microsoft base themes
 ```
 
+
 ## Rules
+
+Here are some core rules to follow:
+
 
 ### Modifying a report
 
@@ -61,6 +65,7 @@ Report.Report/
 5. Plan the modifications ensuring that you know the appropriate structure and values
 6. Validate the JSON files that you change IMMEDIATELY after changing them. Revise if necessary
 
+
 ### Creating a report
 
 1. Same as the above, except you need to generate the appropriate files _de novo_ from scratch. You have to be careful to not miss anything; the best way to do this is just with the `pbir new` command if the `pbir` CLI is available. If not, then check the example reports thoroughly.
@@ -68,6 +73,23 @@ Report.Report/
 3. You should use a theme.json file. We recommend [the example theme from SQLBI and Data Goblins](./examples/K201-MonthSlicer.Report/StaticResources/RegisteredResources/SqlbiDataGoblinTheme.json).
 4. Proceed as normal, validating each time you add a new JSON file.
 5. Make sure that you add the appropriate filters to the `report.json` or `page.json`; see [the filter pane for more information](references/filter-pane.md)
+
+
+### Additional validation
+
+- A custom theme should be used, and formatting should be as much in the theme as possible unless the user specifies otherwise; ask before changing this
+- Visuals SHOULD NOT overlap and there should be equal space between visuals on the canvas. This ensures a pleasant and professional layout
+- Reports should have a title at the top. The title can be a textbox or it can be part of the background image. Ensure the textbox is sufficiently tall to render the text (24-28 pt)
+- The most important information in cards or KPIs should be in the top, as well as possibly small or simple line / bar charts, or slicers
+- There should not be more than 2-3 slicers on the page, and there shouldn't be macguyvered "slicer panes"; use the goddamn filter pane you savage animal
+- Key breakdowns can be in the middel and left of teh chart
+- Tables and matrixes can be on the right side of the page, or at the bottom. Occasionally, tables and matrixes can span the full page, but this is a bad practice, especially if there are more than 3-6 columns in the table or matrix
+- Custom visuals (with Deneb, python, R, or with the pbiviz custom visuals) should be used instead of SVG visuals or heavily "macguyvered" core visuals... within reason. Sometimes a macguyvered visual or a simple SVG can be more elegant, but you want to avoid technical debt and unnecessary complexity
+- Report extensions (thin report measures and visual calculations) should only be used if absolutely necessary over model measures
+- Conditional formatting should ideally be centralized in extension or model measures rather than configured bespoke in the visual
+- Conditional formatting measures should ideally reference theme colors like "bad" or "good" so that the theme centralizes colors and then conditional formatting logic is centralized in a measure
+- Colors should be consistent and used to direct attention. Too much color creates difficulties reading and processing the report.
+
 
 ## Expression Syntax
 
