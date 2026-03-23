@@ -58,15 +58,14 @@ References colors from the Power BI theme.
 "expr": {
   "ThemeDataColor": {
     "ColorId": 1,   // Theme color index (0-based)
-    "Percent": 0    // Brightness adjustment (-100 to 100)
+    "Percent": 0
   }
 }
 ```
 
-**ColorId values:**
-- 0: Background color
-- 1-10: Data colors from theme
-- Higher values: Extended theme palette
+**Parameters:**
+- `ColorId`: Index into theme's dataColors array (0-based)
+- `Percent`: Tint/shade (-1.0 to 1.0; negative = darker, positive = lighter, 0 = exact)
 
 **Use when:**
 - Want theme consistency
@@ -314,7 +313,7 @@ When creating extension measures for formatting:
 - Cannot use color names
 
 **Sizes/Transparency:**
-- dataType: \`"Int64"\` or \`"Double"\`
+- dataType: \`"Integer"\` or \`"Double"\`
 - Return numeric values
 - Visual converts to appropriate format
 

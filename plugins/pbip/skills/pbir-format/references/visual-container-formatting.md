@@ -198,16 +198,6 @@ Visual-specific formatting that belongs in `objects`:
 - `plotArea` - Plot area formatting
 - Type-specific properties (`lineStyles`, `columnStyles`, etc.)
 
-## Python API Note
+## Schema Version Note
 
-The `pbir_object_model` library abstracts this:
-
-```python
-# These go to visualContainerObjects automatically
-visual.title.show = False
-visual.background.show = False
-visual.border.show = False
-visual.shadow.show = False
-```
-
-But when manually editing JSON, you **must** understand the distinction.
+Schemas 2.1.0-2.2.0 use `objects` for both visual-specific and container formatting. Schema 2.4.0+ splits them into `objects` and `visualContainerObjects`. When editing older reports, container properties may legitimately be in `objects`.

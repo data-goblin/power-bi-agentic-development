@@ -161,12 +161,10 @@ The theme files will be in:
 
 ### Using Fabric CLI (Programmatic)
 
+Deploy the report with updated theme files:
+
 ```bash
-# Upload theme to report
-fab report update-theme \
-  --workspace "Workspace Name" \
-  --report "Report Name" \
-  --theme-file "./path/to/theme.json"
+fab import "Workspace.Workspace/Report.Report" -i ./Report.Report -f
 ```
 
 ### Using Power BI Service (Manual)
@@ -718,6 +716,5 @@ The key JSON paths cleared:
 ## Related Documentation
 
 - [visual-container-formatting.md](./visual-container-formatting.md) - Container vs visual properties
-- [CLAUDE.md](./CLAUDE.md) - Theme inheritance section
 - [textbox.md](./textbox.md) - Textbox-specific theme issues
-- [download.md](./download.md) - Downloading reports with themes
+- [filter-pane.md](./filter-pane.md) - Filter pane formatting
