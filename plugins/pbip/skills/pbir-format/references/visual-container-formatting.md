@@ -1,203 +1,155 @@
 # Visual Container Formatting
 
-## Critical Concept: visualContainerObjects vs objects
+Every visual in a Power BI report is wrapped in a "container" -- a box that holds the chart/table/card. The container controls the chrome around the visual: its title bar, background, border, shadow, padding, and header icons. The visual itself controls the data-driven stuff: axes, legends, data points, labels.
 
-Power BI visual definitions have TWO distinct property sections:
+This distinction matters because the two are configured in **separate JSON sections**, and putting properties in the wrong one silently fails.
 
-1. **`objects`** - Visual-specific properties (data labels, axes, legend, etc.)
-2. **`visualContainerObjects`** - Container formatting (title, subtitle, background, border, dropShadow)
+## The Two Sections
 
-## Theme Inheritance and Wildcards
+Inside `visual.json`, the `visual` object has two property sections:
 
-**CRITICAL:** Themes apply default container formatting via wildcard selectors `["*"]["*"]` that affect ALL visuals.
+### `objects` -- the visual itself
 
-### Example from OrderLinesReport Theme
+Controls how the chart/table/card renders its data. What goes here depends on the visual type.
 
-```json
-{
-  "visualStyles": {
-    "*": {
-      "*": {
-        "title": [{ "show": true, "fontSize": 12, ... }],
-        "subTitle": [{ "show": true, "fontSize": 10.5, ... }],
-        "background": [{ "show": true, "color": {...}, ... }],
-        "border": [{ "show": true, "width": 1, ... }],
-        "dropShadow": [{ "show": true, "shadowBlur": 5, ... }]
-      }
-    }
-  }
-}
-```
+Common properties: `dataPoint`, `legend`, `categoryAxis`, `valueAxis`, `dataLabels`, `lineStyles`, `plotArea`, `grid`, `columnHeaders`, `columnFormatting`, `total`, `data` (slicer mode), `general` (textbox paragraphs), `labels`, `markers`, `error`, `sparklines`, `referenceLabel`
 
-**Result:** Every visual inherits these settings automatically. You won't see them in the visual JSON unless explicitly overridden.
+### `visualContainerObjects` -- the container around it
 
-## Common Problem: Textboxes with Theme-Inherited Titles
+Controls the chrome that wraps every visual, regardless of type. Same properties available for all visual types.
 
-When creating textboxes, the inherited `title.show: true` and `subTitle.show: true` create spacing for empty title/subtitle elements, making the textbox content illegible or poorly positioned.
+| Property | What it controls |
+|----------|-----------------|
+| `title` | Title bar (text, font, color, show/hide) |
+| `subTitle` | Subtitle below title |
+| `background` | Container background color and transparency |
+| `border` | Container border (color, width, radius) |
+| `dropShadow` | Shadow behind the container |
+| `padding` | Space between container edge and visual content |
+| `spacing` | Space between title area and visual |
+| `divider` | Line between title and visual content |
+| `visualHeader` | Header icons (drill, filter, focus, etc.) in reading view |
+| `visualHeaderTooltip` | Tooltip for header area |
+| `visualTooltip` | Tooltip for entire visual |
+| `visualLink` | Click-through action |
+| `lockAspect` | Lock aspect ratio |
+| `general` | Container-level general (altText lives here) |
 
-### ✅ Proper Fix: Update the Theme
+## Where They Live in JSON
 
-**This is a theme flaw, not a visual problem.** The correct solution is to add a textbox-specific exception to the theme:
-
-```json
-{
-  "visualStyles": {
-    "*": {
-      "*": {
-        "title": [{ "show": true, ... }],
-        "subTitle": [{ "show": true, ... }],
-        "background": [{ "show": true, ... }],
-        "border": [{ "show": true, ... }],
-        "dropShadow": [{ "show": true, ... }]
-      }
-    },
-    "textbox": {
-      "*": {
-        "title": [{ "show": false }],
-        "subTitle": [{ "show": false }],
-        "background": [{ "show": false }],
-        "border": [{ "show": false }],
-        "dropShadow": [{ "show": false }]
-      }
-    }
-  }
-}
-```
-
-**When to fix in theme vs visual:**
-- **Theme fix**: Affects ALL visuals of that type across the entire report. Use when the default is clearly wrong for a visual type.
-- **Visual fix**: One-off exception for a specific visual instance. Use when you want different behavior than the theme default.
-
-**For textboxes:** Always fix in the theme. Textboxes should never have titles/subtitles/borders by default.
-
-### ❌ Incorrect Pattern (Theme-Inherited, Broken)
+Both are inside `visual`, not at the root of visual.json:
 
 ```json
 {
+  "$schema": "...visualContainer/2.4.0/schema.json",
+  "name": "my_chart",
+  "position": {"x": 0, "y": 0, "z": 0, "width": 400, "height": 300},
   "visual": {
-    "visualType": "textbox",
+    "visualType": "clusteredBarChart",
+    "query": {"queryState": {...}},
     "objects": {
-      "general": [{
-        "properties": {
-          "paragraphs": {
-            "expr": {
-              "Literal": {
-                "Value": "[{\"textRuns\":[{\"value\":\"Title\"}]}]"
-              }
-            }
-          }
-        }
-      }],
-      "background": [{ "properties": { "show": ... }}],  // WRONG LOCATION
-      "border": [...]                                      // WRONG LOCATION
-    }
-  }
-}
-```
-
-**Problems:**
-1. `paragraphs` uses `expr.Literal.Value` with JSON string (old schema)
-2. Container properties (`background`, `border`) in `objects` instead of `visualContainerObjects`
-3. No explicit override of theme-inherited `title`, `subTitle`, `dropShadow`
-
-### ✅ Correct Pattern (Explicitly Overridden)
-
-```json
-{
-  "visual": {
-    "visualType": "textbox",
-    "objects": {
-      "general": [{
-        "properties": {
-          "paragraphs": [
-            {
-              "textRuns": [
-                {
-                  "value": "Title",
-                  "textStyle": {
-                    "fontSize": "32pt"
-                  }
-                }
-              ]
-            }
-          ]
-        }
-      }]
+      "dataPoint": [...],
+      "categoryAxis": [...],
+      "legend": [...]
     },
     "visualContainerObjects": {
-      "title": [{
-        "properties": {
-          "show": {
-            "expr": { "Literal": { "Value": "false" }}
-          }
-        }
-      }],
-      "background": [{
-        "properties": {
-          "show": {
-            "expr": { "Literal": { "Value": "false" }}
-          }
-        }
-      }],
-      "border": [{
-        "properties": {
-          "show": {
-            "expr": { "Literal": { "Value": "false" }}
-          }
-        }
-      }],
-      "dropShadow": [{
-        "properties": {
-          "show": {
-            "expr": { "Literal": { "Value": "false" }}
-          }
-        }
-      }]
+      "title": [...],
+      "background": [...],
+      "border": [...]
     }
   }
 }
 ```
 
-**Key Differences:**
-1. `paragraphs` is direct array (no `expr` wrapper)
-2. Container properties in `visualContainerObjects`, not `objects`
-3. **Explicitly sets `show: false`** to override theme defaults
+## What Goes Wrong
 
-## General Rule for All Visuals
+**Putting container properties in `objects`:** Silently ignored. The title won't show, the border won't appear. No error, just nothing happens.
 
-**When creating any visual programmatically:**
+**Putting `visualContainerObjects` at root level** (outside `visual`): Schema validation error.
 
-1. Check the theme wildcard settings (`visualStyles["*"]["*"]`)
-2. Identify which container properties are enabled by default
-3. **Explicitly override** any inherited settings you don't want
-4. Always use `visualContainerObjects` for container formatting
+**Forgetting to override theme defaults:** The theme may set `title.show: true` and `border.show: true` for all visuals via wildcards. If you create a textbox programmatically without explicitly setting `title.show: false` in `visualContainerObjects`, you'll get an unwanted title bar with empty text taking up space.
 
-## visualContainerObjects Properties
+## Property Value Patterns
 
-Common properties that belong in `visualContainerObjects`:
+All properties in both sections use the same `expr` wrapper pattern:
 
-- `title` - Visual title
-- `subTitle` - Visual subtitle
-- `divider` - Line between title and visual
-- `background` - Container background
-- `border` - Container border
-- `dropShadow` - Container drop shadow
-- `padding` - Container padding
-- `visualHeader` - Header with icons/actions (reading view)
-- `visualTooltip` - Tooltip for entire visual
+```json
+"title": [{
+  "properties": {
+    "show": {"expr": {"Literal": {"Value": "true"}}},
+    "text": {"expr": {"Literal": {"Value": "'Revenue by Region'"}}},
+    "fontSize": {"expr": {"Literal": {"Value": "14D"}}},
+    "fontColor": {"solid": {"color": {"expr": {"ThemeDataColor": {"ColorId": 0, "Percent": -0.3}}}}}
+  }
+}]
+```
 
-## objects Properties
+Each property category is an array of objects, each with a `properties` key and an optional `selector`.
 
-Visual-specific formatting that belongs in `objects`:
+## Schema Version Matters
 
-- `general` - General visual settings
-- `dataPoint` - Data point colors/formatting
-- `categoryAxis`, `valueAxis` - Axis formatting
-- `legend` - Legend formatting
-- `dataLabels` - Data label formatting
-- `plotArea` - Plot area formatting
-- Type-specific properties (`lineStyles`, `columnStyles`, etc.)
+**Schemas 2.1.0 - 2.2.0:** Use `objects` for everything -- both visual-specific AND container formatting live in `objects`. There is no `visualContainerObjects` section.
 
-## Schema Version Note
+**Schema 2.4.0+:** Splits them. Container properties move to `visualContainerObjects`. Visual-specific properties stay in `objects`.
 
-Schemas 2.1.0-2.2.0 use `objects` for both visual-specific and container formatting. Schema 2.4.0+ splits them into `objects` and `visualContainerObjects`. When editing older reports, container properties may legitimately be in `objects`.
+Both are found in real reports. When editing an older report, container properties in `objects` are legitimate and correct for that schema version. Don't "fix" them unless upgrading the schema.
+
+## Common Container Configurations
+
+### Clean visual (no chrome)
+
+```json
+"visualContainerObjects": {
+  "title": [{"properties": {"show": {"expr": {"Literal": {"Value": "false"}}}}}],
+  "background": [{"properties": {"show": {"expr": {"Literal": {"Value": "false"}}}}}],
+  "border": [{"properties": {"show": {"expr": {"Literal": {"Value": "false"}}}}}],
+  "dropShadow": [{"properties": {"show": {"expr": {"Literal": {"Value": "false"}}}}}]
+}
+```
+
+### Titled visual with border
+
+```json
+"visualContainerObjects": {
+  "title": [{
+    "properties": {
+      "show": {"expr": {"Literal": {"Value": "true"}}},
+      "text": {"expr": {"Literal": {"Value": "'Monthly Revenue'"}}},
+      "fontSize": {"expr": {"Literal": {"Value": "14D"}}}
+    }
+  }],
+  "border": [{
+    "properties": {
+      "show": {"expr": {"Literal": {"Value": "true"}}},
+      "color": {"solid": {"color": {"expr": {"ThemeDataColor": {"ColorId": 0, "Percent": 0.6}}}}},
+      "radius": {"expr": {"Literal": {"Value": "4D"}}}
+    }
+  }]
+}
+```
+
+### Accessible visual (with altText)
+
+```json
+"visualContainerObjects": {
+  "general": [{
+    "properties": {
+      "altText": {"expr": {"Literal": {"Value": "'Bar chart showing revenue by region, Q4 2024'"}}}
+    }
+  }]
+}
+```
+
+## Theme Interaction
+
+Container formatting is heavily influenced by the theme. The theme's `visualStyles["*"]["*"]` section sets defaults for all container properties across all visuals. Visual-type exceptions (like `visualStyles["textbox"]["*"]`) override those defaults for specific types.
+
+When a visual's `visualContainerObjects` explicitly sets a property, it overrides the theme. When it doesn't, the theme value applies silently.
+
+This is why a programmatically created visual can look different from what you expect -- the theme is adding titles, borders, or shadows that you didn't ask for. Always check the theme first. See [theme.md](./theme.md) for the full inheritance model.
+
+## Related
+
+- [theme.md](./theme.md) -- Theme wildcards and visual-type overrides
+- [textbox.md](./textbox.md) -- Textbox-specific container patterns
+- [schema-patterns/expressions.md](./schema-patterns/expressions.md) -- Expression syntax for property values
