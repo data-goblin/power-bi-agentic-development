@@ -1,235 +1,103 @@
 # Power BI PBIR Schemas
 
-## Schema Locations
+**Schemas update frequently** -- Microsoft updates PBIR schemas roughly monthly. Always match the `$schema` URL in existing report files. Do not upgrade schema versions unless intentional.
 
-All schemas are hosted at:
-\`\`\`
-https://developer.microsoft.com/json-schemas/
-\`\`\`
+Source repository: `https://github.com/microsoft/json-schemas`
 
-Source repository:
-\`\`\`
-https://github.com/microsoft/json-schemas
-\`\`\`
+## Schema URL Patterns
 
-## Core PBIR Schemas
+Two URL shapes depending on file type:
 
-### Visual Container (2.2.0)
-**URL:** \`https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.2.0/schema.json\`
+**Most PBIR files** (inside `definition/`):
+```
+https://developer.microsoft.com/json-schemas/fabric/item/report/definition/{type}/{version}/schema.json
+```
 
-Defines visual containers, their properties, and layout.
+**Root-level files** (`definition.pbir`, `localSettings.json`):
+```
+https://developer.microsoft.com/json-schemas/fabric/item/report/{type}/{version}/schema.json
+```
 
-**Download:**
-\`\`\`bash
-curl -s https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.2.0/schema.json > visualContainer.schema.json
-\`\`\`
+**Other:**
+- Platform: `.../fabric/gitIntegration/platformProperties/2.0.0/schema.json`
+- PBIP project: `.../fabric/pbip/pbipProperties/1.0.0/schema.json`
+- Semantic model: `.../fabric/item/semanticModel/{type}/{version}/schema.json`
 
-**Usage:** Referenced in \`visual.json\` files
+## Current Schema Versions
 
-### Semantic Query (1.3.0)
-**URL:** \`https://developer.microsoft.com/json-schemas/fabric/item/report/definition/semanticQuery/1.3.0/schema.json\`
+As of mid-2025 (from `pbir-cli`). Older reports will use earlier versions -- that is fine.
 
-Defines query expressions, measures, columns, and data references.
+| Schema Type | Latest Version | File |
+|-------------|---------------|------|
+| visualContainer | 2.7.0 | visual.json |
+| report | 3.2.0 | report.json |
+| page | 2.1.0 | page.json |
+| semanticQuery | 1.4.0 | (embedded in visual.json query) |
+| formattingObjectDefinitions | 1.5.0 | (embedded in visual.json objects) |
+| reportExtension | 1.0.0 | reportExtensions.json |
+| versionMetadata | 1.0.0 | version.json |
+| pagesMetadata | 1.0.0 | pages.json |
+| bookmark | 2.1.0 | [id].bookmark.json |
+| bookmarksMetadata | 1.0.0 | bookmarks.json |
+| filterConfiguration | 1.3.0 | (embedded in report.json / visual.json) |
+| visualConfiguration | 2.3.0 | (embedded in visual.json) |
+| visualContainerMobileState | 2.3.0 | mobile.json |
+| definitionProperties | 2.0.0 | definition.pbir |
 
-**Download:**
-\`\`\`bash
-curl -s https://developer.microsoft.com/json-schemas/fabric/item/report/definition/semanticQuery/1.3.0/schema.json > semanticQuery.schema.json
-\`\`\`
+**Note:** `reportVersionAtImport` format depends on the report schema version:
+- Report schema 2.x: `"reportVersionAtImport": "5.51"` (string)
+- Report schema 3.x: `"reportVersionAtImport": {"visual": "2.4.0", "report": "3.0.0", "page": "2.3.0"}` (object)
 
-**Key definitions:**
-- \`QueryExpressionContainer\`: Expression types (Measure, Column, Literal, etc.)
-- \`QueryMeasureExpression\`: Measure references
-- \`ThemeDataColor\`: Theme color references
+## Key Schema Definitions
 
-### Report Extensions (1.0.0)
-**URL:** \`https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json\`
+### Expression Types (from semanticQuery schema)
 
-Defines thin report measures and extension entities.
+All valid `expr` wrapper types:
 
-**Download:**
-\`\`\`bash
-curl -s https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json > reportExtension.schema.json
-\`\`\`
+- `Literal` -- fixed values with type suffixes (D, L, M, inner single quotes)
+- `ThemeDataColor` -- theme color references (ColorId + Percent)
+- `Measure` -- DAX measure references
+- `Column` -- table column references
+- `Aggregation` -- aggregated expressions (Function codes 0-5)
+- `HierarchyLevel` -- hierarchy level references
+- `FillRule` -- gradient color scales (linearGradient2, linearGradient3)
+- `Conditional` -- rule-based conditions (ComparisonKind 0-4)
+- `Arithmetic` -- math operations
+- `Comparison` -- comparisons
+- `And` / `Or` / `Not` -- logical operations
+- `SparklineData` -- inline sparklines in tables
 
-**Usage:** Referenced in \`reportExtensions.json\`
+### dataViewWildcard.matchingOption (from formattingObjectDefinitions schema)
 
-### Formatting Object Definitions (1.4.0)
-**URL:** \`https://developer.microsoft.com/json-schemas/fabric/item/report/definition/formattingObjectDefinitions/1.4.0/schema.json\`
+| Value | Name | Description |
+|-------|------|-------------|
+| 0 | Default | Match identities and totals |
+| 1 | Instances | Match instances with identities only (per-point formatting) |
+| 2 | Totals | Match totals only |
 
-Defines selectors and formatting patterns.
+### Selector Types (from formattingObjectDefinitions schema)
 
-**Download:**
-\`\`\`bash
-curl -s https://developer.microsoft.com/json-schemas/fabric/item/report/definition/formattingObjectDefinitions/1.4.0/schema.json > formattingObjectDefinitions.schema.json
-\`\`\`
+| Selector | Purpose | Example |
+|----------|---------|---------|
+| (none) | Applies to all | No `selector` key on the property object |
+| `metadata` | Specific column/measure | `"selector": {"metadata": "Orders.Order Lines"}` |
+| `id` | Named instance | `"selector": {"id": "default"}` |
+| `dataViewWildcard` | Pattern matching | `"selector": {"data": [{"dataViewWildcard": {"matchingOption": 1}}]}` |
+| `scopeId` | Specific data point value | `"selector": {"data": [{"scopeId": {"Comparison": {...}}}]}` |
 
-**Key definitions:**
-- \`Selector\`: metadata, data, id selectors
-- \`DataRepetitionSelector\`: scopeId, dataViewWildcard
-- \`DataViewWildcard\`: matchingOption values
-
-### Page Definition (2.0.0)
-**URL:** \`https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json\`
-
-Defines page properties and settings.
-
-**Download:**
-\`\`\`bash
-curl -s https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json > page.schema.json
-\`\`\`
-
-**Usage:** Referenced in \`page.json\` files
-
-## Quick Download Script
-
-Download all schemas to current directory:
-
-\`\`\`bash
-#!/bin/bash
-BASE_URL="https://developer.microsoft.com/json-schemas/fabric/item/report/definition"
-
-schemas=(
-  "visualContainer/2.2.0/schema.json"
-  "semanticQuery/1.3.0/schema.json"
-  "reportExtension/1.0.0/schema.json"
-  "formattingObjectDefinitions/1.4.0/schema.json"
-  "page/2.0.0/schema.json"
-)
-
-for schema in "${schemas[@]}"; do
-  filename=$(basename "$schema")
-  curl -s "$BASE_URL/$schema" > "$filename"
-  echo "Downloaded: $filename"
-done
-\`\`\`
-
-## Validation
-
-Use \`scripts/validate_visual.py\` to validate visual.json files:
-
-\`\`\`bash
-python3 scripts/validate_visual.py path/to/visual.json
-\`\`\`
-
-## Key Schema Patterns
-
-### dataViewWildcard.matchingOption
-
-From \`formattingObjectDefinitions\` schema:
-
-| Value | Constant | Description |
-|-------|----------|-------------|
-| 0 | Default | Match Identities and Totals |
-| 1 | Instances | Match Instances with Identities only (per-point) |
-| 2 | Totals | Match Totals only |
-
-**Usage:**
-\`\`\`json
-{
-  "dataViewWildcard": {
-    "matchingOption": 1  // Per-point evaluation
-  }
-}
-\`\`\`
-
-### Expression Types
-
-From \`semanticQuery\` schema, all valid \`expr\` types:
-
-- \`Literal\`: Fixed values
-- \`ThemeDataColor\`: Theme colors
-- \`Measure\`: DAX measures
-- \`Column\`: Table columns
-- \`Aggregation\`: Aggregated expressions
-- \`Conditional\`: If/then logic
-- \`Arithmetic\`: Math operations
-- \`Comparison\`: Comparisons
-- \`And\`/\`Or\`/\`Not\`: Logical operations
-
-### Selector Types
-
-From \`formattingObjectDefinitions\` schema:
-
-\`\`\`json
-{
-  "metadata": "string",              // Series-level
-  "data": [                          // Data-level
-    {
-      "scopeId": {...},              // Specific category
-      "wildcard": [...],             // All instances (deprecated)
-      "roles": [...],                // By role
-      "total": [...],                // Totals
-      "dataViewWildcard": {...}      // Match by pattern
-    }
-  ],
-  "id": "string"                     // User-defined
-}
-\`\`\`
+Selectors can be combined: `metadata` + `data` + `id` + `order` on the same selector object.
 
 ## Schema Exploration
 
-### Find all expression types:
-\`\`\`bash
-curl -s https://developer.microsoft.com/json-schemas/fabric/item/report/definition/semanticQuery/1.3.0/schema.json | \
-  jq -r '.definitions.QueryExpressionContainer.properties | keys[]'
-\`\`\`
-
-### Find all selector properties:
-\`\`\`bash
-curl -s https://developer.microsoft.com/json-schemas/fabric/item/report/definition/formattingObjectDefinitions/1.4.0/schema.json | \
-  jq -r '.definitions.Selector.properties | keys[]'
-\`\`\`
-
-### Search for specific pattern:
-\`\`\`bash
-# Find all references to "strokeColor"
-gh search code --repo microsoft/json-schemas "strokeColor" --json path
-\`\`\`
-
-## Version History
-
-Power BI schemas use semantic versioning. Check for updates:
-
-\`\`\`bash
-# List all visualContainer versions
+```bash
+# List all schema versions for a type
 gh api repos/microsoft/json-schemas/contents/fabric/item/report/definition/visualContainer
-\`\`\`
 
-## Local Caching
+# Find all expression types in a schema
+curl -s https://developer.microsoft.com/json-schemas/fabric/item/report/definition/semanticQuery/1.4.0/schema.json | \
+  jq -r '.definitions.QueryExpressionContainer.properties | keys[]'
 
-Store schemas locally for offline work:
-
-\`\`\`bash
-mkdir -p ~/.power-bi-schemas
-cd ~/.power-bi-schemas
-# Run download script above
-\`\`\`
-
-Reference in validation tools:
-\`\`\`python
-import json
-import jsonschema
-
-with open('~/.power-bi-schemas/visualContainer.schema.json') as f:
-    schema = json.load(f)
-
-with open('visual.json') as f:
-    visual = json.load(f)
-
-jsonschema.validate(visual, schema)
-\`\`\`
-
-## Useful JMESPath Queries
-
-Extract specific parts of definitions:
-
-\`\`\`bash
-# Get all visual object types
-fab get "Workspace.Workspace/Report.Report" -q "definition.parts[?path=='definition/pages/*/visuals/*/visual.json'].payload | [].visual.visualType"
-
-# Get all measure references
-fab get "Workspace.Workspace/Report.Report" -q "definition.parts[?path=='definition/reportExtensions.json'].payload | [0].entities[].measures[].name"
-
-# Find all selectors with dataViewWildcard
-jq '.visual.objects | .. | select(.dataViewWildcard?)' visual.json
-\`\`\`
+# Find all selector properties
+curl -s https://developer.microsoft.com/json-schemas/fabric/item/report/definition/formattingObjectDefinitions/1.5.0/schema.json | \
+  jq -r '.definitions.Selector.properties | keys[]'
+```
