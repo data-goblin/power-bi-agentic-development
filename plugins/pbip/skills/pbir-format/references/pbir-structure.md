@@ -4,6 +4,11 @@ Power BI reports in PBIR format use a directory structure for version control an
 
 **Preferred tooling:** Use the `pbir` CLI to create and modify PBIR files when available. If it is not installed, the agent can directly read and write the JSON files.
 
+**Deployment:** Use the `fabric-cli` skill for deploying reports to Fabric workspaces. Key commands:
+- `fab export "ws.Workspace/Report.Report" -o ./backup -f` -- export report to local PBIR
+- `fab import "ws.Workspace/Report.Report" -i ./Report.Report -f` -- import/update from local PBIR
+- `fab get "ws.Workspace/Report.Report" -q "definition"` -- get report definition as JSON
+
 **Schemas update frequently** -- Microsoft updates PBIR schemas roughly monthly. Always check the `$schema` URL in existing files to match the version the report is using. Do not upgrade schema versions unless intentional.
 
 ## Directory Layout

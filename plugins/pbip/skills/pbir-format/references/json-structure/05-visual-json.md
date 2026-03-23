@@ -1,6 +1,6 @@
 # visual.json
 
-Visual configuration including position, data bindings, and formatting.
+Visual configuration including position, data bindings, formatting, sorting, and filters.
 
 ## Location
 
@@ -10,14 +10,23 @@ Visual configuration including position, data bindings, and formatting.
 
 ```json
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.2.0/schema.json",
-  "name": "visual-guid",
-  "position": {...},
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.7.0/schema.json",
+  "name": "sales_line_chart",
+  "position": {
+    "x": 100, "y": 50, "z": 1000,
+    "width": 400, "height": 300,
+    "tabOrder": 0
+  },
   "visual": {
-    "visualType": "barChart",
-    "query": {...},
-    "objects": {...},
-    "visualContainerObjects": {...}
+    "visualType": "lineChart",
+    "query": {
+      "queryState": {},
+      "sortDefinition": {}
+    },
+    "objects": {},
+    "visualContainerObjects": {},
+    "filterConfig": {},
+    "drillFilterOtherVisuals": true
   }
 }
 ```
@@ -35,17 +44,31 @@ Visual configuration including position, data bindings, and formatting.
 }
 ```
 
-- `x`, `y`: Top-left corner (pixels)
-- `z`: Layer order (higher = front)
-- `tabOrder`: Keyboard navigation order
+- `x`, `y` -- top-left corner in pixels (can be fractional)
+- `z` -- layer order (higher = front; values like 0, 1000, 4000, 8000, 15000 observed)
+- `tabOrder` -- keyboard navigation order (can differ from z)
 
 ## visualType
 
-Common types: `barChart`, `columnChart`, `lineChart`, `clusteredBarChart`, `clusteredColumnChart`, `pieChart`, `donutChart`, `tableEx`, `pivotTable`, `cardVisual`, `kpi`, `slicer`, `advancedSlicerVisual`, `textbox`, `image`, `shape`, `actionButton`
+Common types:
+
+| Type | Category |
+|------|----------|
+| `card`, `cardVisual` | Cards (old vs new) |
+| `tableEx`, `pivotTable` | Tables |
+| `lineChart`, `areaChart`, `stackedAreaChart` | Line/area charts |
+| `clusteredBarChart`, `clusteredColumnChart` | Bar/column charts |
+| `pieChart` | Pie/donut |
+| `scatterChart` | Scatter |
+| `kpi` | KPI |
+| `slicer`, `advancedSlicerVisual` | Slicers |
+| `textbox` | Text |
+| `shape`, `actionButton`, `image` | Non-data visuals |
+| `scriptVisual` | R/Python visuals |
 
 ## query.queryState
 
-Data bindings by role:
+Data bindings by role. Roles vary by visual type (see SKILL.md query roles table).
 
 ```json
 "query": {
@@ -58,7 +81,9 @@ Data bindings by role:
             "Property": "Month"
           }
         },
-        "queryRef": "Date.Month"
+        "queryRef": "Date.Month",
+        "nativeQueryRef": "Month",
+        "active": true
       }]
     },
     "Y": {
@@ -69,25 +94,44 @@ Data bindings by role:
             "Property": "Revenue"
           }
         },
-        "queryRef": "Sales.Revenue"
+        "queryRef": "Sales.Revenue",
+        "nativeQueryRef": "Revenue"
       }]
     }
+  },
+  "sortDefinition": {
+    "sort": [{
+      "field": {
+        "Measure": {
+          "Expression": {"SourceRef": {"Entity": "Sales"}},
+          "Property": "Revenue"
+        }
+      },
+      "direction": "Descending"
+    }],
+    "isDefaultSort": true
   }
 }
 ```
 
-Common roles: `Category`, `Y`, `Y2`, `Series`, `Values`, `Rows`, `Columns`, `Tooltips`
+Projection properties:
+- `queryRef` -- fully qualified reference (`Table.Field`)
+- `nativeQueryRef` -- display label used in the visual
+- `displayName` -- override display name (optional)
+- `active` -- whether hierarchy level is expanded (optional)
+
+Sort direction values: `"Ascending"`, `"Descending"` (capitalized).
 
 ## objects vs visualContainerObjects
 
-**Critical distinction:**
+**Critical distinction -- both live inside `visual`, not at root level:**
 
-| Section | Contains | Examples |
-|---------|----------|----------|
-| `objects` | Visual-specific formatting | dataPoint, legend, categoryAxis, valueAxis, labels |
-| `visualContainerObjects` | Container formatting | title, subTitle, background, border, dropShadow |
+| Section | Purpose | Common Properties |
+|---------|---------|-------------------|
+| `objects` | Visual-specific formatting | dataPoint, legend, categoryAxis, valueAxis, dataLabels, lineStyles, plotArea, grid, columnHeaders, columnFormatting, total, data (slicer mode), general (textbox paragraphs) |
+| `visualContainerObjects` | Container chrome | title, subTitle, background, border, dropShadow, padding, divider, visualHeader, visualTooltip, general (altText), lockAspect, spacing |
 
-**Wrong:** Putting `background` in `objects` - silently ignored.
+**Schema version matters:** Schemas 2.1.0-2.2.0 use `objects` for everything. Schema 2.4.0+ splits into `objects` and `visualContainerObjects`. Putting container properties in `objects` on 2.4.0+ silently fails.
 
 ```json
 "visual": {
@@ -104,89 +148,31 @@ Common roles: `Category`, `Y`, `Y2`, `Series`, `Values`, `Rows`, `Columns`, `Too
 }
 ```
 
-## Expression Patterns
+## filterConfig
 
-### Literals
-
-```json
-// String (single quotes inside)
-{"expr": {"Literal": {"Value": "'smooth'"}}}
-
-// Number (D suffix required)
-{"expr": {"Literal": {"Value": "14D"}}}
-
-// Boolean (lowercase, no quotes)
-{"expr": {"Literal": {"Value": "true"}}}
-```
-
-### Measure References
+Visual-level filters:
 
 ```json
-// Model measure
-{"expr": {"Measure": {"Expression": {"SourceRef": {"Entity": "Sales"}}, "Property": "Revenue"}}}
-
-// Extension measure (requires Schema)
-{"expr": {"Measure": {"Expression": {"SourceRef": {"Schema": "extension", "Entity": "_Fmt"}}, "Property": "Color"}}}
-```
-
-### ThemeDataColor
-
-```json
-{"expr": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}
-```
-
-- `ColorId`: Index into theme dataColors (0-based)
-- `Percent`: Lightness adjustment (-100 to 100)
-
-### FillRule (Gradient)
-
-```json
-"expr": {
-  "FillRule": {
-    "Input": {"Measure": {...}},
-    "FillRule": {
-      "linearGradient2": {
-        "min": {"color": {"Literal": {"Value": "'minColor'"}}, "value": {"Literal": {"Value": "0D"}}},
-        "max": {"color": {"Literal": {"Value": "'maxColor'"}}, "value": {"Literal": {"Value": "1D"}}}
-      }
-    }
-  }
+"filterConfig": {
+  "filters": [{
+    "name": "e7466b66be105b916228",
+    "field": {"Column": {"Expression": {"SourceRef": {"Entity": "Date"}}, "Property": "Calendar Month"}},
+    "type": "Categorical"
+  }, {
+    "name": "113e43857d99cc7a0e36",
+    "field": {"Measure": {"Expression": {"SourceRef": {"Entity": "Budget"}}, "Property": "Budget vs. Turnover (%)"}},
+    "type": "Advanced"
+  }]
 }
 ```
 
-## Selectors
+Filter types: `"Categorical"`, `"Advanced"`.
 
-### No selector (static)
+## Conditional Formatting
 
-Applies to entire visual:
+Three patterns (see `schema-patterns/conditional-formatting.md` for full details):
 
-```json
-"legend": [{"properties": {"show": {"expr": {"Literal": {"Value": "true"}}}}}]
-```
-
-### metadata (series-level)
-
-Applies to specific field:
-
-```json
-"selector": {"metadata": "Sales.Revenue"}
-```
-
-### dataViewWildcard (per-point)
-
-| matchingOption | Description |
-|----------------|-------------|
-| 0 | Series + totals |
-| 1 | Per data point (conditional formatting) |
-| 2 | Totals only |
-
-```json
-"selector": {"data": [{"dataViewWildcard": {"matchingOption": 1}}]}
-```
-
-## Conditional Formatting Pattern
-
-Two-entry array required:
+### Measure-based (two-entry array with dataViewWildcard)
 
 ```json
 "dataPoint": [
@@ -199,7 +185,7 @@ Two-entry array required:
             "expr": {
               "Measure": {
                 "Expression": {"SourceRef": {"Schema": "extension", "Entity": "_Fmt"}},
-                "Property": "BarColor"
+                "Property": "Bar Color"
               }
             }
           }
@@ -211,18 +197,49 @@ Two-entry array required:
 ]
 ```
 
-## Search
+### FillRule (gradient)
 
-```bash
-# Find visuals by type
-grep -r '"visualType":' Report.Report/definition/pages/
-
-# Find field bindings
-grep -r '"queryRef":' Report.Report/definition/pages/
-
-# Find conditional formatting
-grep -r '"dataViewWildcard"' Report.Report/definition/pages/
-
-# Find extension measure usage
-grep -r '"Schema": "extension"' Report.Report/definition/pages/
+```json
+"expr": {
+  "FillRule": {
+    "Input": {"Measure": {"Expression": {"SourceRef": {"Entity": "Sales"}}, "Property": "Revenue"}},
+    "FillRule": {
+      "linearGradient2": {
+        "min": {"color": {"Literal": {"Value": "'#FF0000'"}}, "value": {"Literal": {"Value": "0D"}}},
+        "max": {"color": {"Literal": {"Value": "'#00FF00'"}}, "value": {"Literal": {"Value": "1D"}}},
+        "nullColoringStrategy": {"strategy": {"Literal": {"Value": "'asZero'"}}}
+      }
+    }
+  }
+}
 ```
+
+### Conditional (rule-based)
+
+```json
+"expr": {
+  "Conditional": {
+    "Cases": [{
+      "Condition": {"Comparison": {"ComparisonKind": 4, "Left": {"Measure": {...}}, "Right": {"Literal": {"Value": "0D"}}}},
+      "Value": {"Literal": {"Value": "'#D64550'"}}
+    }],
+    "DefaultValue": {"Literal": {"Value": "'#118DFF'"}}
+  }
+}
+```
+
+ComparisonKind: 0=Equal, 1=GreaterThan, 2=GreaterThanOrEqual, 3=LessThanOrEqual, 4=LessThan.
+
+## Selectors
+
+| Type | Syntax | Purpose |
+|------|--------|---------|
+| (none) | No `selector` key | Applies to entire visual |
+| metadata | `{"metadata": "Sales.Revenue"}` | Specific column/measure |
+| id | `{"id": "default"}` | Named instance |
+| dataViewWildcard | `{"data": [{"dataViewWildcard": {"matchingOption": 1}}]}` | Per-point formatting |
+| scopeId | `{"data": [{"scopeId": {"Comparison": {...}}}]}` | Specific data point value |
+
+matchingOption: 0 = identities + totals, 1 = per data point, 2 = totals only.
+
+Selectors can be combined: `metadata` + `data` + `id` + `order` on the same object.

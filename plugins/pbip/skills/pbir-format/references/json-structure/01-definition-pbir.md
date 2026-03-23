@@ -4,70 +4,49 @@ Semantic model connection file. Defines which dataset the report connects to.
 
 ## Location
 
-`Report.Report/definition.pbir`
+`Report.Report/definition.pbir` (at report root, NOT inside `definition/`)
 
-## Structure
+## Connection Types
+
+### byPath (local PBIP project)
+
+Local semantic model in same project. Power BI Desktop opens model in full edit mode.
 
 ```json
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/definition/1.0.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/1.0.0/schema.json",
+  "version": "4.0",
   "datasetReference": {
-    "byConnection": {
-      "connectionString": "Data Source=powerbi://...",
-      "pbiServiceModelId": null,
-      "pbiModelVirtualServerName": "sobe_wowvirtualserver",
-      "pbiModelDatabaseName": "workspace-guid-dataset-guid",
-      "name": "EntityDataSource",
-      "connectionType": "pbiServiceXmlaStyleLive"
+    "byPath": {
+      "path": "../Model.SemanticModel"
     }
   }
 }
 ```
 
-## Connection Types
+- Path uses forward slashes, relative to the report folder
+- No absolute paths
 
-### byConnection (Live/DirectQuery)
+### byConnection (remote/thin report)
 
-External semantic model - report queries model at runtime:
+External semantic model -- report queries model at runtime. Desktop does NOT open model in edit mode.
 
 ```json
-"datasetReference": {
-  "byConnection": {
-    "connectionString": "Data Source=powerbi://api.powerbi.com/v1.0/myorg/WorkspaceName;Initial Catalog=DatasetName",
-    "connectionType": "pbiServiceXmlaStyleLive"
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json",
+  "version": "4.0",
+  "datasetReference": {
+    "byConnection": {
+      "connectionString": "Data Source=powerbi://api.powerbi.com/v1.0/myorg/WorkspaceName;Initial Catalog=DatasetName"
+    }
   }
 }
 ```
 
-### byPath (Embedded/Import)
-
-Local semantic model in same project:
-
-```json
-"datasetReference": {
-  "byPath": {
-    "path": "../Model.SemanticModel"
-  }
-}
-```
+Older reports may include additional properties (`pbiServiceModelId`, `pbiModelVirtualServerName`, `pbiModelDatabaseName`, `name`, `connectionType`) but only `connectionString` is required in schema 2.0.0.
 
 ## Rebinding
 
-To point report at different semantic model, change `connectionString` or `path`:
+To point the report at a different semantic model, change the `connectionString` or `path`. Field references in visuals must match the new model's schema.
 
-```json
-// Before: Development model
-"connectionString": "Data Source=powerbi://...;Initial Catalog=Sales-Dev"
-
-// After: Production model
-"connectionString": "Data Source=powerbi://...;Initial Catalog=Sales-Prod"
-```
-
-Field references in visuals must match new model's schema.
-
-## Search
-
-```bash
-# Find current connection
-grep -A5 '"datasetReference"' Report.Report/definition.pbir
-```
+For Fabric REST API deployment, use `byConnection` with `connectionString` containing `semanticmodelid=[id]`.

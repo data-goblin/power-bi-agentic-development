@@ -1,6 +1,6 @@
 # page.json
 
-Page configuration including size, background, and display options.
+Page configuration including dimensions, display option, background, and visual interactions.
 
 ## Location
 
@@ -10,13 +10,14 @@ Page configuration including size, background, and display options.
 
 ```json
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/1.0.0/schema.json",
-  "name": "page-guid",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "77e770be04c64c0c6938",
   "displayName": "Overview",
-  "displayOption": 0,
-  "width": 1280,
+  "displayOption": "FitToPage",
   "height": 720,
-  "objects": {...}
+  "width": 1280,
+  "objects": {},
+  "visualInteractions": []
 }
 ```
 
@@ -24,13 +25,11 @@ Page configuration including size, background, and display options.
 
 ### displayOption
 
-| Value | Size | Use Case |
-|-------|------|----------|
-| 0 | Custom (width/height) | Default |
-| 1 | 4:3 | Presentations |
-| 2 | 16:9 | Widescreen |
-| 3 | Letter | Print |
-| 4 | Tooltip | Tooltip pages |
+| Value | Description |
+|-------|-------------|
+| `"FitToPage"` | Scale to fit viewport (default) |
+| `"FitToWidth"` | Scale to viewport width |
+| `"ActualSize"` | No scaling |
 
 ### Common Sizes
 
@@ -43,7 +42,7 @@ Page configuration including size, background, and display options.
 
 ### objects
 
-Page-level formatting:
+Page-level formatting (background and wallpaper):
 
 ```json
 "objects": {
@@ -61,8 +60,24 @@ Page-level formatting:
 }
 ```
 
-- `background`: Page canvas color
-- `wallpaper`: Area outside canvas (when page is smaller than viewport)
+- `background` -- page canvas color (the area visuals sit on)
+- `wallpaper` -- area outside canvas (visible when page is smaller than viewport)
+
+### visualInteractions
+
+Override default cross-filtering between visuals:
+
+```json
+"visualInteractions": [
+  {
+    "source": "slicer_visual_name",
+    "target": "chart_visual_name",
+    "type": "NoFilter"
+  }
+]
+```
+
+Interaction types: `"NoFilter"` (disable cross-filtering between source and target).
 
 ## pages.json
 
@@ -70,24 +85,14 @@ Page ordering file at `Report.Report/definition/pages/pages.json`:
 
 ```json
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pages/1.0.0/schema.json",
-  "activePageName": "page-guid",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.0.0/schema.json",
+  "activePageName": "77e770be04c64c0c6938",
   "pageOrder": [
-    "page-guid-1",
-    "page-guid-2"
+    "77e770be04c64c0c6938",
+    "Overview",
+    "Details"
   ]
 }
 ```
 
-## Search
-
-```bash
-# Find page dimensions
-grep -E '"width"|"height"' Report.Report/definition/pages/*/page.json
-
-# Find page display names
-grep '"displayName"' Report.Report/definition/pages/*/page.json
-
-# Find page order
-cat Report.Report/definition/pages/pages.json
-```
+Page IDs in `pageOrder` can be hex strings or human-readable folder names.
