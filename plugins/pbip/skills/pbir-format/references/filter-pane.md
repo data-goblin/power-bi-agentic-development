@@ -72,6 +72,71 @@ Every filter has the same core structure regardless of scope:
 | `ordinal` | integer | Display order in filter pane (optional) |
 | `objects` | object | Additional config (requireSingleSelect, etc.) |
 
+## Discovering Filter Values
+
+Before setting default values, you need to know what values exist in the model. Three tools can query the semantic model.
+
+### pbir model (preferred for local PBIR reports)
+
+```bash
+# Get model definition (tables, columns, measures)
+pbir model "Report.Report" -d
+
+# Filter to a specific table
+pbir model "Report.Report" -d -t Date
+
+# Query distinct values for a column
+pbir model "Report.Report" -q "EVALUATE DISTINCT('Date'[Calendar Year (ie 2021)])"
+
+# Query with format
+pbir model "Report.Report" -q "EVALUATE VALUES('Exchange Rate'[From Currency])" -F table
+```
+
+### te query (Tabular Editor CLI)
+
+```bash
+# Query distinct values (explicit workspace/model)
+te query -q "EVALUATE VALUES('Date'[Calendar Year (ie 2021)])" -s "My Workspace" -d "My Model"
+
+# Query with CSV output for processing
+te query -q "EVALUATE VALUES('Exchange Rate'[From Currency])" --output csv
+
+# Query from file
+te query -f query.dax -s "My Workspace" -d "My Model"
+```
+
+### fab api (Fabric CLI -- for remote models)
+
+```bash
+# Get workspace and model IDs first
+WS_ID=$(fab get "ws.Workspace" -q "id" | tr -d '"')
+MODEL_ID=$(fab get "ws.Workspace/Model.SemanticModel" -q "id" | tr -d '"')
+
+# Execute DAX query
+fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/executeQueries" \
+  -X post -i '{"queries":[{"query":"EVALUATE VALUES('\''Date'\''[Calendar Year (ie 2021)])"}]}'
+```
+
+### Useful DAX patterns for filter value discovery
+
+```dax
+-- All distinct values for a column (for Categorical filters)
+EVALUATE VALUES('Date'[Calendar Year (ie 2021)])
+
+-- Distinct values with count (to understand cardinality)
+EVALUATE
+  ADDCOLUMNS(
+    VALUES('Customers'[Account Type]),
+    "Count", CALCULATE(COUNTROWS('Customers'))
+  )
+
+-- Min/max for range filters (Between, Advanced)
+EVALUATE {(MIN('Date'[Date]), MAX('Date'[Date]))}
+
+-- Top N preview (for TopN filters)
+EVALUATE TOPN(10, 'Customers', [Revenue], DESC)
+```
+
 ## Setting Default Selected Values
 
 Default filter values are set in the `filter` property using a `Where` clause with `In` condition. This is how you pre-select values that the report opens with.
