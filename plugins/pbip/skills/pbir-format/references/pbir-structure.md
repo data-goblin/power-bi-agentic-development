@@ -181,7 +181,7 @@ Page ordering and active page:
 ```json
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.0.0/schema.json",
-  "pageOrder": ["77e770be04c64c0c6938", "Overview", "Details"],
+  "pageOrder": ["77e770be04c64c0c6938", "da2e63ebeb2179a994f1"],
   "activePageName": "77e770be04c64c0c6938"
 }
 ```

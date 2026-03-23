@@ -88,14 +88,7 @@ Available in `objects` property:
 - `transparency` - Canvas transparency 0-100 (0D = opaque, 100D = transparent)
 - `image` - Canvas background image (image.name, image.url, image.scaling)
 
-**Setting Background Images:**
-Use the `set-background-image.py` script to set canvas background images:
-```bash
-# Set canvas background image for a single page
-python3 scripts/set-background-image.py page report.pbip image.png "Page Name" --scaling Fit
-```
-
-See [.claude/script-docs/set-background-image.md](./.claude/script-docs/set-background-image.md) for complete documentation.
+**Setting Background Images:** See [images.md](./images.md) for how to register and reference images.
 
 **Example:**
 ```json
@@ -222,21 +215,7 @@ Personalization settings
 
 **Using the script (recommended):**
 
-```bash
-# Set canvas background image (single page)
-python3 scripts/set-background-image.py page ./report.pbip ./image.png "Page Name" --scaling Fit
-
-# Set wallpaper image (single page)
-python3 scripts/set-background-image.py wallpaper ./report.pbip ./image.png "Page Name" --scaling Fill
-
-# Set theme background image (all pages)
-python3 scripts/set-background-image.py theme ./report.pbip ./image.png --scaling Tile
-```
-
-**Documentation:**
-- Script documentation: [.claude/script-docs/set-background-image.md](./.claude/script-docs/set-background-image.md)
-- Canvas background (this object): See `background` section above
-- Wallpaper formatting: See [wallpaper.md](./wallpaper.md)
+See [images.md](./images.md) for image registration and referencing patterns.
 
 **Key Differences:**
 - **Canvas (background)**: Image on the page where visuals sit (99% use case)

@@ -70,6 +70,9 @@ Individual bookmark state. Each bookmark captures a snapshot of the report at a 
 |----------|------|-------------|
 | `targetVisualNames` | string[] | Visuals affected by this bookmark (empty = all) |
 | `suppressDisplay` | boolean | Whether bookmark controls visual visibility |
+| `suppressActiveSection` | boolean | Don't change the active page when applied |
+| `suppressData` | boolean | Don't restore filter/slicer state |
+| `applyOnlyToTargetVisuals` | boolean | Only affect visuals listed in targetVisualNames |
 
 ### explorationState
 

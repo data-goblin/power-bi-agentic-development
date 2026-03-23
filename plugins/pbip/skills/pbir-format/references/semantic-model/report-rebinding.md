@@ -44,36 +44,8 @@ Separate the report from the semantic model to deploy them independently.
 
 6. **Query model for field values** if needed for filters/slicers
 
-7. **Test** - Right-click `definition.pbir` → "Open with Power BI Desktop"
+7. **Test** - Open `definition.pbir` in Power BI Desktop or publish it to a Fabric / Power BI workspace with `pbir publish` or `fab import`
 
-### Result Structure
-
-```yaml
-ProjectName.Report/
-├── .pbi/
-│   └── localSettings.json         # Local settings (gitignored)
-├── .platform                      # Platform metadata
-├── definition.pbir                # Report definition and datasetReference (open this file)
-├── mobileState.json               # Mobile layout state
-├── CustomVisuals/                 # Custom visual packages
-├── StaticResources/
-│   └── RegisteredResources/       # Themes, custom visuals metadata
-└── definition/                    # PBIR Enhanced Format
-    ├── version.json               # Format version
-    ├── report.json                # Report-level properties
-    ├── reportExtensions.json      # Extension measures
-    ├── bookmarks/
-    │   ├── bookmarks.json         # Bookmark index
-    │   └── [bookmarkName].bookmark.json
-    └── pages/
-        ├── pages.json             # Page index and order
-        └── [pageName]/
-            ├── page.json          # Page-level properties
-            └── visuals/
-                └── [visualName]/
-                    ├── visual.json    # Visual definition
-                    └── mobile.json    # Mobile layout
-```
 
 **Key notes:**
 
