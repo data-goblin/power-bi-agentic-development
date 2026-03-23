@@ -1,0 +1,15 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+    "name": "56bda0fdb3f32a7d1fe9",
+    "displayName": "Before Report",
+    "displayOption": "FitToPage",
+    "height": 720,
+    "width": 1280,
+    "visualInteractions": [
+        {
+            "source": "253cea9f56d316ec7291",
+            "target": "ed8b8152417decb421f8",
+            "type": "NoFilter"
+        }
+    ]
+}

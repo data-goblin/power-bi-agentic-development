@@ -160,10 +160,12 @@ Two reference types for connecting to semantic models:
 
 ## References
 
+**Examples:**
+- **`examples/K201-MonthSlicer.Report/`** -- Real PBIR report with 7 visual types (slicer, advancedSlicerVisual, kpi, lineChart, scatterChart, tableEx, textbox), extension measures, bookmarks, conditional formatting
+
 **Structure & schemas:**
 - **`references/pbir-structure.md`** -- PBIR folder structure details
 - **`references/schemas.md`** -- Schema versions and URLs
-- **`references/json-structure/`** -- Per-file format docs (definition.pbir, report.json, reportExtensions.json, page.json, visual.json)
 - **`references/enumerations.md`** -- Valid property enumerations
 
 **Formatting & expressions:**
