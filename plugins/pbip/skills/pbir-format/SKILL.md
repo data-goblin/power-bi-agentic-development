@@ -91,6 +91,13 @@ Here are some core rules to follow:
 - Colors should be consistent and used to direct attention. Too much color creates difficulties reading and processing the report.
 - Ensure that you ALWAYS sort visuals in a logical way; typically, descending by the measure
 - Make good choices about visual types; don't use pie charts when there's over 5 categories, unless you want to be a donkey
+- Chart axes should start at zero unless there's an explicit reason not to (e.g. a narrow variance range)
+- Use consistent fonts across the report; don't mix font families unless there's a design rationale
+- Set `altText` on visuals for accessibility (`visualContainerObjects.general`). Set tab order on interactive visuals
+- Name visuals clearly in the selection pane (the visual folder name) so they're easy to find: `revenue_bar_chart` not `a1b2c3d4`
+- Eliminate redundant visuals. If two visuals show the same thing, kill one
+- Consider the "Apply" button on slicers with high cardinality to avoid excessive queries
+- See the [Data Goblins report checklist](https://data-goblins.com/report-checklist) for a comprehensive pre-deployment checklist
 
 
 ## What to Read for Common Tasks
