@@ -166,4 +166,4 @@ See [script docs](../../scripts/README.md#query-modelpy) for details.
 ## See Also
 
 - [Field References](field-references.md) - How to use field names in report JSON
-- [Model Structure](model-structure.md) - Where fields are defined in model files
+- **`tmdl` skill** - TMDL file structure, syntax, and editing (tables, columns, measures, hierarchies)
