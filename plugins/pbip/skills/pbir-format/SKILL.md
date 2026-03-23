@@ -81,7 +81,7 @@ Here are some core rules to follow:
 - Visuals SHOULD NOT overlap and there should be equal space between visuals on the canvas. This ensures a pleasant and professional layout
 - Reports should have a title at the top. The title can be a textbox or it can be part of the background image. Ensure the textbox is sufficiently tall to render the text (24-28 pt)
 - The most important information in cards or KPIs should be in the top, as well as possibly small or simple line / bar charts, or slicers
-- There should not be more than 2-3 slicers on the page, and there shouldn't be macguyvered "slicer panes"; use the goddamn filter pane you savage animal
+- **FOLLOW THE 3-30-300 RULE** There should not be more than 2-3 slicers on the page, and there shouldn't be macguyvered "slicer panes"; use the goddamn filter pane you savage animal
 - Key breakdowns can be in the middle and left of the page
 - Tables and matrixes can be on the right side of the page, or at the bottom. Occasionally, tables and matrixes can span the full page, but this is a bad practice, especially if there are more than 3-6 columns in the table or matrix
 - Custom visuals (with Deneb, python, R, or with the pbiviz custom visuals) should be used instead of SVG visuals or heavily "macguyvered" core visuals... within reason. Sometimes a macguyvered visual or a simple SVG can be more elegant, but you want to avoid technical debt and unnecessary complexity
@@ -108,6 +108,13 @@ Here are some core rules to follow:
 | Add images or SVGs | **`references/images.md`** -- RegisteredResources, base64 in themes, SVG measures |
 | Add or modify textboxes | **`references/textbox.md`** -- paragraphs, textRuns, textStyle |
 | Sort a visual | **`references/sort-visuals.md`** -- sortDefinition inside query |
+| Sync slicers across pages | **`references/visual-json.md`** -- syncGroup (groupName, fieldChanges, filterChanges) |
+| Edit visual interactions | **`references/visual-json.md`** + **`references/page.md`** -- visualInteractions in page.json (NoFilter, Filter, Highlight) |
+| Change table/matrix column widths | **`references/visual-json.md`** -- columnWidth with metadata selector |
+| Group visuals | **`references/visual-json.md`** -- visualGroup, parentGroupName, groupMode |
+| Hide visuals or fields | **`references/visual-json.md`** -- isHidden at root level, query projection control |
+| Format chart elements (labels, markers, lines) | **`references/visual-json.md`** -- labels, markers, lineStyles, dataPoint |
+| Add analytics lines (reference, trend, error, forecast) | **`references/visual-json.md`** -- y1AxisReferenceLine, trend, error, forecast |
 | Work with bookmarks | **`references/bookmarks.md`** -- bookmark state, filter snapshots, visual show/hide |
 | Find model fields | **`references/semantic-model/finding-fields.md`** -- pbir model, te, fab commands |
 | Rebind to different model | **`references/semantic-model/report-rebinding.md`** -- byPath vs byConnection conversion |

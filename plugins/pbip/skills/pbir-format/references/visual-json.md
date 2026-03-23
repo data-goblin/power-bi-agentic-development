@@ -168,6 +168,263 @@ Direction: `"Ascending"` or `"Descending"`. See [sort-visuals.md](./sort-visuals
 
 Filter types: `"Categorical"`, `"Advanced"`. See [filter-pane.md](./filter-pane.md) for all filter types and patterns.
 
+## Slicer Sync Groups
+
+Slicers on different pages can be synced so they share the same selection. This is configured in `visual.syncGroup` inside the slicer's visual.json:
+
+```json
+"visual": {
+  "visualType": "slicer",
+  "query": {...},
+  "syncGroup": {
+    "groupName": "Calendar Month (ie Jan)1",
+    "fieldChanges": true,
+    "filterChanges": true
+  },
+  "drillFilterOtherVisuals": true
+}
+```
+
+- `groupName` -- slicers with the same groupName sync across pages
+- `fieldChanges` -- sync when the bound field changes
+- `filterChanges` -- sync when the filter selection changes
+
+All slicers in the same `groupName` must bind to the same field. The groupName is typically auto-generated from the field name but can be anything.
+
+## Visual Interactions
+
+Visual interactions control cross-filtering between visuals on a page. Configured in **page.json** (not report.json):
+
+```json
+"visualInteractions": [
+  {"source": "slicer_visual_name", "target": "chart_visual_name", "type": "NoFilter"},
+  {"source": "chart_a_name", "target": "chart_b_name", "type": "NoFilter"}
+]
+```
+
+Types: `"NoFilter"` (disable cross-filter), `"Filter"` (cross-filter), `"Highlight"` (cross-highlight).
+
+Only interactions that deviate from the default need to be listed. By default, all visuals cross-filter each other.
+
+## Table/Matrix Column Widths
+
+Column widths in tables and matrices are set via the `columnWidth` object with a `metadata` selector targeting the specific column:
+
+```json
+"columnWidth": [
+  {
+    "properties": {
+      "value": {"expr": {"Literal": {"Value": "215D"}}}
+    },
+    "selector": {"metadata": "Orders.Order Lines"}
+  },
+  {
+    "properties": {
+      "value": {"expr": {"Literal": {"Value": "150D"}}}
+    },
+    "selector": {"metadata": "Customers.Account Type"}
+  }
+]
+```
+
+Each entry sets the width for one column, identified by `metadata` selector using `Table.Column` format.
+
+## Visual Groups
+
+Visuals can be grouped into a container that moves and resizes as a unit. A group visual uses `visualGroup` instead of `visual`:
+
+```json
+{
+  "$schema": "...visualContainer/2.7.0/schema.json",
+  "name": "my_group",
+  "position": {"x": 0, "y": 0, "z": 0, "width": 800, "height": 400},
+  "visualGroup": {
+    "displayName": "KPI Section",
+    "groupMode": "ScaleMode",
+    "objects": {
+      "background": [...],
+      "general": [...],
+      "lockAspect": [...]
+    }
+  }
+}
+```
+
+Child visuals reference the group via `parentGroupName`:
+
+```json
+{
+  "name": "card_in_group",
+  "position": {"x": 10, "y": 10, "z": 1, "width": 200, "height": 100},
+  "parentGroupName": "my_group",
+  "visual": {
+    "visualType": "card",
+    ...
+  }
+}
+```
+
+- `groupMode`: `"ScaleMode"` (contents scale with group) or `"ScrollMode"` (contents scroll)
+- `visual` and `visualGroup` are mutually exclusive -- a visual.json has one or the other
+- Group objects are limited to `background`, `general`, `lockAspect`
+
+## Hiding Visuals and Fields
+
+### Hiding an entire visual
+
+Set `isHidden: true` at the root level of visual.json (outside `visual`):
+
+```json
+{
+  "name": "hidden_slicer",
+  "position": {...},
+  "visual": {...},
+  "isHidden": true
+}
+```
+
+Hidden visuals still exist and process data, but aren't rendered. Common for bookmarks that toggle visibility, or for slicers that drive cross-filtering without being shown.
+
+### Hiding fields from the visual
+
+Individual fields can be hidden from display while still being used in calculations. This is done by omitting them from the visual's query projections -- if a field isn't in `queryState`, it won't show. The field can still be referenced in extension measures or filters.
+
+## Chart Element Formatting
+
+Common chart formatting properties in `objects`. These use the standard expr wrapper pattern.
+
+### Data Labels
+
+```json
+"labels": [{
+  "properties": {
+    "show": {"expr": {"Literal": {"Value": "true"}}},
+    "fontSize": {"expr": {"Literal": {"Value": "10D"}}},
+    "color": {"solid": {"color": {"expr": {"ThemeDataColor": {"ColorId": 0, "Percent": -0.3}}}}},
+    "labelDisplayUnits": {"expr": {"Literal": {"Value": "1000D"}}},
+    "labelPrecision": {"expr": {"Literal": {"Value": "1L"}}}
+  }
+}]
+```
+
+`labelDisplayUnits`: `0D` (auto), `1D` (none), `1000D` (thousands), `1000000D` (millions), `1000000000D` (billions).
+
+### Markers (line/area charts)
+
+```json
+"markers": [{
+  "properties": {
+    "show": {"expr": {"Literal": {"Value": "true"}}},
+    "markerSize": {"expr": {"Literal": {"Value": "8D"}}},
+    "borderShow": {"expr": {"Literal": {"Value": "false"}}}
+  }
+}]
+```
+
+### Line Styles
+
+```json
+"lineStyles": [{
+  "properties": {
+    "strokeWidth": {"expr": {"Literal": {"Value": "3D"}}},
+    "lineChartType": {"expr": {"Literal": {"Value": "'smooth'"}}},
+    "showMarker": {"expr": {"Literal": {"Value": "true"}}},
+    "segmentGradient": {"expr": {"Literal": {"Value": "false"}}}
+  }
+}]
+```
+
+`lineChartType`: `'smooth'`, `'straight'`, `'stepped'`.
+
+### Bar/Column Borders
+
+Data point borders on bar/column charts:
+
+```json
+"dataPoint": [{
+  "properties": {
+    "fill": {"solid": {"color": {"expr": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}}},
+    "showAllDataPoints": {"expr": {"Literal": {"Value": "true"}}}
+  }
+}]
+```
+
+Border styling is typically controlled via the theme rather than per-visual.
+
+## Analytics Lines
+
+Line and bar charts support reference lines, trend lines, error bars, and forecasts. These live in `objects` under type-specific property names.
+
+### Reference Lines
+
+```json
+"y1AxisReferenceLine": [{
+  "properties": {
+    "show": {"expr": {"Literal": {"Value": "true"}}},
+    "value": {"expr": {"Literal": {"Value": "50000D"}}},
+    "lineColor": {"solid": {"color": {"expr": {"Literal": {"Value": "'#D64550'"}}}}},
+    "transparency": {"expr": {"Literal": {"Value": "0D"}}},
+    "style": {"expr": {"Literal": {"Value": "'dashed'"}}},
+    "position": {"expr": {"Literal": {"Value": "'front'"}}},
+    "dataLabelShow": {"expr": {"Literal": {"Value": "true"}}}
+  }
+}]
+```
+
+Also available: `xAxisReferenceLine`, `referenceLine` (some chart types).
+
+### Trend Lines
+
+```json
+"trend": [{
+  "properties": {
+    "show": {"expr": {"Literal": {"Value": "true"}}},
+    "lineColor": {"solid": {"color": {"expr": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}}},
+    "transparency": {"expr": {"Literal": {"Value": "20D"}}},
+    "style": {"expr": {"Literal": {"Value": "'dashed'"}}}
+  }
+}]
+```
+
+### Error Bars/Bands
+
+```json
+"error": [{
+  "properties": {
+    "enabled": {"expr": {"Literal": {"Value": "true"}}},
+    "barColor": {"solid": {"color": {"expr": {"ThemeDataColor": {"ColorId": 1, "Percent": 0.4}}}}},
+    "barWidth": {"expr": {"Literal": {"Value": "2L"}}}
+  },
+  "selector": {"metadata": "Sales.Revenue"}
+}]
+```
+
+Error bars can use measure-driven bounds via `errorRange.explicit.lowerBound` / `upperBound`.
+
+### Forecast (line charts)
+
+```json
+"forecast": [{
+  "properties": {
+    "show": {"expr": {"Literal": {"Value": "true"}}},
+    "forecastLength": {"expr": {"Literal": {"Value": "3L"}}},
+    "confidenceBandStyle": {"expr": {"Literal": {"Value": "'fill'"}}},
+    "confidenceLevel": {"expr": {"Literal": {"Value": "95D"}}}
+  }
+}]
+```
+
+### Which charts support which analytics
+
+| Analytics | lineChart | barChart/columnChart | areaChart | scatterChart | comboChart |
+|-----------|-----------|---------------------|-----------|--------------|------------|
+| `y1AxisReferenceLine` | yes | yes | yes | yes | yes |
+| `xAxisReferenceLine` | yes | yes | yes | yes | yes |
+| `trend` | yes | yes | yes | yes | yes |
+| `error` | yes | yes | -- | -- | yes |
+| `forecast` | yes | -- | -- | -- | -- |
+| `anomalyDetection` | yes | -- | -- | -- | -- |
+
 ## Related
 
 - [visual-container-formatting.md](./visual-container-formatting.md) -- objects vs visualContainerObjects
@@ -177,3 +434,7 @@ Filter types: `"Categorical"`, `"Advanced"`. See [filter-pane.md](./filter-pane.
 - [sort-visuals.md](./sort-visuals.md) -- Sort configuration
 - [filter-pane.md](./filter-pane.md) -- Filter types and default values
 - [textbox.md](./textbox.md) -- Textbox-specific patterns
+
+## External
+
+- [SQLBI: The 3-30-300 Rule for Better Reports](https://www.sqlbi.com/articles/introducing-the-3-30-300-rule-for-better-reports/) -- report design principles
