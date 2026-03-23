@@ -5,9 +5,19 @@ description: "This skill should be used when the user asks about 'PBIR format', 
 
 # PBIR Format Reference
 
-Reference for Power BI Enhanced Report (PBIR) JSON format -- structure, expression syntax, formatting patterns, and schema rules.
+Skill that teaches Claude about the Power BI Enhanced Report (PBIR) JSON format to read and use it. Doesn't support legacy `report.json` or `layout` report metadata. To convert from legacy to PBIR format, users have to open and save their reports in Power BI Desktop.
 
-**PBIR files are strict JSON -- no comments allowed (not JSONC/JSONL).**
+**WARNING:** The PBIR format is brittle and easily corrupted. You should prefer to modify the PBIR files via the `pbir` command-line tool, because it has special tools and features to avoid breaking the report files. Only fall back to direct modification of the JSON files if the user explicitly requests it or if `pbir` is not available.
+
+## General, critical guidance
+
+- **Check examples:** Check [examples](./examples/) for a valid report
+- **Take a backup:** Make a copy of the report before modifying it
+- **PBIX vs PBIP vs PBIR:** So long as report metadata is in PBIR format, you can work with any of these formats. PBIX is just a zip file; unzip and rezip to work with it. You shouldn't work with PBIT (Power BI Template) file types. Note that PBIP and PBIX contain PBIR, but you can also have a "thin" report that is PBIR only.
+- **Validate often:** Any time you change a JSON file you **must** validate it *IMMEDIATELY* after the modification to avoid "breaking" changes with `<claude put code here>`
+- **Valid JSON vs. Rendering JSON:** Just because something is valid JSON doesn't mean it will render. A visual might not render if the bound field is invalid (missing, wrong table, or misspelled) in the visual.json, if the visual elements are cropped by their container, if a model performance issue causes the dax query to time out, if a model data quality issue results in (Blank) or empty values, etc. You can use tools like the chrome or chrome devTools MCP server to check whether a visual rendered if the report was published to Power BI, but it's often faster to just ask the user to check in Power BI Desktop or the browser.
+- **Hierarchical formatting cascade:** In Power BI reports, formatting is determined by the following order of operations: defaults --> Theme wildcards (*) --> Theme visualTypes --> bespoke visual.json configuration. Theme overwrites defaults, visualType overrides wildcards in themes, and visual.json overrides all theme formatting. It's preferable to put as much of the formatting in the theme as possible over bespoke visual.json formatting because then changes only need to happen in one place
+- **PBIR files are strict JSON:** No comments allowed
 
 ## Report Structure
 
@@ -15,29 +25,49 @@ Reference for Power BI Enhanced Report (PBIR) JSON format -- structure, expressi
 Report.Report/
 +-- .pbi/localSettings.json                # Local-only, gitignored
 +-- .platform                              # Fabric Git integration
-+-- definition.pbir                        # Semantic model connection (byPath or byConnection)
-+-- mobileState.json                       # Mobile layout (no external editing)
-+-- semanticModelDiagramLayout.json        # Model diagrams (no external editing)
++-- definition.pbir                        # Semantic model connection (byPath or byConnection) can open this file in Power BI Desktop to open the report
++-- mobileState.json                       # Mobile layout (niche)
++-- semanticModelDiagramLayout.json        # Model diagrams
 +-- CustomVisuals/                         # Private custom visuals only
 +-- definition/
-|   +-- version.json                       # REQUIRED -- PBIR version (e.g. "1.6.0")
-|   +-- report.json                        # REQUIRED -- theme, report filters, settings
-|   +-- reportExtensions.json              # OPTIONAL -- extension measures (report-level DAX)
+|   +-- version.json                       # REQUIRED -- PBIR version
+|   +-- report.json                        # REQUIRED -- report-level config, including theme, report filters, settings
+|   +-- reportExtensions.json              # Extension measures and visual calculations (report- and visual-level DAX)
 |   +-- pages/
 |   |   +-- pages.json                     # Page order, active page
 |   |   +-- [PageName]/                    # Letters, digits, underscores, hyphens ONLY
-|   |       +-- page.json                  # Page size, background, filters
+|   |       +-- page.json                  # Page-level properties, including size, background, filters
 |   |       +-- visuals/
 |   |           +-- [VisualName]/
-|   |               +-- visual.json        # Visual config and formatting
-|   |               +-- mobile.json        # Mobile layout (optional)
-|   +-- bookmarks/                         # OPTIONAL
+|   |               +-- visual.json        # Visual config, formatting, and field data bindings <-- most important and complex file for report dev and formatting
+|   |               +-- mobile.json        # Mobile formatting of the visual (niche)
+|   +-- bookmarks/                         # Bookmarks are a bad practice and should be avoided if possible!
 |       +-- bookmarks.json                 # Bookmark order and groups
-|       +-- [id].bookmark.json             # Individual bookmark state
+|       +-- [id].bookmark.json             # Individual bookmark state containing a snapshot of the report basically
 +-- StaticResources/
     +-- RegisteredResources/               # Custom themes, images
+        +-- [ThemeName].json               # Custom theme <-- second most important and complex file for formatting
     +-- SharedResources/BaseThemes/        # Microsoft base themes
 ```
+
+## Rules
+
+### Modifying a report
+
+1. First start by understanding the user's request. Ask questions if necessary and make sure you understand the context of their ask. Focus on the business process, and don't be afraid to push the user for additional information about the users, the report, the model, or the business. This information should all be in function of the report.
+2. Explore the report efficiently to get a sense of its contents and where's-what.
+3. Check the connected semantic model. Ideally the report is a thin-report with `byConnection`. If that's the case you can use the `fab`, `pbir`, or `te` command-line tools to explore the model. If those aren't available, you can use an MCP server. If it's `byPath` then you might be able to connect to and query the local model open in Power BI Desktop. Understanding the model helps you to know what fields are available for visuals and the business logic of calculations (in DAX expressions).
+4. Find the appropriate visuals and pages that you need to modify. You might have to ask the user for clarification.
+5. Plan the modifications ensuring that you know the appropriate structure and values
+6. Validate the JSON files that you change IMMEDIATELY after changing them. Revise if necessary
+
+### Creating a report
+
+1. Same as the above, except you need to generate the appropriate files _de novo_ from scratch. You have to be careful to not miss anything; the best way to do this is just with the `pbir new` command if the `pbir` CLI is available. If not, then check the example reports thoroughly.
+2. You have to make sure that the `definition.pbir` is set properly.
+3. You should use a theme.json file. We recommend [the example theme from SQLBI and Data Goblins](./examples/K201-MonthSlicer.Report/StaticResources/RegisteredResources/SqlbiDataGoblinTheme.json).
+4. Proceed as normal, validating each time you add a new JSON file.
+5. Make sure that you add the appropriate filters to the `report.json` or `page.json`; see [the filter pane for more information](references/filter-pane.md)
 
 ## Expression Syntax
 
@@ -95,7 +125,7 @@ Six patterns for referencing fields in queries and expressions:
 | clusteredColumnChart | Category, Y |
 | pivotTable | Rows, Columns, Values |
 | kpi | Indicator, Goal, Goals, TrendLine |
-| scatterChart | Category, X, Y, Size |
+| scatterChart | Category, X, Y, Size, Tooltips |
 | textbox | (none -- uses objects.general.paragraphs) |
 | shape / actionButton | (none -- uses objects for shape/icon config) |
 | scriptVisual | Values |
@@ -118,8 +148,8 @@ Each projection in `queryState` supports:
 ```
 
 - `x`, `y` -- top-left corner in pixels (can be fractional)
-- `z` -- layer order (higher = front); observed values: 0, 1000, 4000, 8000, 15000
-- `tabOrder` -- keyboard navigation order (can differ from z)
+- `z` -- layer order (higher = front); common values: 0, 1000, 2000, 3000, 5000, 8000, 15000
+- `tabOrder` -- keyboard navigation order (optional; can differ from z)
 
 ## objects vs visualContainerObjects
 
@@ -148,7 +178,7 @@ Per-point formatting (e.g. per-bar colors) requires a two-entry array with `matc
 |------|--------|---------|
 | (none) | No `selector` key | Applies to entire visual |
 | metadata | `{"metadata": "Sales.Revenue"}` | Specific column/measure |
-| id | `{"id": "default"}` | Named instance |
+| id | `{"id": "default"}` | Named instance (also: `"selection:selected"`, `"interaction:hover"`, `"interaction:press"`) |
 | dataViewWildcard | `{"data": [{"dataViewWildcard": {"matchingOption": 1}}]}` | Per-point formatting |
 | scopeId | `{"data": [{"scopeId": {"Comparison": {...}}}]}` | Specific data point value |
 
@@ -171,7 +201,7 @@ Many "formatting bugs" are actually theme issues. Before making formatting chang
 ## Visual Creation Rules
 
 1. Pages: 1280x720 px (default)
-2. Page and visual folder names: letters, digits, underscores, hyphens ONLY (no spaces -- hard requirement per MS docs)
+2. Page and visual folder names: letters, digits, underscores, hyphens ONLY (no spaces). Note: Power BI Desktop can produce folders with spaces or `.Page`/`.Visual` suffixes -- these work but aren't recommended for programmatic creation
 3. Visuals must not overlap; use even spacing
 4. All fields must exist in semantic model or `reportExtensions.json`
 5. Each page must have a title (textbox visual)
@@ -179,11 +209,11 @@ Many "formatting bugs" are actually theme issues. Before making formatting chang
 7. Include `altText` in `visualContainerObjects.general` for WCAG 2.1
 8. Use theme colors (`ThemeDataColor`) over hex literals; hex literals are acceptable as fallback for colors not in the theme
 
-## definition.pbir Variants
+## definition.pbir
 
-Two reference types for connecting to semantic models:
+A report must be connected to a semantic model. There are two ways to do this:
 
-- **byPath** -- Local PBIP reference: `{"byPath": {"path": "../Model.SemanticModel"}}` (schema 1.0.0 or 2.0.0)
+- **byPath** -- Local PBIP reference/thick report: `{"byPath": {"path": "../Model.SemanticModel"}}` (schema 1.0.0 or 2.0.0)
 - **byConnection** -- Remote/thin report: `{"byConnection": {"connectionString": "Data Source=powerbi://..."}}` (schema 2.0.0)
 
 ## Related Skills
