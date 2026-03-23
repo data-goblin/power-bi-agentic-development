@@ -7,7 +7,7 @@ Extension measures are DAX measures defined in `reportExtensions.json` that exis
 They are useful for the following: 
 - Report-specific calculations that don't need to be re-used in other reports and therefore shouldn't be in the model
 - Centralizing formatting logic in DAX rather than custom bespoke formatting split over many visuals. This might be better as a model measure if this must be re-used across multiple reports.
-- 
+
 
 They are **not** useful in the following scenarios:
 - Report-specific calculations or logic for a single visual. This is better done with a DAX visual calculation (visicalc, viz calc)
@@ -26,7 +26,7 @@ They are **not** useful in the following scenarios:
 - Manual updates when logic changes
 - Inconsistency when logic differs between visuals
 
-**Solution:** Define formatting logic once in an extension or model measure, reference it everywhere. That way, if you want to change the logic, you only do it once. Ideally, however, you should refrence theme semantic colors like "bad", "good", etc. rather than custom hex colors such as "#171717" or "#FAFAFA".
+**Solution:** Define formatting logic once in an extension or model measure, reference it everywhere. That way, if you want to change the logic, you only do it once. Ideally, however, you should reference theme semantic colors like "bad", "good", etc. rather than custom hex colors such as "#171717" or "#FAFAFA".
 
 **Benefits:**
 1. **Centralized logic** - Change formatting rules in one place
@@ -220,13 +220,13 @@ The `__field_index.md` contains:
 
 **Option 2 (PREFERRED): Use a dedicated measures or reporting objects table (if one exists)**
 
-If none exists, you might want to advise the user to create a new table or calculated table specifically for extension measures that is hidden. This ensures organization and makes it easier to find/use these measures from the 
+If none exists, you might want to advise the user to create a new table or calculated table specifically for extension measures that is hidden. This ensures organization and makes it easier to find/use these measures.
 
 ```json
 {
   "entities": [
     {
-      "name": "__ExtensionMeasures",  // ← If model has a table like deez nuts
+      "name": "__ExtensionMeasures",
       "measures": [
         {
           "name": "KPI Color",
@@ -1067,12 +1067,12 @@ The file is **optional** - only include it when you have at least one extension 
 
 ### Measure Not Evaluating
 
-**Symptom:** Measure found but doesn't apply formatting
+**Symptom:** Measure found but returns a blank or no formatting (if used in conditional formatting)
 
 **Causes:**
-1. Wrong data type (e.g., Text for numeric property)
-2. Invalid return value (e.g., color name instead of hex)
-3. DAX error in expression
+1. DAX error in expression (will result in a "grey box of death error")
+2. Wrong data type (e.g., Text for numeric property)
+3. Invalid return value (e.g., color name instead of hex)
 4. Wrong selector (metadata vs dataViewWildcard)
 
 **Fix:**
@@ -1088,9 +1088,10 @@ Check data type matches property:
 
 Check return format:
 ```dax
-// For colors - use hex:
-"#FF0000"  // ✓ Correct
-"red"      // ✗ Wrong
+// For colors - use theme colors or hexes:
+"bad"      // ✓ Preferred
+"#FF0000"  // ✓ Correct but prefer theme colors instead
+"red"      // ✗ Wrong - will render, but not preferred
 "rgb(255,0,0)"  // ✗ Wrong
 ```
 
@@ -1100,79 +1101,6 @@ Check selector for per-point evaluation:
   "data": [{
     "dataViewWildcard": {"matchingOption": 1}  // ← For per-category
   }]
-}
-```
-
-### DAX Errors
-
-**Symptom:** Visual shows error or blank
-
-**Causes:**
-1. Syntax error in DAX
-2. Reference to non-existent measure
-3. Circular reference
-4. Type mismatch in IF/SWITCH
-
-**Fix:**
-
-Validate DAX by testing in Power BI Desktop first:
-1. Add measure temporarily to model
-2. Test in visual
-3. Debug any errors
-4. Move to reportExtensions.json
-
-Check references:
-```json
-"references": {
-  "measures": [
-    {
-      "entity": "Sales",           // ← Must exist in model
-      "name": "Total Revenue"      // ← Must exist in entity
-    }
-  ]
-}
-```
-
-### Performance Issues
-
-**Symptom:** Visual slow to render/update
-
-**Causes:**
-1. Complex DAX in formatting measure
-2. Measure evaluates expensive calculations
-3. Too many iterations (lots of data points)
-
-**Fix:**
-
-Pre-calculate in model:
-```json
-// Instead of complex calculation in extension measure:
-{
-  "name": "Status Color",
-  "dataType": "Text",
-  "expression": "
-    // Complex logic here...
-    VAR ... = CALCULATE(...)
-    VAR ... = FILTER(...)
-    ...
-  "
-}
-
-// Create model measure with complex logic:
-// [Calculated Status] = SWITCH(TRUE(), ...)
-
-// Use simple extension measure:
-{
-  "name": "Status Color",
-  "dataType": "Text",
-  "expression": "
-    SWITCH(
-      [Calculated Status],  // Model measure
-      \"Good\", \"#4CAF50\",
-      \"Bad\", \"#D64550\",
-      \"#666666\"
-    )
-  "
 }
 ```
 
@@ -1231,141 +1159,10 @@ Verify measure exists:
 }
 ```
 
-Query model to list measures:
-```python
-from pbir_object_model import Report
-
-report = Report.load("Report.Report")
-# List all extension measures
-for measure in report.extension_measures:
-    print(f"{measure.table}.{measure.name}: {measure.expression}")
-                field = visual.SemanticModelObjects[obj]
-                if field.ObjectType == "Measure":
-                    print(f"{field.TableName}.{field.ObjectName}")
-```
 
 ## Examples
 
-### Complete Example: Multi-Threshold KPI
-
-**reportExtensions.json:**
-
-```json
-{
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json",
-  "name": "extension",
-  "entities": [
-    {
-      "name": "Sales",  // ← MUST be existing entity from semantic model
-      "measures": [
-        {
-          "name": "KPI Status Color",
-          "dataType": "Text",
-          "description": "Returns color based on actual vs target performance thresholds",
-          "displayFolder": "Colors",
-          "expression": "\n    VAR Actual = [Total Sales]\n    VAR Target = [Sales Target]\n    VAR Variance = Actual - Target\n    VAR VariancePct = DIVIDE(Variance, Target)\n    RETURN\n        SWITCH(\n            TRUE(),\n            ISBLANK(VariancePct), \"\",\n            VariancePct >= 0.10, \"#4CAF50\",   // Green - exceeding 10%+\n            VariancePct >= 0, \"#118DFF\",      // Blue - meeting target\n            VariancePct >= -0.10, \"#FFA500\",  // Orange - within 10% of target\n            \"#D64550\"                          // Red - missing by 10%+\n        )\n    ",
-          "references": {
-            "measures": [
-              {
-                "entity": "Sales",
-                "name": "Total Sales"
-              },
-              {
-                "entity": "Targets",
-                "name": "Sales Target"
-              }
-            ]
-          }
-        },
-        {
-          "name": "KPI Transparency",
-          "dataType": "Int64",
-          "description": "Fades out data points below threshold",
-          "displayFolder": "Visual Effects",
-          "expression": "\n    VAR Actual = [Total Sales]\n    VAR Target = [Sales Target]\n    RETURN\n        IF(\n            Actual < Target * 0.5,  // Less than 50% of target\n            60,                       // Fade significantly\n            0                         // Full opacity\n        )\n    ",
-          "references": {
-            "measures": [
-              {
-                "entity": "Sales",
-                "name": "Total Sales"
-              },
-              {
-                "entity": "Targets",
-                "name": "Sales Target"
-              }
-            ]
-          }
-        }
-      ]
-    }
-  ]
-}
-```
-
-**Use in line chart (visual.json):**
-
-```json
-{
-  "visual": {
-    "visualType": "lineChart",
-    "objects": {
-      "lineStyles": [
-        {
-          "properties": {
-            "segmentGradient": {
-              "expr": {"Literal": {"Value": "true"}}
-            }
-          }
-        },
-        {
-          "properties": {
-            "strokeColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Measure": {
-                      "Expression": {
-                        "SourceRef": {
-                          "Schema": "extension",
-                          "Entity": "Sales"  // ← Must match entity in reportExtensions.json
-                        }
-                      },
-                      "Property": "KPI Status Color"
-                    }
-                  }
-                }
-              }
-            },
-            "transparency": {
-              "expr": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Schema": "extension",
-                      "Entity": "Sales"  // ← Must match entity in reportExtensions.json
-                    }
-                  },
-                  "Property": "KPI Transparency"
-                }
-              }
-            }
-          },
-          "selector": {
-            "data": [{
-              "dataViewWildcard": {"matchingOption": 1}
-            }]
-          }
-        }
-      ]
-    }
-  }
-}
-```
-
-**Result:**
-- Line segments colored by performance threshold
-- Poor performers faded with transparency
-- Logic centralized → easy to adjust thresholds
+For a real-world example with extension measures, conditional formatting colors, and inter-extension references, see `examples/K201-MonthSlicer.Report/definition/reportExtensions.json` and the visuals that reference them in `examples/K201-MonthSlicer.Report/definition/pages/`.
 
 ## Related Documentation
 
