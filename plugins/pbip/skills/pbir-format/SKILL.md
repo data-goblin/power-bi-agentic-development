@@ -200,6 +200,9 @@ Two reference types for connecting to semantic models:
 - **`references/pbir-structure.md`** -- PBIR folder structure details
 - **`references/schemas.md`** -- Schema versions and URLs
 - **`references/enumerations.md`** -- Valid property enumerations
+- **`references/version-json.md`** -- version.json format (concise)
+- **`references/platform.md`** -- .platform file format (concise)
+- **`references/bookmarks.md`** -- Bookmark structure and state snapshots
 
 **Formatting & expressions:**
 - **`references/schema-patterns/`** -- Expressions, selectors, conditional formatting, visual calculations
