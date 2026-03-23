@@ -48,6 +48,7 @@ claude plugin install fabric-cli-plugin@fabric-cli-plugin
 | [`connect-pbid`](plugins/pbi-desktop/skills/connect-pbid/) | pbi-desktop | Connect to PBI Desktop's local AS instance via TOM and ADOMD.NET |
 | [`tmdl`](plugins/pbip/skills/tmdl/) | pbip | Author and edit TMDL files directly in PBIP projects |
 | [`pbip`](plugins/pbip/skills/pbip/) | pbip | Power BI Project (PBIP) format, structure, and file types |
+| [`pbir-format`](plugins/pbip/skills/pbir-format/) | pbip | PBIR JSON format reference: visual.json, expressions, theme inheritance, schemas |
 
 ### Commands
 
