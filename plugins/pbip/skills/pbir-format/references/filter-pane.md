@@ -245,7 +245,184 @@ Used for measure-based or range-based conditions:
 
 ComparisonKind: `0`=Equal, `1`=GreaterThan, `2`=GreaterThanOrEqual, `3`=LessThanOrEqual, `4`=LessThan.
 
-Use `And`/`Or` wrappers for compound conditions (e.g., between two values).
+### Between (Range Filter)
+
+Filter a column to values within a range (inclusive on both bounds):
+
+```json
+"filter": {
+  "Version": 2,
+  "From": [{"Name": "d", "Entity": "Date", "Type": 0}],
+  "Where": [{
+    "Condition": {
+      "Between": {
+        "Expression": {
+          "Column": {
+            "Expression": {"SourceRef": {"Source": "d"}},
+            "Property": "Date"
+          }
+        },
+        "LowerBound": {"Literal": {"Value": "datetime'2024-01-01T00:00:00.000000"}},
+        "UpperBound": {"Literal": {"Value": "datetime'2024-12-31T00:00:00.000000"}}
+      }
+    }
+  }]
+}
+```
+
+Use `And` with two `Comparison` conditions for exclusive bounds or open-ended ranges.
+
+### Relative Date Filter
+
+Filter to a rolling window relative to today (e.g., "last 3 months"). Uses `DateSpan` in the `Where` condition:
+
+```json
+{
+  "name": "a1b2c3d4e5f6a7b8c9d0",
+  "field": {
+    "Column": {
+      "Expression": {"SourceRef": {"Entity": "Date"}},
+      "Property": "Date"
+    }
+  },
+  "type": "RelativeDate",
+  "filter": {
+    "Version": 2,
+    "From": [{"Name": "d", "Entity": "Date", "Type": 0}],
+    "Where": [{
+      "Condition": {
+        "Comparison": {
+          "ComparisonKind": 2,
+          "Left": {
+            "Column": {
+              "Expression": {"SourceRef": {"Source": "d"}},
+              "Property": "Date"
+            }
+          },
+          "Right": {
+            "DateSpan": {
+              "Expression": {"Now": {}},
+              "TimeUnit": 2
+            }
+          }
+        }
+      }
+    }]
+  }
+}
+```
+
+**TimeUnit values:** `0`=Day, `1`=Week, `2`=Month, `3`=Year, `4`=Decade, `5`=Second, `6`=Minute, `7`=Hour.
+
+`DateSpan` computes the start of the current time unit period. Combine with `DateAdd` to offset:
+
+```json
+"Right": {
+  "DateAdd": {
+    "Expression": {
+      "DateSpan": {
+        "Expression": {"Now": {}},
+        "TimeUnit": 2
+      }
+    },
+    "TimeUnit": 2,
+    "Amount": -3
+  }
+}
+```
+
+This gives "3 months ago from start of current month" -- useful for "last 3 months" rolling windows.
+
+`RelativeTime` works identically but with `TimeUnit` values `5` (Second), `6` (Minute), `7` (Hour) for near-real-time filters.
+
+### TopN Filter
+
+Filter to top/bottom N items by a measure. Uses `VisualTopN` expression:
+
+```json
+{
+  "name": "f1e2d3c4b5a6f7e8d9c0",
+  "field": {
+    "Column": {
+      "Expression": {"SourceRef": {"Entity": "Customers"}},
+      "Property": "Customer Name"
+    }
+  },
+  "type": "TopN",
+  "filter": {
+    "Version": 2,
+    "From": [{"Name": "c", "Entity": "Customers", "Type": 0}],
+    "Where": [{
+      "Condition": {
+        "VisualTopN": {
+          "Expression": {
+            "Column": {
+              "Expression": {"SourceRef": {"Source": "c"}},
+              "Property": "Customer Name"
+            }
+          },
+          "Count": {"Literal": {"Value": "10L"}},
+          "OrderBy": {
+            "Measure": {
+              "Expression": {"SourceRef": {"Entity": "Sales"}},
+              "Property": "Revenue"
+            }
+          },
+          "IsAscending": false
+        }
+      }
+    }]
+  }
+}
+```
+
+`IsAscending: false` = Top N (largest first). `IsAscending: true` = Bottom N (smallest first).
+
+### Compound Conditions (And / Or)
+
+Combine multiple conditions with `And` or `Or` wrappers:
+
+```json
+"Condition": {
+  "And": {
+    "Left": {
+      "Comparison": {
+        "ComparisonKind": 2,
+        "Left": {"Column": {"Expression": {"SourceRef": {"Source": "d"}}, "Property": "Date"}},
+        "Right": {"Literal": {"Value": "datetime'2024-01-01T00:00:00.000000"}}
+      }
+    },
+    "Right": {
+      "Comparison": {
+        "ComparisonKind": 3,
+        "Left": {"Column": {"Expression": {"SourceRef": {"Source": "d"}}, "Property": "Date"}},
+        "Right": {"Literal": {"Value": "datetime'2024-06-30T00:00:00.000000"}}
+      }
+    }
+  }
+}
+```
+
+This filters to dates >= 2024-01-01 AND <= 2024-06-30.
+
+## Filter Condition Reference
+
+All condition types available in `Where[].Condition`:
+
+| Condition | Description |
+|-----------|-------------|
+| `In` | Value is in a list (Categorical) |
+| `Not` -> `In` | Value is NOT in a list (inverted Categorical) |
+| `Comparison` | Single comparison (=, >, >=, <=, <) |
+| `Between` | Value within range (inclusive) |
+| `And` / `Or` | Compound conditions |
+| `Not` | Negation wrapper |
+| `Contains` | String contains substring |
+| `StartsWith` | String starts with prefix |
+| `DateSpan` | Relative date window (current period) |
+| `DateAdd` | Offset from a date expression |
+| `VisualTopN` | Top/bottom N by measure |
+| `Now` | Current date/time (used inside DateSpan/DateAdd) |
 
 ## Filter Configuration Options
 
