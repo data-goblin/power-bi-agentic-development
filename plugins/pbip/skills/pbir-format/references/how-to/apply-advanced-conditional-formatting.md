@@ -901,4 +901,4 @@ fab import "Workspace.Workspace/Report.Report" -i ./Report.Report -f
 
 - [conditional-formatting.md](../schema-patterns/conditional-formatting.md) - Pattern reference
 - [extension-measures.md](../extension-measures.md) - Creating measures
-- [barChart.md](../visuals-catalog/barChart.md) - Bar chart properties
+- [selectors.md](../schema-patterns/selectors.md) - Selector patterns

@@ -186,7 +186,7 @@ Use `scopeId` selector with `Comparison` to apply formatting to specific field v
 }]
 ```
 
-**Common ComparisonKind values:** `0` = Equal, `1` = GreaterThan, `3` = LessThan
+**ComparisonKind values:** `0` = Equal, `1` = GreaterThan, `2` = GreaterThanOrEqual, `3` = LessThanOrEqual, `4` = LessThan
 
 **Notes:**
 

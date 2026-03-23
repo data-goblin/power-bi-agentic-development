@@ -174,7 +174,7 @@ The new card visual (cardVisual) supports SVG images in callout values.
 - **Workaround 2:** Add a Categories field (even with single category), disable small multiples
 - **Status:** Resolved by Microsoft in recent updates
 
-**See:** [cardVisual.md](../visuals-catalog/cardVisual.md) for complete card visual reference
+**See:** [visual.json](../json-structure/05-visual-json.md) for visual structure reference
 
 ### Slicer (New) Visual
 
@@ -212,7 +212,7 @@ The new slicer visual (advancedSlicerVisual) supports SVG in headers and items.
 - Category indicators
 - Interactive buttons with SVG styling
 
-**See:** [advancedSlicerVisual.md](../visuals-catalog/slicer.md) for complete slicer reference
+**See:** [visual.json](../json-structure/05-visual-json.md) for visual structure reference
 
 ### Scatter Chart Background
 
@@ -223,7 +223,7 @@ Scatter charts support SVG images as background overlays.
 - Use `plotArea.image` property in visual configuration
 - SVG scales to plot area dimensions
 
-**See:** [scatterChart.md](../visuals-catalog/scatterChart.md) for complete reference
+**See:** [visual.json](../json-structure/05-visual-json.md) for visual structure reference
 
 ---
 
@@ -867,10 +867,6 @@ Key techniques for performant SVG measures:
 
 ## See Also
 
-- **[table.md](../visuals-catalog/table.md)** - Table visual reference
-- **[cardVisual.md](../visuals-catalog/cardVisual.md)** - New card visual reference
-- **[slicer.md](../visuals-catalog/slicer.md)** - Slicer visual reference
-- **[scatterChart.md](../visuals-catalog/scatterChart.md)** - Scatter chart reference
 - **[expressions.md](../schema-patterns/expressions.md)** - Expression patterns
 - **[conditional-formatting.md](../schema-patterns/conditional-formatting.md)** - Conditional formatting
-- **[examples/visuals/cardVisual/](../../examples/visuals/cardVisual/)** - 12 card visual examples with SVG DAX code in annotations
+- **[extension-measures.md](../extension-measures.md)** - Extension measure patterns
