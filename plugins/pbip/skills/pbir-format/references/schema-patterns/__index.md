@@ -6,9 +6,10 @@ Patterns extracted from official JSON schemas.
 
 | File | Purpose | Source Schema |
 |------|---------|---------------|
-| conditional-formatting.md | Conditional formatting patterns (measures, gradients, rules) | formattingObjectDefinitions/1.4.0 |
-| expressions.md | All expression types (Literal, Measure, etc.) | semanticQuery/1.3.0 |
-| selectors.md | Selector patterns (data, metadata, etc.) | formattingObjectDefinitions/1.4.0 |
+| conditional-formatting.md | Conditional formatting patterns (measures, gradients, rules) | formattingObjectDefinitions |
+| expressions.md | All expression types (Literal, Measure, etc.) | semanticQuery |
+| selectors.md | Selector patterns (data, metadata, etc.) | formattingObjectDefinitions |
+| visual-calculations.md | NativeVisualCalculation patterns | semanticQuery |
 
 ## Quick Lookup
 
@@ -46,10 +47,4 @@ Patterns extracted from official JSON schemas.
 
 ## Schema Files
 
-Located in: `schemas/`
-
-- semanticQuery/1.3.0/schema.json
-- formattingObjectDefinitions/1.4.0/schema.json
-- visualContainer/2.2.0/schema.json
-- visualConfiguration/2.2.0/schema-embedded.json
-- theme/reportThemeSchema-2.145.json
+See `schemas.md` for current schema versions and URLs. Schemas update monthly.

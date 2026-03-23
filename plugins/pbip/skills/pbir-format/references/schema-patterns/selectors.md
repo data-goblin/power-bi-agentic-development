@@ -602,9 +602,7 @@ Visual calculations (NativeVisualCalculation) always have `queryRef: "select"`, 
 
 - [expressions.md](expressions.md) - Measure expressions
 - [visual-calculations.md](visual-calculations.md) - Visual calculation patterns and targeting
-- [dataPoint.md](../property-catalog/visual-properties/dataPoint.md) - dataPoint usage examples
-- [lineStyles.md](../property-catalog/visual-properties/lineStyles.md) - Line chart examples
-- [lineChart.md](../visuals-catalog/lineChart.md) - Complete visual examples
+- [conditional-formatting.md](conditional-formatting.md) - Full conditional formatting guide
 
 ## Notes
 

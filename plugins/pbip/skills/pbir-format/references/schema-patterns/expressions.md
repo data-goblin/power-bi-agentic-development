@@ -59,6 +59,51 @@ Static values with type-specific formatting.
 - `"true"` (lineChart.lineStyles.segmentGradient)
 - `"false"` (barChart.error.barMatchSeriesColor)
 
+### Color Literals (Hex)
+
+```json
+"expr": {"Literal": {"Value": "'#FF0000'"}}
+```
+
+**Format Rules:**
+- Inner single quotes around hex code: `"'#RRGGBB'"`
+- 6-digit RGB: `"'#1971c2'"`
+- 8-digit ARGB: `"'#80FF0000'"` (first two digits = alpha)
+- Case-insensitive
+
+### DateTime Literals
+
+```json
+"expr": {"Literal": {"Value": "datetime'2024-01-15T00:00:00.000000"}}
+```
+
+### Null Literals
+
+```json
+"expr": {"Literal": {"Value": "null"}}
+```
+
+Lowercase, no quotes, no suffix. Used in Conditional expressions to test for null values.
+
+### String Escaping
+
+Single quotes within string literals are escaped by doubling:
+```json
+"expr": {"Literal": {"Value": "'here''s some text'"}}
+```
+
+Font families with fallback chains use triple-quote escaping:
+```json
+"expr": {"Literal": {"Value": "'''Segoe UI Semibold'', helvetica, sans-serif'"}}
+```
+
+### D vs L Gotchas
+
+Both `D` and `L` work for whole numbers but are NOT interchangeable everywhere:
+- `transparency` uses `D` normally BUT `L` inside `dropShadow`
+- `labelPrecision` always uses `L`; `labelDisplayUnits` always uses `D`
+- `fontSize` always uses `D`; `shadowBlur`/`shadowSpread`/`shadowDistance` always use `L`
+
 ## Measure Expressions
 
 Reference DAX measures (model or extension).
@@ -119,7 +164,7 @@ Reference colors from report theme.
 
 **Parameters:**
 - `ColorId`: Index into theme's dataColors array (0-based)
-- `Percent`: Brightness adjustment (-100 to 100)
+- `Percent`: Tint/shade adjustment (-1.0 to 1.0; negative = darker, positive = lighter, 0 = exact)
 
 **Examples from actual visuals:**
 - `{"ColorId": 1, "Percent": 0}` (barChart.error.barColor)

@@ -465,12 +465,11 @@ Complex UI-generated conditional logic - most verbose but UI-configurable.
 
 | Value | Operator |
 |-------|----------|
-| 0 | Equal |
-| 1 | Not equal |
-| 2 | Greater than |
-| 3 | Greater than or equal |
-| 4 | Less than |
-| 5 | Less than or equal |
+| 0 | Equal (==) |
+| 1 | Greater than (>) |
+| 2 | Greater than or equal (>=) |
+| 3 | Less than or equal (<=) |
+| 4 | Less than (<) |
 
 ### Aggregation Functions
 
@@ -725,6 +724,5 @@ Bar chart with comprehensive conditional formatting:
 
 - [extension-measures.md](../extension-measures.md) - Creating extension measures
 - [expressions.md](./expressions.md) - Expression format reference
+- [selectors.md](./selectors.md) - Selector patterns
 - [apply-advanced-conditional-formatting.md](../how-to/apply-advanced-conditional-formatting.md) - Step-by-step guide
-- [barChart.md](../visuals-catalog/barChart.md) - Bar chart reference
-- [lineChart.md](../visuals-catalog/lineChart.md) - Line chart reference
