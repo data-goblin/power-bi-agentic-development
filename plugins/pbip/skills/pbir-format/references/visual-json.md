@@ -437,4 +437,7 @@ Error bars can use measure-driven bounds via `errorRange.explicit.lowerBound` / 
 
 ## External
 
-- [SQLBI: The 3-30-300 Rule for Better Reports](https://www.sqlbi.com/articles/introducing-the-3-30-300-rule-for-better-reports/) -- report design principles
+- [SQLBI: The 3-30-300 Rule for Better Reports](https://www.sqlbi.com/articles/introducing-the-3-30-300-rule-for-better-reports/) -- report design principles (3 visuals, 30 seconds, 300px)
+- [Data Goblins: Report Checklist](https://data-goblins.com/report-checklist) -- comprehensive pre-deployment checklist (layout, accessibility, testing, UX, handover, documentation, training)
+- [Data Goblins: Report Requirements](https://data-goblins.com/power-bi/report-requirements) -- gathering requirements before building
+- [Data Goblins: Solving Problems with Power BI](https://data-goblins.com/power-bi/solving-problems) -- framing reports around business problems, not data
