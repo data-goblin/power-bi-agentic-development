@@ -1,6 +1,27 @@
 # Visual Container Formatting
 
-Every visual in a Power BI report is wrapped in a "container" -- a box that holds the chart/table/card. The container controls the chrome around the visual: its title bar, background, border, shadow, padding, and header icons. The visual itself controls the data-driven stuff: axes, legends, data points, labels.
+Every visual in a Power BI report is wrapped in a "container" -- think of it as a picture frame around a painting. The painting is your chart or table. The frame is everything else: the title bar above it, the background behind it, the border around it, the shadow beneath it, the rounded corners, the padding between the frame edge and the painting, the little header icons in the top-right corner.
+
+```
++-----------------------------------------------+
+|  Title                            [icons]     |  <-- container (visualContainerObjects)
+|  Subtitle                                     |
+|  ─────────────── divider ───────────────────  |
+|  +─────────────────────────────────────────+  |
+|  |                                         |  |
+|  |          The actual visual              |  |  <-- visual content (objects)
+|  |     (chart, table, card, etc.)          |  |
+|  |                                         |  |
+|  +─────────────────────────────────────────+  |
+|                  padding                      |
++-----------------------------------------------+
+           border + rounded corners
+                  shadow
+```
+
+**Container** (visualContainerObjects): title, subtitle, divider, background, border, rounded corners, shadow, padding, spacing, header icons, tooltips, alt text, aspect ratio lock
+
+**Visual content** (objects): axes, legends, data points, data labels, line styles, markers, grid lines, column formatting, plot area -- anything that depends on the visual type and its data
 
 This distinction matters because the two are configured in **separate JSON sections**, and putting properties in the wrong one silently fails.
 
@@ -8,15 +29,15 @@ This distinction matters because the two are configured in **separate JSON secti
 
 Inside `visual.json`, the `visual` object has two property sections:
 
-### `objects` -- the visual itself
+### `objects` -- the visual content
 
-Controls how the chart/table/card renders its data. What goes here depends on the visual type.
+Controls how the chart/table/card renders its data. What goes here depends entirely on the visual type -- a line chart has `lineStyles` and `markers`, a table has `grid` and `columnHeaders`, a slicer has `data` and `selection`.
 
 Common properties: `dataPoint`, `legend`, `categoryAxis`, `valueAxis`, `dataLabels`, `lineStyles`, `plotArea`, `grid`, `columnHeaders`, `columnFormatting`, `total`, `data` (slicer mode), `general` (textbox paragraphs), `labels`, `markers`, `error`, `sparklines`, `referenceLabel`
 
-### `visualContainerObjects` -- the container around it
+### `visualContainerObjects` -- the frame
 
-Controls the chrome that wraps every visual, regardless of type. Same properties available for all visual types.
+Controls the chrome that wraps every visual, regardless of type. A bar chart and a textbox have the same container properties available.
 
 | Property | What it controls |
 |----------|-----------------|
