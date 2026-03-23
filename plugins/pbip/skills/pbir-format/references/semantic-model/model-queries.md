@@ -379,5 +379,5 @@ Don't use KEEPFILTERS when:
 ## See also
 
 - [Inferring queries from visuals](inferring-queries-from-visuals.md) - Map visual metadata to DAX
-- [Extension measures](extension-measures.md) - Creating report-level measures
+- [Extension measures](../measures.md) - Creating report-level measures
 - [Field references](field-references.md) - Understanding field metadata

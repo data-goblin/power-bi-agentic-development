@@ -869,4 +869,4 @@ Key techniques for performant SVG measures:
 
 - **[expressions.md](../schema-patterns/expressions.md)** - Expression patterns
 - **[conditional-formatting.md](../schema-patterns/conditional-formatting.md)** - Conditional formatting
-- **[extension-measures.md](../extension-measures.md)** - Extension measure patterns
+- **[measures.md](../measures.md)** - Extension measure patterns

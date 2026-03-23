@@ -206,7 +206,7 @@ Two reference types for connecting to semantic models:
 - **`references/visual-container-formatting.md`** -- objects vs visualContainerObjects deep-dive
 - **`references/theme.md`** -- Theme wildcards, inheritance, and color system
 - **`references/measures-vs-literals.md`** -- When to use measure expressions vs literal values
-- **`references/extension-measures.md`** -- Extension measure patterns
+- **`references/measures.md`** -- Extension measure patterns
 
 **Visual & page configuration:**
 - **`references/textbox.md`** -- Textbox visual format

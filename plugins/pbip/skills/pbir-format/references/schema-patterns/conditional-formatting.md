@@ -722,7 +722,7 @@ Bar chart with comprehensive conditional formatting:
 
 ## Related Documentation
 
-- [extension-measures.md](../extension-measures.md) - Creating extension measures
+- [measures.md](../measures.md) - Creating extension measures
 - [expressions.md](./expressions.md) - Expression format reference
 - [selectors.md](./selectors.md) - Selector patterns
 - [apply-advanced-conditional-formatting.md](../how-to/apply-advanced-conditional-formatting.md) - Step-by-step guide

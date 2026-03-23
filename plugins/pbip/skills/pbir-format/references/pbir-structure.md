@@ -188,7 +188,7 @@ Page ordering and active page:
 
 ### reportExtensions.json
 
-Extension measures (report-level DAX). See `extension-measures.md` for full details.
+Extension measures (report-level DAX). See `measures.md` for full details.
 ```json
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json",

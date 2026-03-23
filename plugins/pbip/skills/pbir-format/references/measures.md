@@ -350,16 +350,17 @@ Check reportExtensions.json to find available entities. For this example, we'll 
    - Groups extension measures visually in field list
    - Separates them from model measures
 
-4. **Hide implementation details**
+4. **Hidden property**
    ```json
    "hidden": true
    ```
-   - Use for helper measures not meant for end users
+   - Not necessary or recommended for extension measures
 
 5. **Document each measure**
    ```json
    "description": "Returns hex color based on KPI status thresholds"
    ```
+   - Descriptions should be concise and friendly, aligning with conventions already in place in the model. They should include a justification about why the extension measure exists and is not a visual calculation or model measure.
 
 **Example organization:**
 
@@ -630,7 +631,7 @@ Extension measures require `"Schema": "extension"` in the SourceRef:
               "Expression": {
                 "SourceRef": {
                   "Schema": "extension",
-                  "Entity": "Sales"  // ← Existing entity hosting extension measure
+                  "Entity": "Sales"
                 }
               },
               "Property": "Overall Color"
@@ -1213,8 +1214,7 @@ Common escape issues:
 
 **Causes:**
 1. Referenced measure doesn't exist
-2. Measure renamed in model
-3. Typo in entity or measure name
+2. Measure renamed or removed, but the dependency downstream in the visual was not updated
 
 **Fix:**
 

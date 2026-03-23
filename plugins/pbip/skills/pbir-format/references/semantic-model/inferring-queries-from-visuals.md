@@ -393,5 +393,5 @@ Note: Extension measures typically use `IGNORE()` wrapper.
 ## See also
 
 - [Model queries](model-queries.md) - Running DAX queries against semantic models
-- [Extension measures](extension-measures.md) - Creating report-level measures
+- [Extension measures](../measures.md) - Creating report-level measures
 - [Field references](field-references.md) - Understanding field metadata
