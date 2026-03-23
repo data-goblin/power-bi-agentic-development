@@ -113,7 +113,7 @@ If you move all extension measures to the semantic model (e.g., from `reportExte
 - `name` - **CRITICAL: Must be an EXISTING entity/table from the semantic model**
   - Cannot create new entities in reportExtensions.json
   - Must match exact table name from model (case-sensitive)
-  - Use `__field_index.md` to find available entities (see Discovering Model Entities)
+  - Use `pbir model "Report.Report" -d` or `te` to discover available tables
 
 **Measure level:**
 - `name` - Measure name (must be unique across model and all extension measures)
@@ -137,68 +137,26 @@ If you move all extension measures to the semantic model (e.g., from `reportExte
 
 **CRITICAL:** Extension measures must be added to EXISTING entities (tables) from the semantic model. Before creating extension measures, you need to know what entities are available.
 
-### Using download-model.py
+### Discovering Entities
 
-Download the semantic model and generate a field index:
+Use `pbir model`, `te`, or `fab` to list available tables:
 
 ```bash
-# From report's definition.pbir (auto-extract model info)
-python3 scripts/download-model.py \
-  --from-report ./tmp/Test/Test.Report \
-  --output ./tmp/models \
-  --format tmdl
-```
+# Using pbir (preferred -- reads from connected model)
+pbir model "Report.Report" -d
 
-This creates:
-- Model TMDL files in `./tmp/models/{ModelName}/`
-- **`__field_index.md`** - Complete list of tables, columns, and measures
+# Using te (explicit workspace/model)
+te query -q "SELECT [Name] FROM $SYSTEM.TMSCHEMA_TABLES" -s "Workspace" -d "Model"
 
-### Field Index Format
-
-The `__field_index.md` contains:
-
-```markdown
-# Field Index
-
-**Model:** Sales Model
-**Workspace:** Analytics
-**Downloaded:** 2025-10-20 10:52:50
-
-**Summary:** 15 tables | 84 columns | 42 measures
-
----
-
-## Sales
-
-**Columns:**
-- `Sales.OrderDate`
-- `Sales.ProductKey`
-- `Sales.Amount`
-
-**Measures:**
-- `Sales.Total Revenue`
-- `Sales.YTD Sales`
-
----
-
-## Budget
-
-**Columns:**
-- `Budget.Month`
-- `Budget.Amount`
-
-**Measures:**
-- `Budget.Total Budget`
-- `Budget.Budget vs. Turnover (%)`
-
----
+# Using fab
+fab get "ws.Workspace/Model.SemanticModel" -q "definition" | grep "^table "
 ```
 
 ### Using Entities for Extension Measures
 
-"Entities" in the PBIR visual JSON are table names. To discover table names, you need to read the model metadata, either directly (if TMDL files) or using supporting tools like the `te` CLI, an MCP server, or directly connecting to and enumerating the model open in Power BI Desktop by using the `connect-pbir` skill
+"Entities" in reportExtensions.json are table names from the semantic model. You need to discover what tables exist before adding extension measures.
 
-**Pick an existing table / entity** from the field index to host your extension measures:
+**Pick an existing table** to host your extension measures:
 
 **Option 1: Use a measure-heavy table**
 ```json
@@ -1038,7 +996,7 @@ Check entity exists in model:
 # List entities in reportExtensions.json
 jq '.entities[].name' reportExtensions.json
 
-# Compare with model entities in __field_index.md
+# Compare with model tables: pbir model "Report.Report" -d
 ```
 
 ### Empty reportExtensions.json Error
