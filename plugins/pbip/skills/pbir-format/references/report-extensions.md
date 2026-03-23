@@ -312,6 +312,6 @@ Apply each to respective formatting properties: `fontWeight`, `fontStyle`, `text
 
 ## See Also
 
-- [Extension measures](semantic-model/extension-measures.md) - Detailed extension measure documentation
-- [Conditional formatting](property-catalog/visual-properties/conditional-formatting.md) - Using measures for dynamic formatting
-- [Visual colors](best-practices/visual-colors.md) - Theme-based color selection
+- [extension-measures.md](./extension-measures.md) - Detailed extension measure documentation
+- [conditional-formatting.md](./schema-patterns/conditional-formatting.md) - Using measures for dynamic formatting
+- [visual-calculations.md](./schema-patterns/visual-calculations.md) - Visual calculation patterns

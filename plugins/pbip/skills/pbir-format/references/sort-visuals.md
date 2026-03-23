@@ -185,6 +185,5 @@ You can specify multiple sort criteria (evaluated in order):
 
 ## Related Documentation
 
-- [Query Structure](./query-structure.md) - Understanding visual queries
-- [Bar Charts](./visual-types/barChart.md) - Bar chart specific sorting
-- [Line Charts](./visual-types/lineChart.md) - Time series sorting
+- [visual.json](./json-structure/05-visual-json.md) - Visual structure including query
+- [expressions.md](./schema-patterns/expressions.md) - Field reference patterns

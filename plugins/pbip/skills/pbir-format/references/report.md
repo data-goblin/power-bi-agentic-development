@@ -503,7 +503,6 @@ The `settings` object contains numerous options that control report behavior:
 - [page.md](./page.md) - Page-level properties
 - [theme.md](./theme.md) - Theme structure and styling
 - [report-extensions.md](./report-extensions.md) - Extension measures
-- [best-practices/reporting-objects.md](./best-practices/reporting-objects.md) - Report formatting best practices
 
 ## Usage Notes
 

@@ -87,8 +87,8 @@ Valid `visualType` values (from theme.visualStyles):
 ### lineChartType (lineStyles)
 ```
 - "smooth"
-- "straight" (to be confirmed)
-- "stepped" (to be confirmed)
+- "straight"
+- "stepped"
 ```
 
 **Source:** visual.json examples
@@ -210,10 +210,10 @@ Range: 0 to (dataColors.length - 1)
 In CY24SU10 theme: 0-44 (45 colors)
 
 ### ThemeDataColor.Percent
-Range: -100 to 100
-- Negative = darker
+Range: -1.0 to 1.0
+- Negative = darker (e.g. -0.5 = 50% darker)
 - 0 = exact theme color
-- Positive = lighter
+- Positive = lighter (e.g. 0.4 = 40% lighter)
 
 ## Font Properties
 

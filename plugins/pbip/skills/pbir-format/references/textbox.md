@@ -393,6 +393,5 @@ Textboxes should not filter other visuals:
 
 ## Related Documentation
 
-- [Visual Types](./visual-types/README.md) - All visual type references
-- [Position and Layout](./layout.md) - Visual positioning
-- [Page Configuration](./page.md) - Page-level properties
+- [visual-container-formatting.md](./visual-container-formatting.md) - objects vs visualContainerObjects
+- [page.md](./page.md) - Page-level properties

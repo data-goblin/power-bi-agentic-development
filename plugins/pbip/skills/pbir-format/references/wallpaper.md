@@ -458,5 +458,4 @@ Result: Dark blue wallpaper with tiled pattern shows through 80% transparent whi
 ## Related Documentation
 
 - [page.md](./page.md) - Page structure and background (canvas) object
-- [property-catalog/visual-container-properties/background.md](./property-catalog/visual-container-properties/background.md) - Visual background formatting
-- [visual-types/image.md](./visual-types/image.md) - Image visuals on canvas (NOT wallpaper)
+- [visual-container-formatting.md](./visual-container-formatting.md) - Visual container formatting
