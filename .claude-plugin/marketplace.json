@@ -22,6 +22,11 @@
       "name": "pbip",
       "description": "Skills for working with Power BI Project (PBIP) files including TMDL authoring and project operations.",
       "source": "./plugins/pbip"
+    },
+    {
+      "name": "semantic-models",
+      "description": "Skills for auditing and standardizing naming conventions in Power BI semantic models.",
+      "source": "./plugins/semantic-models"
     }
   ]
 }
