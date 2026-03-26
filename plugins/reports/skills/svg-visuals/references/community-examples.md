@@ -7,7 +7,7 @@ Organized by target visual type. Use these as reference when building SVG DAX me
 | Library | Author | Visual Target | Key Features | URL |
 |---|---|---|---|---|
 | PowerofBI.IBCS | Andrzej Leszkiewicz | Table/Matrix | IBCS-compliant bar, column, waterfall, pin, small multiples, P&L | https://daxlib.org/package/PowerofBI.IBCS/ |
-| DaxLib.SVG | Jake Duddy | Table/Matrix | UDF library with 3-tier API (Viz/Compound/Element) | https://github.com/EvaluationContext/daxlib.svg |
+| DaxLib.SVG | Jake Duddy | Table/Matrix | UDF library with 3-tier API (Viz/Compound/Element) | https://daxlib.org/package/DaxLib.SVG/ (source: https://github.com/daxlib/dev-daxlib-svg) |
 | PBI-Core-Visuals-SVG-HTML | David Bacci | Table/Matrix | Chips, tornado, gradient matrix, bar UDF | https://github.com/nickvdw2/PBI-Core-Visuals-SVG-HTML |
 | PowerBI MacGuyver Toolbox | Stepan Resl / Data Goblins | Card/Image | 20+ bar, 14+ line, 24+ KPI templates | https://github.com/data-goblin/powerbi-macguyver-toolbox |
 | Dashboard Design UDF Library | Dashboard-Design | Table/Matrix | Target line bars, pill visuals | https://github.com/Dashboard-Design |

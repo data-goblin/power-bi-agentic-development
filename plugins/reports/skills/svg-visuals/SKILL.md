@@ -94,7 +94,7 @@ Validate JSON syntax with `jq empty <reportExtensions.json>` and inspect the fil
 Before writing a custom SVG measure from scratch, check whether an existing UDF library already provides the chart type:
 
 - **PowerofBI.IBCS** (Andrzej Leszkiewicz) -- IBCS-compliant bar, column, waterfall, pin, small multiples, and P&L charts. Preferred for business reporting with AC/PY/BU/FC comparisons. Install from https://daxlib.org/package/PowerofBI.IBCS/
-- **DaxLib.SVG** (Jake Duddy) -- general-purpose sparklines, bars, boxplots, heatmaps, jitter, violin, progress bars, pills. Install from https://daxlib.org
+- **DaxLib.SVG** (Jake Duddy) -- general-purpose sparklines, bars, boxplots, heatmaps, jitter, violin, progress bars, pills. Install from https://daxlib.org/package/DaxLib.SVG/ -- source at https://github.com/daxlib/dev-daxlib-svg
 - **PowerBI MacGuyver Toolbox** (Stepan Resl / Data Goblins) -- C# scripts that generate SVG measures via Tabular Editor
 
 To check if a library is installed, look for functions/measures starting with `PowerofBI.IBCS.`, `Viz.`, `Compound.`, or `Element.`. Only write custom SVG DAX when no library function covers the required visualization. See `references/community-examples.md` for full function listings and additional libraries.
