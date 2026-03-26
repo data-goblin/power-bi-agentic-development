@@ -1,4 +1,9 @@
-# Report JSON Patterns Reference
+# Rename Patterns in PBIR JSON
+
+> This reference documents Entity, Property, queryRef, and nativeQueryRef patterns
+> in PBIR report files that must be updated during table, column, or measure renames.
+> For the full rename cascade (including TMDL files), see the `pbip` skill's
+> `references/rename-cascade.md`.
 
 Detailed documentation of the JSON structures found in Power BI Report files, focusing on patterns that contain table, column, and measure references.
 
@@ -260,7 +265,7 @@ Each page has a `page.json` file at:
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/1.2.0/schema.json",
   "name": "<pageId>",
   "displayName": "Page Title",
-  "displayOption": 1,
+  "displayOption": "FitToPage",
   "height": 720,
   "width": 1280
 }

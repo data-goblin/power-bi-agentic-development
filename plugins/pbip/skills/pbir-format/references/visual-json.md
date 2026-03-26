@@ -562,3 +562,11 @@ Supported on: lineChart, areaChart, barChart, columnChart, comboChart, and their
 - [Data Goblins: Report Checklist](https://data-goblins.com/report-checklist) -- comprehensive pre-deployment checklist (layout, accessibility, testing, UX, handover, documentation, training)
 - [Data Goblins: Report Requirements](https://data-goblins.com/power-bi/report-requirements) -- gathering requirements before building
 - [Data Goblins: Solving Problems with Power BI](https://data-goblins.com/power-bi/solving-problems) -- framing reports around business problems, not data
+
+## mobile.json
+
+Each visual folder can optionally contain a `mobile.json` file alongside `visual.json`. It defines the visual's position and formatting overrides for mobile layout. Structure mirrors `visual.json` position fields but with mobile-specific coordinates.
+
+**Location:** `definition/pages/[PageName]/visuals/[VisualName]/mobile.json`
+
+Mobile layout is configured in PBI Desktop's mobile view. External editing is supported but rarely needed.

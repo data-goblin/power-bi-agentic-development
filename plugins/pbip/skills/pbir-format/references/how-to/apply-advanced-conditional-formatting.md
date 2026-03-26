@@ -638,11 +638,10 @@ This is the JSON Power BI UI generates for conditional formatting rules. It's co
 
 - **ComparisonKind values:**
   - 0 = Equal
-  - 1 = Not equal
-  - 2 = Greater than (>)
-  - 3 = Greater than or equal (>=)
-  - 4 = Less than (<)
-  - 5 = Less than or equal (<=)
+  - 1 = GreaterThan
+  - 2 = GreaterThanOrEqual
+  - 3 = LessThan
+  - 4 = LessThanOrEqual
 
 - **Aggregation.Function values:**
   - 0 = SUM

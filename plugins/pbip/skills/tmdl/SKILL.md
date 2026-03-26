@@ -13,7 +13,7 @@ Expert guidance for authoring and editing TMDL (Tabular Model Definition Languag
 > - No Tabular Editor CLI or MCP server is installed
 > - Making quick text-level fixes (descriptions, format strings, display folders) where a full tool chain is overkill
 >
-> Direct TMDL editing does not validate DAX syntax, check referential integrity, or verify that property values are valid. Errors will only surface when the model is next loaded in Power BI Desktop or deployed via XMLA.
+> Direct TMDL editing does not validate DAX syntax, check referential integrity, or verify that property values are valid. Errors will only surface when the model is next loaded in Power BI Desktop or deployed via XMLA. Use the **`pbip-validator`** agent to check TMDL files for syntax issues, indentation errors, and referential integrity before opening in PBI Desktop.
 
 ## When to Use This Skill
 
@@ -42,8 +42,8 @@ Activate only when the Tabular Editor CLI, Power BI MCP server, or `connect-pbid
 | `relationships.tmdl` | All relationships between tables | `definition/` |
 | `expressions.tmdl` | Shared M expressions and parameters | `definition/` |
 | `functions.tmdl` | DAX user-defined functions (reusable parameterized DAX) | `definition/` |
-| `roles.tmdl` | Security roles, RLS filter expressions, role members | `definition/` |
-| `perspectives.tmdl` | Perspective definitions and object membership | `definition/` |
+| `roles/<RoleName>.tmdl` | One file per security role (RLS filters, role members, OLS) | `definition/roles/` |
+| `perspectives/<Name>.tmdl` | One file per perspective (object membership) | `definition/perspectives/` |
 | `dataSources.tmdl` | Legacy data source definitions (if present) | `definition/` |
 | `tables/<Name>.tmdl` | Table definition with columns, measures, hierarchies, partitions | `definition/tables/` |
 | `cultures/<locale>.tmdl` | Linguistic metadata and translations | `definition/cultures/` |
@@ -328,7 +328,7 @@ The DAX body follows the same depth rule as measures -- one level deeper than th
 
 ## Roles (Row-Level Security)
 
-Defined in `roles.tmdl`:
+Each role is defined in its own file under `definition/roles/` (e.g., `roles/Regional Sales.tmdl`):
 
 ```tmdl
 role 'Regional Sales'
@@ -540,6 +540,9 @@ ref table Product
 ref table Customer
 ref table _Measures
 
+ref role 'Regional Sales'
+ref perspective 'Sales View'
+
 ref cultureInfo en-US
 ```
 
@@ -577,7 +580,7 @@ ref cultureInfo en-US
 
 - **`references/column-properties.md`** - Full property reference with valid values, `summarizeBy` rules, `formatString` patterns, `PBI_FormatHint` behavior, and `dataType` values
 - **`references/naming-conventions.md`** - SQLBI naming conventions, display folder conventions, measure table conventions, and calculation group naming
-- **`references/tmdl-file-examples.md`** - Complete examples for every TMDL file type (model, database, expressions, relationships, roles, tables, cultures) including backtick-enclosed expressions, field parameters, calculation groups, and date tables
+- **`references/tmdl-file-examples.md`** - Complete examples for every TMDL file type (model, database, expressions, relationships, roles, perspectives, tables, cultures) including backtick-enclosed expressions, field parameters, calculation groups, and date tables
 
 ### External References
 

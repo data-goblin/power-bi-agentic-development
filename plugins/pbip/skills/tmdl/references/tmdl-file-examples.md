@@ -41,6 +41,9 @@ ref table Orders
 ref table Invoices
 ref table _Measures
 
+ref role 'Regional Sales'
+ref perspective 'Sales View'
+
 ref cultureInfo en-US
 ```
 
@@ -216,18 +219,43 @@ Optional properties: `isActive`, `crossFilteringBehavior` (`oneDirection`, `both
 Inactive relationships include `isActive: false` explicitly.
 
 
-## roles.tmdl
+## roles/\<RoleName\>.tmdl
 
-Security roles with RLS filter expressions:
+Each role gets its own file under `definition/roles/`. Security roles with RLS filter expressions:
 
 ```tmdl
 role 'Regional Sales'
 	modelPermission: read
 
 	tablePermission Sales = [Region] = USERPRINCIPALNAME()
+```
 
+```tmdl
+role Reader
+	modelPermission: read
+
+	tablePermission 'Sales'
+		filterExpression = [Region] = "East"
+```
+
+```tmdl
 role Administrator
 	modelPermission: administrator
+```
+
+
+## perspectives/\<Name\>.tmdl
+
+Each perspective gets its own file under `definition/perspectives/`. Defines which objects are visible in that perspective:
+
+```tmdl
+perspective 'Sales View'
+
+	perspectiveTable Sales
+
+		perspectiveMeasure 'Total Revenue'
+
+		perspectiveColumn 'Order Date'
 ```
 
 

@@ -313,7 +313,7 @@ When creating extension measures for formatting:
 - Cannot use color names
 
 **Sizes/Transparency:**
-- dataType: \`"Integer"\` or \`"Double"\`
+- dataType: \`"Int64"\` or \`"Double"\`
 - Return numeric values
 - Visual converts to appropriate format
 

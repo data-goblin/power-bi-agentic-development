@@ -1,6 +1,6 @@
 # Expression Patterns
 
-**Source:** `schemas/semanticQuery/1.3.0/schema.json`
+**Source:** `schemas/semanticQuery/1.4.0/schema.json`
 
 ALL visual properties use the `expr` field with one of these types.
 
@@ -604,7 +604,7 @@ Some properties require nested expr structures:
 
 ## Schema Definition Path
 
-Full specification: `schemas/semanticQuery/1.3.0/schema.json` → `definitions.QueryExpressionContainer`
+Full specification: `schemas/semanticQuery/1.4.0/schema.json` → `definitions.QueryExpressionContainer`
 
 Available expression types (from schema):
 - Literal

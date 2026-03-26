@@ -1,10 +1,11 @@
 # PBIP File Types Reference
 
-Structure and purpose of each file type in a Power BI Project (PBIP).
+Structure and purpose of each entry-point and project-level file in a Power BI Project (PBIP).
 
 > Verify against the current Microsoft docs for the latest schema versions:
 > - [PBIP overview](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-overview)
-> - [PBIP semantic model](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-dataset)
+> - [PBIP semantic model folder](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-dataset)
+> - [PBIP report folder](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report)
 
 
 ## .pbip (Project Entry Point)
@@ -29,6 +30,10 @@ The root file that references the report folder. One per project:
 
 When forking a project, update the `path` to match the renamed `.Report/` folder.
 
+This file is optional -- open `definition.pbir` directly to load the report without a `.pbip` wrapper.
+
+Schema: [pbipProperties](https://github.com/microsoft/json-schemas/tree/main/fabric/pbip/pbipProperties)
+
 
 ## .platform (Item Metadata)
 
@@ -36,13 +41,13 @@ Found inside each `.Report/` and `.SemanticModel/` folder. Contains the item's d
 
 ```json
 {
-  "version": "1.0",
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
   "metadata": {
     "type": "SemanticModel",
     "displayName": "SpaceParts OTC Full"
   },
   "config": {
+    "version": "2.0",
     "logicalId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
   }
 }
@@ -57,7 +62,7 @@ Found inside each `.Report/` and `.SemanticModel/` folder. Contains the item's d
 
 ## definition.pbir (Report Entry Point)
 
-Found inside the `.Report/` folder. References the semantic model the report is connected to:
+Found inside the `.Report/` folder. References the semantic model the report is connected to.
 
 ### byPath (Local Reference)
 
@@ -96,11 +101,34 @@ For reports connected to a remote semantic model (not in the same PBIP project):
 }
 ```
 
+### byConnection v2 (Simplified)
+
+When deploying via Fabric REST API, use `byConnection` with just the `semanticmodelid` property:
+
+```json
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json",
+  "version": "4.0",
+  "datasetReference": {
+    "byConnection": {
+      "connectionString": "semanticmodelid=[SemanticModelId]"
+    }
+  }
+}
+```
+
+### Multiple .pbir Files
+
+Fabric Git Integration only processes `definition.pbir`; other `.pbir` files are ignored but can coexist (e.g. `definition-liveConnect.pbir` for forcing live connect mode).
+
 ### version Property
 
-The `version` property determines format support:
-- `"1.0"` -- PBIR-Legacy format only (`report.json` in the `.Report/` root)
-- `"4.0"` -- PBIR format (individual `visual.json` files under `definition/pages/`)
+| Version | Supported formats |
+|---------|-------------------|
+| 1.0 | PBIR-Legacy only (report.json) |
+| 4.0+ | PBIR-Legacy (report.json) OR PBIR (definition/ folder) |
+
+Schema: [definitionProperties](https://github.com/microsoft/json-schemas/tree/main/fabric/item/report/definitionProperties)
 
 
 ## definition.pbism (Semantic Model Entry Point)
@@ -115,116 +143,92 @@ Found inside the `.SemanticModel/` folder:
 }
 ```
 
-The `version` property determines the model format:
-- Models with `definition/` subfolder containing `.tmdl` files use TMDL format
-- Models with a `model.bim` file use TMSL/JSON format (legacy)
+### version Property
+
+| Version | Supported formats |
+|---------|-------------------|
+| 1.0 | TMSL only (model.bim) |
+| 4.0+ | TMSL (model.bim) OR TMDL (definition/ folder) |
+
+Schema: [definitionProperties](https://github.com/microsoft/json-schemas/tree/main/fabric/item/semanticModel/definitionProperties)
 
 
-## visual.json (Visual Definition)
+## .pbi/ Subfolder
 
-Found under `definition/pages/<pageId>/visuals/<visualId>/`. Contains the visual type, data bindings, and formatting:
+Per-item subfolder containing local settings, caches, and editor state. Present in both `.Report/` and `.SemanticModel/` folders.
 
-```json
-{
-  "name": "a1b2c3d4e5f6",
-  "visual": {
-    "visualType": "barChart",
-    "query": {
-      "Commands": [
-        {
-          "SemanticModel": {
-            "From": [
-              { "Name": "d", "Entity": "Date", "Type": 0 },
-              { "Name": "s", "Entity": "Sales", "Type": 0 }
-            ],
-            "Select": [
-              {
-                "Column": {
-                  "Expression": { "SourceRef": { "Source": "d" } },
-                  "Property": "Year"
-                },
-                "Name": "Date.Year"
-              },
-              {
-                "Measure": {
-                  "Expression": { "SourceRef": { "Source": "s" } },
-                  "Property": "Total Revenue"
-                },
-                "Name": "Sales.Total Revenue"
-              }
-            ]
-          }
-        }
-      ]
-    }
-  }
-}
+### localSettings.json
+
+User/machine-specific settings, gitignored by default. Each user gets their own local state (e.g. last-opened page, query editor state). Present in both report and semantic model folders.
+
+Schema: [localSettings](https://github.com/microsoft/json-schemas/tree/main/fabric/item/semanticModel/localSettings)
+
+### editorSettings.json
+
+Editor settings saved with the model definition, committed to Git. Shared across all users of the project.
+
+Schema: [editorSettings](https://github.com/microsoft/json-schemas/tree/main/fabric/item/semanticModel/editorSettings)
+
+### cache.abf
+
+Analysis Services Backup file, local data cache, gitignored. PBI Desktop can open the project without it -- the model loads without data. If present, data is loaded and the model definition is overwritten from project files.
+
+### unappliedChanges.json
+
+Pending Power Query changes from the Transform Data editor. Committed to Git by default (can exclude).
+
+**WARNING:** If this file exists and changes are applied, it overwrites queries in model metadata.
+
+Schema: [unappliedChanges](https://github.com/microsoft/json-schemas/tree/main/fabric/item/semanticModel/unappliedChanges)
+
+### daxQueries.json
+
+DAX query view editor settings (tab order, default tab).
+
+### tmdlscripts.json
+
+TMDL view script tab settings.
+
+
+## DAXQueries/ Folder
+
+Contains `.dax` files, one per DAX query view tab, named `[Tab name].dax`. Exists in both `.SemanticModel/` and `.Report/` folders. DAX queries are saved when saving from PBI Desktop. Settings stored in `.pbi/daxQueries.json`.
+
+
+## TMDLScripts/ Folder
+
+Contains `.tmdl` files, one per TMDL view script tab, named `[Tab name].tmdl`. Only in `.SemanticModel/` folder. Settings stored in `.pbi/tmdlscripts.json`.
+
+
+## model.bim (TMSL Legacy)
+
+Present only when saving in TMSL format (mutually exclusive with `definition/` folder). Single large JSON file containing the complete model definition. TMDL is the recommended format for source control (better diffs, per-table files).
+
+
+## .gitignore
+
+Default content auto-generated by PBI Desktop:
+
+```
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
 ```
 
-Key patterns:
-- `Entity` is the table name -- update when renaming tables
-- `Property` is the column or measure name -- update when renaming columns/measures
-- `Name` uses `Table.ColumnOrMeasure` format (`queryRef`) -- update both parts
-- `nativeQueryRef` (if present) contains only the column/measure name without table prefix -- update only when renaming columns/measures, not tables
-
-For detailed patterns including SparklineData selectors, see [report-json-patterns.md](./report-json-patterns.md).
+Auto-generated only if one does not already exist in the save folder or parent Git repo.
 
 
-## page.json (Page Metadata)
+## Other Report Folder Files
 
-Found under `definition/pages/<pageId>/`:
+Brief overview of remaining files in the `.Report/` and `.SemanticModel/` folders. For PBIR report definition details, see the `pbir-format` skill.
 
-```json
-{
-  "name": "a1b2c3d4e5f6",
-  "displayName": "Sales Overview",
-  "displayOption": 1,
-  "height": 720,
-  "width": 1280
-}
-```
+| File/Folder | Purpose | External Edit Support |
+|-------------|---------|----------------------|
+| `definition/` | PBIR report definition (pages, visuals, bookmarks) | Yes (JSON schema validated) |
+| `report.json` | PBIR-Legacy report definition | No |
+| `mobileState.json` | Mobile layout settings | No |
+| `semanticModelDiagramLayout.json` | Diagram node positions (contains table names) | Limited (table renames only) |
+| `CustomVisuals/` | Private custom visual metadata (org/AppSource visuals load automatically) | No |
+| `StaticResources/RegisteredResources/` | Custom themes, images, .pbiviz files | Yes (for already-registered resources) |
+| `diagramLayout.json` (in SM folder) | Semantic model diagram metadata | No |
 
-Does not contain Entity/Property references -- no updates needed during renames.
-
-
-## reportExtensions.json (Report-Scoped Measures)
-
-Found under `definition/`. Contains measures defined at the report level (not in the semantic model):
-
-```json
-{
-  "entities": {
-    "Sales": {
-      "measures": [
-        {
-          "name": "Report Total",
-          "expression": "SUM(Sales[Amount])"
-        }
-      ]
-    }
-  }
-}
-```
-
-The `entities` keys are table names -- update when renaming tables. Measure `name` values update when renaming measures.
-
-
-## semanticModelDiagramLayout.json
-
-Found in the `.Report/` folder. Contains diagram node positions keyed by table name:
-
-```json
-{
-  "version": "1.0",
-  "diagrams": [
-    {
-      "nodes": {
-        "Sales": { "x": 100, "y": 200 },
-        "Date": { "x": 300, "y": 200 }
-      }
-    }
-  ]
-}
-```
-
-The `nodes` keys are table names -- update when renaming tables.
+**CustomVisuals/ details:** Contains metadata for private custom visuals (`.pbiviz` packages loaded by the user). Organizational store and AppSource visuals are NOT stored here -- they load automatically. Each custom visual gets a subfolder named with its GUID (e.g., `PBI_CV_a1b2c3d4-...`).

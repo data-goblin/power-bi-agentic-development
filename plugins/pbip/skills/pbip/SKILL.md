@@ -1,357 +1,140 @@
 ---
 name: pbip
-description: This skill should be used when the user asks to "rename a table", "rename a measure", "fork a PBIP project", "update Entity references", "PBIP project structure", "cascade rename", "update report JSON", "fix broken references after rename", "create a copy of a PBIP project", "find all references to a table", or mentions PBIP file editing, report visual JSON, or post-rename verification. Provides expert guidance for project-level operations on Power BI Project (PBIP) files including table/measure renames, project forking, and report JSON updates.
+description: This skill should be used when the user asks about "PBIP project structure", "PBIP vs PBIX", "thin report vs thick report", "rename a table", "rename a measure", "fork a PBIP project", "cascade rename", "fix broken references after rename", "find all references to a table", "what files are in a PBIP", ".pbip file", ".pbism file", ".platform file", "definition.pbir", "DAXQueries folder", "TMDLScripts folder", "unappliedChanges", "CustomVisuals folder", "StaticResources", "Copilot folder", ".gitignore", "PBIP encoding", or mentions PBIP file structure, project-level operations, or post-rename verification. Provides expert guidance for Power BI Project (PBIP) file format, project structure, and cross-cutting operations like renames and forking.
 ---
 
-# PBIP Project Operations
+# PBIP Project Format
 
-Expert guidance for project-level operations on Power BI Project (PBIP) files, including cascading renames, project forking, and report JSON updates.
+PBIP (Power BI Project) is the developer-mode file format for Power BI. It decomposes a `.pbix` binary into human-readable text files organized in folders, enabling source control, external editing, and multi-author collaboration.
 
-## When to Use This Skill
+## General, critical guidance
 
-Activate automatically when tasks involve:
+- **PBIX is a black box; PBIP is transparent.** PBIX is a single binary that cannot be diffed or edited externally. PBIP splits the same content into text files. Convert between them with File > Save As in PBI Desktop.
+- **Thick vs thin reports:** A thick report bundles `.Report/` + `.SemanticModel/` in the same project (`definition.pbir` uses `byPath`). A thin report has `.Report/` only, connecting to a remote model via `byConnection`. Thin reports are preferred for managed/shared BI.
+- **A project can contain multiple items.** Multiple `.Report/` and `.SemanticModel/` folders can coexist. The `.pbip` file is optional -- open `definition.pbir` directly.
+- **UTF-8 without BOM.** All files must be saved as UTF-8 without BOM. A BOM prefix causes parse errors in some tools.
+- **Git line endings:** PBI Desktop writes CRLF. Configure `core.autocrlf` or `* text=auto` in `.gitattributes` to normalize.
+- **260-char Windows path limit.** Use short root paths. Deep nesting of page/visual GUIDs can exceed this limit.
+- **PBI Desktop does not detect external changes.** Close and reopen PBI Desktop after editing files externally.
+- **Rename cascades are cross-cutting.** Renaming a table, measure, or column requires updating references in TMDL files, visual JSONs, report extensions, culture files, DAX queries, and diagram layouts. Missing even one location causes broken visuals or DAX errors.
+- **SparklineData metadata** selectors embed Entity references in compact strings that do not follow the standard `SourceRef.Entity` JSON structure. Easy to miss.
+- **DAX query files exist in TWO locations:** `<Name>.SemanticModel/DAXQueries/` and `<Name>.Report/DAXQueries/`. Always check both during renames.
 
-- Renaming tables or measures across a PBIP project
-- Forking or duplicating a PBIP project
-- Updating report visual JSON after model changes
-- Finding all references to a table, column, or measure
-- Understanding PBIP file structure and conventions
-- Post-rename verification to catch missed references
+## PBIX vs PBIP
 
-## Critical
+| Aspect | PBIX | PBIP |
+|--------|------|------|
+| Format | Single binary file | Folder of text files |
+| Source control | Not diff-friendly | Git-ready, human-readable diffs |
+| Collaboration | Single author at a time | Multiple authors, merge-friendly |
+| External editing | Not supported | VS Code, Tabular Editor, scripts |
+| Deployment | File > Publish | Git integration, Fabric APIs, fabric-cicd |
+| Data | Contains cached data | `cache.abf` is gitignored; metadata only in Git |
+| Convert | File > Save As > PBIP | File > Save As > PBIX |
 
-- **SparklineData metadata** in visual JSON files contains table and measure references in a special selector format: `SparklineData(_Measures.Measure Name_[Date.Hierarchy.Level])`. These are easy to miss during renames because they embed Entity references in a compact string, not the usual JSON structure.
-- **DAX query files exist in two locations**: `<Name>.SemanticModel/DAXQueries/` and `<Name>.Report/DAXQueries/`. Always check both during renames.
-- **`PBI_FormatHint` annotations** may be re-added by Power BI tooling even when they conflict with an explicit `formatString`. Do not remove them; Power BI wants both present.
-- **Report JSON Entity references** appear in multiple nested structures: `SourceRef.Entity`, `queryRef`, `nativeQueryRef`, filter conditions, conditional formatting expressions, and SparklineData metadata selectors. A simple find-and-replace on `"Entity"` will miss several of these.
-- **Culture files** (`cultures/en-US.tmdl`) contain `ConceptualEntity` and `ConceptualProperty` references inside `linguisticMetadata` JSON that must also be updated during renames.
-
-## PBIP Project Structure
-
-A PBIP project consists of a `.pbip` entry point file and two main artifact folders:
+## Project Structure
 
 ```
 <ProjectName>/
-├── <ProjectName>.pbip                      # Entry point - references report folder
-├── <ProjectName>.Report/
-│   ├── definition/
-│   │   ├── pages/                          # Report pages
-│   │   │   └── <pageId>/
-│   │   │       ├── page.json               # Page metadata
-│   │   │       └── visuals/
-│   │   │           └── <visualId>/
-│   │   │               └── visual.json     # Visual definition with Entity refs
-│   │   └── reportExtensions.json           # Report-scoped measures
-│   ├── DAXQueries/                         # Report-level DAX queries
-│   │   └── *.dax
-│   └── semanticModelDiagramLayout.json     # Diagram node positions
-├── <ProjectName>.SemanticModel/
-│   ├── definition/
-│   │   ├── model.tmdl                      # Model config + ref table entries
-│   │   ├── database.tmdl                   # Compatibility level
-│   │   ├── relationships.tmdl              # All relationships
-│   │   ├── expressions.tmdl                # Shared expressions / parameters
-│   │   ├── tables/
-│   │   │   └── <TableName>.tmdl            # Table + columns + measures + partitions
-│   │   └── cultures/
-│   │       └── en-US.tmdl                  # Linguistic metadata with Entity refs
-│   ├── definition.pbism                    # Semantic model entry point
-│   └── DAXQueries/                         # Model-level DAX queries
-│       └── *.dax
-├── .platform                               # Item metadata (displayName, logicalId)
-└── .gitignore
++-- <Name>.pbip                              # Entry point (references .Report folder)
++-- .gitignore                               # Auto-generated by PBI Desktop
++-- <Name>.SemanticModel/
+|   +-- .pbi/
+|   |   +-- localSettings.json               # User-specific (gitignored)
+|   |   +-- editorSettings.json              # Editor settings (committed)
+|   |   +-- cache.abf                        # Data cache (gitignored)
+|   |   +-- unappliedChanges.json            # Pending Power Query changes
+|   |   +-- daxQueries.json                  # DAX query view tab settings
+|   |   +-- tmdlscripts.json                 # TMDL view script tab settings
+|   +-- definition.pbism                     # SM entry point (required)
+|   +-- definition/                          # TMDL format (see tmdl skill)
+|   +-- model.bim                            # TMSL format (legacy alt to definition/)
+|   +-- diagramLayout.json                   # SM diagram (no external edit)
+|   +-- DAXQueries/                          # .dax files from DAX query view
+|   +-- TMDLScripts/                         # .tmdl files from TMDL view
+|   +-- Copilot/                             # Copilot tooling metadata
+|   +-- .platform                            # Fabric identity (displayName, logicalId)
++-- <Name>.Report/
+|   +-- .pbi/
+|   |   +-- localSettings.json               # User-specific (gitignored)
+|   +-- definition.pbir                      # Report entry point (required)
+|   +-- definition/                          # PBIR format (see pbir-format skill)
+|   +-- report.json                          # PBIR-Legacy format (legacy alt to definition/)
+|   +-- mobileState.json                     # Mobile layout (no external edit)
+|   +-- semanticModelDiagramLayout.json      # Diagram positions (table renames)
+|   +-- CustomVisuals/                       # Private custom visual metadata
+|   +-- StaticResources/
+|   |   +-- RegisteredResources/             # Custom themes, images, .pbiviz files
+|   +-- DAXQueries/                          # .dax files from report DAX query view
+|   +-- .platform                            # Fabric identity
 ```
 
-For file type details (`.platform`, `.pbir`, `.pbism` structure), see [pbip-file-types.md](./references/pbip-file-types.md).
+## What to Read for Common Tasks
 
-### Key File Types
-
-| File | Purpose | When to Update |
-|------|---------|----------------|
-| `.pbip` | Project entry point, references `.Report` folder path | Forking only |
-| `.pbir` | Report definition entry point, `byPath` references model | Forking / changing model reference |
-| `.pbism` | Semantic model entry point | Rarely |
-| `model.tmdl` | Model config, `ref table` entries, annotations | Table renames, forking |
-| `relationships.tmdl` | Column-level foreign key references | Table/column renames |
-| `expressions.tmdl` | Shared M expressions and parameters | Rarely |
-| `<Table>.tmdl` | Table definition with columns, measures, partitions | Table/column/measure renames, data quality |
-| `cultures/*.tmdl` | Linguistic metadata with `ConceptualEntity` refs | Table/column/measure renames |
-| `visual.json` | Visual definitions with `Entity`/`Property`/`queryRef` | Table/column/measure renames |
-| `reportExtensions.json` | Report-scoped measures with `entity`/`name` refs | Table/measure renames |
-| `semanticModelDiagramLayout.json` | Diagram node positions using `nodeIndex` table names | Table renames |
-
-## Table Rename Cascade
-
-When renaming a table, update **all** of the following locations in order:
-
-### 1. TMDL File Name
-
-Rename the file from `tables/OldName.tmdl` to `tables/NewName.tmdl`.
-
-### 2. Table Declaration
-
-```tmdl
-// Before
-table 'Old Name'
-
-// After
-table 'New Name'
-```
-
-### 3. Partition Name
-
-```tmdl
-// Before
-partition 'Old Name' = m
-
-// After
-partition 'New Name' = m
-```
-
-### 4. Model.tmdl Ref Entries
-
-```tmdl
-// Before
-ref table 'Old Name'
-
-// After
-ref table 'New Name'
-```
-
-### 5. Relationships.tmdl
-
-```tmdl
-// Before
-fromColumn: 'Old Name'.'Column Key'
-toColumn: 'Old Name'.'Column Key'
-
-// After
-fromColumn: 'New Name'.'Column Key'
-toColumn: 'New Name'.'Column Key'
-```
-
-### 6. DAX Expressions in All TMDL Files
-
-Update every DAX reference in measures, calculated columns, and calculation items across all `.tmdl` files:
-
-```dax
-// Before
-COUNTROWS ( VALUES ( 'Old Name'[Column] ) )
-
-// After
-COUNTROWS ( VALUES ( 'New Name'[Column] ) )
-```
-
-### 7. Visual JSON Entity References
-
-Update `Entity` values in all `visual.json` files:
-
-```json
-// Before
-{ "SourceRef": { "Entity": "Old Name" } }
-
-// After
-{ "SourceRef": { "Entity": "New Name" } }
-```
-
-Also update `queryRef` and `nativeQueryRef` strings:
-
-```json
-// Before
-"queryRef": "Old Name.Column Name"
-
-// After
-"queryRef": "New Name.Column Name"
-```
-
-### 8. SparklineData Metadata Selectors
-
-```json
-// Before
-"metadata": "SparklineData(Old Name.Measure Name_[Date.Hierarchy.Level])"
-
-// After
-"metadata": "SparklineData(New Name.Measure Name_[Date.Hierarchy.Level])"
-```
-
-### 9. SemanticModelDiagramLayout.json
-
-```json
-// Before
-{ "nodeIndex": "Old Name" }
-
-// After
-{ "nodeIndex": "New Name" }
-```
-
-### 10. ReportExtensions.json
-
-```json
-// Before
-{ "entity": "Old Name", "name": "Measure Name" }
-
-// After
-{ "entity": "New Name", "name": "Measure Name" }
-```
-
-### 11. Culture Files
-
-```json
-// Before (inside linguisticMetadata JSON)
-"ConceptualEntity": "Old Name"
-
-// After
-"ConceptualEntity": "New Name"
-```
-
-### 12. DAX Query Files
-
-Check both `<Name>.SemanticModel/DAXQueries/*.dax` and `<Name>.Report/DAXQueries/*.dax`:
-
-```dax
-// Before
-EVALUATE TOPN(100, 'Old Name')
-
-// After
-EVALUATE TOPN(100, 'New Name')
-```
-
-## Measure Rename Cascade
-
-Measure renames touch a subset of the table rename locations:
-
-| Location | What to Update |
-|----------|----------------|
-| **TMDL measure declaration** | `measure 'Old Name' =` → `measure 'New Name' =` |
-| **DAX expressions** | All references in other measures across all `.tmdl` files |
-| **Visual JSON `Property`** | `"Property": "Old Name"` → `"Property": "New Name"` |
-| **Visual JSON `queryRef`** | `"queryRef": "Table.Old Name"` → `"queryRef": "Table.New Name"` |
-| **Visual JSON `nativeQueryRef`** | `"nativeQueryRef": "Old Name"` → `"nativeQueryRef": "New Name"` |
-| **SparklineData metadata** | Table/measure references in metadata selectors |
-| **reportExtensions.json** | `"name": "Old Name"` in measure entries |
-| **Culture files** | `ConceptualProperty` references in `linguisticMetadata` |
+| Task | Read |
+|------|------|
+| Understand entry point file structure | **`references/pbip-file-types.md`** -- `.pbip`, `.pbir`, `.pbism`, `.platform` JSON structure, version properties, byPath vs byConnection |
+| Rename a table, measure, or column | **`references/rename-cascade.md`** -- before/after examples for every cascade location. See also `pbir-format` skill's `references/rename-patterns.md` for visual JSON patterns |
+| Fork / duplicate a PBIP project | **`references/pbip-file-types.md`** -- update `.pbip` path, `.pbir` byPath, `.platform` logicalId and displayName |
+| Work with Copilot tooling files | **`references/copilot-folder.md`** -- AI instructions, verified answers, schema, example prompts |
+| Edit TMDL model files | **`tmdl`** skill -- syntax, authoring, column properties, naming conventions |
+| Edit PBIR report files | **`pbir-format`** skill -- visual.json, theme, filters, report extensions, page layout |
+| Verify no broken references after rename | Grep commands below |
 
 ## Forking a PBIP Project
 
-To create a new project variation from an existing one:
-
-### Step 1: Copy the Project Folder
-
-Copy the entire project folder and rename it:
-
-```
-cp -r "My Report" "My Report - Enhanced"
-```
-
-### Step 2: Rename Artifact Folders
-
-Rename the inner `.Report` and `.SemanticModel` folders to match the new project name:
-
-```
-My Report - Enhanced/
-├── My Report - Enhanced.Report/        # was My Report.Report
-├── My Report - Enhanced.SemanticModel/  # was My Report.SemanticModel (if present)
-```
-
-### Step 3: Rename and Update the .pbip File
-
-Rename `My Report.pbip` → `My Report - Enhanced.pbip` and update the `path` reference:
-
-```json
-{
-  "artifacts": [
-    {
-      "report": {
-        "path": "My Report - Enhanced.Report"
-      }
-    }
-  ]
-}
-```
-
-### Step 4: Update the .pbir File
-
-If the report references a local semantic model, update the `byPath` reference in `definition.pbir`:
-
-```json
-{
-  "datasetReference": {
-    "byPath": {
-      "path": "../My Report - Enhanced.SemanticModel"
-    }
-  }
-}
-```
-
-### Step 5: Update .platform Files
-
-If `.platform` files exist, update the `displayName` field to match the new project name.
+1. **Copy the project folder** -- duplicate the entire root folder with a new name.
+2. **Rename artifact folders** -- rename `.Report/` and `.SemanticModel/` subfolders to match the new project name.
+3. **Rename and update `.pbip`** -- rename the `.pbip` file and update `artifacts[].report.path` to point to the renamed `.Report` folder.
+4. **Update `.pbir`** -- if the report uses `byPath`, update the path to point to the renamed `.SemanticModel` folder.
+5. **Update `.platform` files** -- set `displayName` to the new project name in each `.platform` file. Regenerate `logicalId` (new GUID) if deploying as a separate Fabric item.
 
 ## Verification
 
-After any rename operation, run these verification steps to catch missed references:
+Use the **`pbip-validator`** agent to run a comprehensive validation of the project structure, TMDL syntax, and PBIR schemas. It can also check for orphaned references after renames.
 
-### Grep for Old Names
+After any rename or fork operation, verify no old references remain.
 
 ```bash
-# Search for old table name across all project files
+# Search for old name across all project files
 grep -r "Old Name" "Project.Report/" "Project.SemanticModel/" --include="*.json" --include="*.tmdl" --include="*.dax"
 
 # Search with word boundaries to avoid partial matches
 grep -rP "\bOld Name\b" "Project.Report/" "Project.SemanticModel/"
+
+# Look for old name in single-quoted DAX references
+grep -r "'Old Name'" --include="*.tmdl" --include="*.dax"
 ```
 
-### Common Missed Locations
+Common missed locations:
+1. SparklineData metadata -- compact string format outside standard JSON structure
+2. Conditional formatting expressions -- `Entity` refs nested in `Conditional.Cases`
+3. Filter config -- page-level and visual-level filters in `filterConfig` sections
+4. Sort definitions -- `sortDefinition` blocks in visual JSON
+5. DAX queries in Report folder -- the second DAX query location
+6. Culture file linguisticMetadata -- `ConceptualEntity` and `ConceptualProperty` inside embedded JSON
 
-If grep finds remaining references, check these commonly missed spots:
+## Related Skills
 
-1. **SparklineData metadata** - compact string format embeds table names
-2. **Conditional formatting expressions** - `Entity` refs nested in `Conditional.Cases`
-3. **Filter config** - page and visual-level filters in `filterConfig` sections
-4. **Sort definitions** - `sortDefinition` blocks in visual JSON
-5. **DAX queries in Report folder** - easy to forget the second DAX query location
+**Within this plugin:**
+- **`tmdl`** -- TMDL syntax, authoring, and editing rules for direct `.tmdl` file editing
+- **`pbir-format`** -- PBIR JSON format, visual.json, theme, filters, report extensions
 
-### Verify No Broken DAX
+**Other plugins:**
+- **`semantic-models`** plugin -- tooling and workflows for semantic model development (naming conventions, model quality). Use for working with the actual model content, not just its file format.
+- **`pbi-desktop`** plugin -- connecting to Power BI Desktop's local Analysis Services instance via TOM/ADOMD.NET
+- **`tabular-editor`** plugin -- Tabular Editor CLI, C# scripting, BPA rules, documentation search
 
-After renames, scan for common DAX breakage patterns:
+## References
 
-```bash
-# Look for the old name in single-quoted DAX references
-grep -r "'Old Name'" --include="*.tmdl"
-```
+**Project structure:**
+- **`references/pbip-file-types.md`** -- Entry point file structures (`.pbip`, `.pbir`, `.pbism`, `.platform`), `.pbi/` subfolder, `DAXQueries/`, `TMDLScripts/`, `model.bim`, `.gitignore`, version properties, JSON examples
+- **`references/copilot-folder.md`** -- Copilot/ folder structure (AI instructions, verified answers, schema, example prompts)
 
-## Quick Reference
+**Rename operations:**
+- **`references/rename-cascade.md`** -- Detailed before/after examples for each rename cascade location (TMDL + report files)
 
-### File Extension Guide
-
-| Extension | Full Name | Contains |
-|-----------|-----------|----------|
-| `.pbip` | Power BI Project | Project entry point, artifact paths |
-| `.pbir` | Power BI Report | Report entry point, model path reference |
-| `.pbism` | Power BI Semantic Model | Semantic model entry point |
-| `.tmdl` | Tabular Model Definition Language | Model metadata (tables, columns, measures, relationships) |
-| `.dax` | Data Analysis Expressions | DAX query files |
-| `.json` | JSON | Visual definitions, report extensions, diagram layout |
-
-### Rename Scope Summary
-
-| Rename Type | Files Touched | Estimated Locations |
-|-------------|---------------|---------------------|
-| Table rename | TMDL files, visual JSONs, report JSON, culture files, DAX queries, diagram layout | ~10-12 location types |
-| Measure rename | TMDL files, visual JSONs, report extensions, culture files | ~7-8 location types |
-| Column rename | TMDL files, visual JSONs, relationships, culture files | ~6-7 location types |
-| Project fork | `.pbip`, `.pbir`, `.platform`, folder names | ~4-5 location types |
-
-## Additional Resources
-
-### Reference Files
-
-- **`references/rename-cascade.md`** - Detailed before/after examples for each cascade location, including SparklineData deep-dive and edge cases for quoting in DAX
-- **`references/report-json-patterns.md`** - Visual JSON structure documentation with Entity/Property/queryRef patterns, page filters, reportExtensions, diagram layout, and SparklineData format
-- **`references/pbip-file-types.md`** - Structure of each PBIP file type (.pbip, .platform, .pbir, .pbism, visual.json, page.json, reportExtensions.json, semanticModelDiagramLayout.json)
-
-### External References
-
-- [PBIP and Fabric Git integration (Microsoft Learn)](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-overview)
-- [Power BI Desktop projects - semantic model folder (Microsoft Learn)](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-dataset)
-- [Power BI Desktop projects - report folder (Microsoft Learn)](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report)
+**External references:**
+- [PBIP overview (Microsoft Learn)](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-overview)
+- [Semantic model folder (Microsoft Learn)](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-dataset)
+- [Report folder (Microsoft Learn)](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report)

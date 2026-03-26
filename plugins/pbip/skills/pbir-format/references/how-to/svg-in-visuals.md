@@ -174,7 +174,7 @@ The new card visual (cardVisual) supports SVG images in callout values.
 - **Workaround 2:** Add a Categories field (even with single category), disable small multiples
 - **Status:** Resolved by Microsoft in recent updates
 
-**See:** [visual.json](../json-structure/05-visual-json.md) for visual structure reference
+**See:** [visual.json](../visual-json.md) for visual structure reference
 
 ### Slicer (New) Visual
 
@@ -212,7 +212,7 @@ The new slicer visual (advancedSlicerVisual) supports SVG in headers and items.
 - Category indicators
 - Interactive buttons with SVG styling
 
-**See:** [visual.json](../json-structure/05-visual-json.md) for visual structure reference
+**See:** [visual.json](../visual-json.md) for visual structure reference
 
 ### Scatter Chart Background
 
@@ -223,7 +223,7 @@ Scatter charts support SVG images as background overlays.
 - Use `plotArea.image` property in visual configuration
 - SVG scales to plot area dimensions
 
-**See:** [visual.json](../json-structure/05-visual-json.md) for visual structure reference
+**See:** [visual.json](../visual-json.md) for visual structure reference
 
 ---
 

@@ -144,4 +144,4 @@ This allows independent formatting of:
 
 - [expressions.md](expressions.md) - Measure expression syntax
 - [selectors.md](selectors.md) - Metadata selector patterns
-- [visuals-catalog/lineChart.md](../visuals-catalog/lineChart.md) - Usage in line charts
+- Visual catalog - not yet available

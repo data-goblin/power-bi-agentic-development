@@ -2,7 +2,7 @@
 
 Selectors define **when** and **to what** formatting properties should apply.
 
-**Source:** formattingObjectDefinitions/1.4.0/schema.json
+**Source:** formattingObjectDefinitions/1.5.0/schema.json
 
 ## Selector Structure
 

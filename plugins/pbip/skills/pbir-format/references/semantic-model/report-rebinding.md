@@ -148,6 +148,6 @@ Change which semantic model a report connects to (without changing thick/thin st
 
 ## See Also
 
-- [definition.pbir](../json-structure/01-definition-pbir.md) - Connection types (byPath vs byConnection)
+- [definition.pbir](../definition-pbir.md) - Connection types (byPath vs byConnection)
 - [Finding Fields](finding-fields.md) - Validate fields exist in target model
 - [Field References](field-references.md) - Update field references in visuals

@@ -1,6 +1,6 @@
 # Filter Pane and Filters
 
-> For slicer visuals (on-canvas filters), see `references/slicers.md` (planned).
+> For slicer visuals (on-canvas filters), slicer visual documentation is not yet available.
 
 ## General Guidance
 

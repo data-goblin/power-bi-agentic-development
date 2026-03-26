@@ -185,5 +185,5 @@ You can specify multiple sort criteria (evaluated in order):
 
 ## Related Documentation
 
-- [visual.json](./json-structure/05-visual-json.md) - Visual structure including query
+- [visual.json](./visual-json.md) - Visual structure including query
 - [expressions.md](./schema-patterns/expressions.md) - Field reference patterns

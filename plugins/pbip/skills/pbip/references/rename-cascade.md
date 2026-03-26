@@ -155,6 +155,48 @@ The `queryRef` format is `TableName.ColumnOrMeasureName`:
 
 The `nativeQueryRef` contains only the column/measure name (no table prefix). It does **not** change during table renames — only during column/measure renames.
 
+### Filter Config Entity References
+
+Filter configurations in visual and page JSON files contain `From[].Entity` references:
+
+```json
+// Before (in visual.json or page.json filterConfig)
+"From": [
+  { "Name": "p", "Entity": "Customers", "Type": 0 }
+]
+
+// After
+"From": [
+  { "Name": "p", "Entity": "Customer", "Type": 0 }
+]
+```
+
+### Conditional Formatting Entity References
+
+Conditional formatting rules embed `SourceRef.Entity` inside expression trees:
+
+```json
+// Before (nested in objects.*.properties.*.expr.Conditional.Cases)
+"Measure": {
+  "Expression": {
+    "SourceRef": { "Entity": "Customers" }
+  },
+  "Property": "Some Measure"
+}
+
+// After
+"Measure": {
+  "Expression": {
+    "SourceRef": { "Entity": "Customer" }
+  },
+  "Property": "Some Measure"
+}
+```
+
+### Bookmark Filter Snapshots
+
+Bookmark JSON files (in `definition/bookmarks/`) contain filter state snapshots that include `Entity` references in their `From` arrays and expression trees. These follow the same `From[].Entity` and `SourceRef.Entity` patterns shown above and must also be updated during renames.
+
 ### SparklineData Metadata Selectors
 
 SparklineData metadata selectors embed table names in a compact string format:
