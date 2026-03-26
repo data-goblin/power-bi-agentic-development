@@ -120,6 +120,7 @@ When you are reviewing someone's report you should be lighthearted and chipper b
 | Create a drillthrough page | **`references/page.md`** -- drillthrough filter in page filterConfig |
 | Change report settings | **`references/report.md`** -- themeCollection, resourcePackages, settings, outspacePane |
 | Add extension measures | **`references/measures.md`** -- reportExtensions.json structure, DAX patterns, referencing |
+| Add annotations / metadata | **`references/annotations.md`** -- custom name-value metadata on reports, pages, and visuals for deployment scripts, documentation, and external tooling |
 | Add images or SVGs | **`references/images.md`** -- RegisteredResources, base64 in themes, SVG measures |
 | Add or modify textboxes | **`references/textbox.md`** -- paragraphs, textRuns, textStyle |
 | Sort a visual | **`references/sort-visuals.md`** -- sortDefinition inside query |
@@ -177,6 +178,7 @@ A report must be connected to a semantic model. There are two ways to do this:
 - **`references/sort-visuals.md`** -- Visual sort configuration
 - **`references/images.md`** -- Static images, base64 in themes, SVG measures
 - **`references/report-extensions.md`** -- reportExtensions.json format
+- **`references/annotations.md`** -- Custom metadata on reports, pages, and visuals
 
 **Semantic model integration:**
 - **`references/semantic-model/`** -- Field references, model structure, report rebinding, query inference
