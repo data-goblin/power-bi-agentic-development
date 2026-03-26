@@ -5,6 +5,12 @@ description: This skill should be used when the user asks about "report layout",
 
 # Power BI Report Design
 
+> **Report modification requires tooling.** Two paths exist:
+> 1. **`pbir` CLI (preferred)** -- use the `pbir` command and the `pbir-cli` skill. Check availability with `pbir --version`.
+> 2. **Direct JSON modification** -- if `pbir` is not available, use the `pbir-format` skill (pbip plugin) for PBIR JSON structure and patterns. Validate every change with `jq empty <file.json>`.
+>
+> If neither the `pbir-cli` skill nor the `pbir-format` skill is loaded, ask the user to install the appropriate plugin before proceeding with report modifications.
+
 Best practices and guidelines for Power BI report design. This file provides human-written guidelines, inspiration, and context about Power BI reports for Claude. Without these guidelines, Claude typically tends to struggle with creating good reports, ignoring themes, visual best practices, and common sense evaluation of the formatting choices, chart choices, and visual layouts. The result of this is typically called "Power BI Slop". Avoid "Power BI Slop" at all cost.
 
 Claude must be innovative, pushing boundaries while still adhering to common rules and guidelines in data visualization. Claude must work within the many constraints of Power BI reporting, aiming for simplicity and effectiveness over aesthetics and decoration. Reports, pages, and visuals should be focused on answering specific questions and minimizing cognitive load, rather than making reports "look pretty and impressive".

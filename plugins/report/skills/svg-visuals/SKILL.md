@@ -5,6 +5,12 @@ description: "This skill should be used when the user asks to 'create an SVG vis
 
 # SVG Visuals via DAX Measures (PBIR)
 
+> **Report modification requires tooling.** Two paths exist:
+> 1. **`pbir` CLI (preferred)** -- use the `pbir` command and the `pbir-cli` skill. Check availability with `pbir --version`.
+> 2. **Direct JSON modification** -- if `pbir` is not available, use the `pbir-format` skill (pbip plugin) for PBIR JSON structure and patterns. Validate every change with `jq empty <file.json>`.
+>
+> If neither the `pbir-cli` skill nor the `pbir-format` skill is loaded, ask the user to install the appropriate plugin before proceeding with report modifications.
+
 Generate inline SVG graphics using DAX measures that return SVG markup strings. These render as images in table, matrix, card, image, and slicer visuals. Store as extension measures in `reportExtensions.json`.
 
 ## How It Works

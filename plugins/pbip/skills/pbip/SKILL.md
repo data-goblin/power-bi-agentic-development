@@ -9,6 +9,7 @@ PBIP (Power BI Project) is the developer-mode file format for Power BI. It decom
 
 ## General, critical guidance
 
+- **This skill covers project structure, not file editing.** To modify TMDL files (semantic model), load the `tmdl` skill. To modify PBIR JSON files (report), load the `pbir-format` skill -- or preferably use the `pbir` CLI with the `pbir-cli` skill if available (`pbir --version`). If the required skill is not loaded, ask the user to install the appropriate plugin before proceeding.
 - **PBIX is a black box; PBIP is transparent.** PBIX is a single binary that cannot be diffed or edited externally. PBIP splits the same content into text files. Convert between them with File > Save As in PBI Desktop.
 - **Thick vs thin reports:** A thick report bundles `.Report/` + `.SemanticModel/` in the same project (`definition.pbir` uses `byPath`). A thin report has `.Report/` only, connecting to a remote model via `byConnection`. Thin reports are preferred for managed/shared BI.
 - **A project can contain multiple items.** Multiple `.Report/` and `.SemanticModel/` folders can coexist. The `.pbip` file is optional -- open `definition.pbir` directly.

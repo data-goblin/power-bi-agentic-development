@@ -5,6 +5,12 @@ description: "This skill should be used whenever the user mentions 'Deneb' in an
 
 # Deneb Visuals in Power BI (PBIR)
 
+> **Report modification requires tooling.** Two paths exist:
+> 1. **`pbir` CLI (preferred)** -- use the `pbir` command and the `pbir-cli` skill. Check availability with `pbir --version`.
+> 2. **Direct JSON modification** -- if `pbir` is not available, use the `pbir-format` skill (pbip plugin) for PBIR JSON structure and patterns. Validate every change with `jq empty <file.json>`.
+>
+> If neither the `pbir-cli` skill nor the `pbir-format` skill is loaded, ask the user to install the appropriate plugin before proceeding with report modifications.
+
 Deneb is a certified custom visual for Power BI that enables Vega and Vega-Lite declarative visualization specs directly inside reports. Author specs using this skill.
 
 ## Provider Policy
