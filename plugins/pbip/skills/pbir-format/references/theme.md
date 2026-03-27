@@ -260,8 +260,8 @@ jq '.visualStyles.lineChart["*"].labels' "$THEME"
 jq '.textClasses' "$THEME"
 
 # Filter pane styling
-jq '.visualStyles.page["*"].outspacePane' "$THEME"
-jq '.visualStyles.page["*"].filterCard' "$THEME"
+jq '.visualStyles["*"]["*"].outspacePane' "$THEME"
+jq '.visualStyles["*"]["*"].filterCard' "$THEME"
 ```
 
 ### Modifying Theme Properties
@@ -439,7 +439,7 @@ fab import "Sales.Workspace/Q4Report.Report" -i ./Q4Report.Report -f
 
 ### Filter Pane (outspacePane)
 
-Location in theme: `visualStyles.page."*".outspacePane`
+Location in theme: `visualStyles["*"]["*"].outspacePane`
 
 All properties available (verified against schema):
 
@@ -466,7 +466,7 @@ All properties available (verified against schema):
 
 ### Filter Cards (filterCard)
 
-Location in theme: `visualStyles.page."*".filterCard`
+Location in theme: `visualStyles["*"]["*"].filterCard`
 
 Target specific filter types using `$id`:
 
@@ -514,7 +514,7 @@ ThemeDataColor allows referencing theme palette colors with lightness adjustment
 ```json
 {
   "visualStyles": {
-    "page": {
+    "*": {
       "*": {
         "outspacePane": [
           {
@@ -637,7 +637,7 @@ ThemeDataColor allows referencing theme palette colors with lightness adjustment
 
 1. **Locate theme file**: `<Report>.Report/StaticResources/RegisteredResources/<CustomTheme>.json`
 
-2. **Navigate to page wildcards**: `visualStyles.page."*"`
+2. **Navigate to visual wildcards**: `visualStyles["*"]["*"]`
 
 3. **Add outspacePane array** (or modify existing):
    - Use bare integers for sizes/transparency/width: `14`, `307`, `37`
