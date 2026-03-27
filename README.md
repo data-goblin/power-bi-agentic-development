@@ -14,6 +14,10 @@
 
 ---
 
+<p align="center">
+  <img src="public/bg22-06-2.png" alt="" width="600">
+</p>
+
 ## Installation
 
 These skills are intended for use in Claude Code, Desktop, or Cowork. However, you can use them in other tools, if you wish, like Codex, Gemini CLI, or GitHub Copilot.
