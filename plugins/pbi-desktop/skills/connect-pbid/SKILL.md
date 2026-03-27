@@ -538,39 +538,45 @@ foreach ($m in ($model.Tables | ForEach-Object { $_.Measures })) {
 
 ### Find the Open File Path
 
-TOM does not expose the `.pbix`/`.pbip` file path directly. The most reliable method is reading the `msmdsrv.exe` command line, which includes the workspace data path. From there the workspace folder name can be matched to identify the open model.
+TOM does not expose the `.pbix`/`.pbip` file path directly. The most reliable method across all PBI Desktop install types is reading the `FileHistory` from `User.zip` in the PBI Desktop app data folder.
 
-**Step 1 — Find the workspace data path from msmdsrv:**
+**Primary method — FileHistory in User.zip (works for Store and non-Store):**
 
 ```powershell
-# Get the workspace path from the msmdsrv process command line
+# Read the most recently opened file from PBI Desktop's settings
+$userZip = "$env:USERPROFILE\Microsoft\Power BI Desktop Store App\User.zip"
+# For non-Store installs: "$env:LOCALAPPDATA\Microsoft\Power BI Desktop\User.zip"
+
+Add-Type -Assembly System.IO.Compression.FileSystem
+$z = [System.IO.Compression.ZipFile]::OpenRead($userZip)
+$entry = $z.Entries | Where-Object { $_.Name -eq 'Settings.xml' }
+$reader = New-Object System.IO.StreamReader($entry.Open())
+$content = $reader.ReadToEnd()
+$reader.Close()
+$z.Dispose()
+
+# Extract FileHistory entries (ordered by lastAccessedDate, most recent first)
+$history = ($content -split '(?=<Entry)' | Where-Object { $_ -match 'FileHistory' })[0]
+$json = [regex]::Match($history, 'Value="s\[(.*?)\]"').Groups[1].Value -replace '&quot;', '"'
+$files = $json | ConvertFrom-Json
+$files | Select-Object filePath, lastAccessedDate | Format-Table -AutoSize
+```
+
+The first entry is the most recently opened file. Files on the Mac (via Parallels) appear as `\\Mac\Home\...` paths.
+
+**Fallback — window title (non-Store PBI Desktop only):**
+
+```powershell
+Get-Process PBIDesktop -ErrorAction SilentlyContinue | Select-Object Id, MainWindowTitle
+```
+
+> **Note:** Store PBI Desktop (from Microsoft Store / WindowsApps) does not expose the file path in the window title — use the User.zip method above instead.
+
+**Fallback — msmdsrv command line (gives workspace path, not file path):**
+
+```powershell
+# Useful for finding the port; does NOT reveal the source file path
 (Get-WmiObject Win32_Process -Filter "Name='msmdsrv.exe'").CommandLine
-# Output example:
-# "...\msmdsrv.exe" -c -n AnalysisServicesWorkspace_<guid> -s "C:\Users\<user>\Microsoft\Power BI Desktop Store App\AnalysisServicesWorkspaces\...\Data"
-```
-
-The `-s` argument gives the workspace data directory. The port file is in that same directory:
-
-```powershell
-$wsData = "C:\Users\<user>\Microsoft\Power BI Desktop Store App\AnalysisServicesWorkspaces\AnalysisServicesWorkspace_<guid>\Data"
-Get-Content "$wsData\msmdsrv.port.txt"
-```
-
-**Step 2 — Try the window title (non-Store PBI Desktop only):**
-
-```powershell
-# Window title includes file path on non-Store installs only
-Get-Process PBIDesktop -ErrorAction SilentlyContinue |
-    Select-Object Id, MainWindowTitle
-```
-
-> **Note:** The Store version of PBI Desktop (from Microsoft Store / WindowsApps) does not expose the file path in the window title. Use the msmdsrv command line approach instead.
-
-**Step 3 — Check recent files from registry:**
-
-```powershell
-Get-ItemProperty "HKCU:\Software\Microsoft\Microsoft Power BI Desktop\Recent File List" |
-    Select-Object -Property * -ExcludeProperty PS*
 ```
 
 ### Editing PBIP Metadata Files (Connection, Report, Model)
