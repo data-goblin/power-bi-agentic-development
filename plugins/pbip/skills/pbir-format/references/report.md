@@ -102,10 +102,15 @@ Key settings:
 
 ### objects
 
-Report-level formatting. Currently only `outspacePane` (filter pane visibility).
+Report-level formatting. Two valid properties: `outspacePane` (filter pane visibility) and `section` (canvas vertical alignment).
 
 ```json
 "objects": {
+  "section": [{
+    "properties": {
+      "verticalAlignment": {"expr": {"Literal": {"Value": "'Middle'"}}}
+    }
+  }],
   "outspacePane": [{
     "properties": {
       "visible": {"expr": {"Literal": {"Value": "false"}}},
@@ -114,6 +119,8 @@ Report-level formatting. Currently only `outspacePane` (filter pane visibility).
   }]
 }
 ```
+
+`section.verticalAlignment` values: `'Top'`, `'Middle'`, `'Bottom'`. Sets the default canvas alignment for all pages.
 
 **CRITICAL:** At report level, ONLY `visible` and `expanded` work on outspacePane. Styling properties (backgroundColor, width, etc.) must be in the theme JSON. Putting them here causes deployment errors.
 
@@ -136,9 +143,12 @@ Report-level filters that apply to all pages. See [filter-pane.md](./filter-pane
       "isHiddenInViewMode": false,
       "isLockedInViewMode": false
     }
-  ]
+  ],
+  "filterSortOrder": "Custom"
 }
 ```
+
+`filterSortOrder`: controls filter pane sort order. `"Custom"` preserves the `ordinal` field ordering; omit to use the default sort.
 
 ### annotations
 
