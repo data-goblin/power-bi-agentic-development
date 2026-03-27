@@ -1,5 +1,6 @@
 ---
 name: c-sharp-scripting
+version: 0.8.1
 description: This skill should be used when the user asks to "write a C# script", "create a Tabular Editor script", "automate model changes", "bulk update measures", "create calculation groups", "format DAX expressions", "manage model metadata", "create a macro", "write a Tabular Editor macro", "save a script as macro", "edit MacroActions.json", or mentions TOM (Tabular Object Model), XMLA, C# scripting, or C# macros for Power BI semantic models. Provides comprehensive guidance for writing and executing C# scripts and macros against Power BI semantic models using Tabular Editor 2/3 CLI or the Tabular Editor IDE.
 ---
 
@@ -741,6 +742,10 @@ if(majorVersion >= 3) {
 ### Reference Files
 - `object-types/` - Detailed API docs per object type
 - `examples/` - 180 working `.csx` scripts across 20 categories; always check here before writing from scratch
+
+### Fetching Docs
+
+To retrieve current TOM API reference docs, use `microsoft_docs_search` + `microsoft_docs_fetch` (MCP) if available, otherwise `mslearn search` + `mslearn fetch` (CLI). Search based on the user's request and run multiple searches as needed to ensure sufficient context before proceeding.
 
 ### External References
 - [Tabular Editor Advanced Scripting](https://docs.tabulareditor.com/te2/Advanced-Scripting.html)

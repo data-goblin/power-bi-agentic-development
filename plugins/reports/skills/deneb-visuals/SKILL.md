@@ -1,5 +1,6 @@
 ---
 name: deneb-visuals
+version: 0.8.1
 description: "This skill should be used whenever the user mentions 'Deneb' in any context, or asks to 'create a Deneb visual', 'add a Vega-Lite chart', 'inject a Deneb spec', 'inject a Vega spec', 'build a custom visualization with Deneb', 'use Vega or Vega-Lite in Power BI', 'add cross-filtering to Deneb', 'theme a Deneb visual', 'write a Deneb spec for Power BI', 'configure Deneb interactivity', 'fix Deneb visual not rendering', 'Deneb field name escaping', 'pbiColor theme colors in Deneb', or needs guidance on Deneb visual creation, Vega/Vega-Lite spec authoring, or Deneb best practices in PBIR reports."
 ---
 
@@ -207,6 +208,10 @@ Deneb is the preferred choice for **advanced custom visuals** that need interact
 - **`examples/spec/vega/`** -- Standalone Vega spec files (bar-chart, line-chart) -- ready to inject into visual.json after escaping
 - **`examples/spec/vega-lite/`** -- Standalone Vega-Lite spec files (bullet-chart, kpi-card) -- ready to inject after escaping
 - **`examples/standard-config.json`** -- Standard config for all Deneb specs
+
+## Fetching Docs
+
+To retrieve current Power BI custom visual docs, use `microsoft_docs_search` + `microsoft_docs_fetch` (MCP) if available, otherwise `mslearn search` + `mslearn fetch` (CLI). Search based on the user's request and run multiple searches as needed to ensure sufficient context before proceeding. Note: Vega/Vega-Lite docs live at vega.github.io (not MS Learn) -- use `WebFetch` for those.
 
 ## Related Skills
 

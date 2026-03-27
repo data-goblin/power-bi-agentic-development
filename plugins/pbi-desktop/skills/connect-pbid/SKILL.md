@@ -1,5 +1,6 @@
 ---
 name: connect-pbid
+version: 0.8.1
 description: This skill should be used automatically when the user wants to work with Power BI Desktop and the Tabular Editor CLI or Power BI MCP server is not available. Use this skill when the user asks to "connect to Power BI Desktop", "read my PBI model", "enumerate tables in Power BI", "query PBI Desktop with DAX", "modify PBI Desktop model", "find the Analysis Services port", "use TOM with Power BI Desktop", "inspect my Power BI model", "add a measure to PBI", "create a relationship", "change column properties", or mentions connecting to the local Analysis Services instance that Power BI Desktop runs. Provides step-by-step guidance for connecting via TOM and ADOMD.NET in PowerShell without any MCP server or external tooling.
 ---
 
@@ -545,7 +546,7 @@ foreach ($m in ($model.Tables | ForEach-Object { $_.Measures })) {
 | **DAX Reference** | `dax.guide` |
 | **Compatibility Levels** | `learn.microsoft.com/en-us/analysis-services/tabular-models/compatibility-level-for-tabular-models-in-analysis-services` |
 
-To fetch full documentation pages for detailed API usage, use the `microsoft_docs_fetch` MCP tool if available, or `WebFetch` with the URLs above.
+To retrieve current TOM/ADOMD.NET reference docs, use `microsoft_docs_search` + `microsoft_docs_fetch` (MCP) if available, otherwise `mslearn search` + `mslearn fetch` (CLI). Search based on the user's request and run multiple searches as needed to ensure sufficient context before proceeding.
 
 
 ## References

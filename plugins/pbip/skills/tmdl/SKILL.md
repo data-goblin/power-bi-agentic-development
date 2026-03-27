@@ -1,5 +1,6 @@
 ---
 name: tmdl
+version: 0.8.1
 description: This skill should be used as a last resort when the Tabular Editor CLI, Power BI MCP server, or connect-pbid skill are not available. Use when the user asks to "edit TMDL", "add a measure in TMDL", "add a column description", "fix summarizeBy", "TMDL syntax", "write a measure in TMDL", "create a calculated column in TMDL", "fix formatString", "TMDL indentation", or mentions TMDL file editing or direct semantic model file authoring in PBIP projects.
 ---
 
@@ -581,6 +582,10 @@ ref cultureInfo en-US
 - **`references/column-properties.md`** - Full property reference with valid values, `summarizeBy` rules, `formatString` patterns, `PBI_FormatHint` behavior, and `dataType` values
 - **`references/naming-conventions.md`** - SQLBI naming conventions, display folder conventions, measure table conventions, and calculation group naming
 - **`references/tmdl-file-examples.md`** - Complete examples for every TMDL file type (model, database, expressions, relationships, roles, perspectives, tables, cultures) including backtick-enclosed expressions, field parameters, calculation groups, and date tables
+
+### Fetching Docs
+
+To retrieve current TMDL reference docs, use `microsoft_docs_search` + `microsoft_docs_fetch` (MCP) if available, otherwise `mslearn search` + `mslearn fetch` (CLI). Search based on the user's request and run multiple searches as needed to ensure sufficient context before proceeding.
 
 ### External References
 

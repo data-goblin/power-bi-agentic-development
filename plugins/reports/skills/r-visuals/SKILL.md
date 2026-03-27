@@ -1,5 +1,6 @@
 ---
 name: r-visuals
+version: 0.8.1
 description: "This skill should be used when the user asks to 'create an R visual', 'add a ggplot2 chart', 'inject an R script into Power BI', 'use ggplot in Power BI', 'add an R chart to a report', 'write an R visual script', or needs guidance on R visual creation, ggplot2 patterns, or R visual best practices in PBIR reports."
 ---
 
@@ -194,6 +195,10 @@ R visuals are the preferred choice for **statistical and analytical visualizatio
 - **`examples/visual/bullet-chart.json`** -- PBIR visual.json: bullet chart with conditional coloring, error handling, and extensive escaping
 - **`examples/visual/bar-chart.json`** -- PBIR visual.json: horizontal bar with PY comparison lines and colored account labels
 - **`examples/visual/trend-line.json`** -- PBIR visual.json: area chart with ribbon plot and month factor handling
+
+## Fetching Docs
+
+To retrieve current R visual / package support docs, use `microsoft_docs_search` + `microsoft_docs_fetch` (MCP) if available, otherwise `mslearn search` + `mslearn fetch` (CLI). Search based on the user's request and run multiple searches as needed to ensure sufficient context before proceeding.
 
 ## Related Skills
 

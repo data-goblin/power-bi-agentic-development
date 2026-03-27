@@ -1,5 +1,6 @@
 ---
 name: standardize-naming-conventions
+version: 0.8.1
 description: This skill should be used when the user asks to "standardize naming conventions", "fix naming conventions", "rename measures", "rename columns", "clean up model names", "fix table names", "apply naming standards", "audit naming conventions", "standardize my model", "rename fields", "fix abbreviations in model", "make names human readable", or mentions improving naming conventions in a Power BI semantic model. Provides interactive naming convention standardization for TMDL-based Power BI semantic models.
 ---
 
@@ -140,3 +141,7 @@ Always warn the user about this before applying renames. If downstream reports e
 ### Reference Files
 
 - **`references/naming-rules.md`** -- Complete naming convention rules with detection patterns, anti-pattern tables, and the measure name construction order
+
+### Fetching Docs
+
+To retrieve current semantic model and TMDL reference docs, use `microsoft_docs_search` + `microsoft_docs_fetch` (MCP) if available, otherwise `mslearn search` + `mslearn fetch` (CLI). Search based on the user's request and run multiple searches as needed to ensure sufficient context before proceeding.

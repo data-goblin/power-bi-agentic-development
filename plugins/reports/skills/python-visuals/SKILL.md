@@ -1,5 +1,6 @@
 ---
 name: python-visuals
+version: 0.8.1
 description: "This skill should be used when the user asks to 'create a Python visual', 'add a matplotlib chart', 'inject a Python script into Power BI', 'use seaborn in Power BI', 'add a Python chart to a report', 'write a Python visual script', 'pythonVisual', or needs guidance on Python visual creation, matplotlib/seaborn patterns, or Python visual best practices in PBIR reports."
 ---
 
@@ -179,6 +180,10 @@ Python visuals are appropriate for **statistical and analytical visualizations**
 - **`examples/visual/bar-chart.json`** -- PBIR visual.json: horizontal stacked bar with PY comparison lines and % change labels
 - **`examples/visual/kpi-card.json`** -- PBIR visual.json: text-based KPI with value, % change indicator, and PY comparison
 - **`examples/visual/trend-line.json`** -- PBIR visual.json: area chart with line plot and monthly x-axis
+
+## Fetching Docs
+
+To retrieve current Python visual / package support docs, use `microsoft_docs_search` + `microsoft_docs_fetch` (MCP) if available, otherwise `mslearn search` + `mslearn fetch` (CLI). Search based on the user's request and run multiple searches as needed to ensure sufficient context before proceeding.
 
 ## Related Skills
 

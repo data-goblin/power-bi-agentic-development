@@ -1,5 +1,6 @@
 ---
 name: te-docs
+version: 0.8.1
 description: "This skill should be used when the user asks about 'Tabular Editor documentation', 'TE docs', 'how to do X in Tabular Editor', 'Tabular Editor features', 'TE3 features', '.tmuo files', 'Tabular Editor user options', 'TE3 preferences', 'Preferences.json', 'UiPreferences.json', 'Layouts.json', 'workspace database settings', 'deployment preferences', 'data source overrides', 'keyboard shortcuts', 'DAX editor settings', 'TMDL options', 'per-model TE3 configuration', or needs to search Tabular Editor documentation. Provides Tabular Editor documentation search and configuration file guidance."
 ---
 
@@ -124,6 +125,10 @@ TE3 stores application-level preferences in `%LocalAppData%\TabularEditor3\`:
 - **`schema/`** -- JSON schemas for tmuo, preferences, layouts, UI preferences
 - **`scripts/validate_config.py`** -- Validate TE3 config files
 - **`scripts/validate_tmuo.py`** -- Validate TMUO files
+
+## Fetching Docs
+
+Tabular Editor product docs (docs.tabulareditor.com) are not on Microsoft Learn -- use the local clone approach above. For underlying Analysis Services and Power BI concepts, use `microsoft_docs_search` + `microsoft_docs_fetch` (MCP) if available, otherwise `mslearn search` + `mslearn fetch` (CLI). Search based on the user's request and run multiple searches as needed to ensure sufficient context before proceeding.
 
 ## External
 
