@@ -28,10 +28,10 @@ Report.Report/
 |   +-- reportExtensions.json             # OPTIONAL -- extension measures (report-level DAX)
 |   +-- pages/
 |   |   +-- pages.json                    # Page order and active page
-|   |   +-- [PageName]/                   # Letters, digits, underscores, hyphens ONLY
+|   |   +-- [PageName]/                   # PBI Desktop may generate names with spaces; avoid spaces in human-authored names
 |   |       +-- page.json                 # Page metadata, dimensions, interactions
 |   |       +-- visuals/
-|   |           +-- [VisualName]/         # Letters, digits, underscores, hyphens ONLY
+|   |           +-- [VisualName]/         # Recommend letters, digits, underscores, hyphens only
 |   |               +-- visual.json       # Visual definition
 |   |               +-- mobile.json       # Mobile layout (optional)
 |   +-- bookmarks/                        # OPTIONAL
@@ -55,7 +55,7 @@ Two variants for connecting to semantic models:
 **byPath (local PBIP project):**
 ```json
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/1.0.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json",
   "version": "4.0",
   "datasetReference": {
     "byPath": {
@@ -94,7 +94,7 @@ Format: `major.minor.0` -- both properties required.
 Report-level theme, filters, settings, and resource packages:
 ```json
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/2.1.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/3.0.0/schema.json",
   "themeCollection": {
     "baseTheme": {
       "name": "CY25SU11",
@@ -242,7 +242,7 @@ definition/pages/
 ```
 
 **Rules:**
-- Folder names can be changed freely (letters, digits, underscores, hyphens only)
+- Folder names can be changed freely; spaces are allowed (Power BI Desktop creates them), but prefer letters, digits, underscores, hyphens for human-authored names
 - JSON filenames (`visual.json`, `page.json`) must remain unchanged
 - The `name` property inside JSON files must remain unchanged
 - Power BI Desktop preserves renamed folders on save

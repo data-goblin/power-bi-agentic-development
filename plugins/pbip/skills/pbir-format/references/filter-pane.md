@@ -327,8 +327,8 @@ Filter a column to values within a range (inclusive on both bounds):
             "Property": "Date"
           }
         },
-        "LowerBound": {"Literal": {"Value": "datetime'2024-01-01T00:00:00.000000"}},
-        "UpperBound": {"Literal": {"Value": "datetime'2024-12-31T00:00:00.000000"}}
+        "LowerBound": {"Literal": {"Value": "datetime'2024-01-01T00:00:00.000000'"}},
+        "UpperBound": {"Literal": {"Value": "datetime'2024-12-31T00:00:00.000000'"}}
       }
     }
   }]
@@ -454,14 +454,14 @@ Combine multiple conditions with `And` or `Or` wrappers:
       "Comparison": {
         "ComparisonKind": 2,
         "Left": {"Column": {"Expression": {"SourceRef": {"Source": "d"}}, "Property": "Date"}},
-        "Right": {"Literal": {"Value": "datetime'2024-01-01T00:00:00.000000"}}
+        "Right": {"Literal": {"Value": "datetime'2024-01-01T00:00:00.000000'"}}
       }
     },
     "Right": {
       "Comparison": {
         "ComparisonKind": 3,
         "Left": {"Column": {"Expression": {"SourceRef": {"Source": "d"}}, "Property": "Date"}},
-        "Right": {"Literal": {"Value": "datetime'2024-06-30T00:00:00.000000"}}
+        "Right": {"Literal": {"Value": "datetime'2024-06-30T00:00:00.000000'"}}
       }
     }
   }

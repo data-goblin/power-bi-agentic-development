@@ -74,7 +74,7 @@ Static values with type-specific formatting.
 ### DateTime Literals
 
 ```json
-"expr": {"Literal": {"Value": "datetime'2024-01-15T00:00:00.000000"}}
+"expr": {"Literal": {"Value": "datetime'2024-01-15T00:00:00.000000'"}}
 ```
 
 ### Null Literals
@@ -233,11 +233,21 @@ Maps numeric measure values (0-1) to color gradients:
 }
 ```
 
+**Two forms of linearGradient2:**
+
+**Explicit bounds** (fixed thresholds — min/max at known values like 0–1):
+- Include `"value"` on `min` and `max` to pin the gradient range
+
+**Data-driven min/max** (relative to data — omit `value` bounds):
+- Omit `"value"` on `min` and `max`; Power BI derives bounds from the data automatically
+
+The example above uses explicit bounds (`0D` to `1D`). For data-driven, remove the `value` entries from `min` and `max`. See [conditional-formatting.md](../schema-patterns/conditional-formatting.md) for the data-driven pattern.
+
 **Structure:**
 - `Input.Measure` - Returns numeric value (e.g., 0.75 for 75%)
 - `min.color` - Theme color reference for minimum value (e.g., 'minColor', 'badColor')
 - `max.color` - Theme color reference for maximum value (e.g., 'maxColor', 'goodColor')
-- `min.value` / `max.value` - Numeric range bounds (typically 0D and 1D)
+- `min.value` / `max.value` - Optional numeric range bounds (explicit bounds form only; typically 0D and 1D)
 - `nullColoringStrategy.strategy` - How to handle BLANK():
   - `'asZero'` - Treat null as 0
   - `'specificColor'` - Use specified color

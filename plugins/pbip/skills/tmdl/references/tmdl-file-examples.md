@@ -60,7 +60,7 @@ expression SqlEndpoint =
 		[
 			IsParameterQuery = true,
 			IsParameterQueryRequired = true,
-			Type = type text
+			Type = "Text"
 		]
 	lineageTag: abc-123
 	queryGroup: Parameters
@@ -314,20 +314,20 @@ table _Measures
 
 	/// Total revenue across all invoices in the current filter context.
 	measure 'Gross Sales' =
-				SUMX (
-				    Invoices,
-				    Invoices[Quantity] * Invoices[Price]
-				)
+			SUMX (
+			    Invoices,
+			    Invoices[Quantity] * Invoices[Price]
+			)
 		formatString: #,##0
 		displayFolder: 1. Sales\Actuals
 		lineageTag: def-456
 
 	/// Gross Sales month-to-date, considering only dates in scope.
 	measure 'Gross Sales MTD' =
-				CALCULATE (
-				    [Gross Sales],
-				    DATESMTD ( 'Date'[Date] )
-				)
+			CALCULATE (
+			    [Gross Sales],
+			    DATESMTD ( 'Date'[Date] )
+			)
 		formatString: #,##0
 		displayFolder: 2. MTD\Sales
 		lineageTag: ghi-789

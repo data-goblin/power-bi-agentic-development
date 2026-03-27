@@ -55,25 +55,19 @@ IF ( _Measure = LAST ( [Order Lines], ROWS ), [Order Lines] )
 
 ### Running Total
 
+Visual calculations use dedicated window functions — `ROWS` is an axis keyword, not a filterable table. `EARLIER()` has no meaning in visual calculation context.
+
 ```dax
-VAR _Current = [Revenue]
-RETURN
-SUMX ( FILTER ( ROWS, INDEX() <= EARLIER(INDEX()) ), [Revenue] )
+RUNNINGSUM ( [Revenue] )
 ```
 
 ### Moving Average
 
 ```dax
-VAR _WindowSize = 3
-RETURN
-AVERAGEX (
-    FILTER ( ROWS,
-        INDEX() >= EARLIER(INDEX()) - _WindowSize + 1
-        && INDEX() <= EARLIER(INDEX())
-    ),
-    [Sales]
-)
+MOVINGAVERAGE ( [Sales], 3 )
 ```
+
+The second argument is the window size (number of periods to average over).
 
 ## Multi-Series Configuration
 

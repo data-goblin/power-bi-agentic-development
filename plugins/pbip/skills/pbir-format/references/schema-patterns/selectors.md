@@ -103,7 +103,7 @@ Visual calculations (NativeVisualCalculation) always have `queryRef: "select"`, 
 
 | Value | Constant | Description | Use Case |
 |-------|----------|-------------|----------|
-| 0 | Identities+Totals | Match identities and totals (default) | Series-level (WRONG for per-point) |
+| 0 | Identities+Totals | Match identities and totals | Series-level or identity-matched formatting; wrong when per-data-point is the goal |
 | 1 | Instances only | Match instances with identities only | Per-point conditional formatting (most common) |
 | 2 | Totals only | Match totals only | Total row formatting |
 
@@ -500,16 +500,16 @@ Visual calculations (NativeVisualCalculation) always have `queryRef: "select"`, 
 | Color one specific series | metadata | N/A |
 | Format visual calculation series | metadata: "select" | N/A |
 | Per-point measure colors | data + dataViewWildcard | 1 |
-| Per-series measure colors | data + dataViewWildcard | 0 |
+| Series-level or identity-matched colors | data + dataViewWildcard | 0 |
 | Format specific category | data + scopeId | N/A |
 | Format all fields in role | data + roles | N/A |
 | Format totals only | data + total | N/A |
 
 ## Common Mistakes
 
-### Mistake 1: Wrong matchingOption
+### Mistake 1: Wrong matchingOption for per-point formatting
 
-**Wrong:**
+**Wrong when per-data-point is the goal:**
 ```json
 "selector": {
   "data": [{
@@ -518,9 +518,9 @@ Visual calculations (NativeVisualCalculation) always have `queryRef: "select"`, 
 }
 ```
 
-**Result:** All points in series get same color (first value's color)
+**Result:** All points in series get same color (series-level behavior, not per-point). `matchingOption: 0` is correct for series-level formatting — only wrong when you need per-data-point evaluation.
 
-**Right:**
+**Right for per-data-point:**
 ```json
 "selector": {
   "data": [{

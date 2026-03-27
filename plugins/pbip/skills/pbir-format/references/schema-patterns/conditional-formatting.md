@@ -119,55 +119,59 @@ RETURN
 
 ### Two-Color Gradient (linearGradient2)
 
-No DAX required - uses min/max color scale:
+Two forms depending on whether you need fixed or data-relative bounds.
+
+**Data-driven min/max** (no explicit bounds — Power BI scales to the data range):
 
 ```json
 {
-  "dataPoint": [
-    {
-      "properties": {
-        "fill": {
-          "solid": {
-            "color": {
-              "expr": {
-                "FillRule": {
-                  "Input": {
-                    "Measure": {
-                      "Expression": {"SourceRef": {"Entity": "Orders"}},
-                      "Property": "Order Lines"
-                    }
-                  },
-                  "FillRule": {
-                    "linearGradient2": {
-                      "min": {
-                        "color": {"Literal": {"Value": "'minColor'"}}
-                      },
-                      "max": {
-                        "color": {"Literal": {"Value": "'maxColor'"}}
-                      },
-                      "nullColoringStrategy": {
-                        "strategy": {"Literal": {"Value": "'asZero'"}}
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+  "FillRule": {
+    "linearGradient2": {
+      "min": {
+        "color": {"Literal": {"Value": "'minColor'"}}
       },
-      "selector": {
-        "data": [{"dataViewWildcard": {"matchingOption": 1}}]
+      "max": {
+        "color": {"Literal": {"Value": "'maxColor'"}}
+      },
+      "nullColoringStrategy": {
+        "strategy": {"Literal": {"Value": "'asZero'"}}
       }
     }
-  ]
+  }
 }
 ```
 
+**Explicit bounds** (fixed thresholds — use when the measure returns a known range like 0–1):
+
+```json
+{
+  "FillRule": {
+    "linearGradient2": {
+      "min": {
+        "color": {"Literal": {"Value": "'minColor'"}},
+        "value": {"Literal": {"Value": "0D"}}
+      },
+      "max": {
+        "color": {"Literal": {"Value": "'maxColor'"}},
+        "value": {"Literal": {"Value": "1D"}}
+      },
+      "nullColoringStrategy": {
+        "strategy": {"Literal": {"Value": "'asZero'"}},
+        "color": {"Literal": {"Value": "'#FFFFFF'"}}
+      }
+    }
+  }
+}
+```
+
+**When to use which:**
+- **Data-driven**: When the measure range varies by context and you want the gradient to always span the full visible range
+- **Explicit bounds**: When the measure returns a fixed normalized range (e.g., 0–1 ratio) and you want consistent color mapping
+
 **Properties:**
 - `Input` - Measure to evaluate for gradient position
-- `min.color` - Color for lowest values
-- `max.color` - Color for highest values
+- `min.color` / `max.color` - Colors for lowest/highest values
+- `min.value` / `max.value` - Optional: fixed range bounds (explicit bounds form)
 - `nullColoringStrategy: 'asZero'` - Treat nulls as minimum
 
 ### Three-Color Gradient (linearGradient3)
@@ -475,12 +479,12 @@ Complex UI-generated conditional logic - most verbose but UI-configurable.
 
 | Value | Function |
 |-------|----------|
-| 0 | SUM |
-| 1 | AVG |
-| 2 | COUNT |
-| 3 | MIN |
-| 4 | MAX |
-| 5 | DISTINCTCOUNT |
+| 0 | Sum |
+| 1 | Avg |
+| 2 | Min |
+| 3 | Max |
+| 4 | Count |
+| 5 | DistinctCount |
 
 ### Example: Top 10% Rule
 

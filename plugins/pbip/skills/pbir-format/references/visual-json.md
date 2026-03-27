@@ -46,7 +46,7 @@ All formatting values in visual.json use `expr` wrappers with type-specific suff
 | Integer | `{"expr": {"Literal": {"Value": "14L"}}}` | `L` suffix -- pixel counts, enum values |
 | Decimal | `{"expr": {"Literal": {"Value": "2.4M"}}}` | `M` suffix -- money/decimal precision |
 | Boolean | `{"expr": {"Literal": {"Value": "true"}}}` | Lowercase, no quotes, no suffix |
-| DateTime | `{"expr": {"Literal": {"Value": "datetime'2024-01-15T00:00:00.000000"}}}` | Single-quoted datetime string |
+| DateTime | `{"expr": {"Literal": {"Value": "datetime'2024-01-15T00:00:00.000000'"}}}` | Single-quoted datetime string (closing `'` required) |
 | Color (hex) | `{"expr": {"Literal": {"Value": "'#FF0000'"}}}` | Inner single quotes; 6-digit RGB or 8-digit ARGB |
 | Null | `{"expr": {"Literal": {"Value": "null"}}}` | Lowercase, no quotes, no suffix |
 | Theme color | `{"expr": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}` | Percent: -1.0 (darker) to 1.0 (lighter), 0 = exact |
@@ -73,7 +73,7 @@ Six patterns for referencing fields in queries and expressions:
 | Hierarchy level | `{"HierarchyLevel": {"Expression": {"Hierarchy": {"Expression": {"SourceRef": {"Entity": "Table"}}, "Hierarchy": "Name"}}, "Level": "Level"}}` |
 | SparklineData | `{"SparklineData": {"Measure": {"Measure": {...}}, "Groupings": [{"Column": {...}}]}}` |
 
-**Aggregation function codes:** 0=SUM, 1=AVG, 2=COUNT, 3=MIN, 4=MAX, 5=DISTINCTCOUNT
+**Aggregation function codes:** 0=Sum, 1=Avg, 2=Min, 3=Max, 4=Count, 5=DistinctCount
 
 ## Query Roles by Visual Type
 
@@ -145,7 +145,7 @@ Per-point formatting requires a two-entry array with `matchingOption: 1`. See [c
 | dataViewWildcard | `{"data": [{"dataViewWildcard": {"matchingOption": 1}}]}` | Per-point formatting |
 | scopeId | `{"data": [{"scopeId": {"Comparison": {...}}}]}` | Specific data point value |
 
-matchingOption: `0` = identities + totals, `1` = per data point, `2` = totals only. Selectors can be combined.
+matchingOption: `0` = identities + totals (series-level), `1` = per data point, `2` = totals only. Selectors can be combined. `hierarchyMatching` is an optional property on the selector object that controls hierarchy level matching (`0` = leaf levels only, `1` = all levels matched). See [selectors.md](./schema-patterns/selectors.md) for full details.
 
 ## Sort Definition
 
@@ -181,6 +181,47 @@ Direction: `"Ascending"` or `"Descending"`. See [sort-visuals.md](./sort-visuals
 ```
 
 Filter types: `"Categorical"`, `"Advanced"`. See [filter-pane.md](./filter-pane.md) for all filter types and patterns.
+
+## Slicer Default Selected Values
+
+To set a slicer's default selected values (what it opens with pre-selected), store the selection in `objects.general.properties.filter` — **not** `filterConfig`. This is distinct from `filterConfig` which filters the data going *into* the slicer.
+
+```json
+"visual": {
+  "objects": {
+    "general": [{
+      "properties": {
+        "filter": {
+          "filter": {
+            "Version": 2,
+            "From": [{"Name": "d", "Entity": "Date", "Type": 0}],
+            "Where": [{
+              "Condition": {
+                "In": {
+                  "Expressions": [{
+                    "Column": {
+                      "Expression": {"SourceRef": {"Source": "d"}},
+                      "Property": "Calendar Month (ie Jan)"
+                    }
+                  }],
+                  "Values": [
+                    [{"Literal": {"Value": "'Jan'"}}],
+                    [{"Literal": {"Value": "'Feb'"}}]
+                  ]
+                }
+              }
+            }]
+          }
+        }
+      }
+    }]
+  }
+}
+```
+
+**Key distinction:**
+- `filterConfig.filters[]` — filter pane filters that constrain the data feeding the slicer
+- `objects.general.properties.filter` — the slicer's pre-selected default values
 
 ## Slicer Sync Groups
 

@@ -478,7 +478,7 @@ Target specific filter types using `$id`:
 | `border` | boolean | true/false | Show card border | `false` |
 | `borderColor` | color | `{"solid": {"color": ...}}` | Border color | `{"solid": {"color": "#CCCCCC"}}` |
 | `fontFamily` | string | Font with fallbacks | Card text font | Same as outspacePane |
-| `foregroundColor` | color | `{"solid": {"color": ...}}` | Text and icon color | `{"solid": {"color": "'#e03131'"}}` (note inner quotes!) |
+| `foregroundColor` | color | `{"solid": {"color": ...}}` | Text and icon color | `{"solid": {"color": "#e03131"}}` (bare hex string) |
 | `textSize` | integer | Number (points) | Font size for card text | `11` |
 | `inputBoxColor` | color | `{"solid": {"color": ...}}` | Input field background | ThemeDataColor |
 
@@ -661,7 +661,7 @@ ThemeDataColor allows referencing theme palette colors with lightness adjustment
 
 1. **Don't use "D" or "L" suffixes** in theme JSON - use bare integers
 2. **Don't use page-level formatting** - put it in theme for consistency
-3. **Don't forget inner quotes** for literal color hex codes: `"'#e03131'"`
+3. **Theme JSON color values use bare hex strings**: `"#e03131"` — no inner quotes. Inner single quotes (`"'#e03131'"`) are specific to `expr.Literal.Value` in visual.json, not theme JSON.
 4. **Don't use `"id"` in theme** - it's `"$id"` in theme, `"selector": {"id": ...}` in page.json
 5. **Don't exceed ColorId range** - check your theme's dataColors array length
 

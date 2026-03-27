@@ -25,19 +25,19 @@ https://developer.microsoft.com/json-schemas/fabric/item/report/{type}/{version}
 
 ## Current Schema Versions
 
-As of mid-2025 (from `pbir-cli`). Older reports will use earlier versions -- that is fine.
+Versions below are from the K201 example (mid-2024). Microsoft updates PBIR schemas roughly monthly — newer reports may use higher versions. **Always use the `$schema` URL from your existing project files** rather than the latest version.
 
-| Schema Type | Latest Version | File |
-|-------------|---------------|------|
-| visualContainer | 2.7.0 | visual.json |
-| report | 3.2.0 | report.json |
-| page | 2.1.0 | page.json |
+| Schema Type | Version | File |
+|-------------|---------|------|
+| visualContainer | 2.4.0 | visual.json |
+| report | 3.0.0 | report.json |
+| page | 2.0.0 | page.json |
 | semanticQuery | 1.4.0 | (embedded in visual.json query) |
 | formattingObjectDefinitions | 1.5.0 | (embedded in visual.json objects) |
 | reportExtension | 1.0.0 | reportExtensions.json |
 | versionMetadata | 1.0.0 | version.json |
 | pagesMetadata | 1.0.0 | pages.json |
-| bookmark | 2.1.0 | [id].bookmark.json |
+| bookmark | 1.4.0 | [id].bookmark.json |
 | bookmarksMetadata | 1.0.0 | bookmarks.json |
 | filterConfiguration | 1.3.0 | (embedded in report.json / visual.json) |
 | visualConfiguration | 2.3.0 | (embedded in visual.json) |

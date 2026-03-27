@@ -62,11 +62,17 @@ Valid `visualType` values (from theme.visualStyles):
 
 ### legend.position
 ```
+- "Top"
+- "Bottom"
+- "Left"
+- "Right"
+- "TopCenter"
+- "BottomCenter"
+- "LeftCenter"
 - "RightCenter"
-- (other positions to be documented)
 ```
 
-**Source:** theme.visualStyles.pieChart.*.legend.position
+**Source:** theme.visualStyles.pieChart.*.legend.position, K201 LineChart and ScatterChart examples
 
 ### labels.labelStyle
 ```
@@ -95,11 +101,11 @@ Valid `visualType` values (from theme.visualStyles):
 
 ### markerRangeType
 ```
-- "auto"
-- (other values to be documented)
+- "auto"    -- Automatic range based on data
+- "magnitude" -- Range based on value magnitude
 ```
 
-**Source:** theme.visualStyles.scatterChart.*.bubbles.markerRangeType
+**Source:** theme.visualStyles.scatterChart.*.bubbles.markerRangeType, K201 ScatterChart example
 
 ## Boolean Properties
 

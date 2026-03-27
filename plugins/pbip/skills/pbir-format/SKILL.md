@@ -39,7 +39,7 @@ Report.Report/
 |   +-- reportExtensions.json              # Extension measures and visual calculations (report- and visual-level DAX)
 |   +-- pages/
 |   |   +-- pages.json                     # Page order, active page
-|   |   +-- [PageName]/                    # Letters, digits, underscores, hyphens ONLY
+|   |   +-- [PageName]/                    # Power BI Desktop may generate names with spaces; recommend no spaces for human-authored names
 |   |       +-- page.json                  # Page-level properties, including size, background, filters
 |   |       +-- visuals/
 |   |           +-- [VisualName]/
@@ -141,7 +141,7 @@ When you are reviewing someone's report you should be lighthearted and chipper b
 
 A report must be connected to a semantic model. There are two ways to do this:
 
-- **byPath** -- Local PBIP reference/thick report: `{"byPath": {"path": "../Model.SemanticModel"}}` (schema 1.0.0 or 2.0.0)
+- **byPath** -- Local PBIP reference/thick report: `{"byPath": {"path": "../Model.SemanticModel"}}` (schema 2.0.0)
 - **byConnection** -- Remote/thin report: `{"byConnection": {"connectionString": "Data Source=powerbi://..."}}` (schema 2.0.0)
 
 ## Related Skills

@@ -30,7 +30,7 @@ Activate only when the Tabular Editor CLI, Power BI MCP server, or `connect-pbid
 
 ## Critical
 
-- **`///` (triple-slash) is a description annotation, NOT a comment.** It sets the `Description` property on the object that immediately follows it. A `///` line must be immediately followed by a declaration (`measure`, `column`, `table`, etc.) — never by a blank line or another `///`. Use `//` for regular comments.
+- **`///` (triple-slash) sets the `Description` property** on the object that immediately follows it. A `///` line must be immediately followed by a declaration (`measure`, `column`, `table`, etc.) — never by a blank line or another `///`. Use `//` for regular comments.
 - **Indentation is semantic.** TMDL uses tabs for indentation, and depth equals nesting level. Properties of a table are indented one level; properties of a column (which belongs to a table) are indented two levels. Incorrect indentation will break the model.
 - **Name quoting rules:** Only quote names that contain spaces, special characters, or start with a digit. Simple names and underscore-prefixed names are unquoted. See the Name Quoting section for details.
 
@@ -85,7 +85,7 @@ table Product                              // depth 0: top-level declaration
 
 ### Descriptions (`///`)
 
-Triple-slash lines set the `Description` property on the **next** declaration:
+Triple-slash sets the `Description` property on the **next** declaration:
 
 ```tmdl
 /// Count of distinct products in the current filter context.
@@ -167,7 +167,7 @@ table _Measures                  // unquoted: underscore prefix
 table 'Budget Rate'              // quoted: contains space
 table 'Invoice Document Type'    // quoted: contains spaces
 table '1) Selected Metric'       // quoted: starts with digit
-table 'On-Time Delivery'         // quoted: contains hyphen
+table 'On-Time Delivery'         // quoted: contains space
 ```
 
 ## Column Definitions
@@ -554,7 +554,7 @@ ref cultureInfo en-US
 | Object | Property | Values | Notes |
 |--------|----------|--------|-------|
 | Column | `dataType` | `string`, `int64`, `double`, `decimal`, `dateTime`, `boolean` | Required for data columns |
-| Column | `summarizeBy` | `none`, `sum`, `count`, `min`, `max`, `average` | Use `none` for keys/attributes |
+| Column | `summarizeBy` | `none`, `sum`, `count`, `min`, `max`, `average`, `distinctCount` | Use `none` for keys/attributes |
 | Column | `isHidden` | (flag, no value) | Just write `isHidden` on its own line |
 | Column | `isKey` | (flag, no value) | Marks the column as the table's key |
 | Column | `displayFolder` | folder path string | Use `\` for nesting: `1. Year\Quarter` |

@@ -172,7 +172,7 @@ To add an image to the wallpaper, you must:
    StaticResources/RegisteredResources/image_name_unique_id.png
    ```
 
-2. **Register the image in report.json:**
+2. **Register the image in `definition/report.json`** (not the bare `report.json` at the report root — that is the PBIR-Legacy file):
    ```json
    {
      "resourcePackages": [

@@ -644,12 +644,12 @@ This is the JSON Power BI UI generates for conditional formatting rules. It's co
   - 4 = LessThanOrEqual
 
 - **Aggregation.Function values:**
-  - 0 = SUM
-  - 1 = AVG
-  - 2 = COUNT
-  - 3 = MIN
-  - 4 = MAX
-  - 5 = DISTINCTCOUNT
+  - 0 = Sum
+  - 1 = Avg
+  - 2 = Min
+  - 3 = Max
+  - 4 = Count
+  - 5 = DistinctCount
 
 - **ScopedEval + AllRolesRef:**
   - Evaluates expression at ALL level (ignores all filters)
@@ -860,9 +860,9 @@ fab import "Workspace.Workspace/Report.Report" -i ./Report.Report -f
 
 ## Common Mistakes
 
-1. **Forgetting `"Schema": "extension"`** in SourceRef for extension measures
-   - WRONG: `"SourceRef": {"Entity": "Orders"}`
-   - RIGHT: `"SourceRef": {"Schema": "extension", "Entity": "Orders"}`
+1. **`"Schema": "extension"` only applies to extension measures** (measures defined in `reportExtensions.json`). Do NOT add it to references to real semantic model measures — that will break the reference.
+   - Extension measure: `"SourceRef": {"Schema": "extension", "Entity": "Orders"}` — `"Schema": "extension"` REQUIRED
+   - Model measure: `"SourceRef": {"Entity": "Sales"}` — `"Schema": "extension"` MUST NOT be present
 
 2. **Missing `matchingOption: 1`** for per-data-point evaluation
    - Without it, formatting applies globally

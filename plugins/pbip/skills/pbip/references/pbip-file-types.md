@@ -80,9 +80,39 @@ Found inside the `.Report/` folder. References the semantic model the report is 
 
 The `path` is relative to the `.Report/` folder. `../` navigates up to the project root.
 
-### byConnection (Remote Model)
+### byConnection (Remote Model) — Current Form
 
-For reports connected to a remote semantic model (not in the same PBIP project):
+For new reports connected to a remote semantic model, use the `connectionString`-only form. This is the current recommended format:
+
+```json
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json",
+  "version": "4.0",
+  "datasetReference": {
+    "byConnection": {
+      "connectionString": "Data Source=powerbi://api.powerbi.com/v1.0/myorg/WorkspaceName;Initial Catalog=ModelName"
+    }
+  }
+}
+```
+
+When deploying via Fabric REST API, use the `semanticmodelid` form:
+
+```json
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json",
+  "version": "4.0",
+  "datasetReference": {
+    "byConnection": {
+      "connectionString": "semanticmodelid=[SemanticModelId]"
+    }
+  }
+}
+```
+
+### byConnection Legacy Form
+
+Older reports may use the verbose six-property form. Do not use this for new reports — prefer the `connectionString`-only form above:
 
 ```json
 {
@@ -96,22 +126,6 @@ For reports connected to a remote semantic model (not in the same PBIP project):
       "pbiModelDatabaseName": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
       "name": "EntityDataSource",
       "connectionType": "pbiServiceXmlaStyleLive"
-    }
-  }
-}
-```
-
-### byConnection v2 (Simplified)
-
-When deploying via Fabric REST API, use `byConnection` with just the `semanticmodelid` property:
-
-```json
-{
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definitionProperties/2.0.0/schema.json",
-  "version": "4.0",
-  "datasetReference": {
-    "byConnection": {
-      "connectionString": "semanticmodelid=[SemanticModelId]"
     }
   }
 }
