@@ -1,13 +1,1 @@
-{
-  "name": "reports",
-  "version": "0.8.2",
-  "description": "Skills for Power BI report design and custom visuals including Deneb, R, Python, and SVG visuals.",
-  "author": {
-    "name": "Kurt Buhler",
-    "url": "https://data-goblins.com"
-  },
-  "homepage": "https://data-goblins.com",
-  "repository": "https://github.com/data-goblin/power-bi-agentic-development",
-  "license": "GPL-3.0",
-  "keywords": ["power-bi", "reports", "deneb", "vega", "custom-visuals", "pbir"]
-}
+{"name": "reports"}
