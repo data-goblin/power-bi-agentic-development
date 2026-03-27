@@ -1,6 +1,6 @@
 {
   "name": "semantic-models",
-  "version": "0.8.5",
+  "version": "0.8.6",
   "description": "Skills for auditing and standardizing naming conventions in Power BI semantic models.",
   "author": {
     "name": "Kurt Buhler",

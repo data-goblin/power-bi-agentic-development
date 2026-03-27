@@ -1,6 +1,6 @@
 {
   "name": "pbip",
-  "version": "0.8.5",
+  "version": "0.8.6",
   "description": "Skills for working with Power BI Project (PBIP) files including TMDL authoring, PBIR report format, and project operations.",
   "author": {
     "name": "Kurt Buhler",
