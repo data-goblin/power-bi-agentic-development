@@ -1,6 +1,6 @@
 ---
 name: standardize-naming-conventions
-version: 0.8.1
+version: 0.8.2
 description: This skill should be used when the user asks to "standardize naming conventions", "fix naming conventions", "rename measures", "rename columns", "clean up model names", "fix table names", "apply naming standards", "audit naming conventions", "standardize my model", "rename fields", "fix abbreviations in model", "make names human readable", or mentions improving naming conventions in a Power BI semantic model. Provides interactive naming convention standardization for TMDL-based Power BI semantic models.
 ---
 

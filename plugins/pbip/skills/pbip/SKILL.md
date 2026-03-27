@@ -1,6 +1,6 @@
 ---
 name: pbip
-version: 0.8.1
+version: 0.8.2
 description: This skill should be used when the user asks about "PBIP project structure", "PBIP vs PBIX", "thin report vs thick report", "rename a table", "rename a measure", "fork a PBIP project", "cascade rename", "fix broken references after rename", "find all references to a table", "what files are in a PBIP", ".pbip file", ".pbism file", ".platform file", "definition.pbir", "DAXQueries folder", "TMDLScripts folder", "unappliedChanges", "CustomVisuals folder", "StaticResources", "Copilot folder", ".gitignore", "PBIP encoding", or mentions PBIP file structure, project-level operations, or post-rename verification. Provides expert guidance for Power BI Project (PBIP) file format, project structure, and cross-cutting operations like renames and forking.
 ---
 

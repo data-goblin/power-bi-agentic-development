@@ -1,6 +1,6 @@
 ---
 name: connect-pbid
-version: 0.8.1
+version: 0.8.2
 description: This skill should be used automatically when the user wants to work with Power BI Desktop and the Tabular Editor CLI or Power BI MCP server is not available. Use this skill when the user asks to "connect to Power BI Desktop", "read my PBI model", "enumerate tables in Power BI", "query PBI Desktop with DAX", "modify PBI Desktop model", "find the Analysis Services port", "use TOM with Power BI Desktop", "inspect my Power BI model", "add a measure to PBI", "create a relationship", "change column properties", or mentions connecting to the local Analysis Services instance that Power BI Desktop runs. Provides step-by-step guidance for connecting via TOM and ADOMD.NET in PowerShell without any MCP server or external tooling.
 ---
 
