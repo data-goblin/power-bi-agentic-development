@@ -1,7 +1,7 @@
 {
   "name": "semantic-models",
   "version": "0.8.6",
-  "description": "Skills for auditing and standardizing naming conventions in Power BI semantic models.",
+  "description": "Skills, agents, and resources for agentic development of semantic models.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"
