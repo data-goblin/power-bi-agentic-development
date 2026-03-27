@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "A marketplace for skills and tools for agentic Power BI development.",
-    "version": "0.6.0"
+    "version": "0.8.1"
   },
   "plugins": [
     {
@@ -27,6 +27,11 @@
       "name": "semantic-models",
       "description": "Skills for auditing and standardizing naming conventions in Power BI semantic models.",
       "source": "./plugins/semantic-models"
+    },
+    {
+      "name": "reports",
+      "description": "Skills for Power BI report design and custom visuals (Deneb, R, Python, SVG).",
+      "source": "./plugins/reports"
     }
   ]
 }
