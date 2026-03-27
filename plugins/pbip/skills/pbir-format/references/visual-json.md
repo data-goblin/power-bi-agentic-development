@@ -19,9 +19,9 @@ The most important and complex file in PBIR. Each visual on a report page has on
     },
     "objects": {},
     "visualContainerObjects": {},
-    "filterConfig": {},
     "drillFilterOtherVisuals": true
-  }
+  },
+  "filterConfig": {}
 }
 ```
 
@@ -163,13 +163,20 @@ Direction: `"Ascending"` or `"Descending"`. See [sort-visuals.md](./sort-visuals
 
 ## Visual filterConfig
 
+`filterConfig` lives at the **root level** of visual.json (sibling to `visual`, not nested inside it):
+
 ```json
-"filterConfig": {
-  "filters": [{
-    "name": "e7466b66be105b916228",
-    "field": {"Column": {"Expression": {"SourceRef": {"Entity": "Date"}}, "Property": "Month"}},
-    "type": "Categorical"
-  }]
+{
+  "name": "my_visual",
+  "position": {...},
+  "visual": {...},
+  "filterConfig": {
+    "filters": [{
+      "name": "e7466b66be105b916228",
+      "field": {"Column": {"Expression": {"SourceRef": {"Entity": "Date"}}, "Property": "Month"}},
+      "type": "Categorical"
+    }]
+  }
 }
 ```
 
