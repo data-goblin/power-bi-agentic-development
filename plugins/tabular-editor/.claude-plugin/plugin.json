@@ -1,6 +1,6 @@
 {
   "name": "tabular-editor",
-  "version": "0.8.3",
+  "version": "0.8.5",
   "description": "Agentic development tools for Power BI semantic models with Tabular Editor.",
   "author": {
     "name": "Kurt Buhler",

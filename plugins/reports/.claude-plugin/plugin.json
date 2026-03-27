@@ -1,6 +1,6 @@
 {
   "name": "reports",
-  "version": "0.8.3",
+  "version": "0.8.5",
   "description": "Skills for Power BI report design and custom visuals including Deneb, R, Python, and SVG visuals.",
   "author": {
     "name": "Kurt Buhler",

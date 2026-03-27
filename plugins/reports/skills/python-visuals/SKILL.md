@@ -1,6 +1,6 @@
 ---
 name: python-visuals
-version: 0.8.3
+version: 0.8.5
 description: "This skill should be used when the user asks to 'create a Python visual', 'add a matplotlib chart', 'inject a Python script into Power BI', 'use seaborn in Power BI', 'add a Python chart to a report', 'write a Python visual script', 'pythonVisual', or needs guidance on Python visual creation, matplotlib/seaborn patterns, or Python visual best practices in PBIR reports."
 ---
 
