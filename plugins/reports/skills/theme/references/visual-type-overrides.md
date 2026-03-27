@@ -149,6 +149,8 @@ KPI visuals show a value, trend, and goal. Suppress goal text if redundant; ensu
 
 ### `multiRowCard`
 
+`cardTitle` and `dataLabels` use `color` (not `fontColor`) for font color. The left-side bar is controlled via `card.barShow` (not a `bar` container).
+
 ```json
 "multiRowCard": {
   "*": {
@@ -160,7 +162,7 @@ KPI visuals show a value, trend, and goal. Suppress goal text if redundant; ensu
       "fontSize": 12,
       "fontFamily": "Segoe UI"
     }],
-    "bar": [{"show": false}]
+    "card": [{"barShow": false}]
   }
 }
 ```
@@ -198,18 +200,17 @@ Slicers need item and header font set to match the report's typography. Note: sl
 
 ### `advancedSlicerVisual`
 
-The newer slicer visual type. Uses the same `textSize` property for font sizes.
+The newer card-style slicer. It has a completely different container structure from `slicer` — there are no `items` or `header` containers. Typography is controlled via `label` (field label text) and `value` (data value text). Use `pbir schema containers advancedSlicerVisual` to explore the full container set.
 
 ```json
 "advancedSlicerVisual": {
   "*": {
-    "items": [{
-      "textSize": 12,
+    "label": [{
+      "fontSize": 12,
       "fontFamily": "Segoe UI"
     }],
-    "header": [{
-      "show": true,
-      "textSize": 12,
+    "value": [{
+      "fontSize": 14,
       "fontFamily": "Segoe UI Semibold"
     }]
   }
@@ -222,7 +223,7 @@ The newer slicer visual type. Uses the same `textSize` property for font sizes.
 
 ### `lineChart`
 
-Legend at the bottom is more readable than the right-side default. Minimize axis clutter.
+Legend at the bottom is more readable than the right-side default. Minimize axis clutter. Valid `legend.position` values: `Top`, `TopCenter`, `TopRight`, `Left`, `Right`, `LeftCenter`, `RightCenter`, `Bottom` (bottom-left), `BottomCenter`, `BottomRight`.
 
 ```json
 "lineChart": {
@@ -278,13 +279,14 @@ Legend at the bottom is more readable than the right-side default. Minimize axis
 
 ### `scatterChart`
 
+Note: `scatterChart` has no `labels` container — data labels are not supported at the theme level for scatter charts. It does have `categoryLabels` (for data point labels).
+
 ```json
 "scatterChart": {
   "*": {
     "legend": [{"show": true, "position": "Bottom"}],
     "categoryAxis": [{"show": true, "fontSize": 11}],
-    "valueAxis": [{"show": true, "fontSize": 11}],
-    "labels": [{"show": false}]
+    "valueAxis": [{"show": true, "fontSize": 11}]
   }
 }
 ```
