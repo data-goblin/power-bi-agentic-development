@@ -94,6 +94,8 @@ You can also drag any `.md` skill file into Copilot Chat or reference it with `#
 
 ### Agents
 
+> Subagents have isolated context windows and are appropriate for tasks that benefit from this isolation. Agents are not for specialization or enhancing context; that is the purview of a skill usable by your main agent _or_ a subagent.
+
 | Agent | Plugin | Description |
 |-------|--------|-------------|
 | [`bpa-expression-helper`](plugins/tabular-editor/agents/bpa-expression-helper.md) | tabular-editor | Debug and improve BPA rule expressions |
