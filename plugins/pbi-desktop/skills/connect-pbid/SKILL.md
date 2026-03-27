@@ -1,7 +1,7 @@
 ---
 name: connect-pbid
 version: 0.8.3
-description: This skill should be used automatically when the user wants to work with Power BI Desktop and the Tabular Editor CLI or Power BI MCP server is not available. Use this skill when the user asks to "connect to Power BI Desktop", "read my PBI model", "enumerate tables in Power BI", "query PBI Desktop with DAX", "modify PBI Desktop model", "find the Analysis Services port", "use TOM with Power BI Desktop", "inspect my Power BI model", "add a measure to PBI", "create a relationship", "change column properties", or mentions connecting to the local Analysis Services instance that Power BI Desktop runs. Provides step-by-step guidance for connecting via TOM and ADOMD.NET in PowerShell without any MCP server or external tooling.
+description: This skill should be used automatically when the user wants to work with Power BI Desktop and the Tabular Editor CLI or Power BI MCP server is not available. Use this skill when the user asks to "connect to Power BI Desktop", "read my PBI model", "enumerate tables in Power BI", "query PBI Desktop with DAX", "modify PBI Desktop model", "find the Analysis Services port", "use TOM with Power BI Desktop", "inspect my Power BI model", "add a measure to PBI", "create a relationship", "change column properties", "find the file path of my Power BI file", "edit the connection string", "modify report metadata", "change the connected model", "edit definition.pbir", or mentions connecting to the local Analysis Services instance that Power BI Desktop runs or editing PBIP/PBIX metadata files. Provides step-by-step guidance for connecting via TOM and ADOMD.NET in PowerShell, finding file paths, and editing metadata files directly on disk.
 ---
 
 # Connect to Power BI Desktop (Local Analysis Services)
@@ -533,6 +533,91 @@ foreach ($m in ($model.Tables | ForEach-Object { $_.Measures })) {
     $names[$m.Name] = $m.Table.Name
 }
 ```
+
+## 8. Finding the File Path and Editing Metadata Files
+
+### Find the Open File Path
+
+TOM does not expose the `.pbix`/`.pbip` file path directly. Use the Windows process list to find it:
+
+```powershell
+# Get the file path of the open PBI Desktop instance(s)
+Get-Process PBIDesktop -ErrorAction SilentlyContinue |
+    ForEach-Object { $_.MainWindowTitle } |
+    Where-Object { $_ -match "\.(pbix|pbip)" }
+```
+
+If the title doesn't include the path (some OS/version combinations), use:
+
+```powershell
+# Get full path from process command line (requires admin or same user)
+Get-WmiObject Win32_Process -Filter "Name='PBIDesktop.exe'" |
+    Select-Object ProcessId, CommandLine
+```
+
+Or check recent files from the registry:
+
+```powershell
+# Recent PBI Desktop files from registry
+Get-ItemProperty "HKCU:\Software\Microsoft\Microsoft Power BI Desktop\Recent File List" |
+    Select-Object -Property * -ExcludeProperty PS*
+```
+
+### Editing PBIP Metadata Files (Connection, Report, Model)
+
+For `.pbip` projects, metadata files are human-readable JSON/TMDL on disk. Read and modify them directly with standard file tools.
+
+**Common targets:**
+
+| File | Purpose |
+|------|---------|
+| `<Name>.Report/definition.pbir` | Report-to-model connection (`byPath` or `byConnection`) |
+| `<Name>.Report/definition/report.json` | Report-level settings, theme, filters |
+| `<Name>.SemanticModel/definition/*.tmdl` | Model metadata (tables, measures, relationships) |
+| `<Name>.SemanticModel/definition/expressions.tmdl` | M/Power Query shared expressions and parameters |
+
+**Example -- read and modify a connection string in `definition.pbir`:**
+
+```powershell
+$pbirPath = "C:\Projects\MyReport.Report\definition.pbir"
+$pbir = Get-Content $pbirPath -Raw | ConvertFrom-Json
+
+# Inspect current connection
+$pbir.datasetReference | ConvertTo-Json -Depth 5
+
+# Change from byPath to byConnection (thin report)
+$pbir.datasetReference = @{
+    byConnection = @{
+        connectionString = "powerbi://api.powerbi.com/v1.0/myorg/MyWorkspace"
+        pbiModelDatabaseName = "MySemanticModel"
+        pbiModelVirtualServerName = "sobe_wowvirtualserver"
+        connectionType = "pbiServiceLive"
+    }
+}
+
+$pbir | ConvertTo-Json -Depth 10 | Set-Content $pbirPath
+```
+
+**Example -- read a TMDL file to inspect or edit a measure:**
+
+```powershell
+$tmdlPath = "C:\Projects\MyReport.SemanticModel\definition\tables\Sales.tmdl"
+Get-Content $tmdlPath | Select-String "measure|formatString|displayFolder"
+```
+
+> Use the `tmdl` and `pbir-format` skills (pbip plugin) for full syntax reference on these files.
+
+### No Hot-Reload — Close and Reopen Required
+
+**IMPORTANT:** Power BI Desktop does **not** watch for external file changes. If you edit metadata files on disk while the report is open, the changes will be silently ignored or overwritten when PBI Desktop next saves.
+
+To apply external file edits:
+
+1. Close Power BI Desktop completely
+2. Make your changes to the files on disk
+3. Reopen the `.pbix` or `.pbip` file
+
+This is different from TOM modifications via `$model.SaveChanges()`, which apply immediately to the running instance without requiring a restart.
 
 ### Microsoft Documentation
 
