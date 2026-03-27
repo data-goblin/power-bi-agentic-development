@@ -1,420 +1,123 @@
-# Visual-Type Override Patterns
+# Visual-Type Override Index
 
-Patterns for `visualStyles["<type>"]["*"]` sections in a Power BI theme. Each entry overrides the wildcard `["*"]["*"]` defaults for that specific visual type. Properties omitted here inherit from the wildcard.
+Reference index for `visualStyles["<type>"]["*"]` theme overrides. Each visual type has its own file in `examples/visualTypes/<type>.md` with verified containers, key properties, and a JSON snippet.
 
-**Always verify property names before using them.** The examples in this file are based on the SQLBI/Data Goblins example theme and the `pbir schema` CLI. Use the following to discover and confirm correct property names:
-
+**Always verify property names with `pbir schema`:**
 ```bash
-# List all containers for a visual type
-pbir schema containers lineChart
-
-# Describe exact properties in a container (with types and constraints)
-pbir schema describe lineChart.valueAxis
-
-# Check the official schema for complete reference
-# https://github.com/microsoft/powerbi-desktop-samples/tree/main/Report%20Theme%20JSON%20Schema
+pbir schema containers <type>          # list containers
+pbir schema describe <type>.<container> # list properties + types
 ```
 
-**Common naming gotchas:**
-- Matrix visuals use `pivotTable` as the theme key — not `matrix`
-- Slicers use `textSize` for font size — not `fontSize`
-- KPI trend is `trendline` (lowercase L) — not `trendLine`
-- Table/matrix column color is `backColor` — not `backgroundColor`
-- Card value/label color property is `color` — not `fontColor`
-
----
-
-## When to Add a Visual-Type Override
-
-Add a visual-type section when:
-- The visual type needs different container chrome than the wildcard (e.g., textboxes shouldn't have titles)
-- The visual type has a consistent default for chart-specific properties (e.g., all line charts should show legend at the bottom)
-- Wildcard defaults are generally correct but one visual type is an exception
-
-Do NOT add a visual-type section just to duplicate the wildcard — redundant sections are noise.
-
----
-
-## Container / Decorative Visuals
-
-### `textbox`
-
-Text containers should have no visual chrome — title, border, background, and shadow all suppress.
-
-```json
-"textbox": {
-  "*": {
-    "title": [{"show": false}],
-    "subTitle": [{"show": false}],
-    "background": [{"show": false}],
-    "border": [{"show": false}],
-    "dropShadow": [{"show": false}],
-    "divider": [{"show": false}]
-  }
-}
-```
-
-### `image`
-
-Images are content, not data visuals. Suppress all container chrome.
-
-```json
-"image": {
-  "*": {
-    "title": [{"show": false}],
-    "subTitle": [{"show": false}],
-    "background": [{"show": false}],
-    "border": [{"show": false}],
-    "dropShadow": [{"show": false}]
-  }
-}
-```
-
-### `shape`
-
-Geometric shapes (rectangles, lines, circles) are design elements — no titles or shadows.
-
-```json
-"shape": {
-  "*": {
-    "title": [{"show": false}],
-    "background": [{"show": false}],
-    "border": [{"show": false}],
-    "dropShadow": [{"show": false}]
-  }
-}
-```
-
-### `actionButton`
-
-Buttons have their own visual style system. Suppress the generic container chrome.
-
-```json
-"actionButton": {
-  "*": {
-    "title": [{"show": false}],
-    "background": [{"show": false}],
-    "border": [{"show": false}],
-    "dropShadow": [{"show": false}]
-  }
-}
-```
-
----
-
-## KPI and Card Visuals
-
-### `card`
-
-Cards typically display a single metric. The category label is often redundant if the title is set.
-
-```json
-"card": {
-  "*": {
-    "labels": [{
-      "fontSize": 32,
-      "fontFamily": "Segoe UI Semibold",
-      "color": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}}
-    }],
-    "categoryLabels": [{
-      "show": true,
-      "fontSize": 12,
-      "fontFamily": "Segoe UI",
-      "color": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0.4}}}}
-    }]
-  }
-}
-```
-
-### `kpi`
-
-KPI visuals show a value, trend, and goal. Suppress goal text if redundant; ensure indicator font is large enough.
-
-```json
-"kpi": {
-  "*": {
-    "indicator": [{
-      "fontSize": 36,
-      "fontFamily": "Segoe UI Semibold"
-    }],
-    "trendline": [{
-      "show": true
-    }],
-    "goals": [{
-      "show": true
-    }]
-  }
-}
-```
-
-### `multiRowCard`
-
-`cardTitle` and `dataLabels` use `color` (not `fontColor`) for font color. The left-side bar is controlled via `card.barShow` (not a `bar` container).
-
-```json
-"multiRowCard": {
-  "*": {
-    "cardTitle": [{
-      "fontSize": 12,
-      "fontFamily": "Segoe UI Semibold"
-    }],
-    "dataLabels": [{
-      "fontSize": 12,
-      "fontFamily": "Segoe UI"
-    }],
-    "card": [{"barShow": false}]
-  }
-}
-```
-
----
-
-## Slicer Visuals
-
-### `slicer`
-
-Slicers need item and header font set to match the report's typography. Note: slicer uses `textSize` (not `fontSize`) for item and header font sizes.
-
-```json
-"slicer": {
-  "*": {
-    "items": [{
-      "textSize": 12,
-      "fontFamily": "Segoe UI",
-      "fontColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}}
-    }],
-    "header": [{
-      "show": true,
-      "textSize": 12,
-      "fontFamily": "Segoe UI Semibold",
-      "fontColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}}
-    }]
-  },
-  "hover": {
-    "items": [{
-      "fontColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 1, "Percent": 0}}}}
-    }]
-  }
-}
-```
-
-### `advancedSlicerVisual`
-
-The newer card-style slicer. It has a completely different container structure from `slicer` — there are no `items` or `header` containers. Typography is controlled via `label` (field label text) and `value` (data value text). Use `pbir schema containers advancedSlicerVisual` to explore the full container set.
-
-```json
-"advancedSlicerVisual": {
-  "*": {
-    "label": [{
-      "fontSize": 12,
-      "fontFamily": "Segoe UI"
-    }],
-    "value": [{
-      "fontSize": 14,
-      "fontFamily": "Segoe UI Semibold"
-    }]
-  }
-}
-```
-
----
-
-## Chart Visuals
-
-### `lineChart`
-
-Legend at the bottom is more readable than the right-side default. Minimize axis clutter. Valid `legend.position` values: `Top`, `TopCenter`, `TopRight`, `Left`, `Right`, `LeftCenter`, `RightCenter`, `Bottom` (bottom-left), `BottomCenter`, `BottomRight`.
-
-```json
-"lineChart": {
-  "*": {
-    "legend": [{
-      "show": true,
-      "position": "Bottom",
-      "fontSize": 11,
-      "fontFamily": "Segoe UI"
-    }],
-    "categoryAxis": [{
-      "show": true,
-      "fontSize": 11,
-      "fontFamily": "Segoe UI"
-    }],
-    "valueAxis": [{
-      "show": true,
-      "fontSize": 11,
-      "fontFamily": "Segoe UI",
-      "gridlineColor": {"solid": {"color": "#e9ecef"}},
-      "gridlineThickness": 1
-    }],
-    "labels": [{"show": false}]
-  }
-}
-```
-
-### `barChart` / `columnChart` / `clusteredBarChart`
-
-```json
-"barChart": {
-  "*": {
-    "legend": [{
-      "show": true,
-      "position": "Bottom",
-      "fontSize": 11,
-      "fontFamily": "Segoe UI"
-    }],
-    "categoryAxis": [{
-      "show": true,
-      "fontSize": 11,
-      "fontFamily": "Segoe UI"
-    }],
-    "valueAxis": [{
-      "show": false
-    }],
-    "labels": [{"show": false}]
-  }
-}
-```
-
-> Apply similar patterns to `clusteredBarChart`, `stackedBarChart`, `columnChart`, `clusteredColumnChart`, `stackedColumnChart` — they share the same property schema.
-
-### `scatterChart`
-
-Note: `scatterChart` has no `labels` container — data labels are not supported at the theme level for scatter charts. It does have `categoryLabels` (for data point labels).
-
-```json
-"scatterChart": {
-  "*": {
-    "legend": [{"show": true, "position": "Bottom"}],
-    "categoryAxis": [{"show": true, "fontSize": 11}],
-    "valueAxis": [{"show": true, "fontSize": 11}]
-  }
-}
-```
-
-### `areaChart`
-
-```json
-"areaChart": {
-  "*": {
-    "legend": [{"show": true, "position": "Bottom"}],
-    "categoryAxis": [{"show": true, "fontSize": 11}],
-    "valueAxis": [{"show": true, "start": "0", "fontSize": 11}],
-    "labels": [{"show": false}]
-  }
-}
-```
-
----
-
-## Table and Matrix Visuals
-
-### `tableEx`
-
-Tables benefit from clean column headers and readable row text. Alternating row color aids readability.
-
-```json
-"tableEx": {
-  "*": {
-    "columnHeaders": [{
-      "fontSize": 12,
-      "fontFamily": "Segoe UI Semibold",
-      "fontColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}},
-      "backColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0.9}}}}
-    }],
-    "values": [{
-      "fontSize": 11,
-      "fontFamily": "Segoe UI",
-      "fontColorPrimary": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}},
-      "backColorPrimary": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 1}}}},
-      "fontColorSecondary": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}},
-      "backColorSecondary": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0.95}}}}
-    }],
-    "total": [{
-      "fontSize": 12,
-      "fontFamily": "Segoe UI Semibold"
-    }],
-    "grid": [{
-      "gridVertical": false,
-      "gridHorizontalWeight": 1,
-      "gridHorizontalColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0.85}}}}
-    }]
-  }
-}
-```
-
-### `pivotTable`
-
-The theme key for matrix visuals is `pivotTable` — not `matrix`. Using `matrix` will silently have no effect.
-
-```json
-"pivotTable": {
-  "*": {
-    "columnHeaders": [{
-      "fontSize": 12,
-      "fontFamily": "Segoe UI Semibold",
-      "fontColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}},
-      "backColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0.9}}}}
-    }],
-    "rowHeaders": [{
-      "fontSize": 11,
-      "fontFamily": "Segoe UI",
-      "fontColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}},
-      "backColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 1}}}},
-      "stepped": true,
-      "steppedLayoutIndentation": 16
-    }],
-    "values": [{
-      "fontSize": 11,
-      "fontFamily": "Segoe UI",
-      "backColorPrimary": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 1}}}},
-      "backColorSecondary": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0.95}}}}
-    }],
-    "total": [{
-      "fontSize": 12,
-      "fontFamily": "Segoe UI Semibold"
-    }],
-    "grid": [{
-      "gridVertical": false,
-      "gridHorizontalWeight": 1
-    }]
-  }
-}
-```
-
----
-
-## Gauge and Other Visuals
-
-### `gauge`
-
-```json
-"gauge": {
-  "*": {
-    "calloutValue": [{
-      "fontSize": 24,
-      "fontFamily": "Segoe UI Semibold"
-    }],
-    "labels": [{"show": true, "fontSize": 11}]
-  }
-}
-```
-
-### `treemap`
-
-```json
-"treemap": {
-  "*": {
-    "legend": [{"show": true, "position": "Bottom"}],
-    "labels": [{"show": true, "fontSize": 11}]
-  }
-}
-```
-
----
-
-## Tips
-
-- **Order of sections:** Put the wildcard `"*"` section first, then visual-type sections in alphabetical order for maintainability.
-- **Avoid over-specifying:** Only set properties that differ from the wildcard or that you explicitly want locked for that type. Every property you add is one more thing to maintain.
-- **Test each override** after adding it — deploy and check the visual type in Power BI Desktop or Service to confirm the override applies as expected.
-- **ThemeDataColor vs hex in `visualStyles`:** Use `{"solid": {"color": {"ThemeDataColor": {"ColorId": N, "Percent": 0}}}}` for colors that should stay linked to the palette. Use bare hex strings only for colors that are intentionally fixed regardless of the palette.
+## All Visual Types (49)
+
+### Container / Decorative
+
+| Type | File | Notes |
+|------|------|-------|
+| `textbox` | [textbox.md](../examples/visualTypes/textbox.md) | Suppress all container chrome |
+| `image` | [image.md](../examples/visualTypes/image.md) | Suppress title/border/shadow |
+| `shape` | [shape.md](../examples/visualTypes/shape.md) | Suppress all container chrome |
+| `actionButton` | [actionButton.md](../examples/visualTypes/actionButton.md) | Has `default`/`hover`/`active`/`disabled` states |
+| `group` | [group.md](../examples/visualTypes/group.md) | Container chrome only |
+| `bookmarkNavigator` | [bookmarkNavigator.md](../examples/visualTypes/bookmarkNavigator.md) | Navigation button bar |
+
+### KPI and Card
+
+| Type | File | Notes |
+|------|------|-------|
+| `card` | [card.md](../examples/visualTypes/card.md) | Legacy card — `labels.color`, not `fontColor` |
+| `cardVisual` | [cardVisual.md](../examples/visualTypes/cardVisual.md) | New card visual — `label`/`value` containers |
+| `kpi` | [kpi.md](../examples/visualTypes/kpi.md) | `trendline` (lowercase), not `trendLine` |
+| `multiRowCard` | [multiRowCard.md](../examples/visualTypes/multiRowCard.md) | Bar via `card.barShow`, not a `bar` container |
+
+### Slicers
+
+| Type | File | Notes |
+|------|------|-------|
+| `slicer` | [slicer.md](../examples/visualTypes/slicer.md) | `items`/`header` — uses `textSize` not `fontSize` |
+| `advancedSlicerVisual` | [advancedSlicerVisual.md](../examples/visualTypes/advancedSlicerVisual.md) | Card-style — `label`/`value` containers |
+| `listSlicer` | [listSlicer.md](../examples/visualTypes/listSlicer.md) | New list slicer — same structure as `advancedSlicerVisual` |
+| `textSlicer` | [textSlicer.md](../examples/visualTypes/textSlicer.md) | Search/text slicer — `inputText`/`inputTextBox` |
+
+### Bar / Column Family
+
+All share the same core containers: `categoryAxis`, `valueAxis`, `legend`, `labels`, `dataPoint`.
+
+| Type | File | Unique containers |
+|------|------|-------------------|
+| `barChart` | [barChart.md](../examples/visualTypes/barChart.md) | Base reference for the family |
+| `clusteredBarChart` | [clusteredBarChart.md](../examples/visualTypes/clusteredBarChart.md) | Same as `barChart` |
+| `clusteredColumnChart` | [clusteredColumnChart.md](../examples/visualTypes/clusteredColumnChart.md) | Same as `barChart` |
+| `columnChart` | [columnChart.md](../examples/visualTypes/columnChart.md) | Adds `totals`, `ribbonBands` |
+| `hundredPercentStackedBarChart` | [hundredPercentStackedBarChart.md](../examples/visualTypes/hundredPercentStackedBarChart.md) | Same as `barChart` + `ribbonBands`, `totals` |
+| `hundredPercentStackedColumnChart` | [hundredPercentStackedColumnChart.md](../examples/visualTypes/hundredPercentStackedColumnChart.md) | Same as `barChart` + `ribbonBands`, `totals` |
+| `ribbonChart` | [ribbonChart.md](../examples/visualTypes/ribbonChart.md) | Adds `ribbonBands` |
+
+### Line / Area Family
+
+All share: `categoryAxis`, `valueAxis`, `legend`, `labels`, `dataPoint`.
+
+| Type | File | Unique containers |
+|------|------|-------------------|
+| `lineChart` | [lineChart.md](../examples/visualTypes/lineChart.md) | Base reference; adds `lineStyles`, `markers` |
+| `areaChart` | [areaChart.md](../examples/visualTypes/areaChart.md) | Same as `lineChart` |
+| `stackedAreaChart` | [stackedAreaChart.md](../examples/visualTypes/stackedAreaChart.md) | Same as `lineChart` + `totals`, `seriesLabels` |
+| `hundredPercentStackedAreaChart` | [hundredPercentStackedAreaChart.md](../examples/visualTypes/hundredPercentStackedAreaChart.md) | Same as `stackedAreaChart` |
+
+### Combo Charts
+
+| Type | File | Notes |
+|------|------|-------|
+| `lineClusteredColumnComboChart` | [lineClusteredColumnComboChart.md](../examples/visualTypes/lineClusteredColumnComboChart.md) | `lineChart` + `barChart`; dual `valueAxis` |
+| `lineStackedColumnComboChart` | [lineStackedColumnComboChart.md](../examples/visualTypes/lineStackedColumnComboChart.md) | Same as above + `totals` |
+
+### Other Charts
+
+| Type | File | Notes |
+|------|------|-------|
+| `scatterChart` | [scatterChart.md](../examples/visualTypes/scatterChart.md) | No `labels` container |
+| `pieChart` | [pieChart.md](../examples/visualTypes/pieChart.md) | `labels`/`legend`/`slices` |
+| `donutChart` | [donutChart.md](../examples/visualTypes/donutChart.md) | Same as `pieChart` |
+| `funnel` | [funnel.md](../examples/visualTypes/funnel.md) | `labels`/`categoryAxis`/`percentBarLabel` |
+| `waterfallChart` | [waterfallChart.md](../examples/visualTypes/waterfallChart.md) | Unique `sentimentColors` container |
+| `gauge` | [gauge.md](../examples/visualTypes/gauge.md) | `calloutValue`/`labels` |
+| `treemap` | [treemap.md](../examples/visualTypes/treemap.md) | `legend`/`labels` |
+
+### Table and Matrix
+
+| Type | File | Notes |
+|------|------|-------|
+| `tableEx` | [tableEx.md](../examples/visualTypes/tableEx.md) | `backColor` not `backgroundColor` |
+| `pivotTable` | [pivotTable.md](../examples/visualTypes/pivotTable.md) | Matrix — `pivotTable` not `matrix` |
+| `scorecard` | [scorecard.md](../examples/visualTypes/scorecard.md) | Power BI scorecard / goals |
+
+### Maps
+
+| Type | File | Notes |
+|------|------|-------|
+| `map` | [map.md](../examples/visualTypes/map.md) | Bing map — `legend`/`dataPoint`/`categoryLabels` |
+| `azureMap` | [azureMap.md](../examples/visualTypes/azureMap.md) | Azure Maps — many layer-specific containers |
+| `filledMap` | [filledMap.md](../examples/visualTypes/filledMap.md) | Choropleth — `dataPoint`/`legend` |
+| `shapeMap` | [shapeMap.md](../examples/visualTypes/shapeMap.md) | Custom shape map — `dataPoint`/`legend` |
+
+### Specialized / AI / Navigation
+
+| Type | File | Notes |
+|------|------|-------|
+| `decompositionTreeVisual` | [decompositionTreeVisual.md](../examples/visualTypes/decompositionTreeVisual.md) | `levelHeader`/`dataLabels`/`dataBars` |
+| `keyDriversVisual` | [keyDriversVisual.md](../examples/visualTypes/keyDriversVisual.md) | AI insights — limited theming |
+| `aiNarratives` | [aiNarratives.md](../examples/visualTypes/aiNarratives.md) | AI text — `text`/`summary` containers |
+| `scorecard` | — | See Table/Matrix above |
+
+### Script / External Renderers
+
+Container chrome only — the rendered output itself is not themeable via `visualStyles`.
+
+| Type | File | Notes |
+|------|------|-------|
+| `pythonVisual` | [pythonVisual.md](../examples/visualTypes/pythonVisual.md) | matplotlib/seaborn — chrome only |
+| `scriptVisual` | [scriptVisual.md](../examples/visualTypes/scriptVisual.md) | R ggplot2 — chrome only |
+| `rdlVisual` | [rdlVisual.md](../examples/visualTypes/rdlVisual.md) | Paginated reports — chrome only |
+| `qnaVisual` | [qnaVisual.md](../examples/visualTypes/qnaVisual.md) | Q&A — `inputBox`/`suggestions` |
+| `filter` | [filter.md](../examples/visualTypes/filter.md) | Filter card entity — `general` only |
+
