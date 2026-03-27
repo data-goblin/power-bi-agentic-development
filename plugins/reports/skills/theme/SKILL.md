@@ -1,6 +1,6 @@
 ---
 name: theme
-version: 0.8.8
+version: 0.9.0
 description: "This skill should be used when the user asks to 'create a theme', 'design a theme', 'build a theme from scratch', 'apply a theme to the report', 'enforce theme compliance', 'audit theme adherence', 'push formatting to theme', 'promote bespoke formatting to theme', 'clear visual overrides', 'make all visuals consistent with the theme', 'standardize report formatting', 'set up a theme', 'update theme colors', 'change theme typography', 'set theme text classes', 'validate a theme', 'add visual-type overrides to the theme', 'ensure visuals use theme defaults', or needs to design, enforce, audit, or validate a Power BI report theme beyond simple JSON inspection."
 ---
 
@@ -9,6 +9,8 @@ description: "This skill should be used when the user asks to 'create a theme', 
 Covers design, enforcement, compliance auditing, and validation of Power BI report themes. For PBIR JSON mechanics — exact property names, filter pane selectors, ThemeDataColor syntax, and `jq` patterns — see the **`pbir-format`** skill (pbip plugin) → `references/theme.md`.
 
 > **Tooling preference:** Use `pbir` CLI when available (`pbir theme colors`, `pbir visuals clear-formatting`). Fall back to direct `jq` modification when unavailable. Always validate with `jq empty <file>` after every write.
+
+> **CRITICAL — Do not read theme files directly.** Theme JSON files can be 75KB+ and 2000+ lines — loading the entire file is extremely token-expensive and unnecessary. Always use `jq` to extract only the specific keys needed. First check what keys exist (`jq 'keys' "$THEME"`), then query specific paths (`jq '.visualStyles["*"]["*"]' "$THEME"`). Never use the `Read` tool or `cat` on a theme file.
 
 ## The Formatting Hierarchy
 
@@ -59,25 +61,7 @@ THEME="Report.Report/StaticResources/RegisteredResources/$THEME_NAME"
 jq '.visualStyles["*"]["*"] | keys' "$THEME"
 ```
 
-**Step 3 — List visual types that have type-level overrides:**
-```bash
-jq '.visualStyles | keys | map(select(. != "*"))' "$THEME"
-```
-
-**Step 4 — Scan all visual.json files for bespoke overrides:**
-```bash
-find Report.Report/definition/pages -name "visual.json" -print0 | \
-  xargs -0 -I{} sh -c \
-  'HAS=$(jq -r "(.visual.objects != null) or (.visual.visualContainerObjects != null)" "{}"); \
-   [ "$HAS" = "true" ] && echo "{}"'
-```
-
-**Step 5 — For each flagged visual, identify what is overridden:**
-```bash
-jq '{visualType: .visual.visualType, objects: (.visual.objects | keys // []), vco: (.visual.visualContainerObjects | keys // [])}' visual.json
-```
-
-**Step 6 — Determine whether each override is intentional or stale** (see `references/theme-compliance.md` for severity levels and fix decision tree).
+**Step 3 — Continue with full audit process** — see **`references/theme-compliance.md`** for the complete workflow: scanning all visuals for bespoke overrides, classifying stale vs intentional vs CF, severity levels, and fix decision tree.
 
 ## Workflow: Enforce Theme (Clear Overrides)
 
@@ -123,6 +107,20 @@ When building or substantially revising a theme:
 
 For detailed design guidance, see **`references/theme-authoring.md`**. For visual-type override patterns, see **`references/visual-type-overrides.md`**.
 
+## Workflow: Promote Bespoke Formatting to Theme
+
+When a `visual.json` has formatting that should become a theme default — either for that visual type or for all visuals — promote it:
+
+1. **Identify** what's in `visual.objects` (chart-specific) and `visual.visualContainerObjects` (container chrome)
+2. **Decide** whether it belongs in the wildcard (`["*"]["*"]`) or a visual-type section (`["lineChart"]["*"]`)
+3. **Write** the value into the theme with `jq`, then validate
+4. **Remove** the override from the visual, then validate
+5. **Verify** the visual still renders correctly
+
+Both `objects` and `visualContainerObjects` properties map to the same `visualStyles[type][state]` section in the theme. The distinction in visual.json doesn't exist in the theme.
+
+For complete property mapping tables, wildcard vs visual-type decision guide, color handling, and batch promotion across many visuals, see **`references/promoting-formatting.md`**.
+
 ## Workflow: Validate a Theme
 
 Beyond basic JSON validity, check structural completeness:
@@ -159,10 +157,27 @@ After JSON validation, deploy and visually verify:
 
 | Resource | URL |
 |----------|-----|
-| Official report theme JSON schema (versioned) | [microsoft/powerbi-desktop-samples — Report Theme JSON Schema](https://github.com/microsoft/powerbi-desktop-samples/tree/main/Report%20Theme%20JSON%20Schema) |
+| Official report theme JSON schema (versioned, Draft 7) | [microsoft/powerbi-desktop-samples — Report Theme JSON Schema](https://github.com/microsoft/powerbi-desktop-samples/tree/main/Report%20Theme%20JSON%20Schema) |
+| Latest schema (v2.152, March 2026, exploration v5.71) — **check repo for newer** | [reportThemeSchema-2.152.json](https://github.com/microsoft/powerbi-desktop-samples/blob/main/Report%20Theme%20JSON%20Schema/reportThemeSchema-2.152.json) |
+| Raw schema URL (for `$schema` IDE integration) — **update version as needed** | `https://raw.githubusercontent.com/microsoft/powerbi-desktop-samples/main/Report%20Theme%20JSON%20Schema/reportThemeSchema-2.152.json` |
 | Microsoft Learn — Use report themes in Power BI Desktop | https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-report-themes |
+| Microsoft Learn — Report theme JSON file format | https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-report-themes#report-theme-json-file-format |
 | Community theme templates | [deldersveld/PowerBI-ThemeTemplates](https://github.com/deldersveld/PowerBI-ThemeTemplates) |
 | PBIR item schemas | [microsoft/powerbi-desktop-samples — item-schemas](https://github.com/microsoft/powerbi-desktop-samples/tree/main/item-schemas) |
+
+### IDE Integration (`$schema`)
+
+Add a `$schema` property to the theme JSON to enable autocomplete and validation in VS Code (or any JSON Schema-aware editor):
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/powerbi-desktop-samples/main/Report%20Theme%20JSON%20Schema/reportThemeSchema-2.152.json",
+  "name": "MyTheme",
+  "dataColors": ["#1971c2", ...]
+}
+```
+
+The schema is used verbatim by Power BI Desktop to validate themes on import — if the JSON fails schema validation, Power BI Desktop will reject the theme. Always target the schema version that matches the Power BI Desktop version in use. Schemas follow the pattern `reportThemeSchema-2.{version}.json` where the version matches the monthly Desktop release.
 
 ## Theme Top-Level Keys
 
@@ -170,16 +185,17 @@ After JSON validation, deploy and visually verify:
 |-----|------|---------|
 | `name` | string | Display name shown in Power BI UI |
 | `dataColors` | string[] | Ordered hex palette for data series |
-| `sentimentColors` | object | `good`, `bad`, `neutral` for CF measure returns |
-| `maximum` / `center` / `minimum` | string | Gradient color extremes |
-| `foreground` variants | string | `foreground`, `foregroundLight`, `foregroundDark`, `foregroundNeutral` |
+| `good` / `bad` / `neutral` | string | Flat hex keys for CF measure semantic colors |
+| `maximum` / `center` / `minimum` | string | Gradient color extremes (flat hex keys) |
+| `foreground` variants | string | `foreground`, `foregroundLight`, `foregroundDark`, `foregroundNeutralSecondary`, etc. |
 | `background` variants | string | `background`, `backgroundLight`, `backgroundNeutral`, `backgroundDark` |
-| `textClasses` | object | Typography per semantic role (`title`, `label`, `callout`, `header`, etc.) |
+| `textClasses` | object | Typography per semantic role (`title`, `label`, `callout`, `header`, `boldLabel`, etc.) |
 | `visualStyles` | object | `[visualType][state]` formatting cascade |
 
 ## References
 
-- **`references/theme-authoring.md`** — Color system design, typography, wildcard minimum set, promoting bespoke visual.json formatting to theme level
+- **`references/theme-authoring.md`** — Color system design, typography, wildcard minimum set, schema integration
+- **`references/promoting-formatting.md`** — Promoting bespoke visual.json formatting to theme: objects vs visualContainerObjects, wildcard vs visual-type, property mapping tables, color handling, batch promotion
 - **`references/theme-compliance.md`** — Systematic audit workflow, stale override classification, severity levels, fix decision tree
 - **`references/visual-type-overrides.md`** — Override patterns for textbox, image, shape, card, kpi, slicer, lineChart, barChart, tableEx, and matrix
 

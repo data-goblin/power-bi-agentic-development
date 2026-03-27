@@ -2,6 +2,26 @@
 
 Design guidance for creating and evolving Power BI report themes. This covers decisions and structure — for JSON mechanics, jq patterns, and filter pane properties, see `pbir-format` skill → `references/theme.md`.
 
+## Reading Theme Files Efficiently
+
+**CRITICAL:** Theme JSON files can be 75KB+ and 2000+ lines. Never read the full file — always use targeted `jq` queries. Start by checking keys, then drill into specific paths:
+
+```bash
+# Step 1: Check what top-level keys exist (never read the whole file)
+jq 'keys' "$THEME"
+
+# Step 2: Query specific sections only
+jq '.textClasses | keys' "$THEME"
+jq '.visualStyles | keys' "$THEME"
+jq '.visualStyles["*"]["*"] | keys' "$THEME"
+jq '.visualStyles.textbox' "$THEME"
+jq '.dataColors' "$THEME"
+```
+
+Never use `cat`, `head`, or the `Read` tool on theme files.
+
+---
+
 ## Starting Point
 
 Never author a theme from an empty object. Start from:
@@ -10,12 +30,28 @@ Never author a theme from an empty object. Start from:
 2. **Community templates** — [deldersveld/PowerBI-ThemeTemplates](https://github.com/deldersveld/PowerBI-ThemeTemplates) has snippets for individual visual types.
 3. **Existing report theme** — export from Power BI Service via View → Themes → Save current theme, then extend.
 
-Then check which version of the theme schema to target:
+### Schema Integration (Recommended)
 
-```bash
-# Schema versions are in the filename: reportThemeSchema-2.130.json
-# Target the latest available at: https://github.com/microsoft/powerbi-desktop-samples/tree/main/Report%20Theme%20JSON%20Schema
+Add a `$schema` property as the first key to enable IDE autocomplete and inline validation in VS Code. Two schema URLs are used in practice:
+
+```json
+// Generic Power BI schema reference (used in exported themes)
+{ "$schema": "https://powerbi.com/product/schema#reportTheme" }
+
+// Versioned GitHub schema (recommended for authoring — enables full validation)
+{ "$schema": "https://raw.githubusercontent.com/microsoft/powerbi-desktop-samples/main/Report%20Theme%20JSON%20Schema/reportThemeSchema-2.152.json" }
 ```
+
+Use the versioned GitHub URL when authoring or editing themes. Use the generic `powerbi.com` URL only if it was already present in an exported theme and you're not changing it.
+```
+
+The schema is versioned monthly alongside Power BI Desktop releases (pattern: `reportThemeSchema-2.{version}.json`). The latest as of March 2026 is `2.152` (exploration version 5.71). Target the version matching the Desktop release the report consumers are using.
+
+- Schema index (check for newer versions — schemas are released monthly): https://github.com/microsoft/powerbi-desktop-samples/tree/main/Report%20Theme%20JSON%20Schema
+- The schema is Draft 7 compliant and is used verbatim by Desktop to validate themes on import. Invalid themes are rejected.
+- In VS Code, trigger autocomplete with Ctrl+Space to see valid property names and enum values from the Format pane.
+
+The `visualStyles` section of the schema documents every property available for each visual type — this is the most reliable reference for which properties exist and what their valid values are.
 
 ---
 
@@ -39,7 +75,7 @@ Rules:
 
 ### 2. Semantic Colors
 
-Used by conditional formatting measures that return color name strings (`"good"`, `"bad"`, `"neutral"`). These colors carry implied meaning and should never appear as series colors.
+Flat top-level hex string keys used by conditional formatting measures that return color name strings (`"good"`, `"bad"`, `"neutral"`). These are NOT nested under a `sentimentColors` object — they are individual keys at the root level of the theme JSON.
 
 ```json
 "good": "#2f9e44",
@@ -103,9 +139,9 @@ Text classes define font properties by semantic role. Every defined class overri
 
 ### Font Choice
 
-- Use `"'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif"` for regular weight
-- Use `"'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif"` for emphasis
-- Do not use custom fonts — they will not render on machines where they are not installed
+- Use `"Segoe UI"` for regular weight, `"Segoe UI Semibold"` for emphasis — short name form only
+- In `visualStyles` and `textClasses`: use the short name (`"Segoe UI Semibold"`). The long CSS font stack format (`"'Segoe UI Semibold', wf_segoe-ui_semibold, ..."`) is for `outspacePane`/`filterCard` only.
+- Do not use custom fonts — Power BI only supports its built-in font list. Supported options include: Arial, Calibri, Candara, Consolas, Courier New, DIN, DIN Light, Georgia, Segoe UI, Segoe UI Light, Segoe UI Semibold, Segoe UI Bold, Tahoma, Times New Roman, Trebuchet MS, Verdana (confirmed from pbir object model)
 - Mixing more than two font weights in a report creates visual noise
 
 ### Example `textClasses` Block
@@ -114,27 +150,27 @@ Text classes define font properties by semantic role. Every defined class overri
 "textClasses": {
   "callout": {
     "fontSize": 32,
-    "fontFace": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif",
+    "fontFace": "Segoe UI",
     "color": {"solid": {"color": "#343a40"}}
   },
   "title": {
     "fontSize": 14,
-    "fontFace": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif",
+    "fontFace": "Segoe UI Semibold",
     "color": {"solid": {"color": "#343a40"}}
   },
   "header": {
     "fontSize": 12,
-    "fontFace": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif",
+    "fontFace": "Segoe UI Semibold",
     "color": {"solid": {"color": "#343a40"}}
   },
   "label": {
     "fontSize": 11,
-    "fontFace": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif",
+    "fontFace": "Segoe UI",
     "color": {"solid": {"color": "#495057"}}
   },
   "dataTitle": {
     "fontSize": 12,
-    "fontFace": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif",
+    "fontFace": "Segoe UI",
     "color": {"solid": {"color": "#868e96"}}
   }
 }
@@ -157,7 +193,7 @@ At a minimum, set:
       "title": [{
         "show": true,
         "fontSize": 14,
-        "fontFamily": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif",
+        "fontFamily": "Segoe UI Semibold",
         "fontColor": {"solid": {"color": "#343a40"}},
         "background": {"solid": {"color": {"ThemeDataColor": {"ColorId": 7, "Percent": 0}}}}
       }],
@@ -214,33 +250,7 @@ See `references/visual-type-overrides.md` for JSON patterns for each of these.
 
 ## Promoting Bespoke Visual Formatting to Theme
 
-When a `visual.json` has formatting that should apply to all visuals of its type:
-
-1. **Identify the override:** Read the visual's `objects` (for chart properties) or `visualContainerObjects` (for container chrome)
-
-2. **Copy to the correct theme key:**
-   - `visualContainerObjects.title` → `visualStyles["<type>"]["*"].title`
-   - `objects.legend` → `visualStyles["<type>"]["*"].legend`
-   - `objects.categoryAxis` → `visualStyles["<type>"]["*"].categoryAxis`
-
-3. **Apply with jq:**
-   ```bash
-   # Example: promote a line chart legend setting to the theme
-   jq '.visualStyles.lineChart["*"].legend = [{"position": "Bottom", "show": true}]' \
-     "$THEME" > "$THEME.tmp" && mv "$THEME.tmp" "$THEME"
-   ```
-
-4. **Remove the override from the visual:**
-   ```bash
-   jq 'del(.visual.objects.legend)' visual.json > tmp && mv tmp visual.json
-   ```
-
-5. **Validate both files:**
-   ```bash
-   jq empty "$THEME" && jq empty visual.json
-   ```
-
-6. **Verify the visual still renders the same way** — if it does, the promotion was successful. If it looks different, the property syntax may differ between `objects` and `visualStyles` (usually a wrapper array difference).
+For detailed guidance on promoting bespoke visual.json formatting back into the theme — including the objects vs visualContainerObjects distinction, wildcard vs visual-type decisions, and property mapping examples — see **`references/promoting-formatting.md`**.
 
 ---
 

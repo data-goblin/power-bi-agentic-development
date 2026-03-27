@@ -2,7 +2,25 @@
 
 Patterns for `visualStyles["<type>"]["*"]` sections in a Power BI theme. Each entry overrides the wildcard `["*"]["*"]` defaults for that specific visual type. Properties omitted here inherit from the wildcard.
 
-Reference the [Report Theme JSON Schema](https://github.com/microsoft/powerbi-desktop-samples/tree/main/Report%20Theme%20JSON%20Schema) for the full list of valid properties per visual type.
+**Always verify property names before using them.** The examples in this file are based on the SQLBI/Data Goblins example theme and the `pbir schema` CLI. Use the following to discover and confirm correct property names:
+
+```bash
+# List all containers for a visual type
+pbir schema containers lineChart
+
+# Describe exact properties in a container (with types and constraints)
+pbir schema describe lineChart.valueAxis
+
+# Check the official schema for complete reference
+# https://github.com/microsoft/powerbi-desktop-samples/tree/main/Report%20Theme%20JSON%20Schema
+```
+
+**Common naming gotchas:**
+- Matrix visuals use `pivotTable` as the theme key — not `matrix`
+- Slicers use `textSize` for font size — not `fontSize`
+- KPI trend is `trendline` (lowercase L) — not `trendLine`
+- Table/matrix column color is `backColor` — not `backgroundColor`
+- Card value/label color property is `color` — not `fontColor`
 
 ---
 
@@ -95,13 +113,13 @@ Cards typically display a single metric. The category label is often redundant i
   "*": {
     "labels": [{
       "fontSize": 32,
-      "fontFamily": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif",
+      "fontFamily": "Segoe UI Semibold",
       "color": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}}
     }],
     "categoryLabels": [{
       "show": true,
       "fontSize": 12,
-      "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif",
+      "fontFamily": "Segoe UI",
       "color": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0.4}}}}
     }]
   }
@@ -117,9 +135,9 @@ KPI visuals show a value, trend, and goal. Suppress goal text if redundant; ensu
   "*": {
     "indicator": [{
       "fontSize": 36,
-      "fontFamily": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif"
+      "fontFamily": "Segoe UI Semibold"
     }],
-    "trendLine": [{
+    "trendline": [{
       "show": true
     }],
     "goals": [{
@@ -136,11 +154,11 @@ KPI visuals show a value, trend, and goal. Suppress goal text if redundant; ensu
   "*": {
     "cardTitle": [{
       "fontSize": 12,
-      "fontFamily": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif"
+      "fontFamily": "Segoe UI Semibold"
     }],
     "dataLabels": [{
       "fontSize": 12,
-      "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif"
+      "fontFamily": "Segoe UI"
     }],
     "bar": [{"show": false}]
   }
@@ -153,20 +171,20 @@ KPI visuals show a value, trend, and goal. Suppress goal text if redundant; ensu
 
 ### `slicer`
 
-Slicers need item and header font set to match the report's typography.
+Slicers need item and header font set to match the report's typography. Note: slicer uses `textSize` (not `fontSize`) for item and header font sizes.
 
 ```json
 "slicer": {
   "*": {
     "items": [{
-      "fontSize": 12,
-      "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif",
+      "textSize": 12,
+      "fontFamily": "Segoe UI",
       "fontColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}}
     }],
     "header": [{
       "show": true,
-      "fontSize": 12,
-      "fontFamily": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif",
+      "textSize": 12,
+      "fontFamily": "Segoe UI Semibold",
       "fontColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}}
     }]
   },
@@ -180,19 +198,19 @@ Slicers need item and header font set to match the report's typography.
 
 ### `advancedSlicerVisual`
 
-The newer slicer visual type. Container chrome rules are the same as `slicer`.
+The newer slicer visual type. Uses the same `textSize` property for font sizes.
 
 ```json
 "advancedSlicerVisual": {
   "*": {
     "items": [{
-      "fontSize": 12,
-      "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif"
+      "textSize": 12,
+      "fontFamily": "Segoe UI"
     }],
     "header": [{
       "show": true,
-      "fontSize": 12,
-      "fontFamily": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif"
+      "textSize": 12,
+      "fontFamily": "Segoe UI Semibold"
     }]
   }
 }
@@ -213,19 +231,19 @@ Legend at the bottom is more readable than the right-side default. Minimize axis
       "show": true,
       "position": "Bottom",
       "fontSize": 11,
-      "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif"
+      "fontFamily": "Segoe UI"
     }],
     "categoryAxis": [{
       "show": true,
       "fontSize": 11,
-      "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif"
+      "fontFamily": "Segoe UI"
     }],
     "valueAxis": [{
       "show": true,
       "fontSize": 11,
-      "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif",
+      "fontFamily": "Segoe UI",
       "gridlineColor": {"solid": {"color": "#e9ecef"}},
-      "gridlineWeight": 1
+      "gridlineThickness": 1
     }],
     "labels": [{"show": false}]
   }
@@ -241,12 +259,12 @@ Legend at the bottom is more readable than the right-side default. Minimize axis
       "show": true,
       "position": "Bottom",
       "fontSize": 11,
-      "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif"
+      "fontFamily": "Segoe UI"
     }],
     "categoryAxis": [{
       "show": true,
       "fontSize": 11,
-      "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif"
+      "fontFamily": "Segoe UI"
     }],
     "valueAxis": [{
       "show": false
@@ -297,13 +315,13 @@ Tables benefit from clean column headers and readable row text. Alternating row 
   "*": {
     "columnHeaders": [{
       "fontSize": 12,
-      "fontFamily": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif",
+      "fontFamily": "Segoe UI Semibold",
       "fontColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}},
       "backColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0.9}}}}
     }],
     "values": [{
       "fontSize": 11,
-      "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif",
+      "fontFamily": "Segoe UI",
       "fontColorPrimary": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}},
       "backColorPrimary": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 1}}}},
       "fontColorSecondary": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}},
@@ -311,7 +329,7 @@ Tables benefit from clean column headers and readable row text. Alternating row 
     }],
     "total": [{
       "fontSize": 12,
-      "fontFamily": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif"
+      "fontFamily": "Segoe UI Semibold"
     }],
     "grid": [{
       "gridVertical": false,
@@ -322,33 +340,36 @@ Tables benefit from clean column headers and readable row text. Alternating row 
 }
 ```
 
-### `matrix`
+### `pivotTable`
 
-Matrices are similar to tables with the addition of row header hierarchy.
+The theme key for matrix visuals is `pivotTable` — not `matrix`. Using `matrix` will silently have no effect.
 
 ```json
-"matrix": {
+"pivotTable": {
   "*": {
     "columnHeaders": [{
       "fontSize": 12,
-      "fontFamily": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif",
+      "fontFamily": "Segoe UI Semibold",
+      "fontColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}},
       "backColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0.9}}}}
     }],
     "rowHeaders": [{
       "fontSize": 11,
-      "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif",
+      "fontFamily": "Segoe UI",
+      "fontColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0}}}},
+      "backColor": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 1}}}},
       "stepped": true,
       "steppedLayoutIndentation": 16
     }],
     "values": [{
       "fontSize": 11,
-      "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif",
+      "fontFamily": "Segoe UI",
       "backColorPrimary": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 1}}}},
       "backColorSecondary": {"solid": {"color": {"ThemeDataColor": {"ColorId": 0, "Percent": 0.95}}}}
     }],
     "total": [{
       "fontSize": 12,
-      "fontFamily": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif"
+      "fontFamily": "Segoe UI Semibold"
     }],
     "grid": [{
       "gridVertical": false,
@@ -369,7 +390,7 @@ Matrices are similar to tables with the addition of row header hierarchy.
   "*": {
     "calloutValue": [{
       "fontSize": 24,
-      "fontFamily": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif"
+      "fontFamily": "Segoe UI Semibold"
     }],
     "labels": [{"show": true, "fontSize": 11}]
   }
