@@ -77,7 +77,6 @@ You can also drag any `.md` skill file into Copilot Chat or reference it with `#
 | [`tmdl`](plugins/pbip/skills/tmdl/) | pbip | Author and edit TMDL files directly in PBIP projects |
 | [`pbip`](plugins/pbip/skills/pbip/) | pbip | Power BI Project (PBIP) format, structure, and file types |
 | [`pbir-format`](plugins/pbip/skills/pbir-format/) | pbip | Skill for working with PBIR metadata files (visual.json, report.json, themes, filters, report extensions / thin measures, visual calculations) |
-| [`standardize-naming-conventions`](plugins/semantic-models/skills/standardize-naming-conventions/) | semantic-models | Audit and standardize naming conventions in semantic models |
 | [`pbi-report-design`](plugins/reports/skills/pbi-report-design/) | reports | Power BI report design principles, layout, KPI/card/table patterns |
 | [`deneb-visuals`](plugins/reports/skills/deneb-visuals/) | reports | Deneb custom visuals with Vega and Vega-Lite specs |
 | [`r-visuals`](plugins/reports/skills/r-visuals/) | reports | R script visuals (ggplot2) in Power BI reports |
@@ -86,9 +85,12 @@ You can also drag any `.md` skill file into Copilot Chat or reference it with `#
 
 ### Commands
 
+> In Claude Code, slash commands and skills have coalesced. Commands are simply more prescriptive workflows, but they take the same structure as a skill. Skills are not workflows nor should they be prescriptive.
+
 | Command | Plugin | Description |
 |---------|--------|-------------|
 | [`/suggest-rule`](plugins/tabular-editor/commands/suggest-rule.md) | tabular-editor | Generate BPA rules from descriptions |
+| [`/standardize-naming-conventions`](plugins/semantic-models/skills/standardize-naming-conventions/) | semantic-models | Audit and standardize naming conventions in semantic models |
 
 ### Agents
 
