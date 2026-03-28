@@ -1,0 +1,37 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.7.0/schema.json",
+  "name": "e67b605e16fe4092",
+  "position": {
+    "x": 1523,
+    "y": 152,
+    "z": 4,
+    "height": 115,
+    "width": 361
+  },
+  "visual": {
+    "visualType": "slicer",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Date"
+                    }
+                  },
+                  "Property": "Calendar Quarter Year (ie Q1 2021)"
+                }
+              },
+              "queryRef": "Date.Calendar Quarter Year (ie Q1 2021)",
+              "nativeQueryRef": "Calendar Quarter Year (ie Q1 2021)",
+              "active": true
+            }
+          ]
+        }
+      }
+    }
+  }
+}
