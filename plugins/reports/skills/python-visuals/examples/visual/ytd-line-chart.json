@@ -1,0 +1,125 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.7.0/schema.json",
+  "name": "1a2b3c4d5e6f7890",
+  "position": {
+    "x": 20,
+    "y": 80,
+    "z": 1,
+    "height": 635,
+    "width": 400,
+    "tabOrder": 1
+  },
+  "visual": {
+    "visualType": "pythonVisual",
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Python (matplotlib)'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "subTitle": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Orders",
+                      "Schema": "extension"
+                    }
+                  },
+                  "Property": "Order Lines YTD"
+                }
+              },
+              "queryRef": "Orders.Order Lines YTD",
+              "nativeQueryRef": "Order Lines YTD"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Orders",
+                      "Schema": "extension"
+                    }
+                  },
+                  "Property": "Order Lines (PY) YTD"
+                }
+              },
+              "queryRef": "Orders.Order Lines (PY) YTD",
+              "nativeQueryRef": "Order Lines (PY) YTD"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Date"
+                    }
+                  },
+                  "Property": "Calendar Month (ie Jan)"
+                }
+              },
+              "queryRef": "Date.Calendar Month (ie Jan)",
+              "nativeQueryRef": "Calendar Month (ie Jan)"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "script": [
+        {
+          "properties": {
+            "source": {
+              "expr": {
+                "Literal": {
+                  "Value": "'import matplotlib.pyplot as plt\nimport numpy as np\nfrom matplotlib.ticker import FuncFormatter\n\n# Colors\nCOLORS = {\n    \"current\": \"#5B8DBE\",\n    \"py\": \"#D4A574\",\n    \"gray_700\": \"#495057\",\n    \"gray_600\": \"#6C757D\",\n    \"gray_400\": \"#ADB5BD\"\n}\n\n# Month order\nmonth_order = [\"Jan\", \"Feb\", \"Mar\", \"Apr\", \"May\", \"Jun\", \"Jul\", \"Aug\", \"Sep\", \"Oct\", \"Nov\", \"Dec\"]\n\n# Sort by month\ndataset[\"month_index\"] = dataset[\"Calendar Month (ie Jan)\"].apply(lambda x: month_order.index(x) if x in month_order else -1)\ndataset = dataset.sort_values(\"month_index\")\n\n# Get last index\nlast_idx = len(dataset) - 1\n\n# Create figure with larger size\nfig, ax = plt.subplots(figsize=(5.5, 8.8))\n\n# Plot lines without markers\nax.plot(\n    dataset[\"month_index\"],\n    dataset[\"Order Lines YTD\"],\n    color=COLORS[\"current\"],\n    linewidth=3.5,\n    label=\"Order Lines YTD\"\n)\n\nax.plot(\n    dataset[\"month_index\"],\n    dataset[\"Order Lines (PY) YTD\"],\n    color=COLORS[\"py\"],\n    linewidth=3.5,\n    linestyle=\"--\",\n    label=\"Order Lines (PY) YTD\"\n)\n\n# Add marker ONLY on last point for both lines\nax.plot(\n    dataset.iloc[last_idx][\"month_index\"],\n    dataset.iloc[last_idx][\"Order Lines YTD\"],\n    marker=\"o\",\n    markersize=12,\n    markerfacecolor=\"white\",\n    markeredgecolor=COLORS[\"current\"],\n    markeredgewidth=3.5\n)\n\nax.plot(\n    dataset.iloc[last_idx][\"month_index\"],\n    dataset.iloc[last_idx][\"Order Lines (PY) YTD\"],\n    marker=\"o\",\n    markersize=12,\n    markerfacecolor=\"white\",\n    markeredgecolor=COLORS[\"py\"],\n    markeredgewidth=3.5\n)\n\n# Add labels ONLY on last point\ndef format_k(val):\n    return f\"{int(round(val/1000))}K\"\n\nax.text(\n    dataset.iloc[last_idx][\"month_index\"] + 0.4,\n    dataset.iloc[last_idx][\"Order Lines YTD\"],\n    format_k(dataset.iloc[last_idx][\"Order Lines YTD\"]),\n    fontsize=14,\n    fontweight=\"bold\",\n    color=COLORS[\"current\"],\n    va=\"center\"\n)\n\nax.text(\n    dataset.iloc[last_idx][\"month_index\"] + 0.4,\n    dataset.iloc[last_idx][\"Order Lines (PY) YTD\"],\n    format_k(dataset.iloc[last_idx][\"Order Lines (PY) YTD\"]),\n    fontsize=14,\n    fontweight=\"bold\",\n    color=COLORS[\"py\"],\n    va=\"center\"\n)\n\n# X-axis with breathing room for labels\nax.set_xlim(-0.5, 13.5)\nax.set_xticks(range(12))\nax.set_xticklabels(month_order, rotation=45, ha=\"right\", fontsize=13)\n\n# Y-axis with breathing room\nmax_val = max(dataset[\"Order Lines YTD\"].max(), dataset[\"Order Lines (PY) YTD\"].max())\nax.set_ylim(0, max_val * 1.15)\nax.yaxis.set_major_formatter(FuncFormatter(lambda x, p: f\"{int(round(x/1000))}K\"))\nax.set_ylabel(\"Order Lines YTD\", fontsize=14, color=COLORS[\"gray_700\"])\n\n# Grid and spines\nax.grid(axis=\"y\", color=COLORS[\"gray_400\"], linewidth=0.8, alpha=0.5)\nax.grid(axis=\"x\", visible=False)\nax.spines[\"top\"].set_visible(False)\nax.spines[\"right\"].set_visible(False)\nax.spines[\"left\"].set_color(COLORS[\"gray_400\"])\nax.spines[\"bottom\"].set_color(COLORS[\"gray_400\"])\n\n# Legend\nax.legend(loc=\"upper left\", frameon=False, fontsize=13)\n\n# Styling\nax.tick_params(axis=\"both\", labelsize=13, colors=COLORS[\"gray_600\"], length=0)\n\n# Adjust layout with right margin for labels\nfig.subplots_adjust(right=0.85)\nplt.tight_layout(rect=[0, 0, 0.85, 1])\nplt.show()'"
+                }
+              }
+            },
+            "provider": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Python'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
