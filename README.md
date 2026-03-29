@@ -91,7 +91,7 @@ You can also drag any `.md` skill file into Copilot Chat or reference it with `#
 | [`tmdl`](plugins/pbip/skills/tmdl/) | pbip | Author and edit TMDL files directly |
 | [`pbip`](plugins/pbip/skills/pbip/) | pbip | Power BI Project (PBIP) format, structure, and file types |
 | [`pbir-format`](plugins/pbip/skills/pbir-format/) | pbip | Author and edit PBIR metadata files directly (visual.json, report.json, themes, filters, report extensions / thin measures, visual calculations) |
-| [`pbi-report-design`](plugins/reports/skills/pbi-report-design/) (WIP) | reports | Power BI report design and style |
+| [`pbi-report-design`](plugins/reports/skills/pbi-report-design/) (Very WIP) | reports | Power BI report design and style |
 | [`modifying-theme-json`](plugins/reports/skills/modifying-theme-json/) (WIP) | reports | Design, enforce, audit, and validate Power BI report themes |
 | [`deneb-visuals`](plugins/reports/skills/deneb-visuals/) | reports | Deneb visuals with Vega and Vega-Lite specs |
 | [`r-visuals`](plugins/reports/skills/r-visuals/) | reports | R visuals (ggplot2) in Power BI reports |
