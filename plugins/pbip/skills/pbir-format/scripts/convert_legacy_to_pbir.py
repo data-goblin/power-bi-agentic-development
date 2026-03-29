@@ -43,7 +43,27 @@ LEGACY_ONLY_SETTINGS = {
     "allowDataPointLassoSelect",
     "optOutNewFilterPaneExperience",
     "useNewFilterPaneExperience",
-    "queryLimitOption",  # Not in PBIR schema
+}
+
+# Settings with integer->string conversions
+# exportDataMode: 0=None, 1=AllowSummarized, 2=AllowSummarizedAndUnderlying
+EXPORT_DATA_MODE_MAP = {
+    0: "None",
+    1: "AllowSummarized",
+    2: "AllowSummarizedAndUnderlying",
+    "AllowAll": "AllowSummarizedAndUnderlying",
+    "Disabled": "None",
+}
+
+# queryLimitOption: legacy int -> PBIR string
+QUERY_LIMIT_MAP = {
+    0: "None",
+    1: "Shared",
+    2: "Premium",
+    3: "SQLServerAS",
+    4: "AzureAS",
+    5: "Custom",
+    6: "Auto",
 }
 
 # Combo chart role mapping: legacy Y/Y2 -> PBIR ColumnY/LineY
@@ -247,6 +267,7 @@ def convert_sort_definition(prototype_query):
         sort_entry = {"direction": "Descending" if direction == 2 else "Ascending"}
 
         # Build field reference
+        found = False
         for field_type in ["Measure", "Column"]:
             if field_type in ob.get("Expression", {}):
                 expr = ob["Expression"][field_type]
@@ -263,7 +284,35 @@ def convert_sort_definition(prototype_query):
                         "Property": prop
                     }
                 }
+                found = True
                 break
+
+        # Fallback for Aggregation or other expression types
+        if not found and "Aggregation" in ob.get("Expression", {}):
+            agg = ob["Expression"]["Aggregation"]
+            inner_expr = agg.get("Expression", {})
+            for ft in ["Column", "Measure"]:
+                if ft in inner_expr:
+                    source = inner_expr[ft].get("Expression", {}).get("SourceRef", {}).get("Source", "")
+                    entity_name = resolve_entity_name(prototype_query, source)
+                    prop = inner_expr[ft].get("Property", "")
+                    sort_entry["field"] = {
+                        "Aggregation": {
+                            "Expression": {
+                                ft: {
+                                    "Expression": {"SourceRef": {"Entity": entity_name}},
+                                    "Property": prop
+                                }
+                            },
+                            "Function": agg.get("Function", 0)
+                        }
+                    }
+                    found = True
+                    break
+
+        # Skip sort entries without field refs (would fail validation)
+        if not found:
+            continue
 
         sorts.append(sort_entry)
 
@@ -464,6 +513,20 @@ def convert_report_config(legacy_report):
             }
         report_json["themeCollection"] = pbir_themes
 
+    # Ensure themeCollection exists (required by schema)
+    if "themeCollection" not in report_json:
+        report_json["themeCollection"] = {
+            "baseTheme": {
+                "name": "CY24SU10",
+                "reportVersionAtImport": {
+                    "visual": "1.8.95",
+                    "report": "2.0.95",
+                    "page": "1.3.95"
+                },
+                "type": "SharedResources",
+            }
+        }
+
     # Filter config
     if filters:
         converted_filters = convert_filters(filters)
@@ -476,40 +539,79 @@ def convert_report_config(legacy_report):
 
     # Resource packages
     if "resourcePackages" in legacy_report:
+        # Valid PBIR package types and item types
+        VALID_PKG_TYPES = {"CustomVisual", "RegisteredResources", "SharedResources", "OrganizationalStoreCustomVisual"}
+        VALID_ITEM_TYPES = {
+            "CustomVisualJavascript", "CustomVisualsCss", "CustomVisualScreenshot",
+            "CustomVisualIcon", "CustomVisualWatermark", "CustomVisualMetadata",
+            "Image", "ShapeMap", "CustomTheme", "BaseTheme", "DashboardTheme",
+            "DashboardBaseTheme", "HighContrastTheme", "AppNavigation", "AppTheme", "AppBaseTheme",
+        }
+        # Legacy item type int -> PBIR string
+        ITEM_TYPE_MAP = {
+            0: "CustomVisualJavascript",
+            1: "CustomVisualsCss",
+            2: "CustomVisualScreenshot",
+            3: "CustomVisualIcon",
+            4: "CustomVisualWatermark",
+            5: "CustomVisualMetadata",
+            100: None,  # Infer from extension
+            202: "BaseTheme",
+        }
+
         pbir_packages = []
         for rp in legacy_report["resourcePackages"]:
             pkg = rp.get("resourcePackage", rp)
-            pbir_pkg = {
-                "name": pkg.get("name", ""),
-                "type": pkg.get("name", ""),  # In PBIR, type matches name for standard packages
-            }
+            pkg_name = pkg.get("name", "")
+
+            # Determine package type
+            pkg_type_raw = pkg.get("type", pkg_name)
+            if isinstance(pkg_type_raw, int):
+                # Legacy int types: 1=RegisteredResources, 2=SharedResources, 0=CustomVisual
+                pkg_type = {0: "CustomVisual", 1: "RegisteredResources", 2: "SharedResources"}.get(pkg_type_raw, "CustomVisual")
+            elif isinstance(pkg_type_raw, str) and pkg_type_raw in VALID_PKG_TYPES:
+                pkg_type = pkg_type_raw
+            elif pkg_name in VALID_PKG_TYPES:
+                pkg_type = pkg_name
+            else:
+                pkg_type = "CustomVisual"
+
+            pbir_pkg = {"name": pkg_name, "type": pkg_type}
             items = []
             for item in pkg.get("items", []):
                 pbir_item = {
                     "name": item.get("name", ""),
                     "path": item.get("path", ""),
                 }
-                # Map item type
                 item_type = item.get("type")
-                if item_type == 202:
-                    pbir_item["type"] = "BaseTheme"
-                elif item_type == 100:
-                    # Determine from name/path
-                    if item["name"].endswith(".json"):
-                        pbir_item["type"] = "CustomTheme"
+
+                if isinstance(item_type, int):
+                    mapped = ITEM_TYPE_MAP.get(item_type)
+                    if mapped:
+                        pbir_item["type"] = mapped
                     else:
-                        pbir_item["type"] = "Image"
-                elif isinstance(item_type, str):
+                        # Type 100: infer from extension
+                        iname = item.get("name", "")
+                        if iname.endswith(".json"):
+                            pbir_item["type"] = "CustomTheme"
+                        elif iname.endswith((".png", ".jpg", ".jpeg", ".svg", ".gif")):
+                            pbir_item["type"] = "Image"
+                        else:
+                            pbir_item["type"] = "CustomVisualJavascript"
+                elif isinstance(item_type, str) and item_type in VALID_ITEM_TYPES:
                     pbir_item["type"] = item_type
                 else:
-                    # Default: infer from file extension
-                    name = item.get("name", "")
-                    if name.endswith(".json"):
+                    # Unknown string type -- infer from context
+                    iname = item.get("name", "")
+                    if iname.endswith(".json"):
                         pbir_item["type"] = "CustomTheme"
-                    elif name.endswith((".png", ".jpg", ".jpeg", ".svg", ".gif")):
+                    elif iname.endswith((".png", ".jpg", ".jpeg", ".svg", ".gif")):
                         pbir_item["type"] = "Image"
+                    elif pkg_type == "CustomVisual":
+                        pbir_item["type"] = "CustomVisualJavascript"
                     else:
-                        pbir_item["type"] = "CustomTheme"
+                        pbir_item["type"] = "Image"
+
                 items.append(pbir_item)
             pbir_pkg["items"] = items
             pbir_packages.append(pbir_pkg)
@@ -523,10 +625,12 @@ def convert_report_config(legacy_report):
             # Drop legacy-only settings
             if key in LEGACY_ONLY_SETTINGS:
                 continue
-            # Convert exportDataMode from int to string
-            if key == "exportDataMode" and isinstance(val, int):
-                mode_map = {0: "Disabled", 1: "AllowSummarized", 2: "AllowAll"}
-                pbir_settings[key] = mode_map.get(val, "AllowSummarized")
+            # Convert exportDataMode
+            if key == "exportDataMode":
+                pbir_settings[key] = EXPORT_DATA_MODE_MAP.get(val, val if isinstance(val, str) else "AllowSummarized")
+            # Convert queryLimitOption
+            elif key == "queryLimitOption":
+                pbir_settings[key] = QUERY_LIMIT_MAP.get(val, val if isinstance(val, str) else "Auto")
             else:
                 pbir_settings[key] = val
         if "defaultDrillFilterOtherVisuals" in config:
@@ -729,6 +833,15 @@ def convert_legacy_to_pbir(input_dir, output_dir):
             shutil.rmtree(dst_static)
         shutil.copytree(src_static, dst_static)
         print("  [+] StaticResources/")
+
+    # 8. Copy CustomVisuals (private custom visuals)
+    src_cv = input_path / "CustomVisuals"
+    if src_cv.exists():
+        dst_cv = output_path / "CustomVisuals"
+        if dst_cv.exists():
+            shutil.rmtree(dst_cv)
+        shutil.copytree(src_cv, dst_cv)
+        print("  [+] CustomVisuals/")
 
     print(f"\nConversion complete: {len(sections)} pages, {sum(len(s.get('visualContainers', [])) for s in sections)} visuals")
 
