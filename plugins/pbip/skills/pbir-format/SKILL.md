@@ -149,6 +149,7 @@ A report must be connected to a semantic model. There are two ways to do this:
 
 **Examples:**
 - **`examples/K201-MonthSlicer.Report/`** -- Real PBIR report with 7 visual types (slicer, advancedSlicerVisual, kpi, lineChart, scatterChart, tableEx, textbox), extension measures, bookmarks, conditional formatting
+- **`examples/visuals/`** -- 54 standalone visual.json examples; see `examples/visuals/__index.md` for a catalog. Split into `default/` (minimal, theme-only) and `formatted/` (bespoke formatting, conditional formatting, gradients, filters)
 
 **Core references:**
 - **`references/visual-json.md`** -- visual.json: expressions, field refs, query roles, position, objects vs vCO, selectors, sorting, filters

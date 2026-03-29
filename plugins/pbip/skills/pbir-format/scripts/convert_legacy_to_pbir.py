@@ -4,6 +4,16 @@ Legacy Power BI report.json -> PBIR directory format converter.
 Converts the monolithic legacy report.json (with stringified configs)
 into the PBIR directory structure with individual files per page/visual.
 
+NOTE: This script converts the report definition (legacy report.json) to PBIR
+directory format. It works with:
+  - fab-exported .Report directories (point directly at the exported dir)
+  - PBIX files: unzip first, then point at the Report/ folder inside.
+    The semantic model (DataModel) and definition.pbir/.platform must be
+    handled separately.
+  - PBIP projects: point at the .Report folder containing report.json.
+
+Does NOT support PBIT template files.
+
 Usage:
     python3 convert_legacy_to_pbir.py <input_report_dir> <output_report_dir>
 """
@@ -732,6 +742,12 @@ def convert_legacy_to_pbir(input_dir, output_dir):
     """
     input_path = Path(input_dir)
     output_path = Path(output_dir)
+
+    # Warn if this looks like a PBIX or has no definition.pbir
+    if not (input_path / "definition.pbir").exists() and not (input_path / ".platform").exists():
+        print("NOTE: No definition.pbir or .platform found in input directory.")
+        print("  If converting from a PBIX, ensure you handle definition.pbir and .platform separately.")
+        print("  Proceeding with report definition conversion only.\n")
 
     # Read legacy report.json
     legacy_path = input_path / "report.json"

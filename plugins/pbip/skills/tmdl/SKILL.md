@@ -1,7 +1,7 @@
 ---
 name: tmdl
 version: 0.10.0
-description: This skill should be used as a last resort when the Tabular Editor CLI, Power BI MCP server, or connect-pbid skill are not available. Use when the user asks to "edit TMDL", "add a measure in TMDL", "add a column description", "fix summarizeBy", "TMDL syntax", "write a measure in TMDL", "create a calculated column in TMDL", "fix formatString", "TMDL indentation", or mentions TMDL file editing or direct semantic model file authoring in PBIP projects.
+description: This skill should be used as a last resort when the Tabular Editor CLI, Power BI MCP server, or connect-pbid skill are not available. Use when the user asks to "edit TMDL", "add a measure in TMDL", "add a column description", "fix summarizeBy", "TMDL syntax", "write a measure in TMDL", "create a calculated column in TMDL", "fix formatString", "TMDL indentation", "convert BIM to TMDL", "convert model.bim to TMDL", "BIM to TMDL", "TMDL to BIM", "migrate from BIM to TMDL", or mentions TMDL file editing, BIM-to-TMDL conversion, or direct semantic model file authoring in PBIP projects.
 ---
 
 # TMDL Authoring
@@ -428,6 +428,7 @@ For the complete property reference for every object type, see **`references/obj
 - **`references/object-properties.md`** - Complete property reference for all 30+ TMDL object types with valid enum values for every property type (dataType, summarizeBy, modeType, crossFilteringBehavior, etc.)
 - **`references/column-properties.md`** - Column-specific property guide with `summarizeBy` rules, `formatString` patterns, `PBI_FormatHint` behavior
 - **`references/naming-conventions.md`** - SQLBI naming conventions, display folder conventions, measure table conventions, and calculation group naming
+- **`references/bim-to-tmdl.md`** - Converting between `model.bim` (TMSL) and `definition/` (TMDL) via Tabular Editor CLI or TOM TmdlSerializer
 - **`references/tmdl-file-examples.md`** - Complete examples for every TMDL file type (model, database, expressions, relationships, roles, perspectives, tables, cultures) including backtick-enclosed expressions, field parameters, calculation groups, and date tables
 
 ### Fetching Docs
