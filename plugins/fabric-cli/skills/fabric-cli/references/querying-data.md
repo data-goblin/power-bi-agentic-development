@@ -36,12 +36,4 @@ python3 scripts/execute_dax.py "dest.Workspace/Model.SemanticModel" -q "EVALUATE
 fab rm "dest.Workspace/Model.SemanticModel" -f
 ```
 
-## Get Lakehouse SQL Endpoint
-
-For external SQL clients:
-
-```bash
-fab get "ws.Workspace/LH.Lakehouse" -q "properties.sqlEndpointProperties"
-```
-
-Returns `connectionString` and `id` for SQL connections.
+For lakehouse properties, endpoints, and file/table operations, see [lakehouses.md](./lakehouses.md).

@@ -30,10 +30,22 @@ Activate automatically when tasks involve:
 - The first time you use `fab` run `fab auth status` to make sure the user is authenticated. If not, ask the user to run `fab auth login` to login
 - Always use `fab --help` and `fab <command> --help` the first time you use a command to understand its syntax, first
 - Always try the simple `fab` command alone, first before piping it
-- Always use `-f` when executing command if the flag is available to do so non-interactively
 - Ensure that you avoid removing or moving items, workspaces, or definitions, or changing properties without explicit user direction
 - If a command is blocked in your permissions and you try to use it, stop and ask the user for clarification; never try to circumvent it
-- Use `fab` in non-interactive mode. Interactive mode doesn't work with coding agents
+
+### Always use `-f` (force) on every command that supports it
+
+The `fab` CLI prompts for confirmation on many operations. When stdin is not a terminal (agents, scripts, piped commands), the prompt library crashes with `[UnexpectedError] 22` because it cannot read interactive input. **Always append `-f`** to prevent this. Commands that require it:
+
+- `fab get -q "definition"` ; sensitivity label confirmation
+- `fab export` ; sensitivity label confirmation
+- `fab import` ; overwrite confirmation
+- `fab cp` / `fab cp -r` ; overwrite and sensitivity label confirmation
+- `fab rm` ; delete confirmation
+- `fab assign` / `fab unassign` ; capacity/domain assignment confirmation
+- `fab mv` ; rename/move confirmation
+
+If you see `Warning: Input is not a terminal (fd=0)` or `[UnexpectedError] 22`, the missing `-f` flag is almost certainly the cause.
 
 ## First Run
 
@@ -80,9 +92,9 @@ fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/refreshes" -X post -i '{"ty
 | `fab get -q` | Query specific field | `fab get "Sales.Workspace" -q "id"` |
 | `fab desc` | Check supported commands | `fab desc .SemanticModel` |
 | **Definitions** |||
-| `fab get -q "definition"` | Get full definition | `fab get "ws.Workspace/Model.SemanticModel" -q "definition"` |
-| `fab export` | Export to local | `fab export "ws.Workspace/Nb.Notebook" -o ./backup` |
-| `fab import` | Import from local | `fab import "ws.Workspace/Nb.Notebook" -i ./backup/Nb.Notebook` |
+| `fab get -q "definition"` | Get full definition | `fab get "ws.Workspace/Model.SemanticModel" -q "definition" -f` |
+| `fab export` | Export to local | `fab export "ws.Workspace/Nb.Notebook" -o ./backup -f` |
+| `fab import` | Import from local | `fab import "ws.Workspace/Nb.Notebook" -i ./backup/Nb.Notebook -f` |
 | **Running Jobs** |||
 | `fab job run` | Run synchronously | `fab job run "ws.Workspace/ETL.Notebook"` |
 | `fab job start` | Run asynchronously | `fab job start "ws.Workspace/ETL.Notebook"` |
@@ -93,7 +105,7 @@ fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/refreshes" -X post -i '{"ty
 | `fab api -A powerbi` | Trigger refresh | `fab api -A powerbi "groups/<ws-id>/datasets/<model-id>/refreshes" -X post -i '{"type":"Full"}'` |
 | `fab api -A powerbi` | Check refresh status | `fab api -A powerbi "groups/<ws-id>/datasets/<model-id>/refreshes?\$top=1"` |
 | **DAX Queries** |||
-| `fab get -q "definition"` | Get model schema first | `fab get "ws.Workspace/Model.SemanticModel" -q "definition"` |
+| `fab get -q "definition"` | Get model schema first | `fab get "ws.Workspace/Model.SemanticModel" -q "definition" -f` |
 | `fab api -A powerbi` | Execute DAX | `fab api -A powerbi "groups/<ws-id>/datasets/<model-id>/executeQueries" -X post -i '{"queries":[{"query":"EVALUATE..."}]}'` |
 | **Lakehouse** |||
 | `fab ls` | Browse files/tables | `fab ls "ws.Workspace/LH.Lakehouse/Files"` |
@@ -107,10 +119,10 @@ fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/refreshes" -X post -i '{"ty
 | **Management** |||
 | `fab cp` | Copy items | `fab cp "dev.Workspace/Item.Type" "prod.Workspace" -f` |
 | `fab cp -r` | Copy recursively | `fab cp "dev.Workspace" "prod.Workspace" -r -f` |
-| `fab mv` | Move/rename items | `fab mv "ws.Workspace/Old.Notebook" "ws.Workspace/New.Notebook"` |
+| `fab mv` | Move/rename items | `fab mv "ws.Workspace/Old.Notebook" "ws.Workspace/New.Notebook" -f` |
 | `fab set` | Update properties | `fab set "ws.Workspace/Item.Type" -q displayName -i "New Name"` |
 | `fab rm` | Delete item | `fab rm "ws.Workspace/Item.Type" -f` |
-| `fab assign` | Assign capacity/domain | `fab assign .capacities/cap.Capacity -W ws.Workspace` |
+| `fab assign` | Assign capacity/domain | `fab assign .capacities/cap.Capacity -W ws.Workspace -f` |
 | `fab start/stop` | Start/stop resource | `fab start .capacities/cap.Capacity` |
 
 ## Core Concepts
@@ -298,7 +310,7 @@ fab api workspaces -o /tmp/workspaces.json
 - **Paths require proper extensions** (`.Workspace`, `.SemanticModel`, etc.)
 - **Quote paths with spaces**: `"My Workspace.Workspace"`
 - **Create output directories before export**: `fab export` does not create intermediate directories; `mkdir -p` the output path first or the command fails with `[InvalidPath]`
-- **Use `-f` for non-interactive scripts** (skips prompts; on export, also strips sensitivity labels)
+- **Always use `-f`** on commands that support it; see the [Critical](#always-use--f-force-on-every-command-that-supports-it) section for the full list and why
 - **Semantic model updates**: Use Power BI API (`-A powerbi`) for DAX queries and dataset operations
 
 ## Need More Details?
@@ -323,6 +335,7 @@ fab <command> --help
 - [Quick Start Guide](./references/quickstart.md) - Copy-paste examples for getting started
 - [Essential Commands](./references/essential-commands.md) - Detailed command examples and common workflows
 - [Querying Data](./references/querying-data.md) - Query semantic models and lakehouse tables
+- [Lakehouses](./references/lakehouses.md) - Endpoints, file/table operations, OneLake paths
 - [Semantic Models](./references/semantic-models.md) - TMDL, DAX, refresh, storage mode
 - [Reports](./references/reports.md) - Export, import, visuals, fields
 - [Paginated Reports](./references/paginated-reports.md) - RDL upload, export-to-file, datasources, parameters

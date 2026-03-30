@@ -1,6 +1,6 @@
 ---
 name: refreshing-semantic-model
-version: 0.11.2
+version: 0.11.3
 description: This skill should be used when the user asks to "refresh a semantic model", "trigger a dataset refresh", "refresh specific tables", "refresh partitions", "check refresh status", "monitor refresh history", "do a data-only refresh", "recalculate measures", "clear model data", "cancel a refresh", "validate refresh results", or mentions refresh types, refresh failures, incremental refresh, or enhanced refresh for Power BI semantic models.
 ---
 
