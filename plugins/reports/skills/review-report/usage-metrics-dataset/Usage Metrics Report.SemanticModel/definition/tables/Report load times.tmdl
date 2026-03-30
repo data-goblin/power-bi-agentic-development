@@ -1,0 +1,226 @@
+table 'Report load times'
+	lineageTag: 96a140cd-8e7c-4e48-b86b-424dec870405
+
+	column Timestamp
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: e00d1a4c-4de5-4ad6-9f8d-ea1684e7bc88
+		summarizeBy: none
+		sourceColumn: Timestamp
+
+		variation Variation
+			isDefault
+			relationship: 0a21f399-1dcb-4ce6-af26-a3f141fa16da
+			defaultHierarchy: LocalDateTable_d27e4379-e50d-47cf-aeac-77eb5f688306.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column PbiCluster
+		dataType: string
+		lineageTag: 20f1d500-c0a0-4ec3-9a7e-dbb1067abd42
+		summarizeBy: none
+		sourceColumn: PbiCluster
+
+		annotation SummarizationSetBy = Automatic
+
+	column AppName
+		dataType: string
+		lineageTag: f276504a-c331-4178-bd3f-66a0956f4b76
+		summarizeBy: none
+		sourceColumn: AppName
+
+		annotation SummarizationSetBy = Automatic
+
+	column TenantId
+		dataType: string
+		lineageTag: b01ff4fc-01ba-4f50-a053-ea81e3d4f670
+		summarizeBy: none
+		sourceColumn: TenantId
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserId
+		dataType: string
+		lineageTag: d46f4bb9-eed2-4a9c-bbd8-51881410d748
+		summarizeBy: none
+		sourceColumn: UserId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportId
+		dataType: string
+		lineageTag: 701d4ada-4a18-469c-9567-6093d7391aaf
+		summarizeBy: none
+		sourceColumn: ReportId
+
+		annotation SummarizationSetBy = Automatic
+
+	column GroupId
+		dataType: string
+		lineageTag: a9379168-a7aa-4f68-86ea-c03e3d8f9555
+		summarizeBy: none
+		sourceColumn: GroupId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Client
+		dataType: string
+		lineageTag: 5bb743ad-88da-4685-96ec-5c02c10df39a
+		summarizeBy: none
+		sourceColumn: Client
+
+		annotation SummarizationSetBy = Automatic
+
+	column StartTime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: c1674f3d-a90d-4267-8b12-41608188a052
+		summarizeBy: none
+		sourceColumn: StartTime
+
+		variation Variation
+			isDefault
+			relationship: 04a02bc9-46bd-4135-9a6f-869c0d639cc3
+			defaultHierarchy: LocalDateTable_3b852b25-f44a-4909-b021-a7df8cabefe6.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column EndTime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 8c18e0ad-54f0-4b9c-bc87-9dbc388116b9
+		summarizeBy: none
+		sourceColumn: EndTime
+
+		variation Variation
+			isDefault
+			relationship: d7b0fc44-69d8-4964-9ccd-1628d0e0e291
+			defaultHierarchy: LocalDateTable_3ebb0033-50be-4e6e-8081-ee8c7cf4091f.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column DeviceOSVersion
+		dataType: string
+		lineageTag: bab2b2f7-e550-482b-81af-31003983c3ca
+		summarizeBy: none
+		sourceColumn: DeviceOSVersion
+
+		annotation SummarizationSetBy = Automatic
+
+	column LocationCity
+		dataType: string
+		lineageTag: 839b7272-27e0-4800-99d4-7735192e6820
+		summarizeBy: none
+		sourceColumn: LocationCity
+
+		annotation SummarizationSetBy = Automatic
+
+	column Country
+		dataType: string
+		lineageTag: 905fc576-68d5-4e3a-bcab-7f62c04b56b0
+		summarizeBy: none
+		sourceColumn: Country
+
+		annotation SummarizationSetBy = Automatic
+
+	column loadTime = DATEDIFF('Report load times'[StartTime], 'Report load times'[EndTime], SECOND)
+		formatString: 0
+		lineageTag: 352cfe5c-541b-4c6b-9789-218c95f6852f
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date = DATE(YEAR('Report load times'[Timestamp]), MONTH('Report load times'[Timestamp]), DAY('Report load times'[Timestamp]))
+		formatString: General Date
+		lineageTag: 06b1af1f-0774-4631-bd51-343b4f7534f9
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column OriginalReportId
+		dataType: string
+		lineageTag: 3c764f5d-5c32-47ab-b654-07ff84b19ae5
+		summarizeBy: none
+		sourceColumn: OriginalReportId
+
+		annotation SummarizationSetBy = Automatic
+
+	column OriginalGroupId
+		dataType: string
+		lineageTag: 6943ff8d-2b33-44d4-aadf-ba15220a418b
+		summarizeBy: none
+		sourceColumn: OriginalGroupId
+
+		annotation SummarizationSetBy = Automatic
+
+	column DeviceBrowserVersion
+		dataType: string
+		lineageTag: 812bd21a-4515-44e4-9be6-496a24b84929
+		summarizeBy: none
+		sourceColumn: DeviceBrowserVersion
+
+		annotation SummarizationSetBy = Automatic
+
+	column Browser =
+			
+			SWITCH(TRUE(),
+			        LEFT('Report load times'[DeviceBrowserVersion], 4) = "Edge", "Edge Classic",
+			        LEFT('Report load times'[DeviceBrowserVersion], 3) = "Edg", "Edge Chromium",
+			        LEFT('Report load times'[DeviceBrowserVersion], 21) = "Chrome Mobile Webview", "Chrome Mobile Webview",
+			        LEFT('Report load times'[DeviceBrowserVersion], 13) = "Chrome Mobile", "Chrome Mobile",
+			        LEFT('Report load times'[DeviceBrowserVersion], 6) = "Chrome", "Chrome",
+			        LEFT('Report load times'[DeviceBrowserVersion], 7) = "Firefox", "Firefox",
+			        LEFT('Report load times'[DeviceBrowserVersion], 17) = "Internet Explorer", "Internet Explorer",
+			        LEFT('Report load times'[DeviceBrowserVersion], 13) = "Mobile Safari", "Mobile Safari",
+			        LEFT('Report load times'[DeviceBrowserVersion], 3) = "Safari", "Safari",
+			        LEFT('Report load times'[DeviceBrowserVersion], 8) = "Electron", "Electron",
+			        LEFT('Report load times'[DeviceBrowserVersion], 16) = "Samsung Internet", "Samsung Internet",
+			        "other")
+		lineageTag: bd0a8afc-1993-41e6-8dcf-32cd1e68b42b
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column AppGuid
+		dataType: string
+		lineageTag: 0f219ff0-cf6f-4bda-bf05-9deca7a57a17
+		summarizeBy: none
+		sourceColumn: AppGuid
+
+		annotation SummarizationSetBy = Automatic
+
+	column SessionSource
+		dataType: string
+		lineageTag: 41e4ded6-edac-4d68-b0bc-62d110e5ee6a
+		summarizeBy: none
+		sourceColumn: SessionSource
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Report load times-29c0be13-880a-488d-93af-abefd95f6792' = m
+		mode: import
+		source = ```
+				let 
+				    Source = UsageMetricsDataConnector.GetMetricsData(BaseUrl & "/metadata/v201906/metrics/workspace/" & WorkspaceId & "/reportloads"),
+				    metricsTable = Table.FromRecords(Source),
+				    checkForEmptyTable = if Table.IsEmpty(metricsTable) then
+				                            Table.FromRows
+				                            (
+				                                {
+				                                },
+				                                {
+				                                    "AppGuid","AppName","Client","DeviceBrowserVersion","DeviceOSVersion","EndTime","GroupId","LocationCity","LocationCountry","OriginalGroupId","OriginalReportId","PbiCluster","ReportId","StartTime","TenantId","Timestamp","UserId","SessionSource"
+				                                }
+				                            )
+				                         else
+				                            metricsTable,
+				    finalTable = Table.TransformColumnTypes(checkForEmptyTable, {{"Timestamp", type datetimezone}, {"StartTime", type datetimezone}, {"EndTime", type datetimezone}}),
+				    #"Renamed Columns" = Table.RenameColumns(finalTable,{{"LocationCountry", "Country"}})
+				in
+				    #"Renamed Columns"
+				```
+
+	annotation PBI_QueryRelationships = {"columnCount":17,"keyColumnNames":[],"queryRelationships":[],"columnIdentities":["Section1/Report load times/checkForEmptyTable.{AppGuid,0}","Section1/Report load times/checkForEmptyTable.{AppName,1}","Section1/Report load times/checkForEmptyTable.{Client,2}","Section1/Report load times/checkForEmptyTable.{DeviceBrowserVersion,3}","Section1/Report load times/checkForEmptyTable.{DeviceOSVersion,4}","Section1/Report load times/finalTable.{EndTime,5}","Section1/Report load times/checkForEmptyTable.{GroupId,6}","Section1/Report load times/checkForEmptyTable.{LocationCity,7}","Section1/Report load times/checkForEmptyTable.{LocationCountry,8}","Section1/Report load times/checkForEmptyTable.{OriginalGroupId,9}","Section1/Report load times/checkForEmptyTable.{OriginalReportId,10}","Section1/Report load times/checkForEmptyTable.{PbiCluster,11}","Section1/Report load times/checkForEmptyTable.{ReportId,12}","Section1/Report load times/finalTable.{StartTime,13}","Section1/Report load times/checkForEmptyTable.{TenantId,14}","Section1/Report load times/finalTable.{Timestamp,15}","Section1/Report load times/checkForEmptyTable.{UserId,16}"],"ColumnCount":17,"KeyColumnNames":[],"ColumnIdentities":["Section1/Report load times/checkForEmptyTable.{AppGuid,0}","Section1/Report load times/checkForEmptyTable.{AppName,1}","Section1/Report load times/checkForEmptyTable.{Client,2}","Section1/Report load times/checkForEmptyTable.{DeviceBrowserVersion,3}","Section1/Report load times/checkForEmptyTable.{DeviceOSVersion,4}","Section1/Report load times/finalTable.{EndTime,5}","Section1/Report load times/checkForEmptyTable.{GroupId,6}","Section1/Report load times/checkForEmptyTable.{LocationCity,7}","Section1/Report load times/checkForEmptyTable.{LocationCountry,8}","Section1/Report load times/checkForEmptyTable.{OriginalGroupId,9}","Section1/Report load times/checkForEmptyTable.{OriginalReportId,10}","Section1/Report load times/checkForEmptyTable.{PbiCluster,11}","Section1/Report load times/checkForEmptyTable.{ReportId,12}","Section1/Report load times/finalTable.{StartTime,13}","Section1/Report load times/checkForEmptyTable.{TenantId,14}","Section1/Report load times/finalTable.{Timestamp,15}","Section1/Report load times/checkForEmptyTable.{UserId,16}"],"RelationshipInfo":[]}
+
+	annotation PBI_ResultType = Table
+

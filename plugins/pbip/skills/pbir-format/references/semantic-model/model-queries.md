@@ -190,13 +190,16 @@ SUMMARIZECOLUMNS(
 ### Single measure value (card-style)
 
 ```dax
-EVALUATE
-SUMMARIZECOLUMNS(
-    "Revenue", IGNORE([Total Revenue])
-)
+EVALUATE ROW("Revenue", [Total Revenue])
 ```
 
-Note: `IGNORE()` is used when there are no grouping columns.
+Or the scalar shorthand:
+
+```dax
+EVALUATE {[Total Revenue]}
+```
+
+**Important:** `SUMMARIZECOLUMNS` with only `IGNORE()`-tagged expressions and no grouping columns returns an **empty table** — this is wrong for card-style queries. Use `EVALUATE ROW()` or `EVALUATE {measure}` instead. `IGNORE()` only applies when grouping columns are present and a measure might return blank for some groups.
 
 ## Use cases
 

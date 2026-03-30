@@ -129,7 +129,7 @@ If you move all extension measures to the semantic model (e.g., from `reportExte
 - `formatString` - VBA-style format string (e.g., `"#,0.00"`)
 - `description` - Documentation string
 - `displayFolder` - Organize in field list (e.g., `"Colors\\Status"`)
-- `dataCategory` - Extended category (e.g., `"WebURL"`, `"ImageURL"`)
+- `dataCategory` - Extended category (e.g., `"WebUrl"`, `"ImageUrl"`)
 - `annotations` - Custom metadata (array of name/value pairs)
 - `measureTemplate` - Template tracking info (for DAX templates)
 
@@ -312,7 +312,8 @@ Check reportExtensions.json to find available entities. For this example, we'll 
    ```json
    "hidden": true
    ```
-   - Not necessary or recommended for extension measures
+   - Use `hidden: true` for internal helper measures that should not appear in the report field list
+   - Leave `hidden: false` (or omit) for formatting measures that need to be discoverable
 
 5. **Document each measure**
    ```json
@@ -405,9 +406,9 @@ From schema: `Binary`, `Boolean`, `Date`, `DateTime`, `DateTimeZone`, `Decimal`,
 
 **Colors (strokeColor, fill, etc.):**
 - Must use `"Text"` dataType
-- **In extension measures:** Can return theme color names (`"good"`, `"bad"`, `"neutral"`, `"minColor"`, `"maxColor"`)
-- **In JSON literals:** Must use hex codes (`"#RRGGBB"` or `"#RRGGBBAA"`)
-- Cannot return CSS color names or RGBA() format
+- **Theme color tokens:** `"good"`, `"bad"`, `"neutral"`, `"minColor"`, `"maxColor"` — recommended; inherit from theme
+- **Hex codes:** `"#RRGGBB"` or `"#AARRGGBB"` — specific colors, no theme integration
+- **CSS color names, RGB, RGBA, HSL/HSLA:** Valid per Microsoft docs (e.g., `"red"`, `"rgba(234,234,234,0.5)"`) — prefer theme tokens or hex for predictable theming
 - Can return empty string `""` to use default
 
 **Transparency:**
@@ -439,24 +440,25 @@ IF(
 ```dax
 SWITCH(
     TRUE(),
-    [Variance %] >= 0.10, "good",     // Green - exceeding
-    [Variance %] >= 0, "neutral",     // Blue - meeting
-    [Variance %] >= -0.10, "neutral", // Orange - warning
-    "bad"                              // Red - critical
+    [Variance %] >= 0.10, "good",     // Green - exceeding target
+    [Variance %] >= 0, "good",        // Green - meeting target
+    [Variance %] >= -0.10, "neutral", // Neutral - warning range
+    "bad"                             // Red - critical miss
 )
 ```
 
 **Three-color diverging:**
 ```dax
 // Return theme color names for use with linearGradient3
+// Valid tokens: "minColor", "maxColor", "good", "bad", "neutral"
+// Note: "midColor" is NOT a valid token — use "neutral" for a middle state
 VAR _Value = [Metric]
-VAR _Min = CALCULATE(MIN([Metric]), ALL())
-VAR _Max = CALCULATE(MAX([Metric]), ALL())
+VAR _Midpoint = CALCULATE(MIN([Metric]), ALL()) + (CALCULATE(MAX([Metric]), ALL()) - CALCULATE(MIN([Metric]), ALL())) * 0.5
 RETURN
     IF(
-        _Value < (_Min + (_Max - _Min) * 0.5),
+        _Value < _Midpoint,
         "minColor",
-        IF(_Value > (_Min + (_Max - _Min) * 0.5), "maxColor", "midColor")
+        IF(_Value > _Midpoint, "maxColor", "neutral")
     )
 ```
 
@@ -837,12 +839,12 @@ Extended semantic information:
 {
   "name": "Product Image URL",
   "dataType": "Text",
-  "dataCategory": "ImageURL",
+  "dataCategory": "ImageUrl",
   "expression": "\"https://cdn.example.com/\" & [Product Code] & \".jpg\""
 }
 ```
 
-**Common categories:** `WebURL`, `ImageURL`, `Barcode`
+**Common categories:** `WebUrl`, `ImageUrl`, `Barcode`
 
 ### Measure Templates
 
@@ -1046,11 +1048,11 @@ Check data type matches property:
 
 Check return format:
 ```dax
-// For colors - use theme colors or hexes:
-"bad"      // Preferred (theme color)
-"#FF0000"  // OK but prefer theme colors instead
-"red"      // Works, but not preferred
-"rgb(255,0,0)"  // Wrong format
+// For colors - use theme tokens or hex codes:
+"bad"            // Preferred (theme color token)
+"#FF0000"        // OK (hex)
+"red"            // Works (CSS color name is valid per Microsoft docs), but prefer theme tokens
+"rgb(255,0,0)"   // Works (RGB format is valid per Microsoft docs)
 ```
 
 Check selector for per-point evaluation:

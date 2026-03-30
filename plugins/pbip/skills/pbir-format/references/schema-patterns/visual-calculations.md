@@ -29,13 +29,40 @@ Visual calculations appear in `query.queryState` projections as `NativeVisualCal
 
 ## Window Functions
 
-Visual calculations have access to windowing functions not available in model measures:
+Visual calculations have access to windowing functions not available in model measures. Functions take an optional `axis` parameter (`ROWS`, `COLUMNS`, `ROWS COLUMNS`, or `COLUMNS ROWS`).
 
-**ROWS**: Current row set
-**FIRST()**: First value in window
-**LAST()**: Last value in window
-**INDEX()**: Current row position
-**OFFSET()**: Value N rows away
+### Navigation Functions
+- **[FIRST()](https://dax.guide/first/)**: First value in window along axis
+- **[LAST()](https://dax.guide/last/)**: Last value in window along axis
+- **[PREVIOUS()](https://dax.guide/previous/)**: Value one step back along axis
+- **[NEXT()](https://dax.guide/next/)**: Value one step forward along axis
+- **[INDEX()](https://dax.guide/index/)**: Current row position along axis
+- **[OFFSET()](https://dax.guide/offset/)**: Value N positions away along axis
+
+### Aggregation Functions
+- **[RUNNINGSUM()](https://dax.guide/runningsum/)**: Cumulative sum up to current position
+- **[MOVINGAVERAGE()](https://dax.guide/movingaverage/)**: Moving average over N periods
+- **[RANGE()](https://dax.guide/range/)**: Aggregation over a range of positions
+
+### Expansion/Collapse Functions (matrix visuals)
+- **[COLLAPSE()](https://dax.guide/collapse/)**: Aggregate all rows/columns at the next level up
+- **[COLLAPSEALL()](https://dax.guide/collapseall/)**: Aggregate to the top level
+- **[EXPAND()](https://dax.guide/expand/)**: Break down to the next level
+- **[EXPANDALL()](https://dax.guide/expandall/)**: Break down to the leaf level
+
+### Lookup Functions
+- **[LOOKUP()](https://dax.guide/lookup/)**: Look up a value at a specific position
+- **[LOOKUPWITHTOTALS()](https://dax.guide/lookupwithtotals/)**: Look up a value including totals
+
+### Axis Values
+- `ROWS` — operate along row axis
+- `COLUMNS` — operate along column axis
+- `ROWS COLUMNS` — traverse rows first, then columns (matrix)
+- `COLUMNS ROWS` — traverse columns first, then rows (matrix)
+
+The compound forms `ROWS COLUMNS` and `COLUMNS ROWS` control traversal order in matrix visuals — relevant for `RUNNINGSUM` and `OFFSET` where rows and columns intersect.
+
+**Reference:** [Visual calculations on Microsoft Learn](https://learn.microsoft.com/en-us/power-bi/transform-model/desktop-visual-calculations-overview) | [dax.guide visual calculations](https://dax.guide/visual-calculations/)
 
 ## Common Patterns
 
@@ -55,25 +82,19 @@ IF ( _Measure = LAST ( [Order Lines], ROWS ), [Order Lines] )
 
 ### Running Total
 
+Visual calculations use dedicated window functions — `ROWS` is an axis keyword, not a filterable table. `EARLIER()` has no meaning in visual calculation context.
+
 ```dax
-VAR _Current = [Revenue]
-RETURN
-SUMX ( FILTER ( ROWS, INDEX() <= EARLIER(INDEX()) ), [Revenue] )
+RUNNINGSUM ( [Revenue] )
 ```
 
 ### Moving Average
 
 ```dax
-VAR _WindowSize = 3
-RETURN
-AVERAGEX (
-    FILTER ( ROWS,
-        INDEX() >= EARLIER(INDEX()) - _WindowSize + 1
-        && INDEX() <= EARLIER(INDEX())
-    ),
-    [Sales]
-)
+MOVINGAVERAGE ( [Sales], 3 )
 ```
+
+The second argument is the window size (number of periods to average over).
 
 ## Multi-Series Configuration
 

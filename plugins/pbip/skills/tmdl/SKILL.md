@@ -1,7 +1,7 @@
 ---
 name: tmdl
-version: 0.8.3
-description: This skill should be used as a last resort when the Tabular Editor CLI, Power BI MCP server, or connect-pbid skill are not available. Use when the user asks to "edit TMDL", "add a measure in TMDL", "add a column description", "fix summarizeBy", "TMDL syntax", "write a measure in TMDL", "create a calculated column in TMDL", "fix formatString", "TMDL indentation", or mentions TMDL file editing or direct semantic model file authoring in PBIP projects.
+version: 0.10.0
+description: This skill should be used as a last resort when the Tabular Editor CLI, Power BI MCP server, or connect-pbid skill are not available. Use when the user asks to "edit TMDL", "add a measure in TMDL", "add a column description", "fix summarizeBy", "TMDL syntax", "write a measure in TMDL", "create a calculated column in TMDL", "fix formatString", "TMDL indentation", "convert BIM to TMDL", "convert model.bim to TMDL", "BIM to TMDL", "TMDL to BIM", "migrate from BIM to TMDL", or mentions TMDL file editing, BIM-to-TMDL conversion, or direct semantic model file authoring in PBIP projects.
 ---
 
 # TMDL Authoring
@@ -30,7 +30,7 @@ Activate only when the Tabular Editor CLI, Power BI MCP server, or `connect-pbid
 
 ## Critical
 
-- **`///` (triple-slash) is a description annotation, NOT a comment.** It sets the `Description` property on the object that immediately follows it. A `///` line must be immediately followed by a declaration (`measure`, `column`, `table`, etc.) — never by a blank line or another `///`. Use `//` for regular comments.
+- **`///` (triple-slash) sets the `Description` property** on the object that immediately follows it. A `///` line must be immediately followed by a declaration (`measure`, `column`, `table`, etc.) — never by a blank line or another `///`. Use `//` for regular comments.
 - **Indentation is semantic.** TMDL uses tabs for indentation, and depth equals nesting level. Properties of a table are indented one level; properties of a column (which belongs to a table) are indented two levels. Incorrect indentation will break the model.
 - **Name quoting rules:** Only quote names that contain spaces, special characters, or start with a digit. Simple names and underscore-prefixed names are unquoted. See the Name Quoting section for details.
 
@@ -48,6 +48,30 @@ Activate only when the Tabular Editor CLI, Power BI MCP server, or `connect-pbid
 | `dataSources.tmdl` | Legacy data source definitions (if present) | `definition/` |
 | `tables/<Name>.tmdl` | Table definition with columns, measures, hierarchies, partitions | `definition/tables/` |
 | `cultures/<locale>.tmdl` | Linguistic metadata and translations | `definition/cultures/` |
+
+## Object Nesting Rules
+
+Objects must be nested inside their correct parent. The validator enforces these rules:
+
+| Object | Allowed Parent(s) |
+|--------|-------------------|
+| `column`, `measure`, `hierarchy`, `partition`, `calculationGroup` | `table` |
+| `level` | `hierarchy` |
+| `calculationItem` | `calculationGroup` |
+| `tablePermission` | `role` |
+| `columnPermission` | `tablePermission` |
+| `perspectiveTable` | `perspective` |
+| `perspectiveColumn`, `perspectiveMeasure`, `perspectiveHierarchy` | `perspectiveTable` |
+| `linguisticMetadata`, `translation` | `cultureInfo` |
+| `dataAccessOptions` | `model` |
+| `formatStringDefinition` | `measure`, `calculationItem` |
+| `detailRowsDefinition` | `measure`, `table` |
+| `alternateOf` | `column` |
+| `member` | `role` |
+| `annotation`, `extendedProperty` | any object (including `queryGroup`, `function`, `member`) |
+| `ref` | `model`, `table` |
+
+Root-level objects (indent 0 only): `model`, `database`, `table`, `relationship`, `role`, `cultureInfo`, `perspective`, `dataSource`, `expression`, `queryGroup`, `function`.
 
 ## Syntax Rules
 
@@ -80,12 +104,12 @@ table Product                              // depth 0: top-level declaration
 - Use tabs, not spaces
 - Table-level objects (columns, measures, hierarchies, partitions) are at depth 1
 - Properties of those objects are at depth 2
-- Multi-line DAX expression bodies are at depth 3 (one level deeper than properties -- this is required by the TMDL parser)
+- Multi-line DAX expression bodies are always **2 levels deeper than the enclosing declaration** (depth 3 for measures/columns inside a table; depth 2 for top-level functions; depth 4 for calculationItems)
 - Annotations are at the same depth as properties of their parent object, separated by a blank line
 
 ### Descriptions (`///`)
 
-Triple-slash lines set the `Description` property on the **next** declaration:
+Triple-slash sets the `Description` property on the **next** declaration:
 
 ```tmdl
 /// Count of distinct products in the current filter context.
@@ -167,12 +191,14 @@ table _Measures                  // unquoted: underscore prefix
 table 'Budget Rate'              // quoted: contains space
 table 'Invoice Document Type'    // quoted: contains spaces
 table '1) Selected Metric'       // quoted: starts with digit
-table 'On-Time Delivery'         // quoted: contains hyphen
+table 'On-Time Delivery'         // quoted: contains space
 ```
 
 ## Column Definitions
 
-### Basic Column
+For complete column examples (basic, hidden, key, sortByColumn, description), see **`references/tmdl-file-examples.md`**. For full property reference, see **`references/column-properties.md`**.
+
+Key column pattern:
 
 ```tmdl
 column 'Product Name'
@@ -184,64 +210,6 @@ column 'Product Name'
 
 	annotation SummarizationSetBy = Automatic
 ```
-
-### Column with isHidden
-
-```tmdl
-column 'Product Key'
-	dataType: int64
-	isHidden
-	displayFolder: 5. Keys
-	lineageTag: def-456
-	summarizeBy: none
-	sourceColumn: Product Key
-
-	annotation SummarizationSetBy = Automatic
-```
-
-### Column with Description
-
-```tmdl
-/// The shipping classification determining logistics handling.
-column 'Ship Class for Part'
-	dataType: string
-	displayFolder: 2. Product Attributes
-	lineageTag: ghi-789
-	summarizeBy: none
-	sourceColumn: Ship Class for Part
-
-	annotation SummarizationSetBy = Automatic
-```
-
-### Key Column
-
-```tmdl
-column Date
-	isKey
-	displayFolder: 6. Calendar Date
-	lineageTag: abc-123
-	summarizeBy: none
-	isNameInferred
-	sourceColumn: [Date]
-
-	annotation SummarizationSetBy = Automatic
-```
-
-### Column with sortByColumn
-
-```tmdl
-column 'Calendar Year (ie 2021)'
-	displayFolder: 1. Year
-	lineageTag: abc-123
-	summarizeBy: none
-	isNameInferred
-	sourceColumn: [Calendar Year (ie 2021)]
-	sortByColumn: 'Calendar Year Number (ie 2021)'
-
-	annotation SummarizationSetBy = Automatic
-```
-
-For a complete property reference, see `references/column-properties.md`.
 
 ## Measure Definitions
 
@@ -256,7 +224,23 @@ measure '# Products' = COUNTROWS ( VALUES ( Product[Product Name] ) )
 
 ### Multi-Line DAX
 
-Multi-line DAX is indented with two extra tabs from the measure's parent (table) level:
+Two syntaxes for multi-line DAX:
+
+**1. Indented block** (most common) -- expression body indented two levels deeper than the declaration:
+
+**2. Triple-backtick block** -- DAX enclosed in `` ``` `` fences, useful for expressions with complex indentation:
+
+```tmdl
+measure Percentage = ```
+		VAR _Total = CALCULATE( SUM ( 'Table'[Quantitative] ), REMOVEFILTERS ( ) )
+		RETURN
+		DIVIDE ( SUM ( 'Table'[Quantitative] ), _Total )
+		```
+	formatString: 0.0%;-0.0%;0.0%
+	lineageTag: abc-123
+```
+
+**Indented block syntax** (standard approach) -- indented two extra tabs from the measure's parent (table) level:
 
 ```tmdl
 measure 'Actuals MTD' =
@@ -309,101 +293,9 @@ measure 'Sales Target MTD vs. Actuals (%)' =
 
 **Note:** `formatStringDefinition` replaces `formatString` when the format is computed dynamically via a DAX expression (often a calculation group format function).
 
-## Calculated Columns
+## Other Object Types
 
-A calculated column has a DAX expression instead of a `sourceColumn`:
-
-```tmdl
-	column 'Full Name' =
-			[First Name] & " " & [Last Name]
-		dataType: string
-		lineageTag: abc-123
-		summarizeBy: none
-		isDataTypeInferred
-
-		annotation SummarizationSetBy = Automatic
-```
-
-The DAX body follows the same depth rule as measures -- one level deeper than the column's properties.
-
-
-## Roles (Row-Level Security)
-
-Each role is defined in its own file under `definition/roles/` (e.g., `roles/Regional Sales.tmdl`):
-
-```tmdl
-role 'Regional Sales'
-	modelPermission: read
-
-	tablePermission Sales = [Region] = USERPRINCIPALNAME()
-```
-
-With object-level security (OLS) on a column:
-
-```tmdl
-role 'Restricted Finance'
-	modelPermission: read
-
-	tablePermission Sales = [Department] = "Finance"
-
-		columnPermission Margin
-			metadataPermission: none
-```
-
-
-## Calculation Groups
-
-A calculation group is a special table with `calculationGroup` and `calculationItem` objects:
-
-```tmdl
-table 'Time Intelligence'
-	lineageTag: abc-123
-
-	calculationGroup
-		precedence: 10
-
-		calculationItem YTD =
-				CALCULATE (
-				    SELECTEDMEASURE (),
-				    DATESYTD ( 'Date'[Date] )
-				)
-			ordinal: 0
-
-		calculationItem 'Prior Year' =
-				CALCULATE (
-				    SELECTEDMEASURE (),
-				    DATEADD ( 'Date'[Date], -1, YEAR )
-				)
-			ordinal: 1
-
-	column Name
-		dataType: string
-		isHidden
-		lineageTag: def-456
-		summarizeBy: none
-		sourceColumn: Name
-
-	partition 'Time Intelligence' = calculationGroup
-		mode: import
-```
-
-
-## Date Table Marking
-
-Mark a table as a date table by setting `dataCategory: Time` and `isKey` on the date column:
-
-```tmdl
-table Date
-	dataCategory: Time
-	lineageTag: abc-123
-
-	column Date
-		isKey
-		dataType: dateTime
-		lineageTag: def-456
-		summarizeBy: none
-		sourceColumn: Date
-```
+For complete examples of calculated columns, roles (RLS/OLS), calculation groups, date table marking, hierarchies, partitions, relationships, shared expressions, and model configuration, see **`references/tmdl-file-examples.md`**.
 
 
 ## Common Data Quality Patterns
@@ -468,124 +360,93 @@ column Amount
 
 **Do not fight this annotation.** Power BI tooling re-adds it automatically. When setting a `formatString`, leave any existing `PBI_FormatHint` in place. If Power BI re-adds a removed `PBI_FormatHint`, accept it.
 
-## Other TMDL Constructs
-
-### Hierarchy
-
-```tmdl
-hierarchy 'Product Hierarchy'
-	displayFolder: 1. Product Hierarchy
-	lineageTag: abc-123
-
-	level Type
-		lineageTag: def-456
-		column: Type
-
-	level Subtype
-		lineageTag: ghi-789
-		column: Subtype
-
-	level 'Product Name'
-		lineageTag: jkl-012
-		column: 'Product Name'
-```
-
-### Partition
-
-```tmdl
-partition Product = m
-	mode: import
-	queryGroup: Tables
-	source =
-			let
-			    Source = Sql.Database(#"SqlEndpoint",#"Database"),
-			    Data = Source{[Schema="Dimview",Item="Products"]}[Data]
-			in
-			    Data
-```
-
-### Relationship (in relationships.tmdl)
-
-```tmdl
-relationship abc-123
-	fromColumn: Invoices.'Product Key'
-	toColumn: Product.'Product Key'
-```
-
-### Shared Expression (in expressions.tmdl)
-
-```tmdl
-expression SqlEndpoint = "server.database.windows.net" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
-	lineageTag: abc-123
-	queryGroup: Parameters
-
-	annotation PBI_NavigationStepName = Navigation
-
-	annotation PBI_ResultType = Text
-```
-
-### Model Configuration (in model.tmdl)
-
-```tmdl
-model ModelName
-	culture: en-US
-	defaultPowerBIDataSourceVersion: powerBI_V3
-	discourageImplicitMeasures
-	sourceQueryCulture: en-US
-
-queryGroup Tables
-
-	annotation PBI_QueryGroupOrder = 0
-
-ref table Product
-ref table Customer
-ref table _Measures
-
-ref role 'Regional Sales'
-ref perspective 'Sales View'
-
-ref cultureInfo en-US
-```
 
 ## Quick Reference
 
 ### Property Cheat Sheet
 
+For the complete property reference for every object type, see **`references/object-properties.md`**.
+
 | Object | Property | Values | Notes |
 |--------|----------|--------|-------|
-| Column | `dataType` | `string`, `int64`, `double`, `decimal`, `dateTime`, `boolean` | Required for data columns |
-| Column | `summarizeBy` | `none`, `sum`, `count`, `min`, `max`, `average` | Use `none` for keys/attributes |
-| Column | `isHidden` | (flag, no value) | Just write `isHidden` on its own line |
+| Column | `dataType` | `string`, `int64`, `double`, `decimal`, `dateTime`, `boolean`, `binary`, `unknown`, `variant`, `automatic` | Required for data columns |
+| Column | `summarizeBy` | `default`, `none`, `sum`, `min`, `max`, `count`, `average`, `distinctCount` | Use `none` for keys/attributes |
+| Column | `type` | `data`, `calculated`, `rowNumber`, `calculatedTableColumn` | Column type variant |
+| Column | `isHidden` | (flag, no value) | Boolean flags: write the keyword alone on its own line |
 | Column | `isKey` | (flag, no value) | Marks the column as the table's key |
+| Column | `isNullable` | (flag, no value) | Column allows nulls |
+| Column | `isUnique` | (flag, no value) | Column values are unique |
+| Column | `isNameInferred` | (flag, no value) | Name inferred from source |
+| Column | `isDefaultLabel` | (flag, no value) | Default label for the table |
+| Column | `isDefaultImage` | (flag, no value) | Default image for the table |
+| Column | `isDataTypeInferred` | (flag, no value) | Data type inferred from source |
+| Column | `isAvailableInMdx` | (flag, no value) | Available in MDX queries |
+| Column | `keepUniqueRows` | (flag, no value) | Keep unique rows |
+| Column | `encodingHint` | `default`, `hash`, `value` | Storage encoding hint |
+| Column | `alignment` | `default`, `left`, `right`, `center` | Column alignment |
 | Column | `displayFolder` | folder path string | Use `\` for nesting: `1. Year\Quarter` |
 | Column | `sourceColumn` | source column name | Must match the Power Query output column |
 | Column | `sortByColumn` | column name reference | Column to sort by (e.g., month name sorted by month number) |
+| Column | `expression` | DAX expression | For calculated columns |
 | Measure | `formatString` | format pattern | e.g., `#,##0`, `0.00%` |
 | Measure | `displayFolder` | folder path string | Use `\` for nesting |
-| Measure | `formatStringDefinition` | DAX expression | Dynamic format string (replaces `formatString`) |
+| Measure | `formatStringDefinition` | DAX expression block | Dynamic format string (replaces `formatString`) |
+| Measure | `isHidden` | (flag, no value) | Hide the measure |
+| Measure | `isSimpleMeasure` | (flag, no value) | Simple implicit-style measure |
+| Measure | `dataCategory` | string | Semantic data category |
+| Partition | `mode` | `import`, `directQuery`, `default`, `push`, `dual`, `directLake` | Storage mode |
+| Partition | `sourceType` | `query`, `calculated`, `none`, `m`, `entity`, `policyRange`, `calculationGroup`, `inferred` | Source type |
+| Relationship | `crossFilteringBehavior` | `oneDirection`, `bothDirections`, `automatic` | Cross-filter direction |
+| Relationship | `securityFilteringBehavior` | `oneDirection`, `bothDirections`, `none` | RLS filter direction |
+| Relationship | `fromCardinality` / `toCardinality` | `none`, `one`, `many` | Cardinality ends |
+| Relationship | `isActive` | (flag, no value) | Active relationship |
+| Role | `modelPermission` | `none`, `read`, `readRefresh`, `refresh`, `administrator` | Role permission level |
+| Model | `discourageImplicitMeasures` | (flag, no value) | Disables implicit measures |
+| Model | `defaultPowerBIDataSourceVersion` | `powerBI_V1`, `powerBI_V2`, `powerBI_V3` | PBI data source version |
+| Model | `directLakeBehavior` | `automatic`, `directLakeOnly`, `directQueryOnly` | Direct Lake mode |
 | All | `lineageTag` | GUID | Unique identifier, do not change existing values |
 
 ### Indentation Depth Summary
+
+**Rule: a multi-line DAX body is always 2 levels deeper than its enclosing object declaration.**
 
 | Context | Depth | Tabs |
 |---------|-------|------|
 | Top-level declaration (`table`, `relationship`, `expression`) | 0 | 0 |
 | Table properties, column/measure/hierarchy declarations | 1 | 1 |
 | Column/measure properties, hierarchy levels | 2 | 2 |
-| Multi-line DAX expression body | 3 | 3 |
+| DAX body for measure/column declared at depth 1 (inside table) | 3 | 3 |
 | Level properties | 3 | 3 |
+| DAX body for top-level `function` declared at depth 0 | 2 | 2 |
+| `calculationItem` inside `calculationGroup` (depth 1) | 2 | 2 |
+| DAX body for `calculationItem` at depth 2 | 4 | 4 |
 
 ## Additional Resources
 
 ### Reference Files
 
-- **`references/column-properties.md`** - Full property reference with valid values, `summarizeBy` rules, `formatString` patterns, `PBI_FormatHint` behavior, and `dataType` values
+- **`references/object-properties.md`** - Complete property reference for all 30+ TMDL object types with valid enum values for every property type (dataType, summarizeBy, modeType, crossFilteringBehavior, etc.)
+- **`references/column-properties.md`** - Column-specific property guide with `summarizeBy` rules, `formatString` patterns, `PBI_FormatHint` behavior
 - **`references/naming-conventions.md`** - SQLBI naming conventions, display folder conventions, measure table conventions, and calculation group naming
+- **`references/bim-to-tmdl.md`** - Converting between `model.bim` (TMSL) and `definition/` (TMDL) via Tabular Editor CLI or TOM TmdlSerializer
 - **`references/tmdl-file-examples.md`** - Complete examples for every TMDL file type (model, database, expressions, relationships, roles, perspectives, tables, cultures) including backtick-enclosed expressions, field parameters, calculation groups, and date tables
 
 ### Fetching Docs
 
 To retrieve current TMDL reference docs, use `microsoft_docs_search` + `microsoft_docs_fetch` (MCP) if available, otherwise `mslearn search` + `mslearn fetch` (CLI). Search based on the user's request and run multiple searches as needed to ensure sufficient context before proceeding.
+
+### Example Model
+
+- **`examples/SpaceParts.SemanticModel/`** -- Complete real-world TMDL model (SpaceParts) with 40 tables, 152 measures, 8 calculation groups, 8 RLS roles, 2 perspectives, DAX UDFs (functions.tmdl), shared M expressions, relationships, and cultures. Covers every TMDL file type. Key files to study:
+  - `definition/functions.tmdl` -- DAX user-defined functions with parameters, types, and multi-line expressions
+  - `definition/tables/Z04CG1 - Time Intelligence.tmdl` -- Calculation group with triple-backtick DAX
+  - `definition/tables/__Measures.tmdl` -- Measures table with calculation group references
+  - `definition/tables/Invoices.tmdl` -- Large fact table (51 measures, 18 columns)
+  - `definition/tables/Date.tmdl` -- Calculated date table with 42 columns
+  - `definition/roles/Account Managers.tmdl` -- RLS role with DAX filter expression
+  - `definition/relationships.tmdl` -- 27 relationships including inactive
+  - `definition/expressions.tmdl` -- Shared M/Power Query expressions and parameters
+  - `definition/perspectives/Measure Selection.tmdl` -- Perspective definition
 
 ### External References
 

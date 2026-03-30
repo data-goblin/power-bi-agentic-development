@@ -1,0 +1,177 @@
+{
+    "name": "CY18SU07",
+    "visualStyles": {
+        "*": {
+            "*": {
+                "*": [
+                    {
+                        "wordWrap": true
+                    }
+                ],
+                "wordWrap": [
+                    {
+                        "show": true
+                    }
+                ]
+            }
+        },
+        "scatterChart": {
+            "*": {
+                "general": [
+                    {
+                        "responsive": true
+                    }
+                ],
+                "fillPoint": [
+                    {
+                        "show": true
+                    }
+                ]
+            }
+        },
+        "slicer": {
+            "*": {
+                "general": [
+                    {
+                        "responsive": true
+                    }
+                ]
+            }
+        },
+        "lineChart": {
+            "*": {
+                "general": [
+                    {
+                        "responsive": true
+                    }
+                ]
+            }
+        },
+        "waterfallChart": {
+            "*": {
+                "general": [
+                    {
+                        "responsive": true
+                    }
+                ]
+            }
+        },
+        "columnChart": {
+            "*": {
+                "general": [
+                    {
+                        "responsive": true
+                    }
+                ]
+            }
+        },
+        "clusteredColumnChart": {
+            "*": {
+                "general": [
+                    {
+                        "responsive": true
+                    }
+                ]
+            }
+        },
+        "hundredPercentStackedColumnChart": {
+            "*": {
+                "general": [
+                    {
+                        "responsive": true
+                    }
+                ]
+            }
+        },
+        "barChart": {
+            "*": {
+                "general": [
+                    {
+                        "responsive": true
+                    }
+                ]
+            }
+        },
+        "clusteredBarChart": {
+            "*": {
+                "general": [
+                    {
+                        "responsive": true
+                    }
+                ]
+            }
+        },
+        "hundredPercentStackedBarChart": {
+            "*": {
+                "general": [
+                    {
+                        "responsive": true
+                    }
+                ]
+            }
+        },
+        "areaChart": {
+            "*": {
+                "general": [
+                    {
+                        "responsive": true
+                    }
+                ]
+            }
+        },
+        "stackedAreaChart": {
+            "*": {
+                "general": [
+                    {
+                        "responsive": true
+                    }
+                ]
+            }
+        },
+        "lineClusteredColumnComboChart": {
+            "*": {
+                "general": [
+                    {
+                        "responsive": true
+                    }
+                ]
+            }
+        },
+        "lineStackedColumnComboChart": {
+            "*": {
+                "general": [
+                    {
+                        "responsive": true
+                    }
+                ]
+            }
+        },
+        "ribbonChart": {
+            "*": {
+                "general": [
+                    {
+                        "responsive": true
+                    }
+                ]
+            }
+        },
+        "page": {
+            "*": {
+                "outspace": [
+                    {
+                        "color": {
+                            "solid": {
+                                "color": "#FFFFFF"
+                            }
+                        }
+                    }
+                ],
+                "background": [
+                    {
+                        "transparency": 100
+                    }
+                ]
+            }
+        }
+    }
+}

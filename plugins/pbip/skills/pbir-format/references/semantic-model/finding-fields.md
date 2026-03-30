@@ -4,7 +4,7 @@
 - This means that you need to first get an overview of the fields you can use before trying to modify the report metadata; to understand how fields are referenced in reports, see [field-references.md](field-references.md)
 - You might have to query a semantic model to get field values, too, for certain circumstances
 
-**WARNING:** The most efficient way to do this is by using the `te` command-line tool. The following guidance outlines alternatives using `fab` CLI and local metadata.
+**Tool priority:** Use `pbir model` first (fastest when available), then `te query` as a fallback, then `fab` API if neither CLI is installed.
 
 **Search locations:**
 

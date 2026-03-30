@@ -207,6 +207,8 @@ The new slicer visual (advancedSlicerVisual) supports SVG in headers and items.
 }
 ```
 
+> **Note:** The property names `showHeader` and `headerImageUrl` shown above have not been verified against a live Power BI Desktop export of an SVG-configured slicer. If these properties produce no effect, export the slicer from Power BI Desktop as PBIP and check the actual `objects.general.properties` keys in the resulting `visual.json`.
+
 **Common use cases:**
 - Custom filter icons
 - Category indicators

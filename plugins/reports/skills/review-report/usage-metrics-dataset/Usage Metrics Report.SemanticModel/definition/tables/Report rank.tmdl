@@ -1,0 +1,95 @@
+table 'Report rank'
+	lineageTag: ceca560f-ef98-4b03-b7ac-0945c8bb4c77
+
+	measure 'Total Org Report Count' = IF(COUNTROWS('Report rank') = 0, 0, FIRSTNONBLANK('Report rank'[TotalReportCount], 0))
+		formatString: 0
+		lineageTag: 9a847ae3-5986-4b4a-bf95-183e6ab00ceb
+
+	column ReportId
+		dataType: string
+		lineageTag: 4240b45f-2eae-4d1d-b07a-2cb9eab58c80
+		summarizeBy: none
+		sourceColumn: ReportId
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		isHidden
+		lineageTag: c6df53b9-36bd-482e-9a50-ca6f295260c7
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportViewCount
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 9792859d-5c7d-41ab-93c2-bf3d3be686e1
+		summarizeBy: sum
+		sourceColumn: ReportViewCount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportRank
+		dataType: int64
+		formatString: 0
+		lineageTag: bc87aefe-1cc4-4e0c-9020-72b1a99cdea5
+		summarizeBy: sum
+		sourceColumn: ReportRank
+
+		annotation SummarizationSetBy = Automatic
+
+	column TotalReportCount
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: b53ab747-67a8-4bfd-806a-63ec701c237f
+		summarizeBy: sum
+		sourceColumn: TotalReportCount
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column TenantId
+		dataType: string
+		isHidden
+		lineageTag: 6fa080bb-c95a-47ef-91b6-e43a82b9b9cb
+		summarizeBy: none
+		sourceColumn: TenantId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Report rank-dc146796-6f2a-4d14-8df9-dd19c06e9801' = m
+		mode: import
+		source =
+				let
+				    Source = UsageMetricsDataConnector.GetMetricsData(BaseUrl & "/metadata/v201906/metrics/workspace/" & WorkspaceId & "/reportrank"),
+				    metricsTable = Table.FromRecords(Source),
+				    checkForEmptyTable = if Table.IsEmpty(metricsTable) then
+				                            Table.FromRows
+				                            (
+				                                {
+				                                },
+				                                {
+				                                    "ReportId", "WorkspaceId", "ReportViewCount", "ReportRank", "TotalReportCount", "TenantId"
+				                                }
+				                            )
+				                         else
+				                            metricsTable,
+				    finalTable = Table.TransformColumnTypes(checkForEmptyTable,{{"ReportRank", Int64.Type}, {"TotalReportCount", Int64.Type}, {"ReportViewCount", Int64.Type}})
+				in
+				    finalTable
+
+	annotation PBI_QueryRelationships = {"columnCount":6,"keyColumnNames":[],"queryRelationships":[],"columnIdentities":["Section1/Report rank/checkForEmptyTable.{ReportId,0}","Section1/Report rank/checkForEmptyTable.{WorkspaceId,1}","Section1/Report rank/finalTable.{ReportViewCount,2}","Section1/Report rank/finalTable.{ReportRank,3}","Section1/Report rank/finalTable.{TotalReportCount,4}","Section1/Report rank/checkForEmptyTable.{TenantId,5}"],"ColumnCount":6,"KeyColumnNames":[],"ColumnIdentities":["Section1/Report rank/checkForEmptyTable.{ReportId,0}","Section1/Report rank/checkForEmptyTable.{WorkspaceId,1}","Section1/Report rank/finalTable.{ReportViewCount,2}","Section1/Report rank/finalTable.{ReportRank,3}","Section1/Report rank/finalTable.{TotalReportCount,4}","Section1/Report rank/checkForEmptyTable.{TenantId,5}"],"RelationshipInfo":[]}
+
+	annotation PBI_ResultType = Table
+

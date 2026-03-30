@@ -82,7 +82,7 @@ Dynamic values from DAX measures.
   "Measure": {
     "Expression": {
       "SourceRef": {
-        "Schema": "extension",  // Only for thin report measures
+        "Schema": "extension",  // Only for extension (report-level) measures defined in reportExtensions.json
         "Entity": "<EntityName>"
       }
     },
@@ -98,9 +98,9 @@ Dynamic values from DAX measures.
 
 ## Extension Measures vs Model Measures
 
-### Extension Measures (Thin Report Measures)
+### Extension Measures (Report-Level Measures)
 
-Defined in \`reportExtensions.json\`, scoped to the report only.
+Defined in `reportExtensions.json`, scoped to the report only. Extension measures exist in both thick and thin PBIR reports — the distinction is between report-level DAX (extension) and model-level DAX (model measures), not between report connection types.
 
 **Definition in reportExtensions.json:**
 ```json
@@ -331,8 +331,10 @@ Measures work with different selectors:
   "metadata": "Sales.Revenue"
 }
 ```
-- Evaluates measure once globally
-- Simple but not per-point
+- Targets a specific named field (measure or column) by its `queryRef` string
+- Applies formatting to the series or column matching that exact queryRef
+- Does not evaluate per data point — all points in that series share the same formatting
+- Distinct from no-selector (which applies to the entire visual)
 
 **dataViewWildcard selector:**
 ```json

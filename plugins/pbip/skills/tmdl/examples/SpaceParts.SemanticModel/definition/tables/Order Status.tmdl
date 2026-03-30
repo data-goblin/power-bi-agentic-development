@@ -1,0 +1,70 @@
+table 'Order Status'
+	lineageTag: 12d7ff4e-91a1-4a12-bdaa-8138019fc2d0
+
+	column 'Order Status Code'
+		dataType: string
+		isHidden
+		displayFolder: 2. Keys
+		lineageTag: a100afe0-dcbd-4d7c-99d8-a75db4331ab8
+		summarizeBy: none
+		sourceColumn: Order Status Code
+		sortByColumn: 'Order Status Ordinal'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Order Status Text'
+		dataType: string
+		displayFolder: 1. Order Status
+		lineageTag: cac50369-1d71-44df-9a3a-852a8da9d08f
+		summarizeBy: none
+		sourceColumn: Order Status Text
+		sortByColumn: 'Order Status Ordinal'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Order Status Ordinal'
+		dataType: int64
+		isHidden
+		displayFolder: 3. Ordinal
+		lineageTag: d641dd45-15cd-45fa-9d89-069004a9392c
+		summarizeBy: none
+		sourceColumn: Order Status Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Order Status Group'
+		dataType: string
+		displayFolder: 1. Order Status
+		lineageTag: f34f646d-9d85-473b-be9a-0fd08df3cb97
+		summarizeBy: none
+		sourceColumn: Order Status Group
+		sortByColumn: 'Order Status Grouping Ordinal'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Order Status Grouping Ordinal'
+		dataType: int64
+		isHidden
+		displayFolder: 3. Ordinal
+		lineageTag: b6d344fc-1b71-4459-90fc-67a8d9d92e9f
+		summarizeBy: none
+		sourceColumn: Order Status Grouping Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Order Status' = m
+		mode: import
+		queryGroup: Tables
+		source =
+				let
+				    Source = Sql.Database(#"SqlEndpoint",#"Database"),
+				    Data = Source{[Schema="Dimview",Item="Order Status"]}[Data]
+				in
+				    Data
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+	annotation TabularEditor_TableGroup = 01. Dimension Tables
+

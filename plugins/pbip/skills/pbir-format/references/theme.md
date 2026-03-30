@@ -101,6 +101,32 @@ Override wildcard defaults for specific visual types:
 2. **Visual Type** (e.g., `["textbox"]["*"]`) - Overrides wildcard for that type
 3. **Visual Instance** (in `visualContainerObjects`) - Overrides theme for specific visual
 
+### visualStyles Structure
+
+The two-level key structure is `[visualType][state]`. The second level is a **state**, not an instance selector:
+
+| State key | Meaning |
+|-----------|---------|
+| `"*"` | Default state (normal rendering) — most common |
+| `"hover"` | Hover state formatting |
+| `"press"` | Press/click state formatting |
+| `"selected"` | Selected state formatting |
+
+Example using hover state for slicers:
+
+```json
+{
+  "visualStyles": {
+    "slicer": {
+      "*": {"items": [{"fontColor": {"solid": {"color": "#000000"}}}]},
+      "hover": {"items": [{"fontColor": {"solid": {"color": "#118DFF"}}}]}
+    }
+  }
+}
+```
+
+Some real theme files also use a third-level `"*"` catch-all key for generic visual properties like `wordWrap` and `rectangleRoundedCurve`.
+
 ## Common Theme Properties
 
 ### Container Formatting (visualContainerObjects)
@@ -225,6 +251,30 @@ jq empty "$THEME"
 
 **Example:** Dashboard page has different background than detail pages
 
+## textClass Defaults (CY24SU10 base theme)
+
+Power BI's built-in base theme (`CY24SU10`) defines these default text class values. Custom themes inherit these if not overridden.
+
+| textClass | fontSize | fontFace | color |
+|-----------|----------|----------|-------|
+| `callout` | 45 | DIN | #252423 |
+| `title` | 12 | DIN | #252423 |
+| `header` | 12 | Segoe UI Semibold | #252423 |
+| `label` | 10 | Segoe UI | #252423 |
+
+Override in a custom theme:
+
+```json
+{
+  "textClasses": {
+    "title": {"fontSize": 14, "fontFace": "Segoe UI"},
+    "label": {"fontSize": 11, "fontFace": "Segoe UI"}
+  }
+}
+```
+
+**Source:** `examples/K201-MonthSlicer.Report/StaticResources/SharedResources/BaseThemes/CY24SU10.json`
+
 ## Inspecting and Modifying Themes
 
 **CRITICAL:** Theme files can be 75KB+ with 2000+ lines. Use targeted `jq` queries to read specific sections rather than loading the entire file.
@@ -260,8 +310,8 @@ jq '.visualStyles.lineChart["*"].labels' "$THEME"
 jq '.textClasses' "$THEME"
 
 # Filter pane styling
-jq '.visualStyles.page["*"].outspacePane' "$THEME"
-jq '.visualStyles.page["*"].filterCard' "$THEME"
+jq '.visualStyles["*"]["*"].outspacePane' "$THEME"
+jq '.visualStyles["*"]["*"].filterCard' "$THEME"
 ```
 
 ### Modifying Theme Properties
@@ -439,7 +489,7 @@ fab import "Sales.Workspace/Q4Report.Report" -i ./Q4Report.Report -f
 
 ### Filter Pane (outspacePane)
 
-Location in theme: `visualStyles.page."*".outspacePane`
+Location in theme: `visualStyles["*"]["*"].outspacePane`
 
 All properties available (verified against schema):
 
@@ -466,7 +516,7 @@ All properties available (verified against schema):
 
 ### Filter Cards (filterCard)
 
-Location in theme: `visualStyles.page."*".filterCard`
+Location in theme: `visualStyles["*"]["*"].filterCard`
 
 Target specific filter types using `$id`:
 
@@ -478,7 +528,7 @@ Target specific filter types using `$id`:
 | `border` | boolean | true/false | Show card border | `false` |
 | `borderColor` | color | `{"solid": {"color": ...}}` | Border color | `{"solid": {"color": "#CCCCCC"}}` |
 | `fontFamily` | string | Font with fallbacks | Card text font | Same as outspacePane |
-| `foregroundColor` | color | `{"solid": {"color": ...}}` | Text and icon color | `{"solid": {"color": "'#e03131'"}}` (note inner quotes!) |
+| `foregroundColor` | color | `{"solid": {"color": ...}}` | Text and icon color | `{"solid": {"color": "#e03131"}}` (bare hex string) |
 | `textSize` | integer | Number (points) | Font size for card text | `11` |
 | `inputBoxColor` | color | `{"solid": {"color": ...}}` | Input field background | ThemeDataColor |
 
@@ -486,6 +536,8 @@ Target specific filter types using `$id`:
 - `"$id": "Available"` - Style filters in "Filters on this page" section
 - `"$id": "Applied"` - Style actively applied filters
 - `"$id": "GUID"` - Style specific filter by its ID from filterConfig
+
+**Note on filter card locations:** The `$id`-targeted card states (`Available`, `Applied`) belong at `visualStyles["*"]["*"].filterCard`. Basic filter card styling (background, border without `$id` state selectors) can also appear at `visualStyles["page"]["*"].filterCard` — this is confirmed in `SqlbiDataGoblinTheme.json` and serves as a simpler base style fallback.
 
 ### ThemeDataColor with Percent
 
@@ -514,7 +566,7 @@ ThemeDataColor allows referencing theme palette colors with lightness adjustment
 ```json
 {
   "visualStyles": {
-    "page": {
+    "*": {
       "*": {
         "outspacePane": [
           {
@@ -637,7 +689,7 @@ ThemeDataColor allows referencing theme palette colors with lightness adjustment
 
 1. **Locate theme file**: `<Report>.Report/StaticResources/RegisteredResources/<CustomTheme>.json`
 
-2. **Navigate to page wildcards**: `visualStyles.page."*"`
+2. **Navigate to visual wildcards**: `visualStyles["*"]["*"]`
 
 3. **Add outspacePane array** (or modify existing):
    - Use bare integers for sizes/transparency/width: `14`, `307`, `37`
@@ -661,7 +713,7 @@ ThemeDataColor allows referencing theme palette colors with lightness adjustment
 
 1. **Don't use "D" or "L" suffixes** in theme JSON - use bare integers
 2. **Don't use page-level formatting** - put it in theme for consistency
-3. **Don't forget inner quotes** for literal color hex codes: `"'#e03131'"`
+3. **Theme JSON color values use bare hex strings**: `"#e03131"` — no inner quotes. Inner single quotes (`"'#e03131'"`) are specific to `expr.Literal.Value` in visual.json, not theme JSON.
 4. **Don't use `"id"` in theme** - it's `"$id"` in theme, `"selector": {"id": ...}` in page.json
 5. **Don't exceed ColorId range** - check your theme's dataColors array length
 

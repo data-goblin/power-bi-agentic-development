@@ -1,0 +1,6 @@
+role 'Brand VPs'
+	modelPermission: read
+
+	tablePermission Brands = RLS.ApplySimpleRLS ( 'Brands'[Product Brand VP] )
+
+	annotation PBI_Id = 0b8d41815400413293ab3942e184b53e

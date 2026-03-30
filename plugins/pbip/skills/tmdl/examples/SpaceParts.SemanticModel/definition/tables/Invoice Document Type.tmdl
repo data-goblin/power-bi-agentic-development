@@ -1,0 +1,69 @@
+table 'Invoice Document Type'
+	lineageTag: dbcc3ac6-9a34-4dc6-8477-078cb12b3dd4
+
+	column 'Billing Document Type Code'
+		dataType: string
+		displayFolder: 2. Keys
+		lineageTag: e9a08be0-7588-41c4-bc84-7d10ed0d5d0f
+		summarizeBy: none
+		sourceColumn: Billing Document Type Code
+		sortByColumn: 'Doc. Type Ordinal'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Text
+		dataType: string
+		displayFolder: 1. Billing Doc. Type
+		lineageTag: b90274be-9a59-4782-b817-fe6c65a5c0b3
+		summarizeBy: none
+		sourceColumn: Text
+		sortByColumn: 'Doc. Type Ordinal'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Doc. Type Ordinal'
+		dataType: int64
+		isHidden
+		displayFolder: 3. Ordinal
+		lineageTag: 3439cdad-fc7d-4cfb-9b69-26b03bd3ef65
+		summarizeBy: none
+		sourceColumn: Doc. Type Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column Group
+		dataType: string
+		displayFolder: 1. Billing Doc. Type
+		lineageTag: 494309fe-449d-447a-9522-5aaac15890e8
+		summarizeBy: none
+		sourceColumn: Group
+		sortByColumn: 'Group Ordinal'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Group Ordinal'
+		dataType: int64
+		isHidden
+		displayFolder: 3. Ordinal
+		lineageTag: 5c8de158-176b-43a0-aa9d-5314d4b4ded6
+		summarizeBy: none
+		sourceColumn: Group Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Invoice Document Type' = m
+		mode: import
+		queryGroup: Tables
+		source =
+				let
+				    Source = Sql.Database(#"SqlEndpoint",#"Database"),
+				    Data = Source{[Schema="Dimview",Item="Invoice Document Type"]}[Data]
+				in
+				    Data
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+	annotation TabularEditor_TableGroup = 01. Dimension Tables
+

@@ -1,0 +1,93 @@
+table Brands
+	lineageTag: 5e2b506f-5416-43b6-b5f6-160cbd60ab96
+
+	column Flagship
+		dataType: string
+		displayFolder: 1. Brand Hierarchy
+		lineageTag: 16be3840-ea52-4cb5-bbc1-f866be4193aa
+		summarizeBy: none
+		sourceColumn: Flagship
+
+		annotation SummarizationSetBy = Automatic
+
+	column Class
+		dataType: string
+		displayFolder: 1. Brand Hierarchy
+		lineageTag: e3b11f72-6c3d-4151-a219-5df0d87c75ab
+		summarizeBy: none
+		sourceColumn: Class
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		dataType: string
+		displayFolder: 2. Brand Attributes
+		lineageTag: f1c1b582-1730-4828-a57c-9e4148579d68
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Brand
+		dataType: string
+		displayFolder: 1. Brand Hierarchy
+		lineageTag: 026cc844-0d0a-444c-b3e6-4755b618ee1c
+		summarizeBy: none
+		sourceColumn: Brand
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Sub Brand'
+		dataType: string
+		displayFolder: 1. Brand Hierarchy
+		lineageTag: 64d691d4-8f81-40ad-9626-f50a0fb25bfa
+		summarizeBy: none
+		sourceColumn: Sub Brand
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Product Brand VP'
+		dataType: string
+		displayFolder: 3. Managers
+		lineageTag: cd36ed0c-b7f0-404f-b8a0-ced180569814
+		summarizeBy: none
+		sourceColumn: Product Brand VP
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Brand Hierarchy'
+		displayFolder: 1. Brand Hierarchy
+		lineageTag: 084d70b4-6315-42f4-9fa3-84fac3f33e6b
+
+		level Class
+			lineageTag: 5457edb0-3439-4d56-baf9-e14078ae42d6
+			column: Class
+
+		level Flagship
+			lineageTag: 63f540d1-6f1a-4224-b13d-e5e8cf74727c
+			column: Flagship
+
+		level Brand
+			lineageTag: 47d9b70c-0dbe-4719-9c28-498808e9fe1b
+			column: Brand
+
+		level 'Sub Brand'
+			lineageTag: 4cf48791-4d41-4f0d-988b-385822b676aa
+			column: 'Sub Brand'
+
+	partition Brands = m
+		mode: import
+		queryGroup: Tables
+		source =
+				let
+				    Source = Sql.Database(#"SqlEndpoint",#"Database"),
+				    Data = Source{[Schema="Dimview",Item="Brands"]}[Data]
+				in
+				    Data
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+	annotation TabularEditor_TableGroup = 01. Dimension Tables
+

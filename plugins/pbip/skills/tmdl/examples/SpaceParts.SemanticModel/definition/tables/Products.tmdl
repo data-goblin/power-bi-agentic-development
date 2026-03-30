@@ -1,0 +1,206 @@
+table Products
+	lineageTag: 4963b255-25ef-4ad6-8fc0-3991443146a0
+
+	measure '# Products' = ```
+			
+			COUNTROWS ( 
+			    VALUES ( 'Products'[Product Name] )
+			)
+			```
+		formatString: #,##0
+		displayFolder: Measures
+		lineageTag: 1fb6f2e9-ed3c-4c97-8fdc-95d1d037a0de
+
+	column 'Sub Brand Name'
+		dataType: string
+		isHidden
+		displayFolder: 5. Keys
+		lineageTag: 46b52e9b-f065-4a4b-a860-cbd239180893
+		summarizeBy: none
+		sourceColumn: Sub Brand Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Ship Class for Part'
+		dataType: string
+		displayFolder: 2. Product Attributes
+		lineageTag: 8b05870e-ec7e-4bee-b9cc-3998508fd4c9
+		summarizeBy: none
+		sourceColumn: Ship Class for Part
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Product Name'
+		dataType: string
+		displayFolder: 1. Product Hierarchy
+		lineageTag: 31fc2387-5a7f-4655-a5ea-0bc51c07852a
+		summarizeBy: none
+		sourceColumn: Product Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Part Fit Grading'
+		dataType: string
+		displayFolder: 2. Product Attributes
+		lineageTag: 5832f019-fb01-4e09-ab32-ca411cb31e53
+		summarizeBy: none
+		sourceColumn: Part Fit Grading
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Product Key'
+		dataType: int64
+		isHidden
+		displayFolder: 5. Keys
+		lineageTag: 0af3eedf-9023-45c6-9b52-df7c4c69ee12
+		summarizeBy: none
+		sourceColumn: Product Key
+
+		annotation SummarizationSetBy = Automatic
+
+	column Subtype
+		dataType: string
+		displayFolder: 1. Product Hierarchy
+		lineageTag: 15258ae0-314c-4258-b6a9-c5f4b1f7c0df
+		summarizeBy: none
+		sourceColumn: Subtype
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		dataType: string
+		displayFolder: 1. Product Hierarchy
+		lineageTag: 85080b98-1526-4199-8045-b27395dcead7
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column MK
+		dataType: string
+		displayFolder: 2. Product Attributes
+		lineageTag: 434ef8cd-463c-423c-98d0-133def571872
+		summarizeBy: none
+		sourceColumn: MK
+
+		annotation SummarizationSetBy = Automatic
+
+	column Color
+		dataType: string
+		displayFolder: 2. Product Attributes
+		lineageTag: d09831f4-99c0-40cd-b760-3fde292b3c21
+		summarizeBy: none
+		sourceColumn: Color
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Production Series'
+		dataType: string
+		displayFolder: 2. Product Attributes
+		lineageTag: 2c8917a4-56c0-41b2-aea6-2b4db37b3711
+		summarizeBy: none
+		sourceColumn: Production Series
+
+		annotation SummarizationSetBy = Automatic
+
+	column Nameplate
+		dataType: string
+		displayFolder: 2. Product Attributes
+		lineageTag: 4e1f18fb-66c0-457f-a7df-65694bfe81de
+		summarizeBy: none
+		sourceColumn: Nameplate
+
+		annotation SummarizationSetBy = Automatic
+
+	column Material
+		dataType: string
+		displayFolder: 1. Product Hierarchy
+		lineageTag: a78bca4e-9fc2-42b7-8e38-44a2800b9ad1
+		summarizeBy: none
+		sourceColumn: Material
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Maximum Temperature (K)'
+		dataType: int64
+		displayFolder: 4. Product Facts
+		lineageTag: 2005d462-c934-4b0d-9746-b46329fb408d
+		summarizeBy: sum
+		sourceColumn: Maximum Temperature (K)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Product Business Line Leader'
+		dataType: string
+		displayFolder: 3. Product Managers
+		lineageTag: f7d90ab0-1767-4d3d-884b-33ce7aab8421
+		summarizeBy: none
+		sourceColumn: Product Business Line Leader
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Tolerance (g)'
+		dataType: int64
+		displayFolder: 4. Product Facts
+		lineageTag: 5b9d9f23-63fd-4aca-99c3-8c2952190f4c
+		summarizeBy: sum
+		sourceColumn: Tolerance (g)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Velocity Tolerance (Meters / Second)'
+		dataType: int64
+		displayFolder: 4. Product Facts
+		lineageTag: 762198d6-0454-4be8-bd34-93a179964871
+		summarizeBy: sum
+		sourceColumn: Velocity Tolerance (Meters / Second)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Weight (Tonnes)'
+		dataType: double
+		displayFolder: 4. Product Facts
+		lineageTag: cc3bfcfb-ca3a-48ef-a567-b767efcdf6bd
+		summarizeBy: sum
+		sourceColumn: Weight (Tonnes)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	hierarchy 'Product Hierarchy'
+		displayFolder: 1. Product Hierarchy
+		lineageTag: be3e77c0-e9ee-4ef7-947d-d4d075eeee9a
+
+		level Type
+			lineageTag: 5dc23be4-9e7d-4d9c-9125-29fff24963af
+			column: Type
+
+		level Subtype
+			lineageTag: aad230ae-d02b-40ca-909f-912eb59dbd84
+			column: Subtype
+
+		level 'Product Name'
+			lineageTag: 2faa8a87-f034-4a37-ae57-78226ae641ee
+			column: 'Product Name'
+
+		level Material
+			lineageTag: 3f546d11-2759-4b51-bd76-87db29036a7b
+			column: Material
+
+	partition Products = m
+		mode: import
+		queryGroup: Tables
+		source =
+				let
+				    Source = Sql.Database(#"SqlEndpoint",#"Database"),
+				    Data = Source{[Schema="Dimview",Item="Products"]}[Data]
+				in
+				    Data
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+	annotation TabularEditor_TableGroup = 01. Dimension Tables
+

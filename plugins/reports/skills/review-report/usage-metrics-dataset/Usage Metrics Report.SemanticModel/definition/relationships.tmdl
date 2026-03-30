@@ -1,0 +1,92 @@
+relationship 04a02bc9-46bd-4135-9a6f-869c0d639cc3
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'Report load times'.StartTime
+	toColumn: LocalDateTable_3b852b25-f44a-4909-b021-a7df8cabefe6.Date
+
+relationship d7b0fc44-69d8-4964-9ccd-1628d0e0e291
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'Report load times'.EndTime
+	toColumn: LocalDateTable_3ebb0033-50be-4e6e-8081-ee8c7cf4091f.Date
+
+relationship ef0d9fc4-9058-4bed-a3ba-4f7948775f9d
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'Report views'.CreationTime
+	toColumn: LocalDateTable_dc7eb03a-ec8b-421f-b39b-107ea1f05736.Date
+
+relationship 0a21f399-1dcb-4ce6-af26-a3f141fa16da
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'Report load times'.Timestamp
+	toColumn: LocalDateTable_d27e4379-e50d-47cf-aeac-77eb5f688306.Date
+
+relationship 0c206070-358f-470d-ad74-597d2f631fe9
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'Report page views'.Timestamp
+	toColumn: LocalDateTable_e9fae86b-d80b-4c31-9ba4-095822014411.Date
+
+relationship 1e2a6ce9-f344-48c3-aaf4-93840de66df6
+	fromColumn: 'Report load times'.ReportId
+	toColumn: Reports.ReportGuid
+
+relationship 6c832a87-592b-4010-a82c-5c20fbc55660
+	fromColumn: 'Report views'.ReportId
+	toColumn: Reports.ReportGuid
+
+relationship 00ee2abd-1580-4fd2-a72a-c7efc4d36407
+	fromColumn: 'Report page views'.SectionId
+	toColumn: 'Report pages'.SectionId
+
+relationship bb7dbf62-05d3-4b03-92c7-b3623262de24
+	crossFilteringBehavior: bothDirections
+	fromCardinality: one
+	fromColumn: Reports.ReportGuid
+	toColumn: 'Report rank'.ReportId
+
+relationship d41499dc-ee72-4912-9935-4661eca146cd
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Dates.Date
+	toColumn: LocalDateTable_bc207ece-a79c-4d33-a331-c40f45eb2725.Date
+
+relationship cae3f9e9-6304-4f88-a580-277d9bf01241
+	fromColumn: 'Report load times'.Date
+	toColumn: Dates.Date
+
+relationship 55d869b6-3449-4a47-a0f2-20ef3fd426d1
+	fromColumn: 'Report views'.Date
+	toColumn: Dates.Date
+
+relationship 0ca89e30-ae74-40d1-8df7-255fd44cdee9
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Dates.fDoW
+	toColumn: LocalDateTable_b465bb22-755a-4444-bc06-bd92af8a8952.Date
+
+relationship 250fc40c-658f-4abd-bea0-14a4d7b95417
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Dates.lDoW
+	toColumn: LocalDateTable_7e74b9e2-e4a5-4c05-8b29-c52b531c8abf.Date
+
+relationship 7d3d639e-6ba6-46cc-976b-9f25f5747351
+	fromColumn: 'Report views'.ReportId
+	toColumn: 'Workspace reports'.ReportGuid
+
+relationship 0e867096-b328-44f0-9268-de15602d19a5
+	fromColumn: 'Report page views'.Date
+	toColumn: Dates.Date
+
+relationship d0e18abb-8500-4985-a4c6-e8602ae302d3
+	fromColumn: 'Workspace views'.ReportId
+	toColumn: 'Workspace reports'.ReportGuid
+
+relationship 0808ad5e-5a87-49d1-b679-e2b1dbf93199
+	toCardinality: many
+	fromColumn: 'Report page views'.UserKey
+	toColumn: Users.UserKey
+
+relationship 9c7731bb-5867-4056-8c56-0cf1b1c8dd55
+	toCardinality: many
+	fromColumn: 'Report views'.UserKey
+	toColumn: Users.UserKey
+
+relationship f952f1a3-3469-1e1c-6258-e93b78f3207e
+	fromColumn: 'Report page views'.ReportId
+	toColumn: Reports.ReportGuid
+

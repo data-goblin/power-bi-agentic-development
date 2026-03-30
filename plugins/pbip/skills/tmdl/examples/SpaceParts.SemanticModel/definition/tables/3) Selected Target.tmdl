@@ -1,0 +1,55 @@
+/// This is a disconnected table for Measure Selection.
+/// It lets you select a Target.
+table '3) Selected Target'
+	lineageTag: faedb0d7-81a5-4a5b-aa77-569ccb6f80d4
+
+	column 'MTD Slicer'
+		isHidden
+		lineageTag: 02184b60-9463-42cc-9353-3076dcfd57d1
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [MTD Slicer]
+		sortByColumn: Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Order
+		isHidden
+		lineageTag: 6549343f-cc13-417c-a7ec-4052e86c701d
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Order]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Select a Target'
+		lineageTag: d66a7492-deb6-4fc5-8bf4-9ea15c424cfc
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Select a Target]
+		sortByColumn: Order
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '3) Selected Target' = calculated
+		mode: import
+		source =
+				
+				SELECTCOLUMNS (
+				    'Z03CG1 - Sales Target',
+				    "Select a Target", 'Z03CG1 - Sales Target'[Target],
+				    "Order", 'Z03CG1 - Sales Target'[Ordinal],
+				    "MTD Slicer",
+				        VAR _TARGET = 'Z03CG1 - Sales Target'[Target]
+				        RETURN
+				            SWITCH (
+				                TRUE (),
+				                _TARGET = "Budget",         "Gross Sales MTD vs. Budget",
+				                _TARGET = "Forecast",       "Gross Sales MTD vs. FCST",
+				                _TARGET = "1 Year Prior",   "Gross Sales MTD vs. 1YP",
+				                _TARGET = "2 Years Prior",  "Gross Sales MTD vs. 2YP"
+				            )
+				)
+
+	annotation TabularEditor_TableGroup = 04. Selection Tables
+

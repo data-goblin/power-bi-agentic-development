@@ -48,8 +48,8 @@ Array of sort specifications. Each entry defines:
 - `"Ascending"` - Smallest to largest
 
 ### sortDefinition.isDefaultSort (boolean)
-- `true` - This is the default sort for the visual
-- `false` or omitted - User-customized sort
+- `true` - Marks this as the default sort (Power BI may reset it to this when users clear their custom sort)
+- `false` or omitted - The sort array is applied as-is without the "default" flag; programmatic sorts often omit this property
 
 ## Examples
 

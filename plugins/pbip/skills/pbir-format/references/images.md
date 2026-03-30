@@ -93,7 +93,7 @@ When adding images programmatically, generate a similar suffix (e.g. using a tim
 |----------|--------|---------------|
 | Page background | `page.json` -> `objects.background` | `image.image.url` |
 | Page wallpaper | `page.json` -> `objects.outspace` | `image.image.url` |
-| Image visual | `visual.json` (visualType: `"image"`) | `objects.general.image` |
+| Image visual | `visual.json` (visualType: `"image"` — **verify against your PBI Desktop export**) | `objects.general.image` |
 | Theme background | Theme JSON -> `visualStyles.page."*".background` | `image` (data URI) |
 
 ## Base64 Images in Themes

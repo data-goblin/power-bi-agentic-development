@@ -1,0 +1,80 @@
+table 'Z04CG1 - Time Intelligence'
+	isHidden
+	lineageTag: 06d80604-395e-436b-8758-bf365cf9f944
+
+	calculationGroup
+		precedence: 4
+
+		calculationItem Daily = ```
+				
+				CALCULATE (
+				    SELECTEDMEASURE (), 
+				    CALCULATETABLE (
+				        VALUES ( 'Date'[Date] ),
+				        'Date'[IsDateInScope]
+				    )
+				)
+				```
+
+		calculationItem MTD = ```
+				
+				CALCULATE (
+				    SELECTEDMEASURE (), 
+				    CALCULATETABLE (
+				        DATESMTD ('Date'[Date]),
+				        'Date'[IsDateInScope]
+				    )
+				)
+				```
+
+		calculationItem QTD = ```
+				
+				CALCULATE (
+				    SELECTEDMEASURE (), 
+				    CALCULATETABLE (
+				        DATESQTD ('Date'[Date]),
+				        'Date'[IsDateInScope]
+				    )
+				)
+				```
+
+		calculationItem YTD =
+				
+				VAR _YTD =
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        CALCULATETABLE (
+				            DATESYTD ('Date'[Date]),
+				            'Date'[IsDateInScope]
+				        )
+				    )
+				VAR _FULL_YTD =
+				    CALCULATE (SELECTEDMEASURE (), DATESYTD ('Date'[Date]))
+				RETURN
+				    IF (
+				        SEARCH ("Actuals", SELECTEDMEASURENAME (), , 999) <> 999,
+				        _YTD,
+				        _FULL_YTD
+				    )
+
+	column Aggregation
+		dataType: string
+		isHidden
+		lineageTag: b26f8f5f-3bdc-41ef-8b64-edef27cccd5d
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		lineageTag: a9337a43-d38a-4585-a86a-94689ee5a05e
+		summarizeBy: sum
+		sourceColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	annotation TabularEditor_TableGroup = 06. Calculation Groups
+

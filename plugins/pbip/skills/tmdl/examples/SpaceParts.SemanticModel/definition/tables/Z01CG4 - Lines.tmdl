@@ -1,0 +1,72 @@
+table 'Z01CG4 - Lines'
+	isHidden
+	lineageTag: d0e1c818-c035-4cd9-a3ac-7efb39b1e1a7
+
+	calculationGroup
+		precedence: 3
+
+		calculationItem 'Gross Sales' =
+				
+				[Invoice Lines]
+
+		calculationItem 'Net Sales' =
+				
+				BLANK()
+
+		calculationItem Orders =
+				
+				[Net Orders]
+
+		calculationItem Invoices =
+				
+				[Lines]
+
+		/// The Net Invoice Cost is
+		calculationItem 'Invoice Cost' =
+				
+				BLANK()
+
+		/// The cost of the delivery only
+		calculationItem 'Delivery Cost' =
+				
+				BLANK()
+
+		calculationItem 'Delivery Surcharge' =
+				
+				BLANK()
+
+		calculationItem Taxes =
+				
+				BLANK()
+
+		/// Overdue Payments result when the customer hasn't paid their invoice within a certain number of days since the product was shipped.
+		calculationItem 'Overdue Payment Penalties' =
+				
+				BLANK()
+
+		/// Late Delivery penalties occur when we fail to meet the SLA for deliveries. If the products take longer than a certain number of days to deliver after the requested delivery date, a Late Delivery Penalty is levied.
+		calculationItem 'Late Delivery Penalties' =
+				
+				BLANK()
+
+	column Measure
+		dataType: string
+		isHidden
+		lineageTag: bec81eaa-021e-4d70-a8f3-9b1bf2851d93
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		lineageTag: f246d2a1-6ef4-457c-9953-66884a9f7f4b
+		summarizeBy: sum
+		sourceColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	annotation TabularEditor_TableGroup = 06. Calculation Groups
+

@@ -1,0 +1,62 @@
+table 'Workspace views'
+	lineageTag: ed16c722-1441-471c-915d-0164d8fd550c
+
+	column ReportId
+		lineageTag: 6c82af29-a588-4084-b1ae-bdfd353f4040
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Report views[ReportId]
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserId
+		lineageTag: b63bdc99-0c2c-4886-94a5-127796fef645
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Report views[UserId]
+
+		annotation SummarizationSetBy = Automatic
+
+	column DistributionMethod
+		lineageTag: d325a0c9-02cb-439b-ac7e-f4540bd214b7
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Report views[DistributionMethod]
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConsumptionMethod
+		lineageTag: cfaf38cd-5b54-495d-beb6-e324abf26e41
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Report views[ConsumptionMethod]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Views
+		formatString: 0
+		lineageTag: 1a053eea-1796-4bdb-bf05-a9531cbf1242
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Views]
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserKey
+		lineageTag: 58031bde-a8a2-4086-a47b-5f2b526b2f22
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Report views[UserKey]
+
+		annotation SummarizationSetBy = Automatic
+
+	column UniqueUser = IF('Workspace views'[UserId] = "Unnamed User", "Unnamed User " & 'Workspace views'[UserKey], 'Workspace views'[UserId])
+		lineageTag: b260fc66-1dce-46bc-9615-0c4422563e2c
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Workspace views-963903a6-4a18-469b-83ad-b89918d8e936' = calculated
+		mode: import
+		source = SUMMARIZE('Report views', 'Report views'[ReportId], 'Report views'[UserKey], 'Report views'[UserId], 'Report views'[DistributionMethod], 'Report views'[ConsumptionMethod], "Views", [Report views])
+

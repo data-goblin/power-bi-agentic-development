@@ -14,7 +14,7 @@ Converting between thick/thin reports and re-binding reports to different semant
 
 Separate the report from the semantic model to deploy them independently.
 
-### Steps to convert thick reports to thin reports
+### Steps
 
 1. **Get target model info** using Fabric CLI:
 
@@ -58,7 +58,15 @@ Separate the report from the semantic model to deploy them independently.
 
 Combine report with local semantic model in single PBIP project.
 
-### Steps to convert thin reports to thick reports
+### Using pbir CLI (recommended)
+
+```bash
+pbir report merge-to-thick "Report.Report" "Model.SemanticModel"
+```
+
+Use the manual steps below only as a fallback when `pbir` is not installed.
+
+### Manual steps (without pbir CLI)
 
 1. **Download semantic model** to local directory using [download-model.py](../../scripts/download-model.py)
 
@@ -128,7 +136,15 @@ ProjectName/
 
 Change which semantic model a report connects to (without changing thick/thin status).
 
-### Steps
+### Using pbir CLI (recommended)
+
+```bash
+pbir report rebind "Report.Report" "WorkspaceName.Workspace/ModelName.SemanticModel"
+```
+
+`--model-id` is optional — the CLI auto-retrieves it. Use the manual steps below only as a fallback when `pbir` is not installed.
+
+### Manual steps (without pbir CLI)
 
 1. **Update `datasetReference`** in `definition.pbir` to reference different model:
    - For thin reports: Update `connectionString` with new workspace/model/ID

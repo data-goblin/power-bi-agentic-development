@@ -1,6 +1,6 @@
 # Naming Conventions Reference
 
-SQLBI-aligned naming conventions for Power BI semantic models, distilled into actionable patterns for TMDL authoring.
+Naming conventions for Power BI semantic models, distilled into actionable patterns for TMDL authoring.
 
 ## Table Naming
 
@@ -29,10 +29,10 @@ Use **plural nouns** in PascalCase or natural language:
 
 | Table Type | Convention | Examples |
 |------------|-----------|----------|
-| Measure table | Underscore prefix: `_Measures` | `_Measures`, `___ProjectSpecific` |
+| Measure table | Underscore prefix: `__Measures` | `__Measures`, `___ProjectSpecific` |
 | Disconnected slicer | Descriptive with numbered prefix | `'1) Selected Metric'`, `'2) Selected Unit'` |
 | Calculation group | `Cg` prefix + PascalCase | `CgMetricValue`, `CgTimeIntelligence`, `CgUnit` |
-| Bridge / link table | Descriptive name | `'On-Time Delivery'`, `'Exchange Rate'` |
+| Bridge / link table | Standard convention - descriptive name | `'On-Time Delivery'`, `'Exchange Rate'` |
 
 ## Column Naming
 
@@ -96,9 +96,7 @@ Orders Target vs. Net Orders (Δ) Trend Line
 
 ### Measure Table
 
-Store measures in a dedicated `_Measures` table (unquoted, underscore prefix). This keeps measures organized separately from table columns.
-
-For project-specific measure tables, use multiple underscores: `___ProjectSpecific`.
+Store measures in a dedicated `__Measures` table (unquoted, underscore prefix). This keeps measures organized separately from table columns.
 
 ## Display Folder Conventions
 
@@ -107,11 +105,11 @@ For project-specific measure tables, use multiple underscores: `___ProjectSpecif
 Prefix display folder names with numbers for consistent ordering:
 
 ```
-1. Product Hierarchy
-2. Product Attributes
-3. Brand
-4. Logistics
-5. Keys
+01. Product Hierarchy
+02. Product Attributes
+03. Brand
+04. Logistics
+05. Keys
 ```
 
 ### Nested Folders
@@ -119,10 +117,10 @@ Prefix display folder names with numbers for consistent ordering:
 Use backslash for subfolder nesting:
 
 ```
-2. MTD\Actuals
-2. MTD\Sales Target
-4. YTD
-5. Weekday / Workday\Measures\# Workdays
+02. MTD\A. Actuals
+02. MTD\B. Sales Target
+04. YTD
+05. Weekday / Workday\Measures\C. Workdays
 ```
 
 ### Common Folder Patterns
@@ -130,25 +128,9 @@ Use backslash for subfolder nesting:
 | Folder | Contents |
 |--------|----------|
 | `Measures` | General measures on a table |
-| `1. [Hierarchy Name]` | Columns in a hierarchy |
-| `2. [Attribute Group]` | Related attribute columns |
-| `5. Keys` | Hidden key columns |
-
-## Calculation Group Naming
-
-### Table Name
-
-Use `Cg` prefix followed by PascalCase description:
-
-```
-CgMetricValue
-CgMetricQuantity
-CgMetricLines
-CgUnit
-CgSalesTarget
-CgOrdersTarget
-CgTimeIntelligence
-```
+| `01. [Hierarchy Name]` | Columns in a hierarchy |
+| `02. [Attribute Group]` | Related attribute columns |
+| `05. Keys` | Hidden key columns |
 
 ### Calculation Items
 
@@ -161,18 +143,6 @@ MTD
 YTD
 Prior Year
 ```
-
-## Relationship Naming
-
-Relationships use auto-generated GUIDs as identifiers. The meaningful parts are the `fromColumn` and `toColumn` references:
-
-```tmdl
-relationship abc-123
-	fromColumn: Invoices.'Customer Key'
-	toColumn: Customer.'Customer Key'
-```
-
-Convention: the `fromColumn` is on the many side (fact table), and the `toColumn` is on the one side (dimension table).
 
 ## Summary: Quick Decision Table
 
@@ -188,3 +158,8 @@ Convention: the `fromColumn` is on the many side (fact table), and the `toColumn
 | Percentage measure | `%` prefix or suffix | `% Workdays MTD` |
 | Time intelligence | Standard suffix | `Actuals MTD`, `Net Orders PY` |
 | Display folder | Numbered prefix | `1. Product Hierarchy` |
+
+## References
+
+- sqlbi naming conventions (DAX): https://docs.sqlbi.com/dax-style/dax-naming-conventions
+- Tabular Editor: https://tabulareditor.com/blog/gather-requirements-for-semantic-models

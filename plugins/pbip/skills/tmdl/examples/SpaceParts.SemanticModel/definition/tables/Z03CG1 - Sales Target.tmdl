@@ -1,0 +1,44 @@
+table 'Z03CG1 - Sales Target'
+	isHidden
+	lineageTag: 04c41956-f84c-47b8-a9d6-c2264d42e1e9
+
+	calculationGroup
+		precedence: 6
+
+		calculationItem Budget =
+				
+				[Total Budget]
+
+		calculationItem Forecast =
+				
+				[Forecast]
+
+		calculationItem '1 Year Prior' =
+				
+				[Turnover 1YP (Selected Unit)]
+
+		calculationItem '2 Years Prior' =
+				
+				[Turnover 2YP (Selected Unit)]
+
+	column Target
+		dataType: string
+		isHidden
+		lineageTag: 3f903a26-3226-403d-a33a-4ec211020c27
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		lineageTag: e9744b72-7acd-442c-97f8-64454ba19c7f
+		summarizeBy: sum
+		sourceColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	annotation TabularEditor_TableGroup = 06. Calculation Groups
+

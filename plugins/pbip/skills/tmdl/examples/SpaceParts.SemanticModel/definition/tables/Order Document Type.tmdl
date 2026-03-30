@@ -1,0 +1,67 @@
+table 'Order Document Type'
+	lineageTag: 8f2bc030-d173-42c1-9fc4-26bdc4efcbca
+
+	column 'Sales Order Document Type Code'
+		dataType: string
+		isHidden
+		displayFolder: 2. Keys
+		lineageTag: 3370b74d-45ca-4aee-9dfa-3578ad1b476f
+		summarizeBy: none
+		sourceColumn: Sales Order Document Type Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Text
+		dataType: string
+		displayFolder: 1. Order Doc. Type
+		lineageTag: dd298654-70aa-4357-a16e-7cf6eebe5e0f
+		summarizeBy: none
+		sourceColumn: Text
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Doc. Type Ordinal'
+		dataType: int64
+		isHidden
+		displayFolder: 3. Ordinal
+		lineageTag: f010755d-dc7c-4add-8bfd-a679f33ef0e5
+		summarizeBy: none
+		sourceColumn: Doc. Type Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column Group
+		dataType: string
+		displayFolder: 1. Order Doc. Type
+		lineageTag: f6aaeee2-b14c-47b1-9658-cdf317f44195
+		summarizeBy: none
+		sourceColumn: Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Group Ordinal'
+		dataType: int64
+		isHidden
+		displayFolder: 3. Ordinal
+		lineageTag: 1ce7a8e9-fe9f-4c9e-b106-4464b5c9419d
+		summarizeBy: none
+		sourceColumn: Group Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Order Document Type' = m
+		mode: import
+		queryGroup: Tables
+		source =
+				let
+				    Source = Sql.Database(#"SqlEndpoint",#"Database"),
+				    Data = Source{[Schema="Dimview",Item="Order Document Type"]}[Data]
+				in
+				    Data
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+	annotation TabularEditor_TableGroup = 01. Dimension Tables
+

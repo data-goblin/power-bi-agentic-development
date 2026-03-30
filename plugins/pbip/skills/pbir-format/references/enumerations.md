@@ -1,8 +1,9 @@
 # Enumerated Values
 
 **Sources:**
-- `tmp/Test/Test.Report/StaticResources/SharedResources/BaseThemes/CY24SU10.json`
-- `tmp/Test/Test.Report/definition/pages/*/visuals/*/visual.json`
+- `examples/K201-MonthSlicer.Report/StaticResources/SharedResources/BaseThemes/CY24SU10.json` (bundled base theme)
+- `examples/K201-MonthSlicer.Report/StaticResources/RegisteredResources/SqlbiDataGoblinTheme.json` (bundled custom theme)
+- `examples/K201-MonthSlicer.Report/definition/pages/*/visuals/*/visual.json` (real visual examples)
 
 This document lists valid string values for properties that accept enumerations.
 
@@ -10,43 +11,75 @@ Note that this is not an exhaustive list. Please pull the schema files directly 
 
 ## Visual Types
 
-Valid `visualType` values (from theme.visualStyles):
+Valid `visualType` values. **[K201]** = confirmed in K201 example; **[theme]** = confirmed from bundled theme files.
 
 ```
-- lineChart
-- scatterChart
-- map
-- azureMap
-- pieChart
-- donutChart
-- pivotTable
-- multiRowCard
-- kpi
-- cardVisual
-- advancedSlicerVisual
-- slicer
-- waterfallChart
-- columnChart
-- clusteredColumnChart
-- hundredPercentStackedColumnChart
-- barChart
-- clusteredBarChart
-- hundredPercentStackedBarChart
-- areaChart
-- stackedAreaChart
-- lineClusteredColumnComboChart
-- lineStackedColumnComboChart
-- ribbonChart
-- hundredPercentStackedAreaChart
-- group
-- basicShape
-- shape
-- image
-- actionButton
-- pageNavigator
-- bookmarkNavigator
-- textbox
-- page
+--- Charts ---
+lineChart                          [K201] [theme]
+areaChart                          [theme]
+stackedAreaChart                   [theme]
+hundredPercentStackedAreaChart     [theme]
+barChart                           [theme]
+clusteredBarChart                  [theme]
+hundredPercentStackedBarChart      [theme]
+columnChart                        [theme]
+clusteredColumnChart               [theme]
+hundredPercentStackedColumnChart   [theme]
+lineClusteredColumnComboChart      [theme]
+lineStackedColumnComboChart        [theme]
+scatterChart                       [K201] [theme]
+pieChart                           [theme]
+donutChart                         [theme]
+waterfallChart                     [theme]
+ribbonChart                        [theme]
+funnel                             [theme]
+treemap                            [theme]
+gauge                              [theme]
+filledMap                          [theme]
+map                                [theme]
+azureMap                           [theme]
+shapeMap                           [theme]
+
+--- Tables ---
+tableEx                            [K201] -- standard table visual
+pivotTable                         [theme] -- matrix visual
+multiRowCard                       [theme]
+
+--- KPI & Cards ---
+kpi                                [K201] [theme]
+cardVisual                         [theme] -- new card visual
+card                               [theme] -- classic card visual
+scorecard                          [theme]
+
+--- Slicers ---
+slicer                             [theme]
+advancedSlicerVisual               [K201] [theme] -- new slicer
+listSlicer                         [theme]
+
+--- AI & Advanced ---
+aiNarratives                       [theme]
+decompositionTreeVisual            [theme]
+keyDriversVisual                   [theme]
+qnaVisual                          [theme]
+
+--- Script Visuals ---
+pythonVisual                       [theme]
+scriptVisual                       [theme]
+rdlVisual                          [theme]
+
+--- Layout & Navigation ---
+group                              [theme]
+basicShape                         [theme]
+shape                              [theme]
+image                              [theme]
+actionButton                       [theme]
+pageNavigator                      [theme]
+bookmarkNavigator                  [theme]
+textbox                            [K201] [theme]
+filter                             [theme]
+
+--- Internal ---
+page                               [theme] -- theme visualStyles key ONLY; NOT a valid visualType in visual.json
 ```
 
 ## Common Property Values
@@ -62,11 +95,17 @@ Valid `visualType` values (from theme.visualStyles):
 
 ### legend.position
 ```
+- "Top"
+- "Bottom"
+- "Left"
+- "Right"
+- "TopCenter"
+- "BottomCenter"
+- "LeftCenter"
 - "RightCenter"
-- (other positions to be documented)
 ```
 
-**Source:** theme.visualStyles.pieChart.*.legend.position
+**Source:** theme.visualStyles.pieChart.*.legend.position, K201 LineChart and ScatterChart examples
 
 ### labels.labelStyle
 ```
@@ -95,11 +134,11 @@ Valid `visualType` values (from theme.visualStyles):
 
 ### markerRangeType
 ```
-- "auto"
-- (other values to be documented)
+- "auto"    -- Automatic range based on data
+- "magnitude" -- Range based on value magnitude
 ```
 
-**Source:** theme.visualStyles.scatterChart.*.bubbles.markerRangeType
+**Source:** theme.visualStyles.scatterChart.*.bubbles.markerRangeType, K201 ScatterChart example
 
 ## Boolean Properties
 
@@ -252,11 +291,34 @@ Common fonts (to be confirmed):
 ### lineStyles
 - strokeWidth: numeric
 - lineChartType: string (see enumerations above)
+- lineStyle: string (see below)
 - showMarker: boolean
+- markerShape: string (see below)
 - markerSize: numeric with D suffix
 - segmentGradient: boolean
 - areaShow: boolean
 - transparency: numeric 0-100
+
+### markerShape
+```
+- "circle"   (confirmed from SqlbiDataGoblinTheme.json)
+- "square"   (likely valid)
+- "diamond"  (likely valid)
+- "triangle" (likely valid)
+- "x"        (likely valid)
+```
+
+**Source:** SqlbiDataGoblinTheme.json `lineStyles.markerShape`
+
+### lineStyle
+Controls line dash pattern (distinct from `lineChartType` which controls smooth/stepped/straight):
+```
+- "solid"   (confirmed from SqlbiDataGoblinTheme.json)
+- "dashed"  (likely valid)
+- "dotted"  (likely valid)
+```
+
+**Source:** SqlbiDataGoblinTheme.json `lineStyles.lineStyle`
 
 ### background
 - show: boolean

@@ -36,6 +36,7 @@ Controls the default aggregation behavior when the column is used in a visual wi
 | `min` | Default to MIN | Rarely used |
 | `max` | Default to MAX | Rarely used |
 | `average` | Default to AVERAGE | Rarely used |
+| `distinctCount` | Default to DISTINCT COUNT | Columns where implicit distinct count aggregation is desired; prefer explicit measures |
 
 #### summarizeBy Decision Rules
 

@@ -1,0 +1,307 @@
+table Forecast
+	lineageTag: f44175ec-6e73-4cc5-93db-4febba622528
+
+	measure 'Forecast MTD' = ```
+			
+			-- Calculates the target for the current month/year selection
+			VAR _CURRENT_MONTH_VALUE =
+			    CALCULATE (
+			        [Forecast],
+			        ALL ( 'Date' ),
+			        VALUES ( 'Date'[Calendar Month Year (ie Jan 21)] )
+			    ) 
+			
+			-- Computes rate at which Forecast increases through the month
+			VAR _CURRENT_MONTH_PERC_WORKDAYS_MTD =
+			    POWER (
+			        CALCULATE (
+			            MAX ( 'Date'[Workdays MTD %] ),
+			            'Date'[IsDateInScope] = TRUE
+			        ),
+			        1.035
+			    )
+			
+			VAR _CURRENT_MONTH_PERC_WORKDAYS =
+			    POWER (
+			        CALCULATE (
+			            MAX ( 'Date'[Workdays MTD %] )
+			        ),
+			        1.035
+			    )
+			
+			VAR _PERIOD =
+			    SELECTEDVALUE (
+			        '4) Selected Period'[Period]
+			    )
+			VAR _HASONEMONTH =
+			    HASONEVALUE (
+			        'Date'[Calendar Month Year (ie Jan 21)]
+			    )
+			RETURN
+			    -- return MTD value if a month is selected
+			    IF.EAGER (
+			        _HASONEMONTH
+			            && _PERIOD = "Full Period",
+			        _CURRENT_MONTH_PERC_WORKDAYS
+			            * _CURRENT_MONTH_VALUE,
+			
+			        IF (
+			            _HASONEMONTH,
+			            _CURRENT_MONTH_PERC_WORKDAYS_MTD
+			                * _CURRENT_MONTH_VALUE
+			        )
+			    )
+			```
+		formatString: #,##0
+		displayFolder: Measures\ii. MTD
+		lineageTag: 59b4471b-3cce-43f5-ab24-5555faf2bd37
+
+	measure 'Forecast QTD' =
+			
+			VAR _DATES_QTD =
+			    CALCULATETABLE (
+			        DATESQTD ('Date'[Date]),
+			        'Date'[IsThisMonth] = FALSE
+			    )
+			VAR _CURRENT_MONTH_Forecast = [Forecast MTD]
+			VAR _QTD_Forecast_BEFORE_THIS_MONTH = CALCULATE ([Forecast], _DATES_QTD)
+			VAR _RESULT = _CURRENT_MONTH_Forecast + _QTD_Forecast_BEFORE_THIS_MONTH
+			RETURN
+			    _RESULT
+		formatString: #,##0
+		displayFolder: Measures\iii. QTD
+		lineageTag: b016de82-c11c-4231-a206-c2d02568aa7f
+
+	measure 'Forecast QTD vs. Turnover (%)' =
+			
+			VAR _TARGET = [Forecast QTD]
+			VAR _DELTA  = [Turnover] - [Forecast QTD]
+			VAR _PERC   = DIVIDE ( _DELTA, _TARGET )
+			RETURN
+			_PERC
+		formatString: #,##0.0% ↑;#,##0.0% ↓;#,##0.0%
+		displayFolder: Measures\iii. QTD
+		lineageTag: 5fc59186-997c-4890-a18b-97e7662b0667
+
+	measure 'Forecast QTD vs. Turnover (Δ)' =
+			
+			[Turnover] - [Forecast QTD]
+		formatString: #,##0 ↑;#,##0 ↓;#,##0
+		displayFolder: Measures\iii. QTD
+		lineageTag: 86a370f9-61ff-46d1-a054-614a604cf185
+
+	measure 'Forecast YTD' =
+			
+			VAR _DATES_YTD =
+			    CALCULATETABLE (
+			        DATESYTD ('Date'[Date]),
+			        'Date'[IsThisMonth] = FALSE
+			    )
+			VAR _CURRENT_MONTH_Forecast = [Forecast MTD]
+			VAR _QTD_Forecast_BEFORE_THIS_MONTH = CALCULATE ([Forecast], _DATES_YTD)
+			VAR _RESULT = _CURRENT_MONTH_Forecast + _QTD_Forecast_BEFORE_THIS_MONTH
+			RETURN
+			    _RESULT
+		formatString: #,##0
+		displayFolder: Measures\iv. YTD
+		lineageTag: 8db40d35-8818-45fb-b008-f39e79ba3084
+
+	measure 'Forecast YTD vs. Turnover (%)' =
+			
+			VAR _TARGET = [Forecast YTD]
+			VAR _DELTA  = [Turnover] - [Forecast YTD]
+			VAR _PERC   = DIVIDE ( _DELTA, _TARGET )
+			RETURN
+			_PERC
+		formatString: #,##0.0% ↑;#,##0.0% ↓;#,##0.0%
+		displayFolder: Measures\iv. YTD
+		lineageTag: 8d1f9942-e438-4edf-99fb-a244511fb73f
+
+	measure 'Forecast YTD vs. Turnover (Δ)' =
+			
+			[Turnover] - [Forecast YTD]
+		formatString: #,##0 ↑;#,##0 ↓;#,##0
+		displayFolder: Measures\iv. YTD
+		lineageTag: 1a4e0d88-e751-4350-bf75-3cb5aab8e7c1
+
+	measure 'Total Forecast' = ```
+			
+			    VAR _SelectedRate = MAX ( 'Exchange Rate'[Rate] )
+			RETURN
+			    SUM ( 'Forecast'[Forecast (EUR)] ) * _SelectedRate
+			```
+		formatString: #,##0
+		displayFolder: Measures\i. Total
+		lineageTag: 66dd4eca-8cd0-492a-b93a-0bb91c4f6b04
+
+	measure Forecast = ```
+			
+			IF.EAGER(
+			    HASONEVALUE( '2) Selected Unit'[Select a Unit] )
+			        && 
+			    HASONEVALUE( 'Exchange Rate'[From Currency] ),
+			
+			    VAR _SELECTED_CURRENCY = 
+			        SELECTEDVALUE( 'Exchange Rate'[From Currency] )
+			
+			    VAR _SELECTED_RATE_TYPE = 
+			        SELECTEDVALUE( '2) Selected Unit'[Select a Unit] )
+			    
+			    VAR _SELECTED_BUDGET_RATE =
+			        MAX( 'Exchange Rate'[Rate] )
+			        
+			    VAR _SELECTED_MONTHLY_RATE =
+			        ADDCOLUMNS(
+			            SUMMARIZE(
+			                'Exchange Rate',
+			                'Date'[Calendar Month Year (ie Jan 21)]
+			            ),
+			            "Curr", 
+			            CALCULATE ( 
+			                MAX( 'Exchange Rate'[Rate] ) 
+			            )
+			        )
+			        
+			    RETURN
+			
+			    IF(
+			        _SELECTED_RATE_TYPE = "Value (Budget Rate)",
+			        SUM ( 'Forecast'[Forecast (EUR)]) 
+			        * 
+			        _SELECTED_BUDGET_RATE,
+			        
+			        IF(
+			            _SELECTED_RATE_TYPE = "Value (Monthly Rate)",
+			            SUMX(
+			                _SELECTED_MONTHLY_RATE,
+			                CALCULATE( 
+			                    SUM ( 'Forecast'[Forecast (EUR)])
+			                )
+			                * [Curr]
+			            )
+			        )
+			    )
+			)
+			```
+		formatString: #,##0
+		displayFolder: Measures\i. Total
+		lineageTag: a6383680-00ad-44a2-a972-afd4378179ad
+
+	measure 'Forecast MTD vs. Turnover (%)' =
+			
+			VAR _TARGET = [Forecast MTD]
+			VAR _DELTA  = [MTD Turnover] - _TARGET
+			VAR _PERC   = DIVIDE ( _DELTA, _TARGET )
+			RETURN
+			_PERC
+		formatString: #,##0.0% ↑;#,##0.0% ↓;#,##0.0%
+		displayFolder: Measures\ii. MTD
+		lineageTag: 852154a6-c9a0-46bc-bc2f-f27301426027
+
+	measure 'Forecast MTD vs. Turnover (Δ)' =
+			
+			[MTD Turnover] - [Forecast MTD]
+		formatString: #,##0 ↑;#,##0 ↓;#,##0
+		displayFolder: Measures\ii. MTD
+		lineageTag: 32e7cb6e-42b1-4549-ac5a-4dcd6d678b1c
+
+	measure 'Forecast vs. Turnover (%)' =
+			
+			VAR _TARGET = [Forecast]
+			VAR _DELTA  = [Turnover] - _TARGET
+			VAR _PERC   = DIVIDE ( _DELTA, _TARGET )
+			RETURN
+			_PERC
+		formatString: #,##0.0% ↑;#,##0.0% ↓;#,##0.0%
+		displayFolder: Measures\i. Total
+		lineageTag: 0f955ab8-28e0-4ac4-b335-23c88440db41
+
+	measure 'Forecast vs. Turnover (Δ)' =
+			
+			[Turnover] - [Forecast]
+		formatString: #,##0 ↑;#,##0 ↓;#,##0
+		displayFolder: Measures\i. Total
+		lineageTag: 68c5bb1f-fa70-42a1-8f9c-34f95ed0950b
+
+	column 'Forecast Month'
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		displayFolder: 2. Keys
+		lineageTag: 1c521f45-cb4d-444a-94da-8684fd62cf37
+		summarizeBy: none
+		sourceColumn: Forecast Month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Region Territory'
+		dataType: string
+		isHidden
+		displayFolder: 2. Keys
+		lineageTag: 864f2700-e020-4b14-98ce-7e5b4154275d
+		summarizeBy: none
+		sourceColumn: Region Territory
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Product Type'
+		dataType: string
+		isHidden
+		displayFolder: 2. Keys
+		lineageTag: a3e38e2f-113c-4b33-97bd-ba68256feaff
+		summarizeBy: none
+		sourceColumn: Product Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Forecast (EUR)'
+		dataType: int64
+		isHidden
+		displayFolder: 1. Facts
+		lineageTag: 68c093b8-8ce0-44cc-ab2c-213dcc900077
+		summarizeBy: sum
+		sourceColumn: Forecast (EUR)
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Forecast = m
+		mode: import
+		queryGroup: Tables
+		source = ```
+				let
+				  Source = Sql.Database(
+				    #"SqlEndpoint",
+				    #"Database"
+				  ),
+				
+				  Data = Source
+				    {
+				
+				        [
+				          Schema = "Factview",
+				          Item = "Forecast"
+				        ]
+				    }[Data],
+				
+				  #"Select Columns" = Table.SelectColumns(
+				    Data,
+				    {
+				      "Forecast Month",
+				      "Forecast (EUR)",
+				      "Region Territory",
+				      "Product Type"
+				      }
+				  )
+				in
+				  #"Select Columns"
+				
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+	annotation TabularEditor_TableGroup = 02. Fact Tables
+

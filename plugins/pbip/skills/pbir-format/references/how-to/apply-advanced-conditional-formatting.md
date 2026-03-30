@@ -446,8 +446,21 @@ No extension measure needed - uses FillRule with linearGradient3:
 ```
 
 **Color Options:**
-- Use theme colors: `'minColor'`, `'midColor'`, `'maxColor'`
+- Use theme colors: `'minColor'`, `'neutral'`, `'maxColor'`
 - Use hex codes: `'#e03131'`, `'#f08c00'`, `'#2f9e44'`
+
+**Explicit bounds (fix the midpoint at a known threshold):** To pin zero as always the midpoint regardless of data range, add `value` fields to each stop:
+
+```json
+"linearGradient3": {
+  "min": {"color": {"Literal": {"Value": "'#e03131'"}}, "value": {"Literal": {"Value": "-1D"}}},
+  "mid": {"color": {"Literal": {"Value": "'#f08c00'"}}, "value": {"Literal": {"Value": "0D"}}},
+  "max": {"color": {"Literal": {"Value": "'#2f9e44'"}}, "value": {"Literal": {"Value": "1D"}}},
+  "nullColoringStrategy": {"strategy": {"Literal": {"Value": "'asZero'"}}}
+}
+```
+
+See [conditional-formatting.md](../schema-patterns/conditional-formatting.md) for the full data-driven vs explicit-bounds comparison.
 
 **When to Use:**
 - Diverging data (negative to positive)
@@ -640,16 +653,19 @@ This is the JSON Power BI UI generates for conditional formatting rules. It's co
   - 0 = Equal
   - 1 = GreaterThan
   - 2 = GreaterThanOrEqual
-  - 3 = LessThan
-  - 4 = LessThanOrEqual
+  - 3 = LessThanOrEqual
+  - 4 = LessThan
 
-- **Aggregation.Function values:**
-  - 0 = SUM
-  - 1 = AVG
-  - 2 = COUNT
-  - 3 = MIN
-  - 4 = MAX
-  - 5 = DISTINCTCOUNT
+- **Aggregation.Function values (QueryAggregateFunction):**
+  - 0 = Sum
+  - 1 = Average
+  - 2 = DistinctCount
+  - 3 = Min
+  - 4 = Max
+  - 5 = Count
+  - 6 = Median
+  - 7 = StandardDeviation
+  - 8 = Variance
 
 - **ScopedEval + AllRolesRef:**
   - Evaluates expression at ALL level (ignores all filters)
@@ -860,9 +876,9 @@ fab import "Workspace.Workspace/Report.Report" -i ./Report.Report -f
 
 ## Common Mistakes
 
-1. **Forgetting `"Schema": "extension"`** in SourceRef for extension measures
-   - WRONG: `"SourceRef": {"Entity": "Orders"}`
-   - RIGHT: `"SourceRef": {"Schema": "extension", "Entity": "Orders"}`
+1. **`"Schema": "extension"` only applies to extension measures** (measures defined in `reportExtensions.json`). Do NOT add it to references to real semantic model measures — that will break the reference.
+   - Extension measure: `"SourceRef": {"Schema": "extension", "Entity": "Orders"}` — `"Schema": "extension"` REQUIRED
+   - Model measure: `"SourceRef": {"Entity": "Sales"}` — `"Schema": "extension"` MUST NOT be present
 
 2. **Missing `matchingOption: 1`** for per-data-point evaluation
    - Without it, formatting applies globally

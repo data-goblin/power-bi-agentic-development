@@ -1,0 +1,37 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_QueryOrder = ["Report views","Model measures","Report rank","Report page views","Report pages","Reports","Report load times","Refresh Stats","WorkspaceId","BaseUrl"]
+
+ref table 'Report views'
+ref table DateTableTemplate_d531c5a6-f782-4ea4-a755-a9747139c561
+ref table 'Model measures'
+ref table 'Report rank'
+ref table 'Report page views'
+ref table 'Report load times'
+ref table LocalDateTable_3b852b25-f44a-4909-b021-a7df8cabefe6
+ref table LocalDateTable_3ebb0033-50be-4e6e-8081-ee8c7cf4091f
+ref table LocalDateTable_dc7eb03a-ec8b-421f-b39b-107ea1f05736
+ref table LocalDateTable_d27e4379-e50d-47cf-aeac-77eb5f688306
+ref table 'Report pages'
+ref table Reports
+ref table LocalDateTable_e9fae86b-d80b-4c31-9ba4-095822014411
+ref table 'Refresh Stats'
+ref table Dates
+ref table 'Workspace views'
+ref table 'Workspace reports'
+ref table LocalDateTable_bc207ece-a79c-4d33-a331-c40f45eb2725
+ref table LocalDateTable_b465bb22-755a-4444-bc06-bd92af8a8952
+ref table LocalDateTable_7e74b9e2-e4a5-4c05-8b29-c52b531c8abf
+ref table Users
+ref table Users_ReportPageView
+
+ref cultureInfo en-US
+

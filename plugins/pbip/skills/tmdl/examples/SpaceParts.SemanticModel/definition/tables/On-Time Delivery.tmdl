@@ -1,0 +1,156 @@
+table 'On-Time Delivery'
+	lineageTag: fa6fb917-28ce-4d34-97ad-9fff4d086e1c
+
+	/// Percentage of invoice lines delivered on time
+	measure 'OTD % (Lines)' =
+			
+			VAR _OnTime = [OTD (Lines)]
+			VAR _Total = CALCULATE (
+			    [Invoice Lines],
+			    'Invoice Document Type'[Group] = "Invoice"
+			)
+			RETURN
+			
+			DIVIDE ( _OnTime, _Total )
+		formatString: #,##0.0%
+		displayFolder: 3. Lines
+		lineageTag: ac99485b-fc61-474e-a30e-d0889efce03f
+
+	/// Percentage of invoiced quantity delivered on time
+	measure 'OTD % (Quantity)' = ```
+			
+			VAR _OnTime = [OTD (Quantity)]
+			VAR _Total = 
+			    CALCULATE (
+			        [Total Net Invoice Quantity],
+			        'Invoice Document Type'[Group] = "Invoice"
+			    )
+			RETURN
+			
+			DIVIDE ( _OnTime, _Total )
+			```
+		formatString: #,##0.0%
+		displayFolder: 2. Quantity
+		lineageTag: 29fcb593-54b0-4061-ae46-2683f72fe75a
+
+	/// Percentage of invoiced value delivered on time
+	measure 'OTD % (Value)' = ```
+			
+			VAR _OnTime = [OTD (Value)]
+			VAR _Total = 
+			    CALCULATE (
+			        [Total Net Invoice Value],
+			        'Invoice Document Type'[Group] = "Invoice"
+			    )
+			RETURN
+			
+			DIVIDE ( _OnTime, _Total )
+			```
+		formatString: #,##0.0%
+		displayFolder: 1. Value
+		lineageTag: 8e11165d-306e-4e59-b549-fc1cdf4b080f
+
+	/// Number of invoice lines delivered on time
+	measure 'OTD (Lines)' =
+			
+			CALCULATE (
+			    [Invoice Lines],
+			    'On-Time Delivery'[OTD Indicator] = TRUE,
+			    'Invoice Document Type'[Group] = "Invoice"
+			)
+		formatString: #,##0
+		displayFolder: 3. Lines
+		lineageTag: e117a7f4-cf4b-4ec6-80bb-a1cc7970da51
+
+	/// Total quantity of items delivered on time
+	measure 'OTD (Quantity)' =
+			
+			CALCULATE (
+			    [Total Net Invoice Quantity],
+			    'On-Time Delivery'[OTD Indicator] = TRUE,
+			    'Invoice Document Type'[Group] = "Invoice"
+			)
+		formatString: #,##0
+		displayFolder: 2. Quantity
+		lineageTag: 7018a9c2-01fc-4f2b-8312-80c684c99e25
+
+	/// Calculates the total net invoice value for on-time deliveries where the OTD Indicator is true and the invoice doc type is standard or express..
+	measure 'OTD (Value)' =
+			
+			CALCULATE (
+			    [Total Net Invoice Value],
+			    'On-Time Delivery'[OTD Indicator] = TRUE,
+			    'Invoice Document Type'[Group] = "Invoice"
+			)
+		formatString: #,##0
+		displayFolder: 1. Value
+		lineageTag: c6c32721-002f-444e-8c7a-dadc8ea6c9c6
+
+	/// On-time delivery rate by lines from one year ago
+	measure 'OTD % (Lines) 1YP' = CALCULATE ( [OTD % (Lines)], DATEADD('Date'[Date], -1, YEAR ))
+		formatString: #,##0.0%
+		lineageTag: 4d895722-d128-402f-905a-e3ba3a517964
+
+	/// On-time delivery line count from one year ago
+	measure 'OTD (Lines) 1YP' = CALCULATE ( [OTD (Lines)], DATEADD('Date'[Date], -1, YEAR ))
+		formatString: #,##0
+		lineageTag: f3289dbc-da4a-42f6-8e54-a2e2cd6303be
+
+	column 'OTD Indicator'
+		isHidden
+		displayFolder: Columns\2. Keys
+		lineageTag: 705b4fb2-c9bb-4915-8cb4-b7dac943d875
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Invoices[OTD Indicator]
+		sortByColumn: 'OTD Sort Order'
+		columnOrigin: Invoices.'OTD Indicator'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'OTD Status'
+		isHidden
+		displayFolder: Columns\1. OTD
+		lineageTag: 7f04b315-56ac-43ca-ad33-ff6229fe4e8c
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [OTD Status]
+		sortByColumn: 'OTD Sort Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'OTD Sort Order'
+		isHidden
+		displayFolder: Columns\3. Ordinal
+		lineageTag: 7a38eab2-031b-4605-9352-d562e2c842c7
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [OTD Sort Order]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'On-Time Delivery' = calculated
+		mode: import
+		source =
+				
+				ADDCOLUMNS (
+				    FILTER (
+				        DISTINCT ('Invoices'[OTD Indicator]),
+				        NOT ISBLANK ('Invoices'[OTD Indicator])
+				    ),
+				    "OTD Status",
+				        SWITCH (
+				            TRUE (),
+				            'Invoices'[OTD Indicator] = TRUE, "On Time",
+				            "Late"
+				        ),
+				    "OTD Sort Order",
+				        SWITCH (
+				            TRUE (),
+				            'Invoices'[OTD Indicator] = TRUE, 1,
+				            2
+				        )
+				)
+
+	annotation TabularEditor_TableGroup = 01. Dimension Tables
+

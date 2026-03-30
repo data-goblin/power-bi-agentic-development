@@ -1,0 +1,537 @@
+/// Everything in this Table Requires Measure Selection
+/// 1. Select a Metric
+/// 2. Select a Unit
+/// 3. Select a Target
+/// 4. Select a Period
+/// 5. Select a Currency (from 'Exchange Rate')
+/// 6. Select a Year and/or Month from 'Date'
+/// 
+table __Measures
+	lineageTag: c1f26e78-ea20-4757-b4d4-89e2237d2584
+
+	measure Actuals =
+			
+			CALCULATE (
+			    [Blank],
+			    TREATAS (
+			        DISTINCT ('2) Selected Unit'[Select a Unit]),
+			        'Z02CG1 - Unit'[Unit]
+			    )
+			)
+		formatString: #,##0
+		displayFolder: 1. Total\Actuals
+		lineageTag: 0a6cef3d-e27e-4055-a718-50e2e16947d2
+
+	measure 'Actuals MTD' =
+			
+			CALCULATE (
+			    [Actuals],
+			    CALCULATETABLE (
+			        DATESMTD ('Date'[Date]),
+			        'Date'[IsDateInScope]
+			    )
+			)
+		formatString: #,##0
+		displayFolder: 2. MTD\Actuals
+		lineageTag: ea39866d-9863-418f-884b-661ffb7be937
+
+	measure 'Actuals QTD' =
+			
+			CALCULATE (
+			    [Actuals],
+			    CALCULATETABLE (
+			        DATESQTD ('Date'[Date]),
+			        'Date'[IsDateInScope]
+			    )
+			)
+		formatString: #,##0
+		displayFolder: 3. QTD\Actuals
+		lineageTag: 75670b7b-105c-4bdd-83a1-1ead1595f242
+
+	measure 'Actuals YTD' =
+			
+			CALCULATE (
+			    [Actuals],
+			    CALCULATETABLE (
+			        DATESYTD ('Date'[Date]),
+			        'Date'[IsDateInScope]
+			    )
+			)
+		formatString: #,##0
+		displayFolder: 4. YTD
+		lineageTag: cceb1633-c625-4f81-92e9-220b5bcdf28f
+
+	measure Lines =
+			
+			CALCULATE (
+			    [Blank],
+			    TREATAS (
+			        DISTINCT ('1) Selected Metric'[Select a Measure]),
+			        'Z01CG4 - Lines'[Measure]
+			    )
+			)
+		formatString: #,##0
+		isHidden
+		displayFolder: 1. Total\Actuals
+		lineageTag: 70efca37-c432-410e-a447-3025e4237852
+
+	measure Quantity =
+			
+			CALCULATE (
+			    [Blank],
+			    TREATAS (
+			        DISTINCT ('1) Selected Metric'[Select a Measure]),
+			        'Z01CG1 - Quantity'[Measure])
+			)
+		formatString: #,##0
+		isHidden
+		displayFolder: 1. Total\Actuals
+		lineageTag: c68488fd-5631-4b9f-a9c3-7f17d7f6a2ef
+
+	measure 'Sales Target YTD vs. Turnover (%)' =
+			
+			VAR _TARGET = [Sales Target YTD]
+			VAR _DELTA  = [Actuals YTD] -  _TARGET
+			VAR _PERC   = DIVIDE ( _DELTA, _TARGET )
+			RETURN
+			_PERC
+		formatString: #,##0.0% ↑;#,##0.0% ↓;#,##0.0%
+		displayFolder: 4. YTD
+		lineageTag: 0886ae94-a618-4cb5-a879-159717597f72
+
+	measure 'Sales Target YTD vs. Turnover (Δ)' =
+			
+			[Actuals YTD] - [Sales Target YTD]
+		formatString: #,##0 ↑;#,##0 ↓;#,##0
+		displayFolder: 4. YTD
+		lineageTag: 60e7cc65-3801-4cf5-b186-7216e43c7086
+
+	measure Value = ```
+			
+			CALCULATE (
+			    [Blank],
+			    TREATAS (
+			        DISTINCT ('1) Selected Metric'[Select a Measure]),
+			        'Z01CG2 - Value (Budget Rate)'[Measure]
+			    )
+			) 
+			```
+		formatString: #,##0
+		isHidden
+		displayFolder: 1. Total\Actuals
+		lineageTag: c5c7fd2d-5b7d-467c-953c-71338d4296f7
+
+	measure 'Sales Target YTD' =
+			
+			VAR YRTD =
+			    CALCULATE(
+			        [Sales Target],
+			        CALCULATETABLE(
+			            DATESYTD( 'Date'[Date] ),
+			            'Date'[IsDateInScope] = TRUE
+			        ),
+			        'Date'[IsBeforeThisMonth] = TRUE
+			    ) // Calculates the target for the current month/year selection
+			VAR _CurrentMonth_value =
+			    CALCULATE( [Sales Target], 'Date'[IsThisMonth] = TRUE ) // Calculates the % workdays MTD together with the dynamic parameter to set the exponential rate of increase MTD
+			VAR _currentMonthWorkDay =
+			    POWER(
+			        CALCULATE(
+			            MAX( 'Date'[Workdays MTD %] ),
+			            'Date'[IsDateInScope] = TRUE,
+			            'Date'[IsThisMonth] = TRUE
+			        ),
+			        0.93
+			    ) // If viewing units, hide the FCST (as there is no units FCST as of July 09, 2020)
+			VAR MOTD =
+			    IF(
+			        _CurrentMonth_value > 0,
+			        _currentMonthWorkDay * _CurrentMonth_value,
+			        BLANK( )
+			    )
+			        + YRTD
+			VAR _PERIOD = SELECTEDVALUE( '4) Selected Period'[Period] )
+			VAR _YEAR = MAX( 'Date'[Calendar Year Number (ie 2021)] )
+			VAR _MONTH = MAX( 'Date'[Calendar Year Month (ie 202101)] )
+			RETURN
+			    IF(
+			        _PERIOD = "Full Period",
+			        CALCULATE(
+			            [Sales Target],
+			            ALL( 'Date' ),
+			            'Date'[Calendar Year Number (ie 2021)] = _YEAR,
+			            'Date'[Calendar Year Month (ie 202101)] <= _MONTH
+			        ),
+			        // If date is in the visual context and YTD is blank, show MTD, otherwise add YTD + MTD together
+			        MOTD
+			    )
+		formatString: #,##0
+		displayFolder: 4. YTD
+		lineageTag: 8baefb39-9d1b-40ad-9ad5-4f9c9c310095
+
+	measure 'Sales Target QTD' =
+			
+			VAR _QTD =
+			    CALCULATE(
+			        [Sales Target],
+			        CALCULATETABLE(
+			            DATESQTD( 'Date'[Date] ),
+			            'Date'[IsDateInScope] = TRUE
+			        ),
+			        'Date'[IsThisMonth] = FALSE
+			    )
+			VAR _MTD =
+			    CALCULATE( [Sales Target MTD], 'Date'[IsThisMonth] = TRUE )
+			VAR _PERIOD = SELECTEDVALUE( '4) Selected Period'[Period] )
+			VAR _QUARTER = MAX( 'Date'[Calendar Year Quarter (ie 202101)] )
+			VAR _MONTH = MAX( 'Date'[Calendar Year Month (ie 202101)] )
+			RETURN
+			    IF(
+			        _PERIOD = "Full Period",
+			        CALCULATE(
+			            [Sales Target],
+			            ALL( 'Date' ),
+			            'Date'[Calendar Year Quarter (ie 202101)] = _QUARTER,
+			            'Date'[Calendar Year Month (ie 202101)] <= _MONTH
+			        ),
+			        IF(
+			            ISBLANK( _QTD ),
+			            _MTD,
+			            // If date is in the visual context and QTD is blank, show MTD, otherwise add QTD + MTD together
+			            IF( MAX ( 'Date'[Date] ) >= MAX ('Last Refresh'[Last Refresh]), _QTD + _MTD, _QTD )
+			        )
+			    )
+		formatString: #,##0
+		displayFolder: 3. QTD\Sales Target
+		lineageTag: 5e01dd13-583d-429c-9ba4-79b2fc89b918
+
+	measure 'Sales Target MTD' =
+			
+			-- Calculates the target for the current month/year selection
+			VAR _CurrentMonth =
+			    CALCULATE (
+			        [Sales Target],
+			        ALL ( 'Date' ),
+			        VALUES (
+			            'Date'[Calendar Month Year (ie Jan 21)]
+			        )
+			    )
+			
+			-- Computes rate at which Budget increases through the month
+			VAR _CurrentMonthWDMTD =
+			    POWER (
+			        CALCULATE (
+			            MAX ( 'Date'[Workdays MTD %] ),
+			            'Date'[IsDateInScope] = TRUE
+			        ),
+			        1.035
+			    )
+			VAR CurrentMonthWDTotal =
+			    POWER (
+			        CALCULATE (
+			            MAX ( 'Date'[Workdays MTD %] )
+			        ),
+			        1.035
+			    )
+			VAR _Period =
+			    SELECTEDVALUE (
+			        '4) Selected Period'[Period]
+			    )
+			VAR _HasOneMonth =
+			    HASONEVALUE (
+			        'Date'[Calendar Month Year (ie Jan 21)]
+			    )
+			RETURN
+			    -- return MTD value if a month is selected
+			    IF.EAGER (
+			        _HasOneMonth && _Period = "Full Period",
+			        CurrentMonthWDTotal
+			            * _CurrentMonth,
+			        IF (
+			            _HasOneMonth,
+			            _CurrentMonthWDMTD
+			                * _CurrentMonth
+			        )
+			    )
+		formatString: #,##0
+		displayFolder: 2. MTD\Sales Target
+		lineageTag: 528d4072-5ea6-4427-97e0-7e812a0f511a
+
+	measure 'Sales Target' =
+			
+			CALCULATE (
+			    [Blank],
+			    TREATAS (
+			        DISTINCT (
+			            '3) Selected Target'[Select a Target]
+			        ),
+			        'Z03CG1 - Sales Target'[Target]
+			    )
+			)
+		formatString: #,##0
+		displayFolder: 1. Total\Sales Target
+		lineageTag: 14bbba44-f1d9-49ad-ab20-4c7910d9d7da
+
+	measure 'Sales Target vs. Actuals (Δ)' =
+			
+			[Actuals] - [Sales Target]
+		formatString: #,##0 ↑;#,##0 ↓;#,##0
+		displayFolder: 1. Total\Sales Target
+		lineageTag: 79869441-9511-4efb-b95a-147eb3d14926
+
+	measure 'Sales Target vs. Actuals (%)' =
+			
+			VAR _TARGET = [Sales Target]
+			VAR _ACTUAL = [Actuals]
+			VAR _DELTA  = _ACTUAL - _TARGET
+			VAR _PERC   = DIVIDE ( _DELTA, _TARGET )
+			
+			RETURN
+			
+			_PERC
+		formatString: #,##0.0% ↑;#,##0.0% ↓;#,##0.0%
+		displayFolder: 1. Total\Sales Target
+		lineageTag: 876d123c-de76-4a10-84e7-470eed31b8c8
+
+	measure 'Sales Target MTD vs. Actuals (Δ)' =
+			
+			[Actuals MTD] - [Sales Target MTD]
+		formatString: #,##0 ↑;#,##0 ↓;#,##0
+		displayFolder: 2. MTD\Sales Target
+		lineageTag: 30488de0-5eac-468b-a3db-81eea38a2165
+
+	measure 'Sales Target MTD vs. Actuals (%)' =
+			
+			VAR _TARGET = [Sales Target MTD]
+			VAR _ACTUAL = [Actuals MTD]
+			VAR _DELTA  = _ACTUAL - _TARGET
+			VAR _PERC   = DIVIDE ( _DELTA, _TARGET )
+			
+			RETURN
+			
+			_PERC
+		formatString: #,##0.0% ↑;#,##0.0% ↓;#,##0.0%
+		displayFolder: 2. MTD\Sales Target
+		lineageTag: 2d7fff67-3495-4143-b0e4-2322aca32642
+
+	measure 'Actuals MTD, Latest Data Point' =
+			
+			-- Max workday in scope
+			VAR _MAXWD =
+			    CALCULATE (
+			        MAX ( 'Date'[Workdays MTD] ),
+			        'Date'[IsDateInScope],
+			        ALLEXCEPT ('Date', 'Date'[Calendar Month Year (ie Jan 21)])
+			    )
+			
+			-- Max date in scope
+			VAR _MAXDT =
+			    CALCULATE ( MAX ('Date'[Date] ),
+			        'Date'[IsDateInScope],
+			        ALLEXCEPT ('Date', 'Date'[Calendar Month Year (ie Jan 21)]) )
+			RETURN
+			
+			    -- If the selected workday = the max workday in scope, return the value
+			    -- Otherwise return blank (don't show the marker / value)
+			    IF (
+			        MAX ('Date'[Workdays MTD]) = _MAXWD
+			            || MAX ('Date'[Date]) = _MAXDT,
+			        [Actuals MTD]
+			    )
+		formatString: #,##0
+		isHidden
+		displayFolder: 9. Technical Measures
+		lineageTag: f526af90-be40-4e71-a8af-700e44503379
+
+	measure 'Actuals MTD, Data Label' =
+			
+			-- Max workday in scope
+			VAR _MAXWD =
+			    CALCULATE (
+			        MAX ( 'Date'[Workdays MTD] ),
+			         'Date'[IsDateInScope],
+			         ALLEXCEPT ('Date', 'Date'[Calendar Month Year (ie Jan 21)] )
+			)
+			-- Max date in scope
+			VAR _MAXDT =
+			    CALCULATE ( MAX ('Date'[Date] ),
+			         'Date'[IsDateInScope],
+			         ALLEXCEPT ('Date', 'Date'[Calendar Month Year (ie Jan 21)]) )
+			RETURN
+			
+			    -- If the selected workday = the max workday in scope, return the value
+			    -- Otherwise return blank (don't show the marker / value)
+			    IF (
+			        MAX ('Date'[Workdays MTD]) = _MAXWD
+			            || MAX ('Date'[Date]) = _MAXDT,
+			        "#6e8c95",
+			        "#FFFFFF00"
+			    )
+		formatString: #,##0
+		isHidden
+		displayFolder: 9. Technical Measures
+		lineageTag: a38853fe-b2da-469e-b410-756d6c44e88d
+
+	measure Blank =
+			
+			BLANK ()
+		isHidden
+		displayFolder: 9. Technical Measures
+		lineageTag: 7bc7070b-80ae-431e-8600-63befaa1d5bf
+
+	measure 'Orders Target' =
+			
+			CALCULATE (
+			    [Blank],
+			    TREATAS (
+			        DISTINCT ( '3) Selected Target'[Select a Target] ), 'Z03CG2 - Orders Target'[Target] )
+			    )
+		formatString: #,##0
+		displayFolder: 1. Total\Orders Target
+		lineageTag: 4eed64a0-d832-4f27-ae28-91d1dc31cb89
+
+	/// Net orders exclude cancellation document types
+	measure 'Orders Target vs. Net Orders (%)' =
+			
+			VAR _TARGET = [Orders Target]
+			VAR _DELTA  = [Net Orders] - _TARGET
+			VAR _PERC   = DIVIDE ( _DELTA, _TARGET )
+			RETURN
+			_PERC
+		formatString: #,##0.0% ↑;#,##0.0% ↓;#,##0.0%
+		displayFolder: 1. Total\Orders Target
+		lineageTag: e6cda3c8-6f0c-4d5a-8685-d41623fb81d9
+
+	/// Net orders exclude cancellation document types
+	measure 'Orders Target vs. Net Orders (Δ)' =
+			
+			[Net Orders] - [Orders Target]
+		formatString: #,##0 ↑;#,##0 ↓;#,##0
+		displayFolder: 1. Total\Orders Target
+		lineageTag: baee51d7-d773-4a52-9486-6aed36e264c0
+
+	measure 'Orders Target MTD' = ```
+			
+			-- Calculates the target for the current month/year selection
+			VAR _CurrentMonth =
+			    CALCULATE (
+			        [Orders Target],
+			        ALL ( 'Date' ),
+			        VALUES (
+			            'Date'[Calendar Month Year (ie Jan 21)]
+			        )
+			    )
+			
+			-- Computes rate at which Budget increases through the month
+			VAR _CurrentMonthWDMTD =
+			    POWER (
+			        CALCULATE (
+			            MAX ( 'Date'[Workdays MTD %] ),
+			            'Date'[IsDateInScope] = TRUE
+			        ),
+			        0.93
+			    )
+			VAR _CurrentMonthWDTotal =
+			    POWER (
+			        CALCULATE (
+			            MAX ( 'Date'[Workdays MTD %] )
+			        ),
+			        0.93
+			    )
+			VAR _Period =
+			    SELECTEDVALUE (
+			        '4) Selected Period'[Period]
+			    )
+			    
+			VAR __HasOneMonth =
+			    HASONEVALUE (
+			        'Date'[Calendar Month Year (ie Jan 21)]
+			    )
+			RETURN
+			    -- return MTD value if a month is selected
+			    IF.EAGER (
+			        __HasOneMonth && _Period = "Full Period",
+			        _CurrentMonthWDTotal
+			            * _CurrentMonth,
+			        IF (
+			            __HasOneMonth,
+			            _CurrentMonthWDMTD
+			                * _CurrentMonth
+			        )
+			    )
+			```
+		formatString: #,##0
+		displayFolder: 2. MTD\Orders Target
+		lineageTag: 1d671a50-fac4-4d2b-a41d-3328c522dafa
+
+	measure 'Orders Target QTD' =
+			
+			VAR _DATES_QTD =
+			    CALCULATETABLE (
+			        DATESQTD ('Date'[Date]),
+			        'Date'[IsThisMonth] = FALSE
+			    )
+			VAR _CURRENT_MONTH_Forecast = [Orders Target MTD]
+			VAR _QTD_Forecast_BEFORE_THIS_MONTH = CALCULATE ([Orders Target], _DATES_QTD)
+			VAR _RESULT = _CURRENT_MONTH_Forecast + _QTD_Forecast_BEFORE_THIS_MONTH
+			RETURN
+			    _RESULT
+		formatString: #,##0
+		displayFolder: 3. QTD\Orders Target
+		lineageTag: 8592bd67-7145-4ca4-ba42-fa3e0defba2e
+
+	measure 'Orders Target YTD' =
+			
+			VAR _CURRENT_MONTH_TARGET = [Orders Target MTD]
+			VAR _YTD_TARGET_BEFORE_THIS_MONTH =
+			    CALCULATE (
+			        [Orders Target],
+			        CALCULATETABLE (
+			            DATESYTD ('Date'[Date]),
+			            'Date'[IsThisMonth] = FALSE,
+			            'Date'[IsDateInScope] = TRUE
+			        )
+			    )
+			VAR _RESULT = _CURRENT_MONTH_TARGET + _YTD_TARGET_BEFORE_THIS_MONTH
+			RETURN
+			    _RESULT
+		formatString: #,##0
+		displayFolder: 4. YTD
+		lineageTag: 056c010c-5b3c-4faa-a65e-daeb3231600d
+
+	measure 'Turnover 2YP (Selected Unit)' =
+			
+			CALCULATE ( [Turnover (Selected Unit)], DATEADD('Date'[Date], -2, YEAR ))
+		formatString: #,##0
+		isHidden
+		displayFolder: 1. Total\Sales Target
+		lineageTag: 7a676e6e-7385-4ce0-acb9-84a987fededa
+
+	measure 'Turnover 1YP (Selected Unit)' =
+			
+			CALCULATE ( [Turnover (Selected Unit)], DATEADD('Date'[Date], -1, YEAR ))
+		formatString: #,##0
+		isHidden
+		displayFolder: 1. Total\Sales Target
+		lineageTag: 77b9b822-0dde-4ece-8dd7-3dd7a1a9bb14
+
+	column __Measures
+		isHidden
+		lineageTag: 721b2ff3-ac1f-41ae-b13b-e28a49828598
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [__Measures]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition __Measures = calculated
+		mode: import
+		source =
+				
+				SELECTCOLUMNS (
+				    { 1 },
+				    "__Measures", ''[Value]
+				)
+
+	annotation TabularEditor_TableGroup = 00. Measure Tables
+

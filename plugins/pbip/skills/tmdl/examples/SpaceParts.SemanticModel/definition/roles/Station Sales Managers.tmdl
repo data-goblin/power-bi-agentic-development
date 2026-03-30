@@ -1,0 +1,6 @@
+role 'Station Sales Managers'
+	modelPermission: read
+
+	tablePermission Regions = RLS.ApplySimpleRLS ( 'Regions'[Station Sales Managers] )
+
+	annotation PBI_Id = fa0b2f174d25400296ad332b392a1c57

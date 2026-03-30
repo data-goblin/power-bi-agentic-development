@@ -1,0 +1,40 @@
+table 'Z02CG1 - Unit'
+	isHidden
+	lineageTag: 516121f5-e575-4aef-9915-f766b1aa72e0
+
+	calculationGroup
+		precedence: 2
+
+		calculationItem 'Value (Budget Rate)' =
+				
+				[Value]
+
+		calculationItem Quantity =
+				
+				[Quantity]
+
+		calculationItem Lines =
+				
+				[Lines]
+
+	column Unit
+		dataType: string
+		isHidden
+		lineageTag: 2d7160af-d5c1-4676-b064-a01f4f8cd651
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		lineageTag: c3a035d1-b935-4d28-9654-7b1f0468e8e2
+		summarizeBy: sum
+		sourceColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	annotation TabularEditor_TableGroup = 06. Calculation Groups
+

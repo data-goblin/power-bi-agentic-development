@@ -1,0 +1,21 @@
+{
+  "name": "fabric-cli",
+  "version": "0.11.0",
+  "description": "Get this plugin to work with Fabric / Power BI service, by means of the fabric cli.",
+  "author": {
+    "name": "Kurt Buhler",
+    "url": "https://data-goblins.com"
+  },
+  "homepage": "https://data-goblins.com",
+  "repository": "https://github.com/data-goblin/power-bi-agentic-development",
+  "license": "GPL-3.0",
+  "keywords": [
+    "power-bi",
+    "fabric",
+    "fabric-cli",
+    "fab",
+    "semantic-model",
+    "workspace",
+    "lakehouse"
+  ]
+}

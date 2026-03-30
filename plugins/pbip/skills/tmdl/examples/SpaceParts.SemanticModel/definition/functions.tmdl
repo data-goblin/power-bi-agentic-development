@@ -1,0 +1,2837 @@
+function 'FormatString.RelativeToTarget.Percents' = ```
+		
+		// Dynamic format string generator for comparison values (in percent)
+		// Returns format string with directional indicators based on parameters
+		(
+		    // Position of comparison symbol 
+		    // Expects "PREFIX" or "SUFFIX"
+		    position: STRING,
+		
+		    // Number of decimal places
+		    // Expects an INT64 value from 0-9
+		    decimal_places: INT64,
+		
+		    // Symbol style - number (1-9) or text:
+		    // 1 or "ARROWS": ↑/↓
+		    // 2 or "TRIANGLES": ▲/▼
+		    // 3 or "PLUSMINUS": +/-
+		    // 4 or "CHEVRONS": ˄/˅
+		    // 5 or "GREENRED": 🟢/🔴
+		    // 6 or "BLUEORANGE": 🔵/🟠
+		    // 7 or "BLOCKARROWS": ⬆/⬇
+		    // 8 or "CHECKCROSS": ✓/✗
+		    // 9 or "NONE": no symbol
+		    symbol: ANYVAL,
+		
+		    // Custom prefix text (optional)
+		    // Enter "" to skip parameter
+		    // Enter SELECTEDVALUE( 'Exchange Rate'[Currency Symbol] ) for dynamic currency conversion
+		    //
+		    // Note: Value is string-safe; no need for """"
+		    custom_prefix: EXPR,
+		
+		    // Custom suffix text (optional)
+		    // Enter "" to skip parameter
+		    // Enter SELECTEDVALUE( 'Exchange Rate'[Currency Symbol] ) for dynamic currency conversion
+		    // Enter " (" & FORMAT ( [PercentMeasure], "0.0%" ) & ")" to add a second value for context
+		    //
+		    // Note: Value is string-safe; no need for """"
+		    custom_suffix: EXPR
+		) 
+		=>
+		    VAR _BaseFormat =
+		        FormatString.Component.DecimalPlaces( "#,##0", decimal_places ) & "%"
+		        
+		    VAR _Prefix =
+		        FormatString.Component.MakeStringSafe ( custom_prefix )
+		    
+		    VAR _Suffix =
+		        FormatString.Component.MakeStringSafe ( custom_suffix )
+		    
+		    VAR _PositiveSymbol =
+		        FormatString.Component.Symbols ( symbol, "POSITIVE" )
+		    
+		    VAR _NegativeSymbol =
+		        FormatString.Component.Symbols ( symbol, "NEGATIVE" )
+		    
+		    VAR _PositiveFormat =
+		        _Prefix
+		            & SWITCH (
+		                position,
+		                "PREFIX", _PositiveSymbol & " " & _BaseFormat,
+		                "SUFFIX", _BaseFormat & " " & _PositiveSymbol,
+		                _BaseFormat & " " & _PositiveSymbol
+		            )
+		            &
+		        _Suffix
+		            
+		    VAR _NegativeFormat =
+		        _Prefix
+		            & SWITCH (
+		                position,
+		                "PREFIX", _NegativeSymbol & " " & _BaseFormat,
+		                "SUFFIX", _BaseFormat & " " & _NegativeSymbol,
+		                _BaseFormat & " " & _NegativeSymbol
+		            )
+		            & 
+		        _Suffix
+		            
+		    VAR _ZeroFormat =
+		        _Prefix 
+		            & 
+		            _BaseFormat 
+		            & 
+		        _Suffix
+		        
+		    RETURN
+		        _PositiveFormat & ";" & _NegativeFormat & ";" & _ZeroFormat
+		```
+	lineageTag: 6049e163-a5d9-4947-8b0b-41507711c947
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 1.0.0-beta
+
+function 'SVG.Chart.BulletChart.ActionDot' = ```
+		
+		// Example chart created using the DaxLib.SVG functions
+		//
+		// Generate SVG performance bar with target line and status indicator
+		// Returns SVG string for use in Table/Matrix visuals (set Image size: Height 25px, Width 100px)
+		//
+		// Note: Currently, the chart only supports a single category
+		(
+		    // Actual measure to evaluate
+		    actual : EXPR,
+		    
+		    // Target measure to evaluate
+		    target : EXPR,
+		    
+		    // Table scope for calculating axis max 
+		    // - Example: 'Customers'[Key Account Name]
+		    // - Note: Multiple columns not yet supported
+		    column_one : ANYREF EXPR,
+		    
+		    // Performance thresholds
+		    threshold_very_bad : NUMERIC VAL,
+		    threshold_bad : NUMERIC VAL,
+		    threshold_good : NUMERIC VAL,
+		    threshold_very_good : NUMERIC VAL,
+		    
+		    // Status colors
+		    color_bad_low : STRING VAL,
+		    color_bad_high : STRING VAL,
+		    color_good_low : STRING VAL,
+		    color_good_high : STRING VAL
+		)
+		=> 
+		    -- Chart dimensions
+		    VAR _BarMax = 100
+		    VAR _BarMin = 20
+		    
+		    -- Fixed color config (not parameterized)
+		    VAR _ColorBackground = "#F5F5F5"
+		    VAR _ColorBaseline = "#797979"
+		    VAR _ColorTarget = "black"
+		    
+		    -- Get current values
+		    VAR _Actual = actual
+		    VAR _Target = target
+		    
+		    -- Calculate performance
+		    VAR _Performance = 
+		        DIVIDE ( _Actual - _Target, _Target )
+		    
+		    -- Determine performance color (for both dot and bar)
+		    VAR _PerformanceColor = 
+		        SWITCH (
+		            TRUE(),
+		            _Performance < threshold_very_bad, color_bad_low,
+		            _Performance < threshold_bad, color_bad_high,
+		            _Performance > threshold_very_good, color_good_high,
+		            _Performance > threshold_good, color_good_low,
+		            "#CFCFCF"  -- Default grey when no threshold met
+		        )
+		    
+		    -- Action dot uses same color logic, but transparent if neutral
+		    VAR _ActionDotFill = 
+		        IF (
+		            _Performance >= threshold_bad && _Performance <= threshold_good,
+		            "#FFFFFF00",  -- Transparent for neutral range
+		            _PerformanceColor
+		        )
+		    
+		    VAR _AxisMax = 
+		        MAX (
+		            SVG.Calc.AxisMax( actual, column_one, 1.1 ),
+		            SVG.Calc.AxisMax( target, column_one, 1.1 )
+		        )
+		    
+		    VAR _AxisRange = 
+		        SVG.Calc.AxisRange( _BarMax, _BarMin )
+		    
+		    VAR _ActualNormalized = 
+		        SVG.Calc.Normalize( actual, _AxisMax, _AxisRange )
+		    
+		    VAR _TargetNormalized = 
+		        SVG.Calc.Normalize( target, _AxisMax, _AxisRange ) + _BarMin - 1
+		    
+		    
+		    -- SVG components
+		    VAR _SvgContent = 
+		        
+		        -- Action Dot
+		        SVG.Component.Circles(
+		            10,
+		            10,
+		            5,
+		            _ActionDotFill
+		        )
+		        &
+		        
+		        -- Bar Background
+		        SVG.Component.Rects(
+		            _BarMin,
+		            2,
+		            _BarMax,
+		            "80%",
+		            _ColorBackground,
+		            "",
+		            "",
+		            "",
+		            ""
+		        )
+		        &
+		        
+		        -- Actual Bar
+		        SVG.Component.Rects(
+		            _BarMin,
+		            5,
+		            _ActualNormalized,
+		            "50%",
+		            "#CFCFCF",
+		            "",
+		            "",
+		            "",
+		            ""
+		        )
+		        
+		        &
+		        
+		        -- Target Line
+		        SVG.Component.Rects(
+		            _TargetNormalized,
+		            2,
+		            2,
+		            "80%",
+		            _ColorTarget,
+		            "",
+		            "",
+		            "",
+		            ""
+		        )
+		        &
+		        
+		        -- Bar Baseline
+		        SVG.Component.Rects(
+		            _BarMin,
+		            4,
+		            1,
+		            "60%",
+		            _ColorBaseline,
+		            "",
+		            "",
+		            "",
+		            ""
+		        )
+		    
+		    -- Final SVG
+		    VAR _Svg = 
+		        SVG.Component.PowerBI(
+		            _SvgContent,
+		            _Actual,
+		            "",
+		            "",
+		            "",
+		            "#FFFFFF00"
+		        )
+		    
+		RETURN
+		    _Svg
+		```
+	lineageTag: f9f873eb-a3fe-437a-947f-c96893efacaa
+
+	annotation DAXLIB_PackageId = DaxLib.SVG
+
+	annotation DAXLIB_PackageVersion = 0.1.0-beta
+
+function 'SVG.Component.Circles' = ```
+		
+		// Generates SVG circle element
+		//
+		// Warning: Any measures that use this function must have the "DataCategory" property = "ImageUrl"
+		// Enter "" to skip any optional parameter
+		(
+		    // X-axis Position (top-left corner is 0)
+		    cx : SCALAR VAL,
+		    
+		    // Y-axis Position (top-left corner is 0)
+		    cy : SCALAR VAL,
+		    
+		    // Radius (in pixels)
+		    r : SCALAR VAL,
+		    
+		    // Fill colour
+		    fill_colour : SCALAR VAL
+		)
+		=>
+		    "<circle cx='" & cx & 
+		    "' cy='" & cy & 
+		    "' r='" & r & 
+		    "' fill='" & fill_colour & 
+		    "'/>"
+		```
+	lineageTag: a66fe22b-fa0d-455c-987f-7369465c2a78
+
+	annotation DAXLIB_PackageId = DaxLib.SVG
+
+	annotation DAXLIB_PackageVersion = 0.1.0-beta
+
+function 'SVG.Component.Rects' = ```
+		
+		// Generates SVG rectangle element
+		//
+		// Warning: Any measures that use this function must have the "DataCategory" property = "ImageUrl"
+		// Enter "" to skip any optional parameter
+		(
+		    // X-axis position (top-left corner is 0)
+		    x : SCALAR VAL,
+		    
+		    // Y-axis position (top-left corner is 0)
+		    y : SCALAR VAL,
+		    
+		    // Width (pixels or percentage like "50%")
+		    width : SCALAR VAL,
+		    
+		    // Height (pixels or percentage like "50%")
+		    height : SCALAR VAL,
+		    
+		    // Fill colour (hex or named colour)
+		    fill_colour : SCALAR VAL,
+		    
+		    // Stroke colour
+		    // (Optional; enter "" to skip)
+		    stroke_colour : SCALAR VAL,
+		    
+		    // Stroke width
+		    // (Optional; enter BLANK() to skip)
+		    stroke_width : SCALAR VAL,
+		    
+		    // Corner radius for rounded rectangles
+		    // (Optional; enter BLANK() to skip)
+		    rx : SCALAR VAL,
+		    
+		    // Opacity (0-1)
+		    // (Optional; enter BLANK() to skip)
+		    opacity : SCALAR VAL
+		)
+		=>
+		    "<rect x='" & x & 
+		    "' y='" & y & 
+		    "' width='" & width & 
+		    "' height='" & height & 
+		    "' fill='" & fill_colour & 
+		    "' stroke='" & stroke_colour &
+		    "' stroke-width='" & stroke_width &
+		    "' rx='" & rx &
+		    "' opacity='" & opacity &
+		    "'/>"
+		```
+	lineageTag: 1772903a-88ac-4a74-b4ba-6191b1fd5680
+
+	annotation DAXLIB_PackageId = DaxLib.SVG
+
+	annotation DAXLIB_PackageVersion = 0.1.0-beta
+
+function 'SVG.Component.Texts' = ```
+		
+		// Generates SVG text element
+		//
+		// Warning: Any measures that use this function must have the "DataCategory" property = "ImageUrl"
+		// Enter "" to skip any optional parameter
+		(
+		    // X-axis position
+		    x : SCALAR VAL,
+		    
+		    // Y-axis position (baseline)
+		    y : SCALAR VAL,
+		    
+		    // Text content
+		    text_content : SCALAR VAL,
+		    
+		    // Font size (pixels)
+		    text_font_size : SCALAR VAL,
+		    
+		    // Font family (optional)
+		    font_family : SCALAR VAL,
+		    
+		    // Fill colour
+		    text_fill_colour : SCALAR VAL,
+		    
+		    // Text anchor ("start", "middle", "end", optional)
+		    text_anchor : SCALAR VAL,
+		    
+		    // Font weight ("normal", "bold", optional)
+		    font_weight : SCALAR VAL,
+		    
+		    // Rotation (degrees, optional)
+		    rotation : SCALAR VAL,
+		    
+		    // Opacity (0-1, optional)
+		    opacity : SCALAR VAL
+		)
+		=>
+		    "<text x='" & x & 
+		    "' y='" & y & 
+		    "' font-size='" & text_font_size & 
+		    "' fill='" & text_fill_colour &
+		    "' font-family='" & font_family &
+		    "' text-anchor='" & text_anchor &
+		    "' font-weight='" & font_weight &
+		    "' transform='rotate(" & rotation & " " & x & " " & y & ")" &
+		    "' opacity='" & opacity &
+		    "'>" & text_content & "</text>"
+		```
+	lineageTag: c1959f8a-1799-4345-bb0c-b2d4ab783cc7
+
+	annotation DAXLIB_PackageId = DaxLib.SVG
+
+	annotation DAXLIB_PackageVersion = 0.1.0-beta
+
+function 'SVG.Component.Lines' = ```
+		
+		// Generates SVG line element
+		//
+		// Warning: Any measures that use this function must have the "DataCategory" property = "ImageUrl"
+		// Enter "" to skip any optional parameter
+		(
+		    // Starting X position (left edge is 0)
+		    x1 : SCALAR VAL,
+		    
+		    // Starting Y position (top edge is 0)
+		    y1 : SCALAR VAL,
+		    
+		    // Ending X position (left edge is 0)
+		    x2 : SCALAR VAL,
+		    
+		    // Ending Y position (top edge is 0)
+		    y2 : SCALAR VAL,
+		    
+		    // Stroke colour (line colour)
+		    stroke_colour : SCALAR VAL,
+		    
+		    // Stroke width (line width)
+		    stroke_width : SCALAR VAL,
+		    
+		    // Stroke dasharray (e.g., "5,5" for dashed, optional)
+		    stroke_dasharray : SCALAR VAL,
+		    
+		    // Stroke linecap ("butt", "round", "square", optional)
+		    stroke_linecap : SCALAR VAL,
+		    
+		    // Opacity (0-1, optional)
+		    opacity : SCALAR VAL
+		)
+		=>
+		    "<line x1='" & x1 & 
+		    "' y1='" & y1 & 
+		    "' x2='" & x2 & 
+		    "' y2='" & y2 & 
+		    "' stroke='" & stroke_colour & 
+		    "' stroke-width='" & stroke_width &
+		    "' stroke-dasharray='" & stroke_dasharray &
+		    "' stroke-linecap='" & stroke_linecap &
+		    "' opacity='" & opacity &
+		    "'/>"
+		```
+	lineageTag: 909fa513-4cad-4b16-8d2f-d16446a86eb1
+
+	annotation DAXLIB_PackageId = DaxLib.SVG
+
+	annotation DAXLIB_PackageVersion = 0.1.0-beta
+
+function 'SVG.Component.Paths' = ```
+		
+		// Generates SVG path element
+		//
+		// Warning: Any measures that use this function must have the "DataCategory" property = "ImageUrl"
+		// Enter "" to skip any optional parameter
+		(
+		    // Path data (e.g., "M10 10 L90 90")
+		    d : SCALAR VAL,
+		    
+		    // Fill colour ("none" for no fill)
+		    fill_colour : SCALAR VAL,
+		    
+		    // Stroke colour
+		    stroke_colour : SCALAR VAL,
+		    
+		    // Stroke width
+		    stroke_width : SCALAR VAL,
+		    
+		    // Stroke linejoin ("miter", "round", "bevel", optional)
+		    stroke_linejoin : SCALAR VAL,
+		    
+		    // Fill rule ("nonzero", "evenodd", optional)
+		    fill_rule : SCALAR VAL,
+		    
+		    // Opacity (0-1, optional)
+		    opacity : SCALAR VAL
+		)
+		=>
+		    "<path d='" & d & 
+		    "' fill='" & fill_colour & 
+		    "' stroke='" & stroke_colour & 
+		    "' stroke-width='" & stroke_width &
+		    "' stroke-linejoin='" & stroke_linejoin &
+		    "' fill-rule='" & fill_rule &
+		    "' opacity='" & opacity &
+		    "'/>"
+		```
+	lineageTag: b44c474a-8582-42f7-8c24-abba21afb593
+
+	annotation DAXLIB_PackageId = DaxLib.SVG
+
+	annotation DAXLIB_PackageVersion = 0.1.0-beta
+
+function 'SVG.Component.Polygons' = ```
+		
+		// Generates SVG polygon element
+		//
+		// Warning: Any measures that use this function must have the "DataCategory" property = "ImageUrl"
+		// Enter "" to skip any optional parameter
+		(
+		    // Points as space-separated x,y pairs (e.g., "10,10 50,10 30,40")
+		    points : SCALAR VAL,
+		    
+		    // Fill colour
+		    fill_colour : SCALAR VAL,
+		    
+		    // Stroke colour (optional)
+		    stroke_colour : SCALAR VAL,
+		    
+		    // Stroke width (optional)
+		    stroke_width : SCALAR VAL,
+		    
+		    // Opacity (0-1, optional)
+		    opacity : SCALAR VAL
+		)
+		=>
+		    "<polygon points='" & points & 
+		    "' fill='" & fill_colour &
+		    "' stroke='" & stroke_colour &
+		    "' stroke-width='" & stroke_width &
+		    "' opacity='" & opacity &
+		    "'/>"
+		```
+	lineageTag: d52c435b-81b6-407f-bf8c-5dec4b03452d
+
+	annotation DAXLIB_PackageId = DaxLib.SVG
+
+	annotation DAXLIB_PackageVersion = 0.1.0-beta
+
+function 'SVG.Component.Groups' = ```
+		
+		// Generates SVG group element
+		//
+		// Warning: Any measures that use this function must have the "DataCategory" property = "ImageUrl"
+		// Enter "" to skip any optional parameter
+		(
+		    // Content to group
+		    // Recommendation: Include all content in a single _SvgGroup variable defined upstream
+		    contents : SCALAR VAL,
+		    
+		    // Transform (e.g., "translate(50,50) rotate(45)", optional)
+		    transform : SCALAR VAL,
+		    
+		    // Opacity for entire group (0-1, optional)
+		    opacity : SCALAR VAL
+		)
+		=>
+		    "<g" &
+		    " transform='" & transform & "'" &
+		    " opacity='" & opacity & "'" &
+		    ">" & contents & "</g>"
+		```
+	lineageTag: 987015fc-4f77-4e65-a657-e558918b8ceb
+
+	annotation DAXLIB_PackageId = DaxLib.SVG
+
+	annotation DAXLIB_PackageVersion = 0.1.0-beta
+
+function 'SVG.Component.PowerBI' = ```
+		
+		// Wraps content in SVG container for Power BI visualization
+		//
+		// Warning: Any measures that use this function must have the "DataCategory" property = "ImageUrl"
+		// Enter "" to skip any optional parameter
+		(
+		    // SVG content (elements to include)
+		    // Recommended: Include all elements as a single _Svg variable, defined upstream.
+		    contents : SCALAR VAL,
+		    
+		    // Optional sort value for ordering in tables
+		    sort_value : EXPR,
+		    
+		    // Optional viewBox (e.g., "0 0 100 100")
+		    viewbox : SCALAR VAL,
+		    
+		    // Optional width (pixels or percentage)
+		    width : SCALAR VAL,
+		    
+		    // Optional height (pixels or percentage)
+		    height : SCALAR VAL,
+		    
+		    // Optional background color
+		    // Recommended: Enter "#FFFFFF00" for none
+		    background : SCALAR VAL
+		)
+		=>
+		    VAR _Prefix = 
+		        "data:image/svg+xml;utf8, <svg xmlns='http://www.w3.org/2000/svg'" &
+		        " viewBox='" & viewbox & "'" &
+		        " width='" & width & "'" &
+		        " height='" & height & "'" &
+		        ">"
+		    
+		    VAR _SortDesc = 
+		        "<desc>" & FORMAT(sort_value, "000000000000") & "</desc>"
+		    
+		    VAR _BackgroundColour = 
+		        IF ( ISBLANK ( background ) || background = "", "#FFFFFF00", background )
+		    
+		    VAR _Background = 
+		        "<rect x='0' y='0' width='100%' height='100%' fill='" & _BackgroundColour & "'/>"
+		    
+		    VAR _Suffix = "</svg>"
+		    
+		    RETURN
+		        _Prefix &
+		        _SortDesc &
+		        _Background &
+		        contents &
+		        _Suffix
+		```
+	lineageTag: bf2a7e0d-c663-4a12-bcca-3a70f94d4587
+
+	annotation DAXLIB_PackageId = DaxLib.SVG
+
+	annotation DAXLIB_PackageVersion = 0.1.0-beta
+
+function 'Comparison.RelativeToTarget' = ```
+		
+		// Compare to a target and return the relative percent
+		// Example usage: Comparing sales to budget or forecast to get relative performance
+		// Examples:
+		// - 9/10  is -10%
+		// - 11/10 is +10%
+		(
+		    // The actual value that you are measuring
+		    actual : SCALAR NUMERIC VAL,
+		    
+		    // The target that you are comparing to
+		    target : SCALAR NUMERIC VAL
+		)
+		
+		=> 
+		    VAR _Actual       = actual
+		    VAR _Target       = target
+		    VAR _Delta        = _Actual - _Target
+		    VAR _Percentage   = DIVIDE ( _Delta, _Target )
+		    RETURN
+		        _Percentage
+		```
+	lineageTag: c1b6540c-ee43-4977-b1b2-57714a428db1
+
+function 'SVG.Calc.AxisMax' = ```
+		
+		// Calculate the maximum for a value plotted on an SVG Chart
+		// Handles both category crossfiltering and (sub) totals
+		(
+		    // The actual you will measure
+		    // Expects a measure reference
+		    measure_value : EXPR,
+		    
+		    // The scope of the data for which the SVG will be used
+		    // Expects a table expression
+		    // Note: Multiple columns not yet supported
+		    column_one : ANYREF EXPR,
+		    
+		    // How much buffer should exist between the axis max and the end of the visual
+		    // Expects a scalar numeric value
+		    axis_buffer : NUMERIC VAL
+		)
+		=>  VAR _TotalScope = 
+		        ALL ( column_one )
+		        
+		    -- Calculates the highest value in the data scope
+		    VAR _MaxInScope = 
+		        CALCULATE(
+		            MAXX(
+		                _TotalScope,
+		                measure_value
+		            ),
+		            _TotalScope
+		        )
+		    
+		    -- Calculates the total for the data scope
+		    VAR _MaxOverall =
+		        CALCULATE (
+		            measure_value,
+		            _TotalScope
+		        )
+		    
+		    -- Configures axis for categories if one is selected, otherwise for the total
+		    VAR _Max = 
+		        IF ( 
+		            HASONEVALUE ( column_one ),
+		            _MaxInScope,
+		            _MaxOverall
+		        )
+		    
+		    VAR _Result =
+		        _Max * axis_buffer
+		        
+		    RETURN
+		        _Result
+		```
+	lineageTag: fbaa5b18-3225-4a0c-8df3-71c3736c1aef
+
+	annotation DAXLIB_PackageId = DaxLib.SVG
+
+	annotation DAXLIB_PackageVersion = 0.1.0-beta
+
+function 'SVG.Calc.AxisRange' = ```
+		
+		/// Determines the axis range by subtracting the minimum from the maximum
+		(
+		    // The highest expected value
+		    // Recommended: Use SVG.Calc.AxisMax
+		    max_value : NUMERIC VAL,
+		    
+		    // The lowest expected value
+		    // Typically a fixed value
+		    min_value : NUMERIC VAL
+		)
+		=>
+		    max_value - min_value
+		```
+	lineageTag: 1c2b6db8-47fa-4b9c-91e6-5ee34040f232
+
+	annotation DAXLIB_PackageId = DaxLib.SVG
+
+	annotation DAXLIB_PackageVersion = 0.1.0-beta
+
+function 'SVG.Calc.Normalize' = ```
+		
+		/// Normalize a value that you want to use in an SVG visualization
+		(
+		    // The value being plotted
+		    input_value : NUMERIC VAL,
+		    
+		    // The maximum value of the axis
+		    axis_max : NUMERIC VAL,
+		    
+		    // The range of the axis
+		    axis_range: NUMERIC VAL
+		)
+		    => DIVIDE ( input_value, axis_max ) * axis_range
+		```
+	lineageTag: dc6fb109-470a-49bb-ab98-26fa5647b0da
+
+	annotation DAXLIB_PackageId = DaxLib.SVG
+
+	annotation DAXLIB_PackageVersion = 0.1.0-beta
+
+function 'Report.ShowOnlyLatestDataPoint' = ```
+		
+		// Function to only show the latest data point in a chart
+		// - Returns BLANK() for all earlier or later periods.
+		(
+		    // Granularity for which you only want to see
+		    // the latest value. Typically a column reference.
+		    // - Example: 'Date'[Workdays MTD] or 'Date'[Date]
+		    period: ANYREF,
+		    
+		    // The scope for which the period is defined.
+		    // Typically a column reference.
+		    // - Example: 'Date'[Month] or 'Date'[Year]
+		    periodScope: ANYREF,
+		    
+		    // The value for which you want to see the latest data point
+		    // Typically a measure reference.
+		    // - Example: [Sales MTD] or [Budget]
+		    measureValue: ANYREF
+		) 
+		=>
+		    VAR _LatestPeriod =
+		        CALCULATE (
+		            MAX ( period ),
+		            'Date'[IsDateInScope],
+		            ALLEXCEPT ( 'Date', periodScope )
+		        )
+		    RETURN
+		        IF (
+		            MAX ( period ) = _LatestPeriod,
+		            measureValue
+		        )
+		```
+	lineageTag: 46a13890-16f9-488f-9cfa-fb7246ff9fd4
+
+function 'Convert.MetersPerSecondToKilometersPerHour' =
+		
+		(
+		    // Speed in meters per second (mps)
+		    mps: SCALAR NUMERIC VAL
+		)
+		=>
+		    mps * 3.6 // Output is Kilomters Per Hour (Kph)
+	lineageTag: d31894a9-9cf1-43c0-9e71-8dab926e3ce9
+
+function 'Convert.KelvinToCelsius' =
+		
+		// Converts temperature in Kelvin (K) to Celsius
+		(
+		    // Temperature in Kelvins
+		    K: NUMERIC VAL
+		)
+		=>
+		    K - 273.15
+	lineageTag: 020b0d14-147f-426c-81f1-2e056c95addf
+
+function 'Context.ShowFullMonth' = ```
+		
+		// Function that returns the total value for a full month.
+		// - Example: To get the full-month Budget
+		(
+		    // The measure or expression to return for the full month.
+		    // - Example: [Budget]
+		    ValueToAdjust: ANYREF
+		)
+		=>
+		    CALCULATE (
+		        ValueToAdjust,
+		        ALL ( 'Date' ),
+		        VALUES (
+		            'Date'[Calendar Month Year (ie Jan 21)]
+		        )
+		    )
+		
+		```
+	lineageTag: b01e8376-381e-493e-a61c-6d344787ef36
+
+function 'FormatString.HHMMSS.Seconds' = ```
+		
+		// Convert duration in seconds to HH:MM:SS format string
+		(
+		    // Duration in seconds
+		    seconds: NUMERIC
+		) =>
+		    VAR _TotalSeconds = seconds
+		    
+		    VAR _Hours = 
+		        INT( _TotalSeconds / 3600 )
+		    
+		    VAR _Minutes = 
+		        INT( MOD( _TotalSeconds, 3600 ) / 60 )
+		    
+		    VAR _Seconds = 
+		        INT( MOD( _TotalSeconds, 60 ) )
+		    
+		    VAR _Result =
+		        FORMAT( _Hours, "00" ) & ":" &
+		        FORMAT( _Minutes, "00" ) & ":" &
+		        FORMAT( _Seconds, "00" )
+		        
+		    RETURN
+		        _Result
+		```
+	lineageTag: 0e126ec7-b70e-4a13-ae1e-72f9513592d6
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 1.0.0-beta
+
+function 'FormatString.HHMMSS.StartTimeEndTime' = ```
+		
+		// Convert duration between start and end times to HH:MM:SS format string
+		(
+		    // Start datetime
+		    // Include measure, expression, or scalar value
+		    startTime: EXPR,
+		    
+		    // End datetime
+		    // Include measure, expression, or scalar value
+		    endTime: EXPR
+		) =>
+		    VAR _DurationInSeconds = 
+		        INT( ( endTime - startTime ) * 86400 )
+		    
+		    VAR _Hours = 
+		        INT( _DurationInSeconds / 3600 )
+		    
+		    VAR _Minutes = 
+		        INT( MOD( _DurationInSeconds, 3600 ) / 60 )
+		    
+		    VAR _Seconds = 
+		        INT( MOD( _DurationInSeconds, 60 ) )
+		    
+		    VAR _Result =
+		        FORMAT( _Hours, "00" ) & ":" &
+		        FORMAT( _Minutes, "00" ) & ":" &
+		        FORMAT( _Seconds, "00" )
+		        
+		    RETURN
+		        _Result
+		```
+	lineageTag: 7f1cafdf-0bd9-44e0-a83e-a90b6066ea4c
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 1.0.0-beta
+
+function 'Report.ConditionalColors.ComparisonToTarget' = ```
+		
+		// Function that compares two numbers and returns
+		// the "good" theme color if 
+		(
+		    // What you are measuring
+		    actual: SCALAR NUMERIC,
+		    
+		    // What you will compare to
+		    target: SCALAR NUMERIC
+		)
+		=>
+		    IF (
+		        actual > target,
+		        "good",
+		        "bad"
+		    )
+		```
+	lineageTag: 0b8a291a-78a2-46f0-9955-43920d0e8ea1
+
+function 'FormatString.DynamicUnits' = ```
+		
+		// Dynamic format string with automatic K/M/bn/tn suffix, rounding, and decimal places based on value magnitude
+		// Supports dynamic currency conversion
+		(
+		    // The value to format
+		    // Expects a numeric value or measure reference
+		    // Recommended: SELECTEDMEASURE()
+		    format_value: EXPR,
+		    
+		    // The currency symbol you want to use
+		    // Expects a symbol like "$"
+		    // Enter "" for none
+		    // Use FormatString.Component.GetCurrencySymbol for dynamic currency conversion
+		    currency_symbol: STRING,
+		    
+		    // Whether the currency should be a prefix or suffix
+		    // Expects "PREFIX" or "SUFFIX"
+		    // Enter "" for none
+		    // Use FormatString.Component.GetCurrencyPosition for dynamic currency conversion
+		    currency_position: STRING,
+		    
+		    // Custom prefix (optional)
+		    // Enter "" for none
+		    // Note: Value is string-safe; no need for """"
+		    custom_prefix : EXPR,
+		    
+		    // Custom suffix (optional)
+		    // Enter "" for none
+		    // Note: Value is string-safe; no need for """"
+		    custom_suffix : EXPR
+		) 
+		=>
+		    VAR _NumberFormat =
+		        FormatString.Component.DynamicUnits( "#,##0", format_value )
+		    
+		    VAR _CurrencySymbol =
+		        currency_symbol
+		    
+		    VAR _CurrencyPosition =
+		        currency_position
+		    
+		    VAR _Prefix = 
+		        IF ( _CurrencyPosition = "PREFIX", _CurrencySymbol & " ", "" ) &
+		        FormatString.Component.MakeStringSafe( custom_prefix )
+		        
+		    VAR _Suffix =
+		        IF ( _CurrencyPosition = "SUFFIX", " " & _CurrencySymbol, "" ) &
+		        FormatString.Component.MakeStringSafe( custom_suffix )
+		    
+		    VAR _FormatString =
+		        _Prefix & _NumberFormat & _Suffix
+		        
+		    RETURN
+		        _FormatString
+		```
+	lineageTag: b5bb2f86-09bb-4dc3-83c7-d54c28a20090
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 1.0.0-beta
+
+function 'RLS.ApplyRLS' = ```
+		
+		// Function to apply RLS based on an employee security table
+		(
+		    // The table that contains employee information used to set up dynamic RLS
+		    employeeSecurityTable: ANYREF,
+		    
+		    // The column that has the employee email that matches USERPRINCIPALNAME()
+		    employeeEmailColumn: ANYREF,
+		    
+		    // The column that has the employee name in the security table
+		    employeeNameColumn: ANYREF,
+		    
+		    // The column that has the employee name in the dimension table
+		    dimensionEmployeeNameColumn: SCALAR
+		)
+		=>
+		    VAR _CurrentUser =
+		        SELECTCOLUMNS (
+		            FILTER (
+		                employeeSecurityTable,
+		                employeeEmailColumn = USERPRINCIPALNAME ( )
+		            ),
+		            "@Name", employeeNameColumn
+		        )
+		    RETURN
+		        dimensionEmployeeNameColumn IN _CurrentUser
+		```
+	lineageTag: d0cece71-b542-4f8d-b214-621c188a536a
+
+function 'RLS.ApplySimpleRLS' = ```
+		
+		// Function to apply RLS to a column that contains the employee full name
+		(  
+		    // The column that has the employee name in the dimension table
+		    employeeNameColumn: SCALAR
+		)
+		=>
+		    VAR _CurrentUser =
+		        SELECTCOLUMNS (
+		            FILTER (
+		                'Employees',
+		                'Employees'[Employee Email] = USERPRINCIPALNAME ( )
+		            ),
+		            "@Name", 'Employees'[Employee Name] 
+		        )
+		    RETURN
+		        employeeNameColumn IN _CurrentUser
+		```
+	lineageTag: 43ad4557-1a15-4b52-801c-0b1cdfeb8c44
+
+function 'TimeIntelligence.MonthToDate' = ```
+		
+		// Cumulate month-to-date only for dates with sales
+		(
+		    measureReference: EXPR
+		)
+		=>
+		    CALCULATE (
+		        measureReference, 
+		        CALCULATETABLE (
+		            DATESMTD ('Date'[Date]),
+		            'Date'[IsDateInScope]
+		        )
+		    )
+		```
+	lineageTag: f71c7b23-6415-43a7-8be7-f6fd6e995fe9
+
+function 'TimeIntelligence.DatesWithSales' = ```
+		
+		// Cumulate only for dates with sales
+		(
+		    measureReference: EXPR
+		)
+		=>
+		    CALCULATE (
+		        measureReference, 
+		        CALCULATETABLE (
+		            VALUES ('Date'[Date]),
+		            'Date'[IsDateInScope]
+		        )
+		    )
+		```
+	lineageTag: 6b86ba7c-b9d1-451d-a470-ca90a813d7de
+
+function 'TimeIntelligence.QuarterToDate' = ```
+		
+		// Cumulate quarter-to-date only for dates with sales
+		(
+		    measureReference: EXPR
+		)
+		=>
+		    CALCULATE (
+		        measureReference, 
+		        CALCULATETABLE (
+		            DATESQTD ('Date'[Date]),
+		            'Date'[IsDateInScope]
+		        )
+		    )
+		```
+	lineageTag: 209651cc-6dee-4827-bd2c-7de7692f0b6e
+
+function 'TimeIntelligence.YearToDate' = ```
+		
+		// Cumulate year-to-date only for dates with sales
+		(
+		    measureReference: EXPR
+		)
+		=>
+		    CALCULATE (
+		        measureReference, 
+		        CALCULATETABLE (
+		            DATESYTD ('Date'[Date]),
+		            'Date'[IsDateInScope]
+		        )
+		    )
+		```
+	lineageTag: 22c4322e-e95a-46e1-b7c5-923286f6605a
+
+function 'SVG.Calc.AxisMin' = ```
+		
+		// Calculate the minimum for a value plotted on an SVG
+		(
+		    // The actual you will measure
+		    // Expects a measure reference
+		    measure_value : EXPR,
+		    
+		    // The scope of the data for which the SVG will be used
+		    // Expects a table expression
+		    // Note: Multiple columns not yet supported
+		    column_one : ANYREF,
+		    
+		    // How much buffer should exist between the axis min and the end of the visual
+		    // Expects a scalar numeric value
+		    axis_buffer : NUMERIC VAL
+		)
+		=>  VAR _TotalScope = 
+		        ALL ( column_one )
+		        
+		    -- Calculates the lowest value in the data scope
+		    VAR _MinInScope = 
+		        CALCULATE(
+		            MINX(
+		                _TotalScope,
+		                measure_value
+		            ),
+		            _TotalScope
+		        )
+		    
+		    VAR _Result =
+		        _MinInScope * axis_buffer
+		        
+		    RETURN
+		        _Result
+		```
+	lineageTag: 3013cc15-ed53-4c70-8ac2-4b2f93f9df93
+
+	annotation DAXLIB_PackageId = DaxLib.SVG
+
+	annotation DAXLIB_PackageVersion = 0.1.0-beta
+
+function 'SVG.Component.Ellipses' = ```
+		
+		// SVG.Component.Ellipses
+		// Generates SVG ellipse element for oval shapes
+		(
+		    // X-axis position of center
+		    cx : SCALAR VAL,
+		    
+		    // Y-axis position of center
+		    cy : SCALAR VAL,
+		    
+		    // Horizontal radius in pixels
+		    rx : SCALAR VAL,
+		    
+		    // Vertical radius in pixels
+		    ry : SCALAR VAL,
+		    
+		    // Fill color (hex or named color)
+		    fill_colour : SCALAR VAL,
+		    
+		    // Stroke color (optional - enter "" to skip)
+		    stroke_colour : SCALAR VAL,
+		    
+		    // Stroke width in pixels (optional - enter BLANK() to skip)
+		    stroke_width : SCALAR VAL,
+		    
+		    // Opacity from 0 to 1 (optional - enter BLANK() to skip)
+		    opacity : SCALAR VAL
+		) =>
+		    "<ellipse cx='" & cx & 
+		    "' cy='" & cy & 
+		    "' rx='" & rx & 
+		    "' ry='" & ry & 
+		    "' fill='" & fill_colour & 
+		    "' stroke='" & stroke_colour &
+		    "' stroke-width='" & stroke_width &
+		    "' opacity='" & opacity &
+		    "'/>"
+		```
+	lineageTag: 4b18d266-6d8a-4266-9ae6-402ea89c3f84
+
+function 'SVG.Component.LinearGradients' = ```
+		
+		// SVG.Component.LinearGradient
+		// Creates a linear gradient definition for use in fills
+		(
+		    // Unique identifier for this gradient
+		    identifier : SCALAR VAL,
+		    
+		    // Starting X position as percentage (0-100)
+		    x1 : SCALAR VAL,
+		    
+		    // Starting Y position as percentage (0-100)
+		    y1 : SCALAR VAL,
+		    
+		    // Ending X position as percentage (0-100)
+		    x2 : SCALAR VAL,
+		    
+		    // Ending Y position as percentage (0-100)
+		    y2 : SCALAR VAL,
+		    
+		    // Starting color (hex or named color)
+		    color1 : SCALAR VAL,
+		    
+		    // Ending color (hex or named color)
+		    color2 : SCALAR VAL,
+		    
+		    // Starting color position as percentage (0-100)
+		    offset1 : SCALAR VAL,
+		    
+		    // Ending color position as percentage (0-100)
+		    offset2 : SCALAR VAL
+		) =>
+		    "<defs><linearGradient id='" & identifier & 
+		    "' x1='" & x1 & "%' y1='" & y1 & 
+		    "%' x2='" & x2 & "%' y2='" & y2 & "%'>" &
+		    "<stop offset='" & offset1 & "%' stop-color='" & color1 & "'/>" &
+		    "<stop offset='" & offset2 & "%' stop-color='" & color2 & "'/>" &
+		    "</linearGradient></defs>"
+		```
+	lineageTag: e4ab41e8-2864-4029-a335-ca470f862c1c
+
+function 'SVG.Calc.ArcPath' = ```
+		
+		// SVG.Calc.ArcPath
+		// Generates path data for arc segments used in donut and gauge charts
+		(
+		    // Center X position in pixels
+		    cx : SCALAR VAL,
+		    
+		    // Center Y position in pixels
+		    cy : SCALAR VAL,
+		    
+		    // Outer radius in pixels
+		    radius : SCALAR VAL,
+		    
+		    // Starting angle in degrees (0 = right, 90 = bottom)
+		    start_angle : SCALAR VAL,
+		    
+		    // Ending angle in degrees
+		    end_angle : SCALAR VAL,
+		    
+		    // Inner radius for donut effect (0 for pie slice)
+		    inner_radius : SCALAR VAL
+		) =>
+		    VAR _StartRad = start_angle * PI() / 180
+		    VAR _EndRad = end_angle * PI() / 180
+		    VAR _LargeArc = IF(end_angle - start_angle > 180, 1, 0)
+		    
+		    VAR _X1 = cx + radius * COS(_StartRad)
+		    VAR _Y1 = cy + radius * SIN(_StartRad)
+		    VAR _X2 = cx + radius * COS(_EndRad)
+		    VAR _Y2 = cy + radius * SIN(_EndRad)
+		    
+		    VAR _InnerX1 = cx + inner_radius * COS(_StartRad)
+		    VAR _InnerY1 = cy + inner_radius * SIN(_StartRad)
+		    VAR _InnerX2 = cx + inner_radius * COS(_EndRad)
+		    VAR _InnerY2 = cy + inner_radius * SIN(_EndRad)
+		    
+		    RETURN
+		        IF(
+		            inner_radius > 0,
+		            "M " & _InnerX1 & " " & _InnerY1 & 
+		            " L " & _X1 & " " & _Y1 &
+		            " A " & radius & " " & radius & 
+		            " 0 " & _LargeArc & " 1 " & 
+		            _X2 & " " & _Y2 &
+		            " L " & _InnerX2 & " " & _InnerY2 &
+		            " A " & inner_radius & " " & inner_radius & 
+		            " 0 " & _LargeArc & " 0 " & 
+		            _InnerX1 & " " & _InnerY1 & " Z",
+		            "M " & cx & " " & cy &
+		            " L " & _X1 & " " & _Y1 & 
+		            " A " & radius & " " & radius & 
+		            " 0 " & _LargeArc & " 1 " & 
+		            _X2 & " " & _Y2 & " Z"
+		        )
+		```
+	lineageTag: 47464057-9da1-47c3-ac13-5aeabd16aaa1
+
+function 'SVG.Calc.AngleFromPercent' = ```
+		
+		// SVG.Calc.AngleFromPercent
+		// Converts percentage to angle for circular visualizations
+		(
+		    // Percentage value (0-100)
+		    perc : SCALAR VAL,
+		    
+		    // Starting angle in degrees (default -90 for top)
+		    start_angle : SCALAR VAL,
+		    
+		    // Total sweep angle in degrees (default 360 for full circle)
+		    sweep_angle : SCALAR VAL
+		) =>
+		    start_angle + (perc / 100 * sweep_angle)
+		```
+	lineageTag: 7854846f-5593-47e9-ac9b-3acf176946bd
+
+function 'SVG.Calc.ColourScale' = ```
+		
+		// SVG.Calc.ColourScale
+		// Returns color based on thresholds
+		(
+		    // Value to evaluate
+		    measure_value : SCALAR VAL,
+		    
+		    // Lower threshold value
+		    threshold_low : SCALAR VAL,
+		    
+		    // Upper threshold value
+		    threshold_high : SCALAR VAL,
+		    
+		    // Color for values <= threshold_low
+		    color_low : SCALAR VAL,
+		    
+		    // Color for values between thresholds
+		    color_mid : SCALAR VAL,
+		    
+		    // Color for values >= threshold_high
+		    color_high : SCALAR VAL
+		) =>
+		    SWITCH(
+		        TRUE(),
+		        measure_value <= threshold_low, color_low,
+		        measure_value >= threshold_high, color_high,
+		        color_mid
+		    )
+		```
+	lineageTag: c3e05417-a6ec-47e9-a413-ace557aca577
+
+function 'SVG.Calc.ToPercent' = ```
+		
+		// SVG.Calc.ToPercent
+		// Converts a value to percentage within a range
+		(
+		    // Value to convert
+		    decimal_value : SCALAR VAL,
+		    
+		    // Minimum value of the range
+		    min_value : SCALAR VAL,
+		    
+		    // Maximum value of the range
+		    max_value : SCALAR VAL
+		) =>
+		    DIVIDE(decimal_value - min_value, max_value - min_value) * 100
+		```
+	lineageTag: df0a08e3-f5f2-4d48-99e2-16d23a51f616
+
+function 'SVG.Component.ClipPaths' = ```
+		
+		// SVG.Component.ClipPath
+		// Creates a clipping mask definition for selective rendering
+		(
+		    // Unique identifier for this clip path
+		    // Example: "cut-top", "mask-circle"
+		    identifier : SCALAR VAL,
+		    
+		    // Starting X position of clip rectangle
+		    x : SCALAR VAL,
+		    
+		    // Starting Y position of clip rectangle  
+		    y : SCALAR VAL,
+		    
+		    // Width of clip rectangle
+		    width : SCALAR VAL,
+		    
+		    // Height of clip rectangle
+		    height : SCALAR VAL
+		) =>
+		    "<clipPath id='" & identifier & "'>" &
+		    "<rect x='" & x & 
+		    "' y='" & y & 
+		    "' width='" & width & 
+		    "' height='" & height & "'/>" &
+		    "</clipPath>"
+		```
+	lineageTag: e1a499d4-8da3-4644-9369-679a8c9eda01
+
+function 'SVG.Component.Polylines' = ```
+		
+		// SVG.Component.Polyline
+		// Creates a polyline (connected points) with optional fill and clipping
+		(
+		    // Space-separated x,y coordinate pairs
+		    // Example: "0,10 20,30 40,15"
+		    points : SCALAR VAL,
+		    
+		    // Fill color or "none" for no fill
+		    fill_colour : SCALAR VAL,
+		    
+		    // Fill opacity (0-1)
+		    fill_opacity : SCALAR VAL,
+		    
+		    // Stroke color
+		    stroke_colour : SCALAR VAL,
+		    
+		    // Stroke width in pixels
+		    stroke_width : SCALAR VAL,
+		    
+		    // Line cap style ("butt", "round", "square")
+		    stroke_linecap : SCALAR VAL,
+		    
+		    // Line join style ("miter", "round", "bevel")
+		    stroke_linejoin : SCALAR VAL,
+		    
+		    // Reference to clip path ID (e.g., "#element")
+		    // Enter "" if no clipping needed
+		    clip_path_ref : SCALAR VAL,
+		    
+		    // Optional element ID for this polyline
+		    // Enter "" if not needed
+		    element_id : SCALAR VAL
+		) =>
+		    "<polyline" &
+		    IF(element_id <> "", " id='" & element_id & "'", "") &
+		    " points='" & points & 
+		    "' fill='" & fill_colour & 
+		    "' fill-opacity='" & fill_opacity &
+		    "' stroke='" & stroke_colour & 
+		    "' stroke-width='" & stroke_width &
+		    "' stroke-linecap='" & stroke_linecap &
+		    "' stroke-linejoin='" & stroke_linejoin &
+		    IF(clip_path_ref <> "", "' clip-path='url(" & clip_path_ref & ")'", "'") &
+		    "/>"
+		```
+	lineageTag: 74db8a33-96e5-4bf0-bda3-fda27c364399
+
+function 'SVG.Chart.BarChart.OverlappingBars' = ```
+		
+		// Chart.BarChart.OverlappingBars
+		// Creates overlapping bars showing actual vs target with variance indicator
+		// Returns SVG string for Table/Matrix visuals
+		(
+		    // Actual value measure
+		    // Example: [Actuals MTD]
+		    actual : EXPR,
+		    
+		    // Target value measure
+		    // Example: [Budget MTD]
+		    target : EXPR,
+		    
+		    // Column for grouping/scope
+		    // Example: 'Customers'[Key Account Name]
+		    group_column : ANYREF,
+		    
+		    // Color for actual bar
+		    // Example: "#686868" (charcoal)
+		    colour_actual : SCALAR VAL,
+		    
+		    // Color for target bar
+		    // Example: "#e1dfdd" (grey)
+		    colour_target : SCALAR VAL,
+		    
+		    // Color for negative variance
+		    // Example: "#fab005" (yellow)
+		    colour_variance_negative : SCALAR VAL,
+		    
+		    // Color for positive variance
+		    // Example: "#2094ff" (blue)
+		    color_variance_positive : SCALAR VAL,
+		    
+		    // Font family for labels
+		    // Example: "Segoe UI"
+		    text_font_family : SCALAR VAL,
+		    
+		    // Font size for percentage label
+		    // Example: 10
+		    text_font_size : SCALAR VAL,
+		    
+		    // Font weight for labels
+		    // Example: 600
+		    text_font_weight : SCALAR VAL
+		) =>
+		    -- Chart dimensions
+		    VAR _BarMax = 100
+		    VAR _BarMin = 30
+		    
+		    -- Get current values
+		    VAR _Actual = actual
+		    VAR _Target = target
+		    
+		    -- Calculate performance
+		    VAR _Performance = DIVIDE(_Actual - _Target, _Target)
+		    
+		    -- Determine variance color
+		    VAR _VarianceColor = 
+		        IF(_Performance < 0, colour_variance_negative, color_variance_positive)
+		    
+		    -- Get scope for axis calculation
+		    VAR _Scope = ALLSELECTED(group_column)
+		    
+		    -- Calculate axis maximums
+		    VAR _MaxActualsInScope = 
+		        CALCULATE(
+		            MAXX(_Scope, actual),
+		            REMOVEFILTERS(group_column)
+		        )
+		    
+		    VAR _MaxTargetInScope = 
+		        CALCULATE(
+		            MAXX(_Scope, target),
+		            REMOVEFILTERS(group_column)
+		        )
+		    
+		    VAR _AxisMax = 
+		        IF(
+		            HASONEVALUE(group_column),
+		            MAX(_MaxActualsInScope, _MaxTargetInScope),
+		            CALCULATE(MAX(actual, target), REMOVEFILTERS(group_column))
+		        ) * 1.1
+		    
+		    -- Calculate normalized positions
+		    VAR _AxisRange = _BarMax - _BarMin
+		    
+		    VAR _ActualNormalized = 
+		        DIVIDE(_Actual, _AxisMax) * _AxisRange
+		    
+		    VAR _TargetNormalized = 
+		        DIVIDE(_Target, _AxisMax) * _AxisRange
+		    
+		    -- Calculate variance bar position and width
+		    VAR _VarianceX = _BarMin + MIN(_ActualNormalized, _TargetNormalized) + 1
+		    VAR _VarianceY = IF(_Target > _Actual, 2.9, 9)
+		    VAR _VarianceWidth = ABS(_ActualNormalized - _TargetNormalized) - 1
+		    
+		    -- Build SVG components
+		    VAR _SvgContent = 
+		        
+		        -- Performance Icon (triangle up/down)
+		        SVG.Component.Texts(
+		            _BarMin - 3,                                    -- x
+		            13.5,                                            -- y
+		            FORMAT(_Performance, "▲;▼;"),                   -- text_content
+		            6,                                               -- text_font_size
+		            "Segoe UI",                                      -- font_family
+		            _VarianceColor,                                  -- fill
+		            "end",                                           -- text_anchor
+		            700,                                             -- font_weight
+		            "",                                              -- rotation
+		            ""                                               -- opacity
+		        ) &
+		        
+		        -- Performance Label (percentage)
+		        SVG.Component.Texts(
+		            _BarMin - 10,                                    -- x
+		            15,                                              -- y
+		            FORMAT(_Performance, "#,##0%;#,##0%;#,##0%"),   -- text_content
+		            text_font_size,                                       -- text_font_size
+		            text_font_family,                                     -- font_family
+		            _VarianceColor,                                  -- fill
+		            "end",                                           -- text_anchor
+		            text_font_weight,                                     -- font_weight
+		            "",                                              -- rotation
+		            ""                                               -- opacity
+		        ) &
+		        
+		        -- Target Bar (bottom)
+		        SVG.Component.Rects(
+		            _BarMin,                -- x
+		            10,                     -- y
+		            _TargetNormalized,      -- width
+		            12,                     -- height
+		            colour_target,           -- fill
+		            colour_actual,           -- stroke (uses actual color for outline)
+		            "",                     -- stroke_width
+		            "",                     -- rx
+		            ""                      -- opacity
+		        ) &
+		        
+		        -- Actual Bar (top)
+		        SVG.Component.Rects(
+		            _BarMin,                -- x
+		            3,                      -- y
+		            _ActualNormalized,      -- width
+		            12,                     -- height
+		            colour_actual,           -- fill
+		            colour_actual,           -- stroke
+		            "",                     -- stroke_width
+		            "",                     -- rx
+		            ""                      -- opacity
+		        ) &
+		        
+		        -- Variance Bar
+		        SVG.Component.Rects(
+		            _VarianceX,             -- x
+		            _VarianceY,             -- y
+		            _VarianceWidth,         -- width
+		            6,                      -- height
+		            _VarianceColor,         -- fill
+		            _VarianceColor,         -- stroke
+		            "",                     -- stroke_width
+		            "",                     -- rx
+		            ""                      -- opacity
+		        )
+		    
+		    -- Wrap in PowerBI container with sort value
+		    VAR _Svg = 
+		        SVG.Component.PowerBI(
+		            _SvgContent,
+		            _Actual,                -- sort_value
+		            "",                     -- viewbox (uses default)
+		            "",                     -- width (uses default)
+		            "",                     -- height (uses default)
+		            "#FFFFFF00"             -- transparent background
+		        )
+		    
+		    RETURN
+		        _Svg
+		```
+	lineageTag: 922a5d51-8b34-4590-9066-539dbd786178
+
+function 'SVG.Chart.BarChart.OverlappingBarsSimple' = ```
+		
+		// Chart.BarChart.OverlappingBarsSimple
+		// Creates overlapping bars showing actual vs target with variance bar (no text labels)
+		// Returns SVG string for Table/Matrix visuals
+		(
+		    // Actual value measure
+		    // Example: [Actuals MTD]
+		    actual : EXPR,
+		    
+		    // Target value measure
+		    // Example: [Budget MTD]
+		    target : EXPR,
+		    
+		    // Column for grouping/scope
+		    // Example: 'Customers'[Key Account Name]
+		    column_one : ANYREF,
+		    
+		    // Colour for actual bar
+		    // Example: "#686868" (charcoal)
+		    colour_actual : SCALAR VAL,
+		    
+		    // Colour for target bar
+		    // Example: "#e1dfdd" (grey)
+		    colour_target : SCALAR VAL,
+		    
+		    // Colour for negative variance
+		    // Example: "#fab005" (yellow)
+		    colour_variance_negative : SCALAR VAL,
+		    
+		    // Colour for positive variance
+		    // Example: "#2094ff" (blue)
+		    colour_variance_positive : SCALAR VAL
+		) =>
+		    -- Chart dimensions
+		    VAR _BarMax = 100
+		    VAR _BarMin = 10  -- Can start closer to edge without labels
+		    
+		    -- Get current values
+		    VAR _Actual = actual
+		    VAR _Target = target
+		    
+		    -- Calculate performance
+		    VAR _Performance = DIVIDE(_Actual - _Target, _Target)
+		    
+		    -- Determine variance Colour
+		    VAR _VarianceColour = 
+		        IF(_Performance < 0, colour_variance_negative, colour_variance_positive)
+		    
+		    VAR _AxisMax = 
+		        MAX (
+		            SVG.Calc.AxisMax( actual, column_one, 1.1 ),
+		            SVG.Calc.AxisMax( target, column_one, 1.1 )
+		        )
+		    
+		    -- Calculate normalized positions
+		    VAR _AxisRange =
+		        SVG.Calc.AxisRange ( _BarMax, _BarMin )
+		    
+		    VAR _ActualNormalized = 
+		        SVG.Calc.Normalize ( actual, _AxisMax, _AxisRange )
+		    
+		    VAR _TargetNormalized = 
+		        SVG.Calc.Normalize ( target, _AxisMax, _AxisRange )
+		    
+		    -- Calculate variance bar position and width
+		    VAR _VarianceX = _BarMin + MIN(_ActualNormalized, _TargetNormalized) + 1
+		    VAR _VarianceY = IF(_Target > _Actual, 2.9, 9)
+		    VAR _VarianceWidth = ABS(_ActualNormalized - _TargetNormalized) - 1
+		    
+		    -- Build SVG components (no text labels)
+		    VAR _SvgContent = 
+		        
+		        -- Target Bar (bottom)
+		        SVG.Component.Rects(
+		            _BarMin,                -- x
+		            10,                     -- y
+		            _TargetNormalized,      -- width
+		            12,                     -- height
+		            colour_target,           -- fill
+		            colour_actual,           -- stroke (uses actual Colour for outline)
+		            "",                     -- stroke_width
+		            "",                     -- rx
+		            ""                      -- opacity
+		        ) &
+		        
+		        -- Actual Bar (top)
+		        SVG.Component.Rects(
+		            _BarMin,                -- x
+		            3,                      -- y
+		            _ActualNormalized,      -- width
+		            12,                     -- height
+		            colour_actual,           -- fill
+		            colour_actual,           -- stroke
+		            "",                     -- stroke_width
+		            "",                     -- rx
+		            ""                      -- opacity
+		        ) &
+		        
+		        -- Variance Bar
+		        SVG.Component.Rects(
+		            _VarianceX,             -- x
+		            _VarianceY,             -- y
+		            _VarianceWidth,         -- width
+		            6,                      -- height
+		            _VarianceColour,         -- fill
+		            _VarianceColour,         -- stroke
+		            "",                     -- stroke_width
+		            "",                     -- rx
+		            ""                      -- opacity
+		        )
+		    
+		    -- Wrap in PowerBI container with sort value
+		    VAR _Svg = 
+		        SVG.Component.PowerBI(
+		            _SvgContent,
+		            _Actual,                -- sort_value
+		            "",                     -- viewbox (uses default)
+		            "",                     -- width (uses default)
+		            "",                     -- height (uses default)
+		            "#FFFFFF00"             -- transparent background
+		        )
+		    
+		    RETURN
+		        _Svg
+		```
+	lineageTag: 7a4e7d3c-39f7-4a1a-a433-89912e00320e
+
+function 'SVG.Chart.DumbbellPlot' = ```
+		
+		// Chart.DumbbellPlot
+		// Creates a dumbbell chart showing actual vs target with connecting line
+		// Returns SVG string for Table/Matrix visuals (set Image size: Height 25px, Width 100px)
+		(
+		    // Actual value measure
+		    // Example: [Sales Amount]
+		    actual : EXPR,
+		    
+		    // Target value measure
+		    // Example: [Sales Target]
+		    target : EXPR,
+		    
+		    // Column for grouping/scope
+		    // Example: 'Product'[Category]
+		    column_one : ANYREF,
+		    
+		    // Colour when actual exceeds target
+		    // Example: "#448FD6" (blue)
+		    colour_on_target_fill : SCALAR VAL,
+		    
+		    // Stroke colour when actual exceeds target
+		    // Example: "#2F6698" (dark blue)
+		    colour_on_target_stroke : SCALAR VAL,
+		    
+		    // Colour when actual below target
+		    // Example: "#D64444" (red)
+		    colour_off_target_fill : SCALAR VAL,
+		    
+		    // Stroke colour when actual below target
+		    // Example: "#982F2F" (dark red)
+		    colour_off_target_stroke : SCALAR VAL
+		) =>
+		    -- SVG dimensions
+		    VAR _SvgWidth = 100
+		    VAR _SvgMin = 0
+		    VAR _SvgHeight = 25
+		    VAR _CenterY = _SvgHeight / 2
+		    
+		    -- Fixed colours
+		    VAR _TargetCircleColour = "#F5F5F5"
+		    VAR _TargetStrokeColour = "#C7C7C7"
+		    VAR _AxisColour = "#C7C7C7"
+		    
+		    -- Get current values
+		    VAR _Actual = actual
+		    VAR _Target = target
+		    
+		    -- Determine colours based on performance
+		    VAR _Fill = IF(_Actual > _Target, colour_on_target_fill, colour_off_target_fill)
+		    VAR _Stroke = IF(_Actual > _Target, colour_on_target_stroke, colour_off_target_stroke)
+		    
+		    -- Use existing calculation functions
+		    VAR _AxisMax = 
+		        MAX(
+		            SVG.Calc.AxisMax(actual, column_one, 1.1),
+		            SVG.Calc.AxisMax(target, column_one, 1.1)
+		        )
+		    
+		    -- Calculate normalized positions using existing functions
+		    VAR _AxisRange = 
+		        SVG.Calc.AxisRange(_SvgWidth, _SvgMin)
+		    
+		    VAR _ActualNormalized = 
+		        SVG.Calc.Normalize(_Actual, _AxisMax, _AxisRange)
+		    
+		    VAR _TargetNormalized = 
+		        SVG.Calc.Normalize(_Target, _AxisMax, _AxisRange)
+		    
+		    -- Build SVG components
+		    VAR _SvgContent = 
+		        
+		        -- Axis line
+		        SVG.Component.Lines(
+		            0,                      -- x1
+		            _CenterY,               -- y1
+		            _SvgWidth,              -- x2
+		            _CenterY,               -- y2
+		            _AxisColour,            -- stroke_colour
+		            1,                      -- stroke_width
+		            "",                     -- stroke_dasharray
+		            "",                     -- stroke_linecap
+		            ""                      -- opacity
+		        ) &
+		        
+		        -- Origin circle
+		        SVG.Component.Circles(
+		            2,                      -- cx
+		            _CenterY,               -- cy
+		            2,                      -- radius
+		            _AxisColour             -- fill
+		        ) &
+		        
+		        -- Dumbbell connecting line
+		        SVG.Component.Lines(
+		            _ActualNormalized,      -- x1
+		            _CenterY,               -- y1
+		            _TargetNormalized,      -- x2
+		            _CenterY,               -- y2
+		            _Fill,                  -- stroke_colour (uses actual colour)
+		            3,                      -- stroke_width
+		            "",                     -- stroke_dasharray
+		            "",                     -- stroke_linecap
+		            ""                      -- opacity
+		        ) &
+		        
+		        -- Target circle with stroke
+		        "<circle cx='" & _TargetNormalized & 
+		        "' cy='" & _CenterY & 
+		        "' r='4' fill='" & _TargetCircleColour & 
+		        "' stroke='" & _TargetStrokeColour & 
+		        "' stroke-width='1.5'/>" &
+		        
+		        -- Actual circle with stroke
+		        "<circle cx='" & _ActualNormalized & 
+		        "' cy='" & _CenterY & 
+		        "' r='4' fill='" & _Fill & 
+		        "' stroke='" & _Stroke & 
+		        "' stroke-width='1.5'/>"
+		    
+		    -- Wrap in PowerBI container with specific dimensions
+		    VAR _Svg = 
+		        SVG.Component.PowerBI(
+		            _SvgContent,
+		            _Actual,                -- sort_value
+		            "0 0 " & _SvgWidth & " " & _SvgHeight,  -- viewbox
+		            _SvgWidth,              -- width
+		            _SvgHeight,             -- height
+		            "#FFFFFF00"             -- transparent background
+		        )
+		    
+		    RETURN
+		        _Svg
+		```
+	lineageTag: 464a06ea-5e25-458f-a7c0-368566350c12
+
+function 'SVG.Chart.Waterfall' = ```
+		
+		// Chart.WaterfallChartSimple
+		// Creates a waterfall chart showing contribution to total with cumulative positioning (no labels)
+		// Returns SVG string for Table/Matrix visuals (set Image size: Height 25px, Width 100px)
+		(
+		    // Actual value measure to display
+		    // Example: [Sales Amount]
+		    actual : EXPR,
+		    
+		    // Column for grouping/scope
+		    // Example: 'Product'[Category]
+		    column_one : ANYREF,
+		    
+		    // Bar fill colour for category items
+		    // Example: "#dad9d8" (light grey)
+		    colour_bar_category : SCALAR VAL,
+		    
+		    // Bar fill colour for totals
+		    // Example: "#878582" (dark grey)
+		    colour_bar_total : SCALAR VAL,
+		    
+		    // Connector colour
+		    // Example: "#333333" (dark grey)
+		    colour_connector : SCALAR VAL
+		) =>
+		    -- Chart dimensions
+		    VAR _BarMax = 100
+		    VAR _BarMin = 0
+		    
+		    -- Get current value
+		    VAR _Actual = actual
+		    
+		    -- Determine bar colour based on context
+		    VAR _BarFillColour = 
+		        IF(
+		            HASONEVALUE(column_one),
+		            colour_bar_category,
+		            colour_bar_total
+		        )
+		    
+		    -- Calculate cumulative positioning
+		    VAR _Scope = ALLSELECTED(column_one)
+		    
+		    VAR _Total = 
+		        SUMX(_Scope, actual)
+		    
+		    -- Calculate cumulative sum of all items before current one
+		    VAR _CumulativeBefore = 
+		        SUMX(
+		            FILTER(
+		                _Scope,
+		                actual > _Actual
+		            ),
+		            actual
+		        )
+		    
+		    -- Calculate percentage positions
+		    VAR _PercentageStart = 
+		        IF(
+		            HASONEVALUE(column_one),
+		            DIVIDE(_CumulativeBefore, _Total),
+		            0
+		        )
+		    
+		    VAR _PercentageWidth = 
+		        DIVIDE(_Actual, _Total)
+		    
+		    -- Calculate normalized positions
+		    VAR _AxisRange = 
+		        SVG.Calc.AxisRange(_BarMax, _BarMin)
+		    
+		    VAR _StartPos = 
+		        _PercentageStart * _AxisRange
+		    
+		    VAR _BarWidth = 
+		        _PercentageWidth * _AxisRange
+		    
+		    VAR _EndPos = 
+		        MIN(_StartPos + _BarWidth, 99)
+		    
+		    -- Build SVG components (no labels)
+		    VAR _SvgContent = 
+		        
+		        -- Main bar
+		        SVG.Component.Rects(
+		            _StartPos,              -- x
+		            3,                      -- y
+		            _BarWidth,              -- width
+		            "75%",                  -- height
+		            _BarFillColour,         -- fill
+		            "",                     -- stroke
+		            "",                     -- stroke_width
+		            "",                     -- rx
+		            ""                      -- opacity
+		        ) &
+		        
+		        -- Start connector
+		        SVG.Component.Rects(
+		            _StartPos,              -- x
+		            0,                      -- y
+		            0.5,                    -- width
+		            "100%",                 -- height
+		            colour_connector,       -- fill
+		            "",                     -- stroke
+		            "",                     -- stroke_width
+		            "",                     -- rx
+		            ""                      -- opacity
+		        ) &
+		        
+		        -- End connector
+		        SVG.Component.Rects(
+		            _EndPos,                -- x
+		            0,                      -- y
+		            0.5,                    -- width
+		            "100%",                 -- height
+		            colour_connector,       -- fill
+		            "",                     -- stroke
+		            "",                     -- stroke_width
+		            "",                     -- rx
+		            ""                      -- opacity
+		        )
+		    
+		    -- Wrap in PowerBI container
+		    VAR _Svg = 
+		        SVG.Component.PowerBI(
+		            _SvgContent,
+		            _Actual,                -- sort_value
+		            "",                     -- viewbox
+		            "",                     -- width
+		            "",                     -- height
+		            "#FFFFFF00"             -- transparent background
+		        )
+		    
+		    RETURN
+		        _Svg
+		```
+	lineageTag: 1b7fa21b-38b8-4132-b285-43f7875ffdfe
+
+function 'Comparison.Achievement' = ```
+		
+		// Compare to a target and return the relative percent
+		// Example usage: Comparing sales to budget or forecast to get relative performance
+		// Examples:
+		// - 9/10  is 90%
+		// - 11/10 is 110%
+		(
+		    // The actual value that you are measuring
+		    actual : SCALAR NUMERIC VAL,
+		    
+		    // The target that you are comparing to
+		    target : SCALAR NUMERIC VAL
+		)
+		
+		=>
+		    DIVIDE ( actual, target )
+		```
+	lineageTag: 7cf1811f-f5f4-4d4d-8649-d5ddafc7e989
+
+function 'FormatString.Component.Symbols' = ```
+		
+		// Get comparison symbol based on style and value sign
+		// Returns appropriate symbol for positive, negative, or zero values
+		(
+		    // Symbol style - number (1-9) or text:
+		    // 1 or "ARROWS": ↑/↓
+		    // 2 or "TRIANGLES": ▲/▼
+		    // 3 or "PLUSMINUS": +/-
+		    // 4 or "CHEVRONS": ˄/˅
+		    // 5 or "GREENRED": 🟢/🔴
+		    // 6 or "BLUEORANGE": 🔵/🟠
+		    // 7 or "BLOCKARROWS": ⬆/⬇
+		    // 8 or "CHECKCROSS": ✓/✗
+		    // 9 or "NONE": no symbol
+		    symbol_style: ANYVAL,
+		    
+		    // Value type: "POSITIVE", "NEGATIVE", or "ZERO"
+		    value_type: STRING
+		)
+		=>
+		    VAR _SymbolCode =
+		        IF ( ISNUMBER ( symbol_style ),
+		            symbol_style,
+		            SWITCH ( UPPER ( symbol_style ),
+		                "ARROWS", 1,
+		                "TRIANGLES", 2,
+		                "PLUSMINUS", 3,
+		                "CHEVRONS", 4,
+		                "GREENRED", 5,
+		                "BLUEORANGE", 6,
+		                "BLOCKARROWS", 7,
+		                "CHECKCROSS", 8,
+		                "NONE", 9,
+		                9
+		            )
+		        )
+		    
+		    VAR _Symbol = 
+		        SWITCH ( value_type,
+		            "POSITIVE", 
+		                SWITCH ( _SymbolCode,
+		                    1, "↑",
+		                    2, "▲",  
+		                    3, "+",
+		                    4, "˄",
+		                    5, "🟢",
+		                    6, "🔵",
+		                    7, "⬆",
+		                    8, "✓",
+		                    9, "",
+		                    ""
+		                ),
+		            "NEGATIVE",
+		                SWITCH ( _SymbolCode,
+		                    1, "↓",
+		                    2, "▼",
+		                    3, "-",
+		                    4, "˅",
+		                    5, "🔴",
+		                    6, "🟠",
+		                    7, "⬇",
+		                    8, "✗",
+		                    9, "",
+		                    ""
+		                ),
+		            ""
+		        )
+		    
+		    RETURN
+		        _Symbol
+		```
+	lineageTag: 5adfd11c-e6b7-4598-b100-cc600147b93a
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 1.0.0-beta
+
+function 'FormatString.Component.DecimalPlaces' = ```
+		
+		// Returns a 0 string repeated a number of times equal to the number of decimal places
+		(
+		    // Base format string
+		    // Expects a valid format string base, i.e. "#,##0"
+		    base_format: STRING,
+		    
+		    // Number of decimal places
+		    // Expects an integer value from 0-9
+		    decimal_places: INT64
+		)
+		=>
+		    base_format
+		    &
+		    IF (
+		        decimal_places > 0,
+		        "."
+		            & REPT ( "0", MIN ( decimal_places, 9 ) ),
+		        ""
+		    )
+		```
+	lineageTag: 3eec4451-c2d5-413d-a4b1-40e255e0d1c4
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 1.0.0-beta
+
+function 'FormatString.Component.MakeStringSafe' =
+		
+		// Wraps strings in double-quotes to avoid issues with format string interpretation
+		(
+		    // The value you want to put in the format string
+		    unsafe_string : STRING
+		)
+		=>
+		    """" & unsafe_string & """"
+	lineageTag: d193267d-a54e-48a6-8ad1-47313515c489
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 1.0.0-beta
+
+function 'FormatString.DynamicCurrency' = ```
+		
+		// Get currency format string based on currency code
+		// Returns appropriate number format with currency symbol placement
+		(
+		    // Currency code (ISO 4217 three-letter code)
+		    // Examples: CAD, EUR, GBP, JPY, etc.
+		    // Expects a column reference used for selecting a currency in the report, like 'Exchange Rate'[Currency Code]
+		    currency_code: ANYREF,
+		    
+		    // Base format string
+		    // Recommended: "#,##0"
+		    decimal_places: INT64
+		)
+		=>
+		    VAR _BaseFormat =
+		        FormatString.Component.DecimalPlaces( "#,##0", decimal_places )
+		    
+		    VAR _CurrencyPosition =
+		        FormatString.Component.GetCurrencyPosition ( currency_code )
+		        
+		    VAR _CurrencySymbol =
+		        FormatString.Component.GetCurrencySymbol ( currency_code )
+		    
+		    VAR _Prefix =
+		        IF ( _CurrencyPosition = "PREFIX", _CurrencySymbol & " ", "" )
+		    
+		    VAR _Suffix =
+		        IF ( _CurrencyPosition = "SUFFIX", " " & _CurrencySymbol, "" )
+		    
+		    VAR _Format =
+		        _Prefix & _BaseFormat & _Suffix
+		    
+		    RETURN
+		        _Format
+		```
+	lineageTag: d4d918a9-3629-492c-8916-290b50863fef
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 1.0.0-beta
+
+function 'FormatString.Component.GetCurrencySymbol' = ```
+		
+		// Get currency symbol based on currency code
+		// Returns currency symbol as a string (e.g., "$" or "€")
+		(
+		    // Currency code (ISO 4217 three-letter code)
+		    // Examples: CAD, EUR, GBP, JPY, etc.
+		    currency_code: ANYREF
+		)
+		=>
+		    VAR _Code = 
+		        SELECTEDVALUE ( currency_code )
+		    
+		    VAR _Currency = 
+		        FILTER (
+		            -- Calc. table with common currencies and formats
+		            -- Optionally replace with your own, in-memory exchange rate table 
+		            FormatString.Component.CurrencyTable(),
+		            ''[Currency Code] = _Code
+		        )
+		        
+		    VAR _Symbol =
+		        SELECTCOLUMNS ( _Currency, ''[Currency Symbol] )
+		    
+		    RETURN
+		        _Symbol
+		```
+	lineageTag: be2e7d0c-b5c0-492d-9a71-ef84b9ec6ccc
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 1.0.0-beta
+
+function 'FormatString.Component.GetCurrencyPosition' = ```
+		
+		// Get currency position based on currency code
+		// Returns either "PREFIX" or "SUFFIX"
+		(
+		    // Currency code (ISO 4217 three-letter code)
+		    // Examples: CAD, EUR, GBP, JPY, etc.
+		    currency_code: ANYREF
+		)
+		=>
+		    VAR _Code = 
+		        SELECTEDVALUE ( currency_code )
+		    
+		    VAR _Currency = 
+		        FILTER (
+		            -- Calc. table with common currencies and formats
+		            -- Optionally replace with your own, in-memory exchange rate table
+		            FormatString.Component.CurrencyTable(),
+		            ''[Currency Code] = _Code
+		        )
+		        
+		    VAR _Position =
+		        SELECTCOLUMNS ( _Currency, ''[Currency Position] )
+		    
+		    RETURN
+		        _Position
+		```
+	lineageTag: 4cecaf33-0da7-47f2-abd4-5a7d7326ce22
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 1.0.0-beta
+
+function 'FormatString.Component.DynamicUnits' = ```
+		
+		// Helper function to dynamically round and format values
+		(
+		    // Base format string
+		    // Expects a valid format string base, i.e. "#,##0"
+		    base_format: STRING,
+		    
+		    // The value to format
+		    format_value: EXPR
+		)
+		=>
+		    VAR _CurrentValue =
+		        format_value
+		        
+		    VAR _Format =
+		        base_format &
+		        SWITCH (
+		            TRUE (),
+		            _CurrentValue <= 1E3, ".",
+		            _CurrentValue <= 1E4, ",.00 K",
+		            _CurrentValue <= 1E5, ",.0 K",
+		            _CurrentValue <= 1E6, ",. K",
+		            _CurrentValue <= 1E7, ",,.00 M",
+		            _CurrentValue <= 1E8, ",,.0 M",
+		            _CurrentValue <= 1E9, ",,. M",
+		            _CurrentValue <= 1E10, ",,.00 bn",
+		            _CurrentValue <= 1E11, ",,.0 bn",
+		            _CurrentValue <= 1E12, ",,. bn",
+		            _CurrentValue <= 1E13, ",,.00 tn",
+		            _CurrentValue <= 1E14, ",,.0 tn",
+		            _CurrentValue <= 1E15, ",,. tn"
+		        )
+		    RETURN
+		        _Format
+		```
+	lineageTag: 1e61924d-b4a7-4f36-bcf9-c736b8d05fe4
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 1.0.0-beta
+
+function 'FormatString.RelativeToTarget.Numeric' = ```
+		
+		// Dynamic format string generator for comparison values (in value)
+		// Returns format string with directional indicators based on parameters
+		(
+		    // Position of comparison symbol 
+		    // Expects "PREFIX" or "SUFFIX"
+		    position: STRING,
+		
+		    // Number of decimal places
+		    // Expects an INT64 value from 0-9
+		    decimal_places: INT64,
+		
+		    // Symbol style - number (1-9) or text:
+		    // 1 or "ARROWS": ↑/↓
+		    // 2 or "TRIANGLES": ▲/▼
+		    // 3 or "PLUSMINUS": +/-
+		    // 4 or "CHEVRONS": ˄/˅
+		    // 5 or "GREENRED": 🟢/🔴
+		    // 6 or "BLUEORANGE": 🔵/🟠
+		    // 7 or "BLOCKARROWS": ⬆/⬇
+		    // 8 or "CHECKCROSS": ✓/✗
+		    // 9 or "NONE": no symbol
+		    symbol: ANYVAL,
+		
+		    // Custom prefix text (optional)
+		    // Enter "" to skip parameter
+		    // Enter SELECTEDVALUE( 'Exchange Rate'[Currency Symbol] ) for dynamic currency conversion
+		    //
+		    // Note: Value is string-safe; no need for """"
+		    custom_prefix: EXPR,
+		
+		    // Custom suffix text (optional)
+		    // Enter "" to skip parameter
+		    // Enter SELECTEDVALUE( 'Exchange Rate'[Currency Symbol] ) for dynamic currency conversion
+		    // Enter " (" & FORMAT ( [PercentMeasure], "0.0%" ) & ")" to add a second value for context
+		    //
+		    // Note: Value is string-safe; no need for """"
+		    custom_suffix: EXPR
+		) =>
+		    VAR _BaseFormat =
+		        FormatString.Component.DecimalPlaces( "#,##0", decimal_places ) & "%"
+		    
+		    VAR _Prefix = 
+		        FormatString.Component.MakeStringSafe ( custom_prefix )
+		    
+		    VAR _Suffix = 
+		        FormatString.Component.MakeStringSafe ( custom_suffix )
+		    
+		    VAR _PositiveSymbol = 
+		        FormatString.Component.Symbols ( symbol, "POSITIVE" )
+		    
+		    VAR _NegativeSymbol = 
+		        FormatString.Component.Symbols ( symbol, "NEGATIVE" )
+		    
+		    VAR _PositiveFormat =
+		        _Prefix
+		            & SWITCH (
+		                position,
+		                "PREFIX",
+		                    _PositiveSymbol & " " & _BaseFormat,
+		                "SUFFIX",
+		                    _BaseFormat & " " & _PositiveSymbol,
+		                _BaseFormat & " " & _PositiveSymbol
+		            )
+		            & _Suffix
+		            
+		    VAR _NegativeFormat =
+		        _Prefix
+		            & SWITCH (
+		                position,
+		                "PREFIX",
+		                    _NegativeSymbol & " " & _BaseFormat,
+		                "SUFFIX",
+		                    _BaseFormat & " " & _NegativeSymbol,
+		                _BaseFormat & " " & _NegativeSymbol
+		            )
+		            & _Suffix
+		            
+		    VAR _ZeroFormat =
+		        _Prefix & _BaseFormat & _Suffix
+		        
+		    RETURN
+		        _PositiveFormat & ";" & _NegativeFormat
+		            & ";"
+		            & _ZeroFormat
+		```
+	lineageTag: 4898ee77-1789-4355-9451-b7e667dcd6a2
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 1.0.0-beta
+
+function 'FormatString.Component.CurrencyTable' = ```
+		
+		// Get currency reference table with codes, symbols, position, and format strings
+		// Returns table with currency metadata for use in other calculations
+		()
+		=>
+		    VAR _CurrencyTable = 
+		        DATATABLE (
+		            "Currency Code", STRING,
+		            "Currency Symbol", STRING,
+		            "Currency Position", STRING,
+		            "Format String", STRING,
+		            "Format String PNZ", STRING,
+		            {
+		                -- Major currencies
+		                { "CAD", "C$", "PREFIX", "C$#,##0", "C$#,##0;-C$#,##0;C$0" },
+		                { "EUR", "€", "SUFFIX", "#,##0 €", "#,##0 €;-#,##0 €;0 €" },
+		                { "GBP", "£", "PREFIX", "£#,##0", "£#,##0;-£#,##0;£0" },
+		                { "JPY", "¥", "PREFIX", "¥#,##0", "¥#,##0;-¥#,##0;¥0" },
+		                { "CHF", "CHF", "PREFIX", "CHF #,##0", "CHF #,##0;-CHF #,##0;CHF 0" },
+		                
+		                -- Dollar variants
+		                { "USD", "$", "PREFIX", "$#,##0", "$#,##0;-$#,##0;$0" },
+		                { "AUD", "A$", "PREFIX", "A$#,##0", "A$#,##0;-A$#,##0;A$0" },
+		                { "NZD", "NZ$", "PREFIX", "NZ$#,##0", "NZ$#,##0;-NZ$#,##0;NZ$0" },
+		                { "HKD", "HK$", "PREFIX", "HK$#,##0", "HK$#,##0;-HK$#,##0;HK$0" },
+		                { "SGD", "S$", "PREFIX", "S$#,##0", "S$#,##0;-S$#,##0;S$0" },
+		                { "TWD", "NT$", "PREFIX", "NT$#,##0", "NT$#,##0;-NT$#,##0;NT$0" },
+		                
+		                -- Asian currencies
+		                { "CNY", "¥", "PREFIX", "¥#,##0", "¥#,##0;-¥#,##0;¥0" },
+		                { "INR", "₹", "PREFIX", "₹#,##0", "₹#,##0;-₹#,##0;₹0" },
+		                { "KRW", "₩", "PREFIX", "₩#,##0", "₩#,##0;-₩#,##0;₩0" },
+		                { "THB", "฿", "PREFIX", "฿#,##0", "฿#,##0;-฿#,##0;฿0" },
+		                { "PHP", "₱", "PREFIX", "₱#,##0", "₱#,##0;-₱#,##0;₱0" },
+		                { "IDR", "Rp", "PREFIX", "Rp#,##0", "Rp#,##0;-Rp#,##0;Rp0" },
+		                { "MYR", "RM", "PREFIX", "RM#,##0", "RM#,##0;-RM#,##0;RM0" },
+		                { "VND", "₫", "PREFIX", "₫#,##0", "₫#,##0;-₫#,##0;₫0" },
+		                { "PKR", "Rs", "PREFIX", "Rs#,##0", "Rs#,##0;-Rs#,##0;Rs0" },
+		                { "BDT", "৳", "PREFIX", "৳#,##0", "৳#,##0;-৳#,##0;৳0" },
+		                { "LKR", "Rs", "PREFIX", "Rs#,##0", "Rs#,##0;-Rs#,##0;Rs0" },
+		                { "RUB", "₽", "PREFIX", "₽#,##0", "₽#,##0;-₽#,##0;₽0" },
+		                { "UAH", "₴", "PREFIX", "₴#,##0", "₴#,##0;-₴#,##0;₴0" },
+		                { "KZT", "₸", "PREFIX", "₸#,##0", "₸#,##0;-₸#,##0;₸0" },
+		                { "BYN", "Br", "PREFIX", "Br#,##0", "Br#,##0;-Br#,##0;Br0" },
+		                { "UZS", "soʻm", "SUFFIX", "#,##0 soʻm", "#,##0 soʻm;-#,##0 soʻm;0 soʻm" },
+		                { "AZN", "₼", "PREFIX", "₼#,##0", "₼#,##0;-₼#,##0;₼0" },
+		                { "GEL", "₾", "PREFIX", "₾#,##0", "₾#,##0;-₾#,##0;₾0" },
+		                { "AMD", "֏", "PREFIX", "֏#,##0", "֏#,##0;-֏#,##0;֏0" },
+		                
+		                -- European currencies
+		                { "SEK", "kr", "SUFFIX", "#,##0 kr", "#,##0 kr;-#,##0 kr;0 kr" },
+		                { "NOK", "kr", "SUFFIX", "#,##0 kr", "#,##0 kr;-#,##0 kr;0 kr" },
+		                { "DKK", "kr", "SUFFIX", "#,##0 kr", "#,##0 kr;-#,##0 kr;0 kr" },
+		                { "PLN", "zł", "SUFFIX", "#,##0 zł", "#,##0 zł;-#,##0 zł;0 zł" },
+		                { "HUF", "Ft", "SUFFIX", "#,##0 Ft", "#,##0 Ft;-#,##0 Ft;0 Ft" },
+		                { "CZK", "Kč", "SUFFIX", "#,##0 Kč", "#,##0 Kč;-#,##0 Kč;0 Kč" },
+		                { "RON", "lei", "SUFFIX", "#,##0 lei", "#,##0 lei;-#,##0 lei;0 lei" },
+		                { "BGN", "лв", "SUFFIX", "#,##0 лв", "#,##0 лв;-#,##0 лв;0 лв" },
+		                { "HRK", "kn", "SUFFIX", "#,##0 kn", "#,##0 kn;-#,##0 kn;0 kn" },
+		                { "ISK", "kr", "SUFFIX", "#,##0 kr", "#,##0 kr;-#,##0 kr;0 kr" },
+		                
+		                -- Latin American
+		                { "MXN", "$", "PREFIX", "$#,##0", "$#,##0;-$#,##0;$0" },
+		                { "BRL", "R$", "PREFIX", "R$#,##0", "R$#,##0;-R$#,##0;R$0" },
+		                { "CLP", "$", "PREFIX", "$#,##0", "$#,##0;-$#,##0;$0" },
+		                { "COP", "$", "PREFIX", "$#,##0", "$#,##0;-$#,##0;$0" },
+		                { "ARS", "$", "PREFIX", "$#,##0", "$#,##0;-$#,##0;$0" },
+		                { "PEN", "S/", "PREFIX", "S/#,##0", "S/#,##0;-S/#,##0;S/0" },
+		                { "UYU", "$U", "PREFIX", "$U#,##0", "$U#,##0;-$U#,##0;$U0" },
+		                { "BOB", "Bs", "PREFIX", "Bs#,##0", "Bs#,##0;-Bs#,##0;Bs0" },
+		                { "PYG", "₲", "PREFIX", "₲#,##0", "₲#,##0;-₲#,##0;₲0" },
+		                { "VES", "Bs", "PREFIX", "Bs#,##0", "Bs#,##0;-Bs#,##0;Bs0" },
+		                { "GTQ", "Q", "PREFIX", "Q#,##0", "Q#,##0;-Q#,##0;Q0" },
+		                { "CRC", "₡", "PREFIX", "₡#,##0", "₡#,##0;-₡#,##0;₡0" },
+		                { "DOP", "RD$", "PREFIX", "RD$#,##0", "RD$#,##0;-RD$#,##0;RD$0" },
+		                { "CUP", "$", "PREFIX", "$#,##0", "$#,##0;-$#,##0;$0" },
+		                
+		                -- Middle Eastern & African
+		                { "TRY", "₺", "PREFIX", "₺#,##0", "₺#,##0;-₺#,##0;₺0" },
+		                { "ILS", "₪", "PREFIX", "₪#,##0", "₪#,##0;-₪#,##0;₪0" },
+		                { "AED", "AED", "PREFIX", "AED #,##0", "AED #,##0;-AED #,##0;AED 0" },
+		                { "SAR", "SAR", "PREFIX", "SAR #,##0", "SAR #,##0;-SAR #,##0;SAR 0" },
+		                { "QAR", "QR", "PREFIX", "QR #,##0", "QR #,##0;-QR #,##0;QR 0" },
+		                { "KWD", "KD", "PREFIX", "KD #,##0", "KD #,##0;-KD #,##0;KD 0" },
+		                { "BHD", "BD", "PREFIX", "BD #,##0", "BD #,##0;-BD #,##0;BD 0" },
+		                { "OMR", "OMR", "PREFIX", "OMR #,##0", "OMR #,##0;-OMR #,##0;OMR 0" },
+		                { "JOD", "JD", "PREFIX", "JD #,##0", "JD #,##0;-JD #,##0;JD 0" },
+		                { "EGP", "E£", "PREFIX", "E£#,##0", "E£#,##0;-E£#,##0;E£0" },
+		                { "MAD", "MAD", "PREFIX", "MAD #,##0", "MAD #,##0;-MAD #,##0;MAD 0" },
+		                { "ZAR", "R", "PREFIX", "R #,##0", "R #,##0;-R #,##0;R 0" },
+		                { "NGN", "₦", "PREFIX", "₦#,##0", "₦#,##0;-₦#,##0;₦0" },
+		                { "KES", "KSh", "PREFIX", "KSh#,##0", "KSh#,##0;-KSh#,##0;KSh0" },
+		                { "GHS", "GH₵", "PREFIX", "GH₵#,##0", "GH₵#,##0;-GH₵#,##0;GH₵0" },
+		                { "TND", "DT", "PREFIX", "DT #,##0", "DT #,##0;-DT #,##0;DT 0" },
+		                { "ETB", "Br", "PREFIX", "Br#,##0", "Br#,##0;-Br#,##0;Br0" },
+		                
+		                -- SpaceParts fictional currencies
+		                { "ARC", "₳", "PREFIX", "₳ #,##0", "₳ #,##0;-₳ #,##0;₳ 0" },
+		                { "BELT", "฿", "PREFIX", "฿ #,##0", "฿ #,##0;-฿ #,##0;฿ 0" },
+		                { "BLO", "Ł", "SUFFIX", "#,##0 Ł", "#,##0 Ł;-#,##0 Ł;0 Ł" },
+		                { "BLT", "₺", "PREFIX", "₺ #,##0", "₺ #,##0;-₺ #,##0;₺ 0" },
+		                { "CAL", "¢", "SUFFIX", "#,##0 ¢", "#,##0 ¢;-#,##0 ¢;0 ¢" },
+		                { "CREDITS", "₡", "PREFIX", "₡ #,##0", "₡ #,##0;-₡ #,##0;₡ 0" },
+		                { "ELD", "Ξ", "SUFFIX", "#,##0 Ξ", "#,##0 Ξ;-#,##0 Ξ;0 Ξ" },
+		                { "HAL", "Ħ", "PREFIX", "Ħ #,##0", "Ħ #,##0;-Ħ #,##0;Ħ 0" },
+		                { "ILOS", "ł", "SUFFIX", "#,##0 ł", "#,##0 ł;-#,##0 ł;0 ł" },
+		                { "LAK", "₭", "PREFIX", "₭ #,##0", "₭ #,##0;-₭ #,##0;₭ 0" },
+		                { "MCR", "₥", "PREFIX", "₥ #,##0", "₥ #,##0;-₥ #,##0;₥ 0" },
+		                { "OTN", "Ø", "PREFIX", "Ø #,##0", "Ø #,##0;-Ø #,##0;Ø 0" },
+		                { "UPN", "Ʉ", "SUFFIX", "#,##0 Ʉ", "#,##0 Ʉ;-#,##0 Ʉ;0 Ʉ" }
+		            }
+		        )
+		    
+		    RETURN
+		        _CurrencyTable
+		```
+	lineageTag: f256a35c-887e-4a5b-a3c2-566226d3a4ae
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 1.0.0-beta
+
+function 'FormatString.Component.GetCurrencyFormat' = ```
+		
+		// Get currency format based on currency code
+		// Returns simple currency format string (i.e. $#,##0.0)
+		(
+		    // Currency code (ISO 4217 three-letter code)
+		    // Examples: CAD, EUR, GBP, JPY, etc.
+		    currency_code: ANYREF
+		)
+		=>
+		    VAR _Code = 
+		        SELECTEDVALUE ( currency_code )
+		    
+		    VAR _Currency = 
+		        FILTER (
+		            -- Calc. table with common currencies and formats
+		            -- Optionally replace with your own, in-memory exchange rate table
+		            FormatString.Component.CurrencyTable(),
+		            ''[Currency Code] = _Code
+		        )
+		        
+		    VAR _Symbol =
+		        SELECTCOLUMNS ( _Currency, ''[Format String] )
+		    
+		    RETURN
+		        _Symbol
+		```
+	lineageTag: 729b49b1-c381-4839-825b-64ec638c7a9c
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 1.0.0-beta
+
+function 'FormatString.Component.GetCurrencyFormat.PNZ' = ```
+		
+		// Get currency format based on currency code
+		// Returns positive; negative; zero format string (i.e. $#,##0.0; ($-#,##0.0); $0)
+		(
+		    // Currency code (ISO 4217 three-letter code)
+		    // Examples: CAD, EUR, GBP, JPY, etc.
+		    currency_code: ANYREF
+		)
+		=>
+		    VAR _Code = 
+		        SELECTEDVALUE ( currency_code )
+		    
+		    VAR _Currency = 
+		        FILTER (
+		            -- Calc. table with common currencies and formats
+		            -- Optionally replace with your own, in-memory exchange rate table
+		            FormatString.Component.CurrencyTable(),
+		            ''[Currency Code] = _Code
+		        )
+		        
+		    VAR _Symbol =
+		        SELECTCOLUMNS ( _Currency, ''[Format String PNZ] )
+		    
+		    RETURN
+		        _Symbol
+		```
+	lineageTag: 3d5d7c0c-c33d-4c3d-8afe-7dac63aedab7
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 1.0.0-beta
+
+function 'BusCalcs.Pareto' = ```
+		
+		// Computes the Pareto of a measure by one or more categories
+		// Returns the cumulative percentage for that category
+		(
+		    // Measure or expression that you want to calculate the Pareto for
+		    measure_reference: EXPR,
+		    
+		    // Table expression
+		    data_scope: ANYREF
+		)
+		=>
+		    VAR _TotalValue = 
+		        measure_reference
+		    
+		    VAR _MeasureByDataScope =
+		        ADDCOLUMNS (
+		            ALLSELECTED ( data_scope ),
+		            "@Value", measure_reference
+		        )
+		    
+		    VAR _Cumulation =
+		        FILTER (
+		            _MeasureByDataScope,
+		            [@Value] >= _TotalValue
+		        )
+		    
+		    VAR _CumulativeAmount =
+		        SUMX ( _Cumulation, [@Value] )
+		    
+		    VAR _Total =
+		        SUMX ( _MeasureByDataScope, [@Value] )
+		    
+		    VAR _CumulativePercentage =
+		        DIVIDE (
+		            _CumulativeAmount,
+		            _Total,
+		            BLANK ( )
+		        )
+		        
+		    RETURN
+		        _CumulativePercentage
+		```
+	lineageTag: a9a359e2-90a6-464c-942d-a86671ad811f
+
+function 'BusCalcs.MovingAverage' = ```
+		
+		// Calculate moving average over N periods
+		(
+		    // Measure to average
+		    measure_reference: EXPR,
+		    
+		    // Number of periods
+		    periods: INT64,
+		    
+		    // Column for periods (e.g., Date column)
+		    period_column: ANYREF,
+		    
+		    // Table for periods (e.g., Date table)
+		    period_table: ANYREF
+		) =>
+		    -- Uses approach from Definitive Guide to DAX 2e P202
+		    VAR _LastVisibleDate = MAX ( period_column )
+		    
+		    VAR _NumberOfPeriods = periods
+		    
+		    VAR _PeriodToUse =
+		        FILTER (
+		            ALL ( period_table ),
+		            period_column > _LastVisibleDate - _NumberOfPeriods &&
+		            period_column <= _LastVisibleDate
+		        )
+		    
+		    VAR _Result =
+		        CALCULATE (
+		            DIVIDE (
+		                measure_reference, COUNTROWS ( VALUES ( period_column ) )
+		            ),
+		            _PeriodToUse
+		        )
+		    
+		    RETURN
+		        _Result
+		```
+	lineageTag: 8b03e8a4-9b65-4612-b304-a65dd9ae0e65
+
+function 'BusCalcs.PercentOfTotal' = ```
+		
+		// Calculate percent of total within scope
+		(
+		    // Measure to calculate percentage for
+		    measure_reference: EXPR,
+		    
+		    // Scope to remove for total calculation
+		    remove_scope: ANYREF
+		) =>
+		    DIVIDE (
+		        measure_reference,
+		        CALCULATE (
+		            measure_reference,
+		            REMOVEFILTERS ( remove_scope )
+		        ),
+		        BLANK()
+		    )
+		```
+	lineageTag: 49383946-6b2e-47ff-9b92-7bd30089ab7e
+
+function 'BusCalcs.YearOverYear' = ```
+		
+		// Calculate year-over-year change
+		(
+		    // Measure to compare
+		    measure_reference: EXPR,
+		    
+		    // Date column
+		    date_column: COLUMNREF,
+		    
+		    // Return type: "VALUE", "PERCENT", "DELTA"
+		    return_type: STRING
+		) =>
+		    VAR _Current = measure_reference
+		    VAR _PriorYear = 
+		        CALCULATE (
+		            measure_reference,
+		            SAMEPERIODLASTYEAR ( date_column )
+		        )
+		    RETURN
+		        SWITCH (
+		            return_type,
+		            "VALUE", _PriorYear,
+		            "DELTA", _Current - _PriorYear,
+		            "PERCENT", DIVIDE ( _Current - _PriorYear, _PriorYear, BLANK() ),
+		            BLANK()
+		        )
+		```
+	lineageTag: 34df0bb2-4ccc-43eb-881a-82392f1fa1aa
+
+function 'BusCalcs.WeightedAverage' = ```
+		
+		// Calculate weighted average
+		(
+		    // Value to average
+		    value_column: COLUMNREF,
+		    
+		    // Weight column
+		    weight_column: COLUMNREF,
+		    
+		    // Table containing both columns
+		    data_table: TABLEREF
+		) =>
+		    DIVIDE (
+		        SUMX ( data_table, value_column * weight_column ),
+		        SUMX ( data_table, weight_column ),
+		        BLANK()
+		    )
+		```
+	lineageTag: e877a57d-d177-4ed1-925e-a00ae39bf4cd
+
+function 'BusCalcs.ABC' = ```
+		
+		// Classify items into A/B/C categories based on cumulative contribution
+		(
+		    // Pareto percentage
+		    // Use BusCalcs.ABC
+		    pareto_pct: SCALAR VAL,
+		    
+		    // Threshold for A items (e.g., 0.8 for 80%)
+		    a_threshold: SCALAR VAL,
+		    
+		    // Threshold for B items (e.g., 0.95 for 95%)
+		    b_threshold: SCALAR VAL
+		) =>
+		    SWITCH (
+		        TRUE(),
+		        pareto_pct <= a_threshold, "A",
+		        pareto_pct <= b_threshold, "B",
+		        "C"
+		    )
+		```
+	lineageTag: 3dec8cb5-e5d2-430a-8357-c95800e3eafc
+
+function 'BusCalcs.RunningTotal' = ```
+		
+		// Calculate running total over a sorted dimension
+		(
+		    // Measure to accumulate
+		    measure_reference: EXPR,
+		    
+		    // Column to sort by (typically date)
+		    sort_column: COLUMNREF,
+		    
+		    // Scope for the calculation
+		    data_scope: ANYREF
+		) =>
+		    VAR _CurrentValue = MAX ( sort_column )
+		    RETURN
+		        CALCULATE (
+		            measure_reference,
+		            FILTER (
+		                ALLSELECTED ( data_scope ),
+		                sort_column <= _CurrentValue
+		            )
+		        )
+		```
+	lineageTag: 9469fc4a-c3fa-4932-a6d8-59aff4f07037
+
+function 'BusCalcs.MovingSum' = ```
+		
+		// Calculate moving sum over N periods
+		(
+		    // Measure to sum
+		    measure_reference: EXPR,
+		    
+		    // Number of periods
+		    periods: INT64,
+		    
+		    // Column for periods (e.g., Date column)
+		    period_column: ANYREF,
+		    
+		    // Table for periods (e.g., Date table)
+		    period_table: ANYREF
+		) =>
+		    VAR _LastVisibleDate = MAX ( period_column )
+		    
+		    VAR _NumberOfPeriods = periods
+		    
+		    VAR _PeriodToUse =
+		        FILTER (
+		            ALL ( period_table ),
+		            period_column > _LastVisibleDate - _NumberOfPeriods &&
+		            period_column <= _LastVisibleDate
+		        )
+		    
+		    VAR _Result =
+		        CALCULATE (
+		            measure_reference,
+		            _PeriodToUse
+		        )
+		    
+		    RETURN
+		        _Result
+		```
+	lineageTag: 7f7b7492-fcc7-4b49-8841-590dd30ecfc3
+

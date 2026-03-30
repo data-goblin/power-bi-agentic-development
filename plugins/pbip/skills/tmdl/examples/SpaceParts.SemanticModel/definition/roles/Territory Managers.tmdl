@@ -1,0 +1,6 @@
+role 'Territory Managers'
+	modelPermission: read
+
+	tablePermission Regions = RLS.ApplySimpleRLS ( 'Regions'[Territory Directors] )
+
+	annotation PBI_Id = 6d4eacc1cfdf475eb3dac207196ec47f

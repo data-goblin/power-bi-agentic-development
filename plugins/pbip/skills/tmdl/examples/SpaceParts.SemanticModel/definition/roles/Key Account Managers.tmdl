@@ -1,0 +1,6 @@
+role 'Key Account Managers'
+	modelPermission: read
+
+	tablePermission Customers = RLS.ApplySimpleRLS ( 'Customers'[Key Account Manager] )
+
+	annotation PBI_Id = 74b5a908a58f4954b252fd5d2c9cb895

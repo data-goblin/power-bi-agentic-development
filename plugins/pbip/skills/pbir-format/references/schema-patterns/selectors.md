@@ -103,7 +103,7 @@ Visual calculations (NativeVisualCalculation) always have `queryRef: "select"`, 
 
 | Value | Constant | Description | Use Case |
 |-------|----------|-------------|----------|
-| 0 | Identities+Totals | Match identities and totals (default) | Series-level (WRONG for per-point) |
+| 0 | Identities+Totals | Match identities and totals | Series-level or identity-matched formatting; wrong when per-data-point is the goal |
 | 1 | Instances only | Match instances with identities only | Per-point conditional formatting (most common) |
 | 2 | Totals only | Match totals only | Total row formatting |
 
@@ -214,7 +214,7 @@ Visual calculations (NativeVisualCalculation) always have `queryRef: "select"`, 
 
 **Behavior:** Applies property only when Category = "Electronics"
 
-**Note:** Complex structure, rarely used manually. Usually created by Power BI UI.
+**Note:** Complex structure, rarely used manually. Usually created by Power BI UI. Unlike filter `Where` conditions (which require `Source` alias + `From[]`), scopeId uses `SourceRef.Entity` directly — confirmed in K201 real examples.
 
 ## roles Selector (Role-Based)
 
@@ -275,6 +275,38 @@ Visual calculations (NativeVisualCalculation) always have `queryRef: "select"`, 
 - border (no selector support)
 - categoryAxis (no selector support)
 - valueAxis (no selector support)
+
+## id Selector Values
+
+The `id` field on a selector targets a specific named state of a visual element. Valid values confirmed from K201 `ButtonSlicer_TopCenter.Visual` examples:
+
+| Value | State | Applies to |
+|-------|-------|------------|
+| `"default"` | Base/unselected state | All visuals with stateful formatting |
+| `"selection:selected"` | Selected/active item state | Slicers, action buttons |
+| `"interaction:hover"` | Mouse hover state | Slicers, action buttons, shapes |
+| `"interaction:press"` | Press/click active state | Action buttons, slicers |
+
+**Example — styling a slicer's selected item:**
+
+```json
+"items": [
+  {
+    "properties": {
+      "fontColor": {"solid": {"color": {"expr": {"Literal": {"Value": "'#000000'"}}}}}
+    },
+    "selector": {"id": "default"}
+  },
+  {
+    "properties": {
+      "fontColor": {"solid": {"color": {"expr": {"Literal": {"Value": "'#FFFFFF'"}}}}}
+    },
+    "selector": {"id": "selection:selected"}
+  }
+]
+```
+
+**Note:** Not all visual types support all `id` values. Slicers and action buttons have the richest set. Other visuals may only support `"default"`.
 
 ## Advanced Properties
 
@@ -500,16 +532,16 @@ Visual calculations (NativeVisualCalculation) always have `queryRef: "select"`, 
 | Color one specific series | metadata | N/A |
 | Format visual calculation series | metadata: "select" | N/A |
 | Per-point measure colors | data + dataViewWildcard | 1 |
-| Per-series measure colors | data + dataViewWildcard | 0 |
+| Series-level or identity-matched colors | data + dataViewWildcard | 0 |
 | Format specific category | data + scopeId | N/A |
 | Format all fields in role | data + roles | N/A |
 | Format totals only | data + total | N/A |
 
 ## Common Mistakes
 
-### Mistake 1: Wrong matchingOption
+### Mistake 1: Wrong matchingOption for per-point formatting
 
-**Wrong:**
+**Wrong when per-data-point is the goal:**
 ```json
 "selector": {
   "data": [{
@@ -518,9 +550,9 @@ Visual calculations (NativeVisualCalculation) always have `queryRef: "select"`, 
 }
 ```
 
-**Result:** All points in series get same color (first value's color)
+**Result:** All points in series get same color (series-level behavior, not per-point). `matchingOption: 0` is correct for series-level formatting — only wrong when you need per-data-point evaluation.
 
-**Right:**
+**Right for per-data-point:**
 ```json
 "selector": {
   "data": [{

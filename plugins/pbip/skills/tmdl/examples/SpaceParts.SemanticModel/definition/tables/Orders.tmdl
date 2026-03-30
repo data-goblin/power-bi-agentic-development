@@ -1,0 +1,286 @@
+table Orders
+	lineageTag: 85791d56-7571-4870-ac91-2e53ef43e591
+
+	/// Net orders exclude cancellation document types
+	measure 'Net Orders' = ```
+			
+			CALCULATE (
+			    [Total Net Order Value],
+			    'Order Document Type'[Group]
+			        <> "Cancellation"
+			) 
+			```
+		formatString: #,##0
+		displayFolder: 1. Value\i. Total
+		lineageTag: 4b34a3e0-ef13-4b57-8312-568cc0f1083c
+
+	/// Net orders exclude cancellation document types
+	measure 'Net Orders (Quantity)' = ```
+			
+			CALCULATE (
+			    [Total Net Order Quantity],
+			    'Order Document Type'[Group]
+			        <> "Cancellation"
+			) 
+			```
+		formatString: #,##0
+		displayFolder: 2. Quantity
+		lineageTag: 735e22bf-4e02-4887-a597-e1dfcdd34aad
+
+	/// Net orders exclude cancellation document types
+	measure 'Net Orders 1YP' =
+			
+			CALCULATE ( [Net Orders], DATEADD('Date'[Date], -1, YEAR ))
+		formatString: #,##0
+		displayFolder: 1. Value\ii. 1YP
+		lineageTag: ff93215e-8b82-41cd-bfd8-a31541d6dc84
+
+		changedProperty = IsHidden
+
+	/// Net orders exclude cancellation document types
+	measure 'Net Orders 2YP' =
+			
+			CALCULATE ( [Net Orders], DATEADD('Date'[Date], -2, YEAR ))
+		formatString: #,##0
+		displayFolder: 1. Value\iii. 2YP
+		lineageTag: 4ace6187-dbc5-4132-a957-a2c2d78d7c0e
+
+		changedProperty = IsHidden
+
+	/// The net order value is the sum of all order intake including cancellations (also known as Gross Orders)
+	measure 'Total Net Order Value' = ```
+			
+			VAR _RATE = MAX ('Exchange Rate'[Rate])
+			RETURN
+			
+			    -- Convert to common currency (WAT)
+			    SUMX (
+			        'Orders',
+			        'Orders'[Net Order Value]
+			            / RELATED ('Budget Rate'[Rate])
+			    )
+			
+			        -- Convert to selected currency
+			        * _RATE 
+			```
+		formatString: #,##0
+		displayFolder: 1. Value\i. Total
+		lineageTag: 7bb01c04-5462-4841-93f9-e0d850e8c1cf
+
+	/// Count of individual order line items
+	measure 'Order Lines' =
+
+			COUNTROWS ( 'Orders' )
+		formatString: #,##0
+		displayFolder: 3. Lines
+		lineageTag: 5324832f-97a5-437f-9604-d6dca47246de
+
+	/// Sum of all ordered quantities including cancellations
+	measure 'Total Net Order Quantity' =
+
+			SUM ( 'Orders'[Net Order Quantity] )
+		formatString: #,##0
+		displayFolder: 2. Quantity
+		lineageTag: 880c9c1a-af07-4b22-b4e8-28a116f6a170
+
+		changedProperty = IsHidden
+
+	/// Order line count from the same period one year ago
+	measure 'Order Lines 1YP' = CALCULATE ( [Order Lines], DATEADD('Date'[Date], -1, YEAR ))
+		formatString: #,##0
+		lineageTag: b613d389-5fef-4116-8d5a-c4f533ccf797
+
+	column 'Sales Order Document Number'
+		dataType: int64
+		isHidden
+		displayFolder: Columns\2. Document Fields
+		lineageTag: 163858ac-fb24-4133-adf0-b14dab3c3f36
+		summarizeBy: sum
+		sourceColumn: Sales Order Document Number
+
+		annotation SummarizationSetBy = Automatic
+
+	/// There is a bug with the "Order Date" field where it is blank. This will take me a bit of time to resolve. - Kurt
+	column 'Order Date'
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		displayFolder: Columns\3. Keys\Dates
+		lineageTag: cca4d6f0-d0b7-47ed-a7c9-8f5aa2a98962
+		summarizeBy: none
+		sourceColumn: Order Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Customer Key'
+		dataType: string
+		isHidden
+		displayFolder: Columns\3. Keys
+		lineageTag: 9496ba22-b180-436d-bcdc-9a1a74722321
+		summarizeBy: none
+		sourceColumn: Customer Key
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Sales Order Document Line Item Number'
+		dataType: int64
+		isHidden
+		displayFolder: Columns\2. Document Fields
+		lineageTag: 3160dd83-6600-4ee8-9352-1f63bf72df1e
+		summarizeBy: sum
+		sourceColumn: Sales Order Document Line Item Number
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Product Key'
+		dataType: int64
+		isHidden
+		displayFolder: Columns\3. Keys
+		lineageTag: 35a4cdf8-ef86-4d1f-b389-9f9cf1567188
+		summarizeBy: none
+		sourceColumn: Product Key
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Billing Date'
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		displayFolder: Columns\3. Keys\Dates
+		lineageTag: 0dfc4547-ab35-4e31-b8c9-e1ac1f97746e
+		summarizeBy: none
+		sourceColumn: Billing Date
+
+		variation Variation
+			isDefault
+			relationship: 0b2be8fb-09ab-4abc-a26a-c2b736c312b4
+			defaultHierarchy: LocalDateTable_fca581ec-8430-42e1-9f91-795770007388.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Ship Date'
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		displayFolder: Columns\3. Keys\Dates
+		lineageTag: 9792bfa7-8c8a-434d-8cad-919bc7f9ecb8
+		summarizeBy: none
+		sourceColumn: Ship Date
+
+		variation Variation
+			isDefault
+			relationship: 1c1cd679-d959-4344-a9d3-e592ae111e42
+			defaultHierarchy: LocalDateTable_4ad7e833-9e3a-4bd3-9873-535c2d4d4285.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Request Goods Receipt Date'
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		displayFolder: Columns\3. Keys\Dates
+		lineageTag: 1d86455e-0786-4044-a863-46c0f76d2528
+		summarizeBy: none
+		sourceColumn: Request Goods Receipt Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Confirm Goods Receipt Date'
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		displayFolder: Columns\3. Keys\Dates
+		lineageTag: 76a947d9-cf88-49b9-945e-9034a3c2ce17
+		summarizeBy: none
+		sourceColumn: Confirm Goods Receipt Date
+
+		variation Variation
+			isDefault
+			relationship: 0cb7c41d-deae-4c82-b01a-5dbeb9ed834b
+			defaultHierarchy: LocalDateTable_579bd8be-fc8b-4a18-a637-ab748ff358e0.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Sales Order Document Type Code'
+		dataType: string
+		isHidden
+		displayFolder: Columns\3. Keys
+		lineageTag: 9f790c89-4a50-4f00-9729-4e8219f5ebb4
+		summarizeBy: none
+		sourceColumn: Sales Order Document Type Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Sales Order Document Line Item Status'
+		dataType: string
+		isHidden
+		displayFolder: Columns\3. Keys
+		lineageTag: cd22a20a-de0e-411c-8c1a-bf9806d7dcfe
+		summarizeBy: none
+		sourceColumn: Sales Order Document Line Item Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Local Currency'
+		dataType: string
+		isHidden
+		displayFolder: Columns\3. Keys
+		lineageTag: 2022bec1-9cd4-4ac9-993e-9cc85a29646c
+		summarizeBy: none
+		sourceColumn: Local Currency
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Net Order Value'
+		dataType: double
+		isHidden
+		displayFolder: Columns\1. Facts
+		lineageTag: ce7d5f32-b1d9-4c34-b778-963c65d7931d
+		summarizeBy: sum
+		sourceColumn: Net Order Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Net Order Quantity'
+		dataType: int64
+		isHidden
+		displayFolder: Columns\1. Facts
+		lineageTag: 38503552-7ce2-412c-bb5e-b56bda227eb0
+		summarizeBy: sum
+		sourceColumn: Net Order Quantity
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Orders = m
+		mode: import
+		queryGroup: Tables
+		source =
+				let
+				    Source = Sql.Database(#"SqlEndpoint",#"Database"),
+				    Data = Source{[Schema="Factview",Item="Orders"]}[Data],
+				    #"Select Columns" = Table.RemoveColumns ( Data, "DWCreatedDate" ),
+				    #"Added Custom" = Table.AddColumn(#"Select Columns", "RandomDays", each Number.RandomBetween(7, 90), Int64.Type),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Added Custom",{{"RandomDays", Int64.Type}}),
+				    #"Added Custom1" = Table.AddColumn(#"Changed Type", "Fixed Order Date", each if [Order Date] = null then Date.AddDays([Request Goods Receipt Date], -[RandomDays]) else [Order Date]),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Added Custom1",{{"Fixed Order Date", type date}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Changed Type1",{"Order Date", "RandomDays"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"Fixed Order Date", "Order Date"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+	annotation TabularEditor_TableGroup = 02. Fact Tables
+

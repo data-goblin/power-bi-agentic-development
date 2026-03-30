@@ -1,0 +1,91 @@
+relationship 0e6e4252-95c4-4e0e-a4c8-874e5463ec4c
+	fromColumn: Invoices.'Billing Date'
+	toColumn: Date.Date
+
+relationship 7dacb5b5-3b77-45fe-85f9-cdebc76b1d56
+	fromColumn: Invoices.'Billing Document Type Code'
+	toColumn: 'Invoice Document Type'.'Billing Document Type Code'
+
+relationship a9b264e6-c155-4643-adc9-e01ad2b308ea
+	fromColumn: Invoices.'Product Key'
+	toColumn: Products.'Product Key'
+
+relationship 2fe91495-a480-42d8-bcf5-63ce2f84e4d0
+	fromColumn: Invoices.'Customer Key'
+	toColumn: Customers.'Customer Key'
+
+relationship 03e537eb-3ddb-4c20-b5ad-9090c0aadd0d
+	fromColumn: Customers.Station
+	toColumn: Regions.Station
+
+relationship aee91ed3-e637-4150-a8d4-22619ecc0034
+	fromColumn: Products.'Sub Brand Name'
+	toColumn: Brands.'Sub Brand'
+
+relationship bbcee627-b8b2-4604-9ad8-9d2036321cfb
+	fromColumn: Budget.Month
+	toColumn: Date.Date
+
+relationship 583c271a-a6ae-4f4b-bdb0-dfc91a31493e
+	fromColumn: Budget.'Customer Key'
+	toColumn: Customers.'Customer Key'
+
+relationship b9c4b659-0116-4f12-af8c-704fe07f3112
+	fromColumn: Budget.'Product Key'
+	toColumn: Products.'Product Key'
+
+relationship 4a26dc2c-f944-4c6e-9670-5e66e566c970
+	fromColumn: 'Exchange Rate'.Date
+	toColumn: Date.Date
+
+relationship 7a4bdc99-ebb9-4dc1-92bd-c20e0460b638
+	fromColumn: Invoices.'Local Currency'
+	toColumn: 'Budget Rate'.'From Currency'
+
+relationship 4eade231-e4d9-4b9f-8568-0f8dd9162e6f
+	fromColumn: Invoices.'OTD Indicator'
+	toColumn: 'On-Time Delivery'.'OTD Indicator'
+
+relationship 1ae64f29-da13-4294-bde5-4320a84af2c1
+	fromColumn: Orders.'Order Date'
+	toColumn: Date.Date
+
+/// Inactive relationship for analyzing orders by requested goods receipt date via USERELATIONSHIP
+relationship 34c786fb-4d8e-41d3-a86c-fd83e71d8cc1
+	isActive: false
+	fromColumn: Orders.'Request Goods Receipt Date'
+	toColumn: Date.Date
+
+relationship 6ef67eab-1e07-436d-a358-6197853f0064
+	fromColumn: Orders.'Sales Order Document Line Item Status'
+	toColumn: 'Order Status'.'Order Status Code'
+
+relationship 5c8f76eb-7c06-4ed5-bdc2-6368b1f0ef0a
+	fromColumn: Orders.'Sales Order Document Type Code'
+	toColumn: 'Order Document Type'.'Sales Order Document Type Code'
+
+relationship 7664202a-acbb-4942-a83e-60eb3b8537f9
+	fromColumn: Orders.'Product Key'
+	toColumn: Products.'Product Key'
+
+relationship c97e9cf2-9441-4f5a-8609-f53e6a3a7571
+	fromColumn: Orders.'Customer Key'
+	toColumn: Customers.'Customer Key'
+
+relationship 3795aac2-e6ba-48a7-9722-b7dd7af7b762
+	fromColumn: Forecast.'Forecast Month'
+	toColumn: Date.Date
+
+relationship 599b10ac-8bcb-4550-b452-56d8954b2a35
+	toCardinality: many
+	fromColumn: Forecast.'Product Type'
+	toColumn: Products.Type
+
+relationship 703b86a0-df9c-47d6-82e4-7c457de95971
+	toCardinality: many
+	fromColumn: Forecast.'Region Territory'
+	toColumn: Regions.Territory
+
+relationship d3b21caa-eed5-4a2b-85a1-92a599807a8a
+	fromColumn: Orders.'Local Currency'
+	toColumn: 'Budget Rate'.'From Currency'

@@ -1,0 +1,58 @@
+table Dates
+	lineageTag: 400619c0-544c-46b1-a5a0-9f6df481b7e5
+
+	column Date
+		formatString: General Date
+		lineageTag: 0d131d9c-1d9c-40db-9337-4f37205426ed
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Date]
+
+		variation Variation
+			isDefault
+			relationship: d41499dc-ee72-4912-9935-4661eca146cd
+			defaultHierarchy: LocalDateTable_bc207ece-a79c-4d33-a331-c40f45eb2725.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column DoW = WEEKDAY('Dates'[Date])
+		formatString: 0
+		lineageTag: f239ab83-aadd-4111-86e8-4579f2bfc43c
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column fDoW = 'Dates'[Date] - 'Dates'[DoW] + 1
+		formatString: General Date
+		lineageTag: 8db85d67-b349-4e5d-9575-9b53609db79c
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 0ca89e30-ae74-40d1-8df7-255fd44cdee9
+			defaultHierarchy: LocalDateTable_b465bb22-755a-4444-bc06-bd92af8a8952.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column lDoW = 'Dates'[fDoW] + 6
+		formatString: General Date
+		lineageTag: df26ef9f-7d55-40d8-a77e-be79909160f2
+		summarizeBy: none
+
+		variation Variation
+			isDefault
+			relationship: 250fc40c-658f-4abd-bea0-14a4d7b95417
+			defaultHierarchy: LocalDateTable_7e74b9e2-e4a5-4c05-8b29-c52b531c8abf.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dates-dc28838f-eac0-4cba-8cd2-7f5b5a1b5d67 = calculated
+		mode: import
+		source = ```
+				
+				    var startDate = TODAY() - 31
+				    var lastRefreshDate = DATEVALUE(MAX('Refresh Stats'[Last Refresh]))
+				return
+				    CALENDAR(startDate, IF(OR(ISBLANK(lastRefreshDate), lastRefreshDate <= startDate), TODAY(), lastRefreshDate))
+				```
+

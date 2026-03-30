@@ -119,67 +119,73 @@ RETURN
 
 ### Two-Color Gradient (linearGradient2)
 
-No DAX required - uses min/max color scale:
+Two forms depending on whether you need fixed or data-relative bounds.
+
+**Data-driven min/max** (no explicit bounds — Power BI scales to the data range):
 
 ```json
 {
-  "dataPoint": [
-    {
-      "properties": {
-        "fill": {
-          "solid": {
-            "color": {
-              "expr": {
-                "FillRule": {
-                  "Input": {
-                    "Measure": {
-                      "Expression": {"SourceRef": {"Entity": "Orders"}},
-                      "Property": "Order Lines"
-                    }
-                  },
-                  "FillRule": {
-                    "linearGradient2": {
-                      "min": {
-                        "color": {"Literal": {"Value": "'minColor'"}}
-                      },
-                      "max": {
-                        "color": {"Literal": {"Value": "'maxColor'"}}
-                      },
-                      "nullColoringStrategy": {
-                        "strategy": {"Literal": {"Value": "'asZero'"}}
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+  "FillRule": {
+    "linearGradient2": {
+      "min": {
+        "color": {"Literal": {"Value": "'minColor'"}}
       },
-      "selector": {
-        "data": [{"dataViewWildcard": {"matchingOption": 1}}]
+      "max": {
+        "color": {"Literal": {"Value": "'maxColor'"}}
+      },
+      "nullColoringStrategy": {
+        "strategy": {"Literal": {"Value": "'asZero'"}}
       }
     }
-  ]
+  }
 }
 ```
 
+**Explicit bounds** (fixed thresholds — use when the measure returns a known range like 0–1):
+
+```json
+{
+  "FillRule": {
+    "linearGradient2": {
+      "min": {
+        "color": {"Literal": {"Value": "'minColor'"}},
+        "value": {"Literal": {"Value": "0D"}}
+      },
+      "max": {
+        "color": {"Literal": {"Value": "'maxColor'"}},
+        "value": {"Literal": {"Value": "1D"}}
+      },
+      "nullColoringStrategy": {
+        "strategy": {"Literal": {"Value": "'asZero'"}},
+        "color": {"Literal": {"Value": "'#FFFFFF'"}}
+      }
+    }
+  }
+}
+```
+
+**When to use which:**
+- **Data-driven**: When the measure range varies by context and you want the gradient to always span the full visible range
+- **Explicit bounds**: When the measure returns a fixed normalized range (e.g., 0–1 ratio) and you want consistent color mapping
+
 **Properties:**
 - `Input` - Measure to evaluate for gradient position
-- `min.color` - Color for lowest values
-- `max.color` - Color for highest values
+- `min.color` / `max.color` - Colors for lowest/highest values
+- `min.value` / `max.value` - Optional: fixed range bounds (explicit bounds form)
 - `nullColoringStrategy: 'asZero'` - Treat nulls as minimum
 
 ### Three-Color Gradient (linearGradient3)
 
-Diverging color scheme with midpoint:
+Diverging color scheme with midpoint.
+
+**Data-driven** (scale spans actual data min/max):
 
 ```json
 {
   "FillRule": {
     "linearGradient3": {
       "min": {"color": {"Literal": {"Value": "'minColor'"}}},
-      "mid": {"color": {"Literal": {"Value": "'midColor'"}}},
+      "mid": {"color": {"Literal": {"Value": "'neutral'"}}},
       "max": {"color": {"Literal": {"Value": "'maxColor'"}}},
       "nullColoringStrategy": {
         "strategy": {"Literal": {"Value": "'asZero'"}}
@@ -189,7 +195,37 @@ Diverging color scheme with midpoint:
 }
 ```
 
-**Use case:** Red-yellow-green scale for negative-neutral-positive values.
+**Explicit bounds** (fixed thresholds — e.g., 0 is always the midpoint regardless of data range):
+
+```json
+{
+  "FillRule": {
+    "linearGradient3": {
+      "min": {
+        "color": {"Literal": {"Value": "'minColor'"}},
+        "value": {"Literal": {"Value": "-1D"}}
+      },
+      "mid": {
+        "color": {"Literal": {"Value": "'neutral'"}},
+        "value": {"Literal": {"Value": "0D"}}
+      },
+      "max": {
+        "color": {"Literal": {"Value": "'maxColor'"}},
+        "value": {"Literal": {"Value": "1D"}}
+      },
+      "nullColoringStrategy": {
+        "strategy": {"Literal": {"Value": "'asZero'"}}
+      }
+    }
+  }
+}
+```
+
+**When to use which:**
+- **Data-driven**: Color maps across the observed range; midpoint shifts with data
+- **Explicit bounds**: 0 (or any threshold) is always the midpoint; useful for variance measures where zero means neutral
+
+**Use case:** Red-neutral-green scale for negative-neutral-positive values.
 
 ## Pattern 2: Line Chart Segment Colors
 
@@ -471,16 +507,19 @@ Complex UI-generated conditional logic - most verbose but UI-configurable.
 | 3 | Less than or equal (<=) |
 | 4 | Less than (<) |
 
-### Aggregation Functions
+### Aggregation Functions (QueryAggregateFunction)
 
 | Value | Function |
 |-------|----------|
-| 0 | SUM |
-| 1 | AVG |
-| 2 | COUNT |
-| 3 | MIN |
-| 4 | MAX |
-| 5 | DISTINCTCOUNT |
+| 0 | Sum |
+| 1 | Average |
+| 2 | DistinctCount |
+| 3 | Min |
+| 4 | Max |
+| 5 | Count |
+| 6 | Median |
+| 7 | StandardDeviation |
+| 8 | Variance |
 
 ### Example: Top 10% Rule
 

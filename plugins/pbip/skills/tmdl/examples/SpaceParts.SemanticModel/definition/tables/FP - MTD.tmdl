@@ -1,0 +1,59 @@
+table 'FP - MTD'
+	lineageTag: 7b25559c-6025-444f-bba9-985e57c81e5c
+
+	column 'FP - MTD'
+		lineageTag: b503781d-db8d-4091-ac37-6fa0ff05de01
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'FP - MTD Order'
+
+		relatedColumnDetails
+			groupByColumn: 'FP - MTD Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'FP - MTD Fields'
+		isHidden
+		lineageTag: b467be59-aaa1-4bf7-8c3c-90bdae167bb4
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'FP - MTD Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'FP - MTD Order'
+		isHidden
+		formatString: 0
+		lineageTag: 91f5c4a5-41df-41a4-bcdf-16f4d8000033
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'FP - MTD' = calculated
+		mode: import
+		source =
+				
+				{
+				    (
+				        "Actuals",
+				        NAMEOF ( [Actuals MTD - UDF] ),
+				        0
+				    ),
+				    (
+				        "Target",
+				        NAMEOF ( [Sales Target MTD - UDF] ),
+				        1
+				    )
+				}
+
+	annotation PBI_Id = 933c9197a6224078a97c9772b81c52a0
+
+	annotation TabularEditor_TableGroup = 05. Parameters
+

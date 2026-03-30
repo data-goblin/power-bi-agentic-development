@@ -1,0 +1,54 @@
+table 'Workspace reports'
+	lineageTag: bb3f9ae3-4a39-4d36-80c4-815ee18c146a
+
+	measure IsSelectedReport = IF(SELECTEDVALUE('Workspace reports'[ReportGuid]) = SELECTEDVALUE(Reports[ReportGuid]), 1, 0)
+		formatString: 0
+		lineageTag: c1d018d1-26b5-42af-815c-c72d45ebf455
+
+	column ReportGuid
+		lineageTag: 7dc770e3-25e2-4e48-8961-b964390cf0fd
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Reports[ReportGuid]
+
+		annotation SummarizationSetBy = Automatic
+
+	column trend
+		formatString: 0%;-0%;0%
+		lineageTag: 64e70630-3689-4d9f-8fe3-26d4fdc20afa
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [trend]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Days with usage'
+		formatString: 0
+		lineageTag: 3f021dae-8b9c-42aa-83f3-9cd57e6a3b2a
+		summarizeBy: sum
+		sourceColumn: [active days]
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportName = LOOKUPVALUE(Reports[ReportName], Reports[ReportGuid], 'Workspace reports'[ReportGuid])
+		lineageTag: 176daf7d-a39e-4990-a3b0-17771cebdb39
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsUsageMetricsReportWS = LOOKUPVALUE(Reports[IsUsageMetricsReport], Reports[ReportGuid], 'Workspace reports'[ReportGuid])
+		lineageTag: 3877fe44-3d9d-4b3b-897f-397fcaccbfdd
+		summarizeBy: none
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Workspace reports-4c161197-f6eb-4196-ac5e-cb92418dbc91' = calculated
+		mode: import
+		source = ```
+				ADDCOLUMNS(DISTINCT(Reports[ReportGuid]), 
+				                            "trend", [Workspace view trend], 
+				                            "active days", [Workspace active days per report])
+				```
+

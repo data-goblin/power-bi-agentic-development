@@ -1,6 +1,6 @@
 ---
 name: c-sharp-scripting
-version: 0.8.3
+version: 0.8.5
 description: This skill should be used when the user asks to "write a C# script", "create a Tabular Editor script", "automate model changes", "bulk update measures", "create calculation groups", "format DAX expressions", "manage model metadata", "create a macro", "write a Tabular Editor macro", "save a script as macro", "edit MacroActions.json", or mentions TOM (Tabular Object Model), XMLA, C# scripting, or C# macros for Power BI semantic models. Provides comprehensive guidance for writing and executing C# scripts and macros against Power BI semantic models using Tabular Editor 2/3 CLI or the Tabular Editor IDE.
 ---
 
@@ -178,71 +178,12 @@ When a Display Folder is selected, all child items are included in the selection
 
 ## LINQ Fundamentals
 
-LINQ (Language Integrated Query) is essential for filtering and transforming collections.
+LINQ is essential for filtering and transforming TOM collections. See **`references/linq-reference.md`** for the full method table, lambda syntax, and examples.
 
-### Common LINQ Methods
-
-| Method | Purpose | Example |
-|--------|---------|---------|
-| `Where(predicate)` | Filter collection | `.Where(m => m.Name.Contains("YTD"))` |
-| `First([predicate])` | Get first item | `.First(t => t.Name == "Sales")` |
-| `FirstOrDefault([predicate])` | Get first or null | `.FirstOrDefault(t => t.Name == "Sales")` |
-| `Any([predicate])` | Check if any match | `.Any(m => m.IsHidden)` |
-| `All(predicate)` | Check if all match | `.All(c => c.DataType == DataType.String)` |
-| `Count([predicate])` | Count items | `.Count(m => !m.IsHidden)` |
-| `Select(map)` | Transform items | `.Select(m => m.Name)` |
-| `OrderBy(key)` | Sort ascending | `.OrderBy(m => m.Name)` |
-| `OrderByDescending(key)` | Sort descending | `.OrderByDescending(m => m.Name)` |
-| `ToList()` | Convert to List | `.Where(...).ToList()` |
-| `ForEach(action)` | Execute on each | `.ForEach(m => m.IsHidden = true)` |
-
-### Lambda Expression Syntax
+Key methods: `Where()`, `First()`, `FirstOrDefault()`, `Any()`, `All()`, `Count()`, `Select()`, `OrderBy()`, `ForEach()`, `ToList()`.
 
 ```csharp
-// Simple predicate (returns bool)
-m => m.Name.Contains("YTD")
-
-// Multi-condition predicate
-m => m.Name.StartsWith("Total") && !m.IsHidden
-
-// Complex predicate with curly braces
-m => {
-    if(m.Expression.Contains("CALCULATE")) {
-        return m.Name.StartsWith("_");
-    }
-    return false;
-}
-
-// Action (no return value)
-m => m.DisplayFolder = "Metrics"
-
-// Map/projection
-m => m.Name + " (" + m.Table.Name + ")"
-```
-
-### LINQ Examples
-
-```csharp
-// Filter measures by name pattern
-var ytdMeasures = Model.AllMeasures.Where(m => m.Name.EndsWith("YTD"));
-
-// Check if table exists before accessing
-if(Model.Tables.Any(t => t.Name == "Sales")) {
-    var sales = Model.Tables["Sales"];
-}
-
-// Get all hidden columns
-var hiddenCols = Model.AllColumns.Where(c => c.IsHidden);
-
-// Count measures per table
-foreach(var t in Model.Tables) {
-    Info($"{t.Name}: {t.Measures.Count()} measures");
-}
-
-// Find first matching or null
-var dateTable = Model.Tables.FirstOrDefault(t => t.DataCategory == "Time");
-
-// Chain operations
+// Common pattern: filter, chain, act
 Model.AllMeasures
     .Where(m => m.Name.Contains("Revenue"))
     .Where(m => string.IsNullOrEmpty(m.FormatString))
@@ -252,7 +193,7 @@ Model.AllMeasures
 
 ## Helper Methods
 
-### Output and Messaging
+See **`references/helper-methods.md`** for the complete reference including Output() variations, file operations, property export/import, interactive selection dialogs, DAX formatting/execution, and macro invocation.
 
 | Method | Purpose |
 |--------|---------|
@@ -260,221 +201,16 @@ Model.AllMeasures
 | `Warning(message)` | Display warning popup |
 | `Error(message)` | Display error popup and stop script |
 | `Output(object)` | Display detailed object inspector dialog |
-
-### Output() Variations
-
-```csharp
-// Scalar value - shows simple message
-Output("Hello World");
-Output(123);
-
-// Single TOM object - shows property grid (editable)
-Output(Model.Tables["Sales"].Measures["Revenue"]);
-
-// Collection of TOM objects - shows list with property grid
-Output(Model.AllMeasures.Where(m => m.IsHidden));
-
-// DataTable - shows sortable grid
-var dt = new System.Data.DataTable();
-dt.Columns.Add("Name");
-dt.Columns.Add("Expression");
-foreach(var m in Model.AllMeasures) {
-    dt.Rows.Add(m.Name, m.Expression);
-}
-Output(dt);
-```
-
-### File Operations
-
-```csharp
-SaveFile("path/to/file.txt", content);
-string content = ReadFile("path/to/file.txt");
-```
-
-### Property Export/Import
-
-```csharp
-// Export to TSV
-var tsv = ExportProperties(Model.AllMeasures, "Name,Expression,FormatString");
-SaveFile("measures.tsv", tsv);
-
-// Import from TSV
-var tsv = ReadFile("measures.tsv");
-ImportProperties(tsv);
-```
-
-### Interactive Selection (IDE Only)
-
-```csharp
-// Let user select a measure
-var measure = SelectMeasure();
-var measure = SelectMeasure(preselect, "Choose a base measure");
-
-// Let user select from any collection
-var table = SelectTable(Model.Tables, null, "Select target table");
-var column = SelectColumn(table.Columns, null, "Select date column");
-var obj = SelectObject(Model.AllMeasures, null, "Pick one");
-
-// Multi-select
-var selected = SelectObjects(Model.AllMeasures, null, "Pick measures");
-```
-
-### DAX Formatting
-
-```csharp
-// Queue for formatting (executed after script)
-measure.FormatDax();
-
-// Format immediately
-CallDaxFormatter();
-
-// Format collection
-Model.AllMeasures.FormatDax();
-
-// Convert locale (US/UK <-> non-US/UK)
-var converted = ConvertDax(daxExpression, useSemicolons: true);
-```
-
-### DAX Execution (When Connected to AS)
-
-```csharp
-// Evaluate scalar or table expression
-var result = EvaluateDax("SUM(Sales[Amount])");
-var table = EvaluateDax("TOPN(10, Sales)");
-
-// Execute DAX query returning DataSet
-var ds = ExecuteDax("EVALUATE Sales");
-
-// Execute and stream results
-using(var reader = ExecuteReader("EVALUATE Sales")) {
-    while(reader.Read()) { /* process rows */ }
-}
-
-// Execute TMSL command
-ExecuteCommand(tmslJson);
-
-// Execute XMLA command
-ExecuteCommand(xmla, isXmla: true);
-```
-
-### Macro/Custom Action Invocation
-
-```csharp
-// Call another macro by name
-CustomAction("Time Intelligence\\Create YTD");
-CustomAction(Selected.Measures, "Format Measures");
-```
+| `SaveFile(path, content)` / `ReadFile(path)` | File I/O |
+| `ExportProperties()` / `ImportProperties()` | TSV export/import |
+| `SelectMeasure()` / `SelectTable()` | Interactive selection (IDE only) |
+| `FormatDax()` / `CallDaxFormatter()` | DAX formatting |
+| `EvaluateDax()` / `ExecuteDax()` | DAX execution (connected) |
 
 
 ## WinForms UI Patterns
 
-Create interactive dialogs for user input using System.Windows.Forms.
-
-### Basic Input Dialog
-
-```csharp
-#r "System.Drawing"
-
-using System.Drawing;
-using System.Windows.Forms;
-
-// Hide the 'Running Macro' spinner
-ScriptHelper.WaitFormVisible = false;
-
-string userInput = "";
-
-using(var form = new Form())
-{
-    form.Text = "Input Required";
-    form.AutoSize = true;
-    form.StartPosition = FormStartPosition.CenterScreen;
-    form.AutoScaleMode = AutoScaleMode.Dpi;
-
-    var font = new Font("Segoe UI", 11);
-
-    var label = new Label() {
-        Text = "Enter value:",
-        Location = new Point(20, 20),
-        AutoSize = true,
-        Font = font
-    };
-
-    var textBox = new TextBox() {
-        Location = new Point(20, 50),
-        Width = 200,
-        Font = font
-    };
-
-    var okButton = new Button() {
-        Text = "OK",
-        Location = new Point(20, 90),
-        DialogResult = DialogResult.OK,
-        Font = font
-    };
-
-    var cancelButton = new Button() {
-        Text = "Cancel",
-        Location = new Point(100, 90),
-        DialogResult = DialogResult.Cancel,
-        Font = font
-    };
-
-    form.AcceptButton = okButton;
-    form.CancelButton = cancelButton;
-
-    form.Controls.Add(label);
-    form.Controls.Add(textBox);
-    form.Controls.Add(okButton);
-    form.Controls.Add(cancelButton);
-
-    if(form.ShowDialog() == DialogResult.OK) {
-        userInput = textBox.Text;
-        Info("You entered: " + userInput);
-    } else {
-        Error("Cancelled!");
-    }
-}
-```
-
-### Dropdown Selection Dialog
-
-```csharp
-#r "System.Drawing"
-
-using System.Drawing;
-using System.Windows.Forms;
-
-ScriptHelper.WaitFormVisible = false;
-
-using(var form = new Form())
-{
-    form.Text = "Select Option";
-    form.AutoSize = true;
-    form.StartPosition = FormStartPosition.CenterScreen;
-
-    var combo = new ComboBox() {
-        Location = new Point(20, 20),
-        Width = 150,
-        DropDownStyle = ComboBoxStyle.DropDownList
-    };
-    combo.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
-    combo.SelectedIndex = 0;
-
-    var okButton = new Button() {
-        Text = "OK",
-        Location = new Point(20, 60),
-        DialogResult = DialogResult.OK
-    };
-
-    form.Controls.Add(combo);
-    form.Controls.Add(okButton);
-    form.AcceptButton = okButton;
-
-    if(form.ShowDialog() == DialogResult.OK) {
-        Info("Selected: " + combo.SelectedItem.ToString());
-    }
-}
-```
+For interactive dialogs (input forms, dropdowns, multi-select), see **`references/winforms-dialogs.md`**. Key setup: `#r "System.Drawing"`, `ScriptHelper.WaitFormVisible = false;`
 
 
 ## Quick Reference
@@ -587,78 +323,7 @@ Detailed documentation for each object type in `object-types/`:
 
 ## Common Workflows
 
-### 1. Bulk Format Measures
-
-```csharp
-var count = 0;
-foreach(var m in Model.AllMeasures) {
-    if(!string.IsNullOrEmpty(m.Expression)) {
-        m.FormatDax();
-        count++;
-    }
-}
-Info("Formatted " + count + " measures");
-```
-
-### 2. Create Time Intelligence Measures
-
-```csharp
-var baseMeasure = Model.Tables["Metrics"].Measures["Sales Amount"];
-var table = baseMeasure.Table;
-
-var ytd = table.AddMeasure(
-    baseMeasure.Name + " YTD",
-    "CALCULATE([" + baseMeasure.Name + "], DATESYTD('Date'[Date]))"
-);
-ytd.FormatString = baseMeasure.FormatString;
-ytd.DisplayFolder = "Time Intelligence";
-
-var py = table.AddMeasure(
-    baseMeasure.Name + " PY",
-    "CALCULATE([" + baseMeasure.Name + "], SAMEPERIODLASTYEAR('Date'[Date]))"
-);
-py.FormatString = baseMeasure.FormatString;
-py.DisplayFolder = "Time Intelligence";
-
-Info("Created time intelligence measures");
-```
-
-### 3. Configure RLS
-
-```csharp
-var role = Model.AddRole("Regional Access");
-role.ModelPermission = ModelPermission.Read;
-
-// Add table filter
-var salesPerm = role.TablePermissions.Find("Sales");
-if(salesPerm == null) {
-    salesPerm = role.AddTablePermission(Model.Tables["Sales"]);
-}
-salesPerm.FilterExpression = "[Region] = USERNAME()";
-
-Info("Configured RLS for " + role.Name);
-```
-
-### 4. Audit Hidden Objects
-
-```csharp
-var hidden = new System.Text.StringBuilder();
-hidden.AppendLine("Hidden Objects Report:");
-
-foreach(var t in Model.Tables.Where(t => t.IsHidden)) {
-    hidden.AppendLine("  Table: " + t.Name);
-}
-
-foreach(var c in Model.AllColumns.Where(c => c.IsHidden && !c.Table.IsHidden)) {
-    hidden.AppendLine("  Column: " + c.DaxObjectFullName);
-}
-
-foreach(var m in Model.AllMeasures.Where(m => m.IsHidden)) {
-    hidden.AppendLine("  Measure: " + m.DaxObjectFullName);
-}
-
-Output(hidden.ToString());
-```
+See **`references/common-workflows.md`** for complete workflow scripts: bulk format measures, create time intelligence measures, configure RLS, audit hidden objects. Also check `examples/` for 180 working `.csx` scripts before writing from scratch.
 
 
 ## Debugging & Troubleshooting

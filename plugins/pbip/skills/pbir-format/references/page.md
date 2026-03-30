@@ -6,7 +6,7 @@
 
 ## Page Folder Naming
 
-- When creating new report pages, ensure that folders have no spaces
+- Power BI Desktop may generate page folder names with spaces (e.g., `Before Report.Page`). For human-authored names, avoid spaces — use underscores or hyphens instead for predictable behaviour in tooling.
 
 ## Top-Level Properties
 
@@ -240,7 +240,7 @@ Individual filter cards within the filter pane. See [filter-pane.md](./filter-pa
 **Wallpaper** - Area behind/around the report canvas. See [wallpaper.md](./wallpaper.md) for complete documentation on setting wallpaper color, images, and transparency.
 
 ### outspacePane
-Filter pane formatting and visibility. See [filter-pane.md](./filter-pane.md) for complete documentation.
+Filter pane visibility and expanded state. **Note:** In the K201 example, `outspacePane` appears only in `report.json` objects (report-level), not in `page.json`. The filter pane is a report-level UI element — set `outspacePane` in `definition/report.json`, not here. See [filter-pane.md](./filter-pane.md) for complete documentation.
 
 ### pageInformation
 Page information formatting

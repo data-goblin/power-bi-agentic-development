@@ -1,0 +1,289 @@
+table Budget
+	lineageTag: a6b0eb60-264f-474d-a8fe-ac16f65fbc35
+
+	measure 'Budget MTD' = ```
+			
+			-- Calculates the target for the current month/year selection
+			VAR _CURRENT_MONTH_VALUE =
+			    CALCULATE (
+			        [Budget],
+			        ALL ( 'Date' ),
+			        VALUES ( 'Date'[Calendar Month Year (ie Jan 21)] )
+			    ) 
+			
+			-- Computes rate at which Budget increases through the month
+			VAR _CURRENT_MONTH_PERC_WORKDAYS_MTD =
+			    POWER (
+			        CALCULATE (
+			            MAX ( 'Date'[Workdays MTD %] ),
+			            'Date'[IsDateInScope] = TRUE
+			        ),
+			        1.035
+			    )
+			
+			VAR _CURRENT_MONTH_PERC_WORKDAYS =
+			    POWER (
+			        CALCULATE (
+			            MAX ( 'Date'[Workdays MTD %] )
+			        ),
+			        1.035
+			    )
+			
+			VAR _PERIOD =
+			    SELECTEDVALUE (
+			        '4) Selected Period'[Period]
+			    )
+			VAR _HASONEMONTH =
+			    HASONEVALUE (
+			        'Date'[Calendar Month Year (ie Jan 21)]
+			    )
+			RETURN
+			    -- return MTD value if a month is selected
+			    IF.EAGER (
+			        _HASONEMONTH
+			            && _PERIOD = "Full Period",
+			        _CURRENT_MONTH_PERC_WORKDAYS
+			            * _CURRENT_MONTH_VALUE,
+			
+			        IF (
+			            _HASONEMONTH,
+			            _CURRENT_MONTH_PERC_WORKDAYS_MTD
+			                * _CURRENT_MONTH_VALUE
+			        )
+			    )
+			```
+		formatString: #,##0
+		displayFolder: Measures\ii. MTD
+		lineageTag: e7c3e0f7-bc73-4250-93f4-17d3b3e06d2e
+
+	measure 'Budget MTD vs. Turnover (%)' =
+			
+			VAR _TARGET = [Budget MTD]
+			VAR _DELTA  = [MTD Turnover] - _TARGET
+			VAR _PERC   = DIVIDE ( _DELTA, _TARGET )
+			RETURN
+			_PERC
+		formatString: #,##0.0% ↑;#,##0.0% ↓;#,##0.0%
+		displayFolder: Measures\ii. MTD
+		lineageTag: 8eb42713-706d-436a-a1c4-dda1c25494e1
+
+	measure 'Budget MTD vs. Turnover (Δ)' =
+			
+			[MTD Turnover] - [Budget MTD]
+		formatString: #,##0 ↑;#,##0 ↓;#,##0
+		displayFolder: Measures\ii. MTD
+		lineageTag: dae40a70-a31d-41e3-bf4d-f77b08aefe31
+
+	measure 'Budget QTD' =
+			
+			VAR _DATES_QTD =
+			    CALCULATETABLE (
+			        DATESQTD ('Date'[Date]),
+			        'Date'[IsThisMonth] = FALSE
+			    )
+			VAR _CURRENT_MONTH_Budget = [Budget MTD]
+			VAR QTD_BUDGET_BEFORE_THIS_MONTH = CALCULATE ([Budget], _DATES_QTD)
+			VAR _RESULT = _CURRENT_MONTH_Budget + QTD_BUDGET_BEFORE_THIS_MONTH
+			RETURN
+			    _RESULT
+		formatString: #,##0
+		displayFolder: Measures\iii. QTD
+		lineageTag: 377282fa-8f79-4de5-b02c-9ed97ed804ff
+
+	measure 'Budget QTD vs. Turnover (%)' =
+			
+			VAR _TARGET = [Budget QTD]
+			VAR _DELTA  = [Turnover] - [Budget QTD]
+			VAR _PERC   = DIVIDE ( _DELTA, _TARGET )
+			RETURN
+			_PERC
+		formatString: #,##0.0% ↑;#,##0.0% ↓;#,##0.0%
+		displayFolder: Measures\iii. QTD
+		lineageTag: 4b634367-f3b3-4b7e-a4c5-11ae1f0005a3
+
+	measure 'Budget QTD vs. Turnover (Δ)' =
+			
+			[Turnover] - [Budget QTD]
+		formatString: #,##0 ↑;#,##0 ↓;#,##0
+		displayFolder: Measures\iii. QTD
+		lineageTag: 2a13f546-675f-46dc-80b9-e457b2aa9d01
+
+	measure 'Budget YTD' =
+			
+			VAR _DATES_YTD =
+			    CALCULATETABLE (
+			        DATESYTD ( 'Date'[Date] ),
+			        'Date'[IsThisMonth] = FALSE
+			    )
+			VAR _CURRENT_MONTH_Budget = [Budget MTD]
+			VAR QTD_Budget_BEFORE_THIS_MONTH =
+			    CALCULATE ( [Budget], _DATES_YTD )
+			VAR _RESULT =
+			    _CURRENT_MONTH_Budget
+			        + QTD_Budget_BEFORE_THIS_MONTH
+			RETURN
+			    _RESULT
+		formatString: #,##0
+		displayFolder: Measures\iv. YTD
+		lineageTag: 4cfd4bbc-3ee3-4224-8224-89ba77bfd212
+
+	measure 'Budget YTD vs. Turnover (%)' =
+			
+			VAR _TARGET = [Budget YTD]
+			VAR _DELTA  = [Turnover] - [Budget YTD]
+			VAR _PERC   = DIVIDE ( _DELTA, _TARGET )
+			RETURN
+			_PERC
+		formatString: #,##0.0% ↑;#,##0.0% ↓;#,##0.0%
+		displayFolder: Measures\iv. YTD
+		lineageTag: 99f3b31f-c3eb-4f23-8403-959bdcf5cae0
+
+	measure 'Budget YTD vs. Turnover (Δ)' =
+			
+			[Turnover] - [Budget YTD]
+		formatString: #,##0 ↑;#,##0 ↓;#,##0
+		displayFolder: Measures\iv. YTD
+		lineageTag: ee4a5a38-3679-4596-afa7-5f613a87ed87
+
+	measure 'Total Budget' = ```
+			
+			    VAR _SelectedRate = MAX ( 'Exchange Rate'[Rate] )
+			RETURN
+			    SUM ( 'Budget'[Budget (EUR)] ) * _SelectedRate
+			```
+		formatString: #,##0
+		displayFolder: Measures\i. Total
+		lineageTag: 1cfbbd0e-ec57-4948-8e7c-e8a520d634c7
+
+	measure Budget = ```
+			
+			IF.EAGER(
+			    HASONEVALUE( '2) Selected Unit'[Select a Unit] )
+			        && 
+			    HASONEVALUE( 'Exchange Rate'[From Currency] ),
+			
+			    VAR _SELECTED_CURRENCY = 
+			        SELECTEDVALUE( 'Exchange Rate'[From Currency] )
+			
+			    VAR _SELECTED_RATE_TYPE = 
+			        SELECTEDVALUE( '2) Selected Unit'[Select a Unit] )
+			    
+			    VAR _SELECTED_BUDGET_RATE =
+			        MAX( 'Exchange Rate'[Rate] )
+			        
+			    VAR _SELECTED_MONTHLY_RATE =
+			        ADDCOLUMNS(
+			            SUMMARIZE(
+			                'Exchange Rate',
+			                'Date'[Calendar Month Year (ie Jan 21)]
+			            ),
+			            "Curr", 
+			            CALCULATE ( 
+			                MAX( 'Exchange Rate'[Rate] ) 
+			            )
+			        )
+			        
+			    RETURN
+			
+			    IF(
+			        _SELECTED_RATE_TYPE = "Value (Budget Rate)",
+			        SUM ( 'Budget'[Budget (EUR)]) 
+			        * 
+			        _SELECTED_BUDGET_RATE,
+			        
+			        IF(
+			            _SELECTED_RATE_TYPE = "Value (Monthly Rate)",
+			            SUMX(
+			                _SELECTED_MONTHLY_RATE,
+			                CALCULATE( 
+			                    SUM ( 'Budget'[Budget (EUR)])
+			                )
+			                * [Curr]
+			            )
+			        )
+			    )
+			)
+			```
+		formatString: #,##0
+		displayFolder: Measures\i. Total
+		lineageTag: 60d839fc-8ab6-4b78-af3f-80bc6305c529
+
+	measure 'Budget vs. Turnover (%)' =
+			
+			VAR _TARGET = [Budget]
+			VAR _DELTA  = [Turnover] - [Budget]
+			VAR _PERC   = DIVIDE ( _DELTA, _TARGET )
+			RETURN
+			_PERC
+		formatString: #,##0.0% ↑;#,##0.0% ↓;#,##0.0%
+		displayFolder: Measures\i. Total
+		lineageTag: e5eb5098-0e4f-4d23-b7c5-bb287ff8bb59
+
+	measure 'Budget vs. Turnover (Δ)' =
+			
+			[Turnover] - [Budget]
+		formatString: #,##0 ↑;#,##0 ↓;#,##0
+		displayFolder: Measures\i. Total
+		lineageTag: 824b1d58-869a-408c-a12e-ccdf950300ef
+
+	column Month
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		displayFolder: 1. Keys
+		lineageTag: 23bef58e-18a2-4193-856d-2498101b880c
+		summarizeBy: none
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Budget (EUR)'
+		dataType: double
+		isHidden
+		displayFolder: 2. Facts
+		lineageTag: 3f44e27b-e38e-489b-ab39-80615cb15782
+		summarizeBy: sum
+		sourceColumn: Budget (EUR)
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Customer Key'
+		dataType: string
+		isHidden
+		displayFolder: 1. Keys
+		lineageTag: f748b942-7ab6-4a6a-800e-7e1acfe97bca
+		summarizeBy: none
+		sourceColumn: Customer Key
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Product Key'
+		dataType: int64
+		isHidden
+		displayFolder: 1. Keys
+		lineageTag: f70c2f53-c04d-46a5-a162-d54d50bfffa0
+		summarizeBy: none
+		sourceColumn: Product Key
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Budget = m
+		mode: import
+		queryGroup: Tables
+		source =
+				let
+				    Source = Sql.Database(#"SqlEndpoint",#"Database"),
+				    Data = Source{[Schema="Factview",Item="Budget"]}[Data],
+				    #"Select Columns" = Table.SelectColumns ( Data, {"Customer Key", "Month", "Product Key", "Total Budget"} ),
+				    #"Renamed Columns" = Table.RenameColumns(#"Select Columns",{{"Total Budget", "Budget (EUR)"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+	annotation TabularEditor_TableGroup = 02. Fact Tables
+

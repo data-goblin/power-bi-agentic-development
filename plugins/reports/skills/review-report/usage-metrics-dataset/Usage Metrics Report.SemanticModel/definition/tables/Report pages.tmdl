@@ -1,0 +1,64 @@
+table 'Report pages'
+	lineageTag: 188b8e09-bf11-4400-b737-7ff61d8904f0
+
+	column ReportId
+		dataType: string
+		lineageTag: 6ba18d5f-8652-4c1f-9b46-ed7dd792b940
+		summarizeBy: none
+		sourceColumn: ReportId
+
+		annotation SummarizationSetBy = Automatic
+
+	column SectionId
+		dataType: string
+		lineageTag: 838a3e51-08e1-4160-9502-65cd4886a266
+		summarizeBy: none
+		sourceColumn: SectionId
+
+		annotation SummarizationSetBy = Automatic
+
+	column SectionName
+		dataType: string
+		lineageTag: f6c1b906-7e88-4353-9966-39f2ad8c5ac3
+		summarizeBy: none
+		sourceColumn: SectionName
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		isHidden
+		lineageTag: 80baa592-e19c-4ce2-98ab-10d56ab3615f
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Report pages-de0ee579-25ba-4ce2-87e8-6b14a015641b' = m
+		mode: import
+		source =
+				let
+				    Source = UsageMetricsDataConnector.GetMetricsData(BaseUrl & "/metadata/v201906/metrics/workspace/" & WorkspaceId & "/reportpagesectionmetadata"),
+				    #"metricsTable" = Table.FromRecords(Source),
+				    checkForEmptyTable = if Table.IsEmpty(#"metricsTable") then
+				                            Table.FromRows
+				                            (
+				                                {
+				                                },
+				                                {
+				                                    "ReportId", "SectionId", "SectionName", "WorkspaceId"
+				                                }
+				                            )
+				                         else
+				                            #"metricsTable",
+				    #"Filtered Rows1" = Table.SelectRows(checkForEmptyTable, each ([SectionId] <> null)),
+				    #"Filtered Rows" = Table.SelectRows(#"Filtered Rows1", each ([ReportId] <> null))
+				in
+				    #"Filtered Rows"
+
+	annotation PBI_QueryRelationships = {"columnCount":4,"keyColumnNames":[],"queryRelationships":[],"columnIdentities":["Section1/Report pages/checkForEmptyTable.{ReportId,0}","Section1/Report pages/checkForEmptyTable.{SectionId,1}","Section1/Report pages/checkForEmptyTable.{SectionName,2}","Section1/Report pages/checkForEmptyTable.{WorkspaceId,3}"],"ColumnCount":4,"KeyColumnNames":[],"ColumnIdentities":["Section1/Report pages/checkForEmptyTable.{ReportId,0}","Section1/Report pages/checkForEmptyTable.{SectionId,1}","Section1/Report pages/checkForEmptyTable.{SectionName,2}","Section1/Report pages/checkForEmptyTable.{WorkspaceId,3}"],"RelationshipInfo":[]}
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,44 @@
+perspective 'No Measure Selection'
+
+	perspectiveTable Orders
+
+		perspectiveMeasure 'Total Net Order Quantity'
+
+		perspectiveMeasure 'Order Lines'
+
+		perspectiveMeasure 'Net Orders (Quantity)'
+
+		perspectiveMeasure 'Total Net Order Value'
+
+		perspectiveMeasure 'Net Orders'
+
+		perspectiveMeasure 'Net Orders 1YP'
+
+		perspectiveMeasure 'Net Orders 2YP'
+
+	perspectiveTable 'Order Status'
+
+		perspectiveColumn 'Order Status Group'
+
+		perspectiveColumn 'Order Status Text'
+
+	perspectiveTable 'Order Document Type'
+
+		perspectiveColumn Text
+
+		perspectiveColumn Group
+
+	perspectiveTable 'On-Time Delivery'
+
+		perspectiveMeasure 'OTD % (Lines)'
+
+		perspectiveMeasure 'OTD (Lines)'
+
+		perspectiveMeasure 'OTD (Quantity)'
+
+		perspectiveMeasure 'OTD % (Quantity)'
+
+		perspectiveMeasure 'OTD (Value)'
+
+		perspectiveMeasure 'OTD % (Value)'
+

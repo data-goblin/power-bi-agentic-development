@@ -1,0 +1,166 @@
+table 'Report page views'
+	lineageTag: 082dd08a-3736-49eb-a465-a5294b27ae7b
+
+	column AppName
+		dataType: string
+		lineageTag: 487a8b13-2a8f-4c52-a5c3-d6b7fd0160a9
+		summarizeBy: none
+		sourceColumn: AppName
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserId
+		dataType: string
+		isHidden
+		lineageTag: 7f8edcd0-7ed2-4fe1-8d2f-69a1c3b6ce73
+		summarizeBy: none
+		sourceColumn: UserId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportId
+		dataType: string
+		lineageTag: 70e0d123-e2b8-46ff-a88e-99f2186d68db
+		summarizeBy: none
+		sourceColumn: ReportId
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date = DATE(YEAR('Report page views'[Timestamp]), MONTH('Report page views'[Timestamp]), DAY('Report page views'[Timestamp]))
+		formatString: General Date
+		lineageTag: 57962bf7-717c-4618-b845-2d3ddcf1ce7b
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Timestamp
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 76d15a53-d5bf-47b8-80f6-e304f8e99687
+		summarizeBy: none
+		sourceColumn: Timestamp
+
+		variation Variation
+			isDefault
+			relationship: 0c206070-358f-470d-ad74-597d2f631fe9
+			defaultHierarchy: LocalDateTable_e9fae86b-d80b-4c31-9ba4-095822014411.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column AppGuid
+		dataType: string
+		lineageTag: 6f19e4ca-2291-4e3b-847a-162e4c05ca1a
+		summarizeBy: none
+		sourceColumn: AppGuid
+
+		annotation SummarizationSetBy = Automatic
+
+	column Client
+		dataType: string
+		lineageTag: 07e7c257-422a-438e-8f1c-dbc510f2c992
+		summarizeBy: none
+		sourceColumn: Client
+
+		annotation SummarizationSetBy = Automatic
+
+	column DeviceBrowserVersion
+		dataType: string
+		lineageTag: 20d10d7b-0f15-4a40-a7be-b1f5fb373e30
+		summarizeBy: none
+		sourceColumn: DeviceBrowserVersion
+
+		annotation SummarizationSetBy = Automatic
+
+	column DeviceOSVersion
+		dataType: string
+		lineageTag: 22c69059-fa69-4b20-abec-53a928379cda
+		summarizeBy: none
+		sourceColumn: DeviceOSVersion
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		lineageTag: 60824bac-ea25-49fc-ae70-13de37761bf2
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column OriginalWorkspaceId
+		dataType: string
+		lineageTag: 3c36c56d-94e3-4e3b-ab8e-21e7f1b0dcfe
+		summarizeBy: none
+		sourceColumn: OriginalWorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column OriginalReportId
+		dataType: string
+		lineageTag: 0711fc72-97fa-4996-b893-2c5e7a0c27f7
+		summarizeBy: none
+		sourceColumn: OriginalReportId
+
+		annotation SummarizationSetBy = Automatic
+
+	column SectionId
+		dataType: string
+		lineageTag: 25060260-0c57-4932-8c2c-252f5a72fd51
+		summarizeBy: none
+		sourceColumn: SectionId
+
+		annotation SummarizationSetBy = Automatic
+
+	column TenantId
+		dataType: string
+		lineageTag: 79b95f9f-d9f3-4825-adfd-a5ea39d819a5
+		summarizeBy: none
+		sourceColumn: TenantId
+
+		annotation SummarizationSetBy = Automatic
+
+	column SessionSource
+		dataType: string
+		lineageTag: bb26b226-b1c3-44b7-9438-5c2f2e9d0dd7
+		summarizeBy: none
+		sourceColumn: SessionSource
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserKey
+		dataType: string
+		lineageTag: 92528000-8ff7-4408-83f6-ca52279700f5
+		summarizeBy: none
+		sourceColumn: UserKey
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Report page views-a5ffcf67-89d0-4264-a7af-238d8ad42ac5' = m
+		mode: import
+		source =
+				let
+				    Source = UsageMetricsDataConnector.GetMetricsData(BaseUrl & "/metadata/v201906/metrics/workspace/" & WorkspaceId & "/reportpagesectionviews"),
+				    #"metricsTable" = Table.FromRecords(Source),
+				    checkForEmptyTable = if Table.IsEmpty(#"metricsTable") then
+				                            Table.FromRows
+				                            (
+				                                {
+				                                },
+				                                {
+				                                    "Timestamp", "PbiCluster", "AppName", "TenantId", "UserId", "ReportId", "OriginalReportId", "GroupId", "OriginalGroupId", "AppGuid", "SectionId", "Client", "SessionSource", "DeviceOSVersion", "DeviceBrowserVersion", "UserKey"
+				                                }
+				                            )
+				                         else
+				                            #"metricsTable",
+				    #"Removed Columns" = Table.RemoveColumns(checkForEmptyTable,{"PbiCluster"}),
+				    finalTable = Table.TransformColumnTypes(#"Removed Columns", {{"Timestamp", type datetime}}),
+				    #"Renamed Columns" = Table.RenameColumns(finalTable,{{"GroupId", "WorkspaceId"}, {"OriginalGroupId", "OriginalWorkspaceId"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_QueryRelationships = {"columnCount":13,"keyColumnNames":[],"queryRelationships":[],"columnIdentities":["Section1/Report page views/finalTable.{Timestamp,0}","Section1/Report page views/checkForEmptyTable.{AppName,2}","Section1/Report page views/checkForEmptyTable.{TenantId,3}","Section1/Report page views/checkForEmptyTable.{UserId,4}","Section1/Report page views/checkForEmptyTable.{ReportId,5}","Section1/Report page views/checkForEmptyTable.{OriginalReportId,6}","Section1/Report page views/checkForEmptyTable.{GroupId,7}","Section1/Report page views/checkForEmptyTable.{OriginalGroupId,8}","Section1/Report page views/checkForEmptyTable.{AppGuid,9}","Section1/Report page views/checkForEmptyTable.{SectionId,10}","Section1/Report page views/checkForEmptyTable.{Client,11}","Section1/Report page views/checkForEmptyTable.{DeviceOSVersion,12}","Section1/Report page views/checkForEmptyTable.{DeviceBrowserVersion,13}"],"ColumnCount":13,"KeyColumnNames":[],"ColumnIdentities":["Section1/Report page views/finalTable.{Timestamp,0}","Section1/Report page views/checkForEmptyTable.{AppName,2}","Section1/Report page views/checkForEmptyTable.{TenantId,3}","Section1/Report page views/checkForEmptyTable.{UserId,4}","Section1/Report page views/checkForEmptyTable.{ReportId,5}","Section1/Report page views/checkForEmptyTable.{OriginalReportId,6}","Section1/Report page views/checkForEmptyTable.{GroupId,7}","Section1/Report page views/checkForEmptyTable.{OriginalGroupId,8}","Section1/Report page views/checkForEmptyTable.{AppGuid,9}","Section1/Report page views/checkForEmptyTable.{SectionId,10}","Section1/Report page views/checkForEmptyTable.{Client,11}","Section1/Report page views/checkForEmptyTable.{DeviceOSVersion,12}","Section1/Report page views/checkForEmptyTable.{DeviceBrowserVersion,13}"],"RelationshipInfo":[]}
+
+	annotation PBI_ResultType = Table
+

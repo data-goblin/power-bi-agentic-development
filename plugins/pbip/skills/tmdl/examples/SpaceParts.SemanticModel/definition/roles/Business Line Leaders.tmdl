@@ -1,0 +1,6 @@
+role 'Business Line Leaders'
+	modelPermission: read
+
+	tablePermission Products = RLS.ApplySimpleRLS ( 'Products'[Product Business Line Leader] )
+
+	annotation PBI_Id = b975518cd80041dabbaf5d904a66b92f

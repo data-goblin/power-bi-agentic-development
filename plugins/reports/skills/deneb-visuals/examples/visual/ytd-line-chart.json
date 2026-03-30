@@ -1,0 +1,200 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.7.0/schema.json",
+  "name": "3d4e5f6a7b8c9d0e",
+  "position": {
+    "x": 860,
+    "y": 80,
+    "z": 4,
+    "height": 635,
+    "width": 400,
+    "tabOrder": 4
+  },
+  "visual": {
+    "visualType": "deneb7E15AEF80B9E4D4F8E12924291ECE89A",
+    "query": {
+      "queryState": {
+        "dataset": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Date"
+                    }
+                  },
+                  "Property": "Calendar Month (ie Jan)"
+                }
+              },
+              "queryRef": "Date.Calendar Month (ie Jan)",
+              "nativeQueryRef": "Calendar Month (ie Jan)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Schema": "extension",
+                      "Entity": "Orders"
+                    }
+                  },
+                  "Property": "Order Lines YTD"
+                }
+              },
+              "queryRef": "Orders.Order Lines YTD",
+              "nativeQueryRef": "Order Lines YTD"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Schema": "extension",
+                      "Entity": "Orders"
+                    }
+                  },
+                  "Property": "Order Lines (PY) YTD"
+                }
+              },
+              "queryRef": "Orders.Order Lines (PY) YTD",
+              "nativeQueryRef": "Order Lines (PY) YTD"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "vega": [
+        {
+          "properties": {
+            "provider": {
+              "expr": {
+                "Literal": {
+                  "Value": "'vegaLite'"
+                }
+              }
+            },
+            "jsonSpec": {
+              "expr": {
+                "Literal": {
+                  "Value": "'{\n  \"$schema\": \"https://vega.github.io/schema/vega-lite/v5.json\",\n  \"data\": {\n    \"name\": \"dataset\"\n  },\n  \"transform\": [\n    {\n      \"fold\": [\n        \"Order Lines YTD\",\n        \"Order Lines (PY) YTD\"\n      ],\n      \"as\": [\n        \"Measure\",\n        \"Value\"\n      ]\n    },\n    {\n      \"window\": [\n        {\n          \"op\": \"row_number\",\n          \"as\": \"row\"\n        }\n      ],\n      \"groupby\": [\n        \"Measure\"\n      ]\n    },\n    {\n      \"calculate\": \"datum.row === 12 ? datum.Value : null\",\n      \"as\": \"LastValue\"\n    }\n  ],\n  \"layer\": [\n    {\n      \"mark\": {\n        \"type\": \"line\",\n        \"strokeWidth\": 3.5,\n        \"point\": false\n      },\n      \"encoding\": {\n        \"x\": {\n          \"field\": \"Calendar Month (ie Jan)\",\n          \"type\": \"nominal\",\n          \"axis\": {\n            \"title\": null,\n            \"grid\": false,\n            \"labelAngle\": -45\n          },\n          \"sort\": [\n            \"Jan\",\n            \"Feb\",\n            \"Mar\",\n            \"Apr\",\n            \"May\",\n            \"Jun\",\n            \"Jul\",\n            \"Aug\",\n            \"Sep\",\n            \"Oct\",\n            \"Nov\",\n            \"Dec\"\n          ]\n        },\n        \"y\": {\n          \"field\": \"Value\",\n          \"type\": \"quantitative\",\n          \"axis\": {\n            \"title\": null,\n            \"grid\": false,\n            \"labelColor\": \"#6C757D\",\n            \"labelFontSize\": 12,\n            \"format\": \",.3s\"\n          },\n          \"scale\": {\n            \"zero\": true\n          }\n        },\n        \"color\": {\n          \"field\": \"Measure\",\n          \"type\": \"nominal\",\n          \"scale\": {\n            \"domain\": [\n              \"Order Lines YTD\",\n              \"Order Lines (PY) YTD\"\n            ],\n            \"range\": [\n              \"#5B8DBE\",\n              \"#D4A574\"\n            ]\n          },\n          \"legend\": null\n        },\n        \"strokeDash\": {\n          \"field\": \"Measure\",\n          \"type\": \"nominal\",\n          \"scale\": {\n            \"domain\": [\n              \"Order Lines YTD\",\n              \"Order Lines (PY) YTD\"\n            ],\n            \"range\": [\n              [\n                1,\n                0\n              ],\n              [\n                5,\n                5\n              ]\n            ]\n          },\n          \"legend\": null\n        }\n      }\n    },\n    {\n      \"mark\": {\n        \"type\": \"point\",\n        \"filled\": true,\n        \"size\": 100,\n        \"stroke\": \"white\",\n        \"strokeWidth\": 2\n      },\n      \"encoding\": {\n        \"x\": {\n          \"field\": \"Calendar Month (ie Jan)\",\n          \"type\": \"nominal\",\n          \"sort\": [\n            \"Jan\",\n            \"Feb\",\n            \"Mar\",\n            \"Apr\",\n            \"May\",\n            \"Jun\",\n            \"Jul\",\n            \"Aug\",\n            \"Sep\",\n            \"Oct\",\n            \"Nov\",\n            \"Dec\"\n          ]\n        },\n        \"y\": {\n          \"field\": \"LastValue\",\n          \"type\": \"quantitative\"\n        },\n        \"color\": {\n          \"field\": \"Measure\",\n          \"type\": \"nominal\",\n          \"scale\": {\n            \"domain\": [\n              \"Order Lines YTD\",\n              \"Order Lines (PY) YTD\"\n            ],\n            \"range\": [\n              \"#5B8DBE\",\n              \"#D4A574\"\n            ]\n          },\n          \"legend\": null\n        }\n      }\n    },\n    {\n      \"mark\": {\n        \"type\": \"text\",\n        \"align\": \"left\",\n        \"dx\": 5,\n        \"dy\": -10,\n        \"fontSize\": 18,\n        \"fontWeight\": 600\n      },\n      \"encoding\": {\n        \"x\": {\n          \"field\": \"Calendar Month (ie Jan)\",\n          \"type\": \"nominal\",\n          \"sort\": [\n            \"Jan\",\n            \"Feb\",\n            \"Mar\",\n            \"Apr\",\n            \"May\",\n            \"Jun\",\n            \"Jul\",\n            \"Aug\",\n            \"Sep\",\n            \"Oct\",\n            \"Nov\",\n            \"Dec\"\n          ]\n        },\n        \"y\": {\n          \"field\": \"LastValue\",\n          \"type\": \"quantitative\"\n        },\n        \"text\": {\n          \"field\": \"LastValue\",\n          \"type\": \"quantitative\",\n          \"format\": \",.3s\"\n        },\n        \"color\": {\n          \"field\": \"Measure\",\n          \"type\": \"nominal\",\n          \"scale\": {\n            \"domain\": [\n              \"Order Lines YTD\",\n              \"Order Lines (PY) YTD\"\n            ],\n            \"range\": [\n              \"#5B8DBE\",\n              \"#D4A574\"\n            ]\n          },\n          \"legend\": null\n        }\n      }\n    }\n  ]\n}'"
+                }
+              }
+            },
+            "enableTooltips": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "jsonConfig": {
+              "expr": {
+                "Literal": {
+                  "Value": "'{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":\"transparent\"},\"font\":\"Segoe UI\"}'"
+                }
+              }
+            },
+            "enableContextMenu": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "enableSelection": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "version": {
+              "expr": {
+                "Literal": {
+                  "Value": "'6.4.1'"
+                }
+              }
+            },
+            "isNewDialogOpen": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "stateManagement": [
+        {
+          "properties": {
+            "viewportHeight": {
+              "expr": {
+                "Literal": {
+                  "Value": "580D"
+                }
+              }
+            },
+            "viewportWidth": {
+              "expr": {
+                "Literal": {
+                  "Value": "378D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "developer": [
+        {
+          "properties": {
+            "version": {
+              "expr": {
+                "Literal": {
+                  "Value": "'1.8.2.0'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Deneb (Vega-Lite)'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "subTitle": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

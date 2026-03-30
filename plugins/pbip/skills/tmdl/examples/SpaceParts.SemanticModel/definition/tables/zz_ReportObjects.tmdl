@@ -1,0 +1,194 @@
+table zz_ReportObjects
+	isHidden
+	lineageTag: 798f027d-8c22-4f11-bcca-ce440e34f5c8
+
+	/// SVG Dumbbell Chart of Actuals MTD vs. Sales Target MTD, grouped by Key Account Name
+	measure 'New SVG Dumbbell Chart' = ```
+			
+			-- SVG measure
+			-- Use this inside of a Table or a Matrix visual.
+			-- The 'Image size' property of the Table or Matrix must match the values in the config below
+			
+			-- Input field config
+			VAR _Actual = [Actuals MTD]
+			VAR _Target = [Sales Target MTD]
+			
+			
+			-- SVG configuration
+			VAR _SvgWidth = 100
+			VAR _SvgMin = 0
+			VAR _SvgHeight = 25
+			
+			VAR _Scope = ALLSELECTED ( 'Customers'[Key Account Name] )
+			VAR _MaxActualsInScope = 
+			    CALCULATE(
+			        MAXX(
+			            _Scope,
+			            [Actuals MTD]
+			        ),
+			        REMOVEFILTERS( 'Customers'[Key Account Name] )
+			    )
+			
+			VAR _MaxTargetInScope = 
+			    CALCULATE(
+			        MAXX(
+			            _Scope,
+			            [Sales Target MTD]
+			        ),
+			        REMOVEFILTERS( 'Customers'[Key Account Name] )
+			    )
+			
+			VAR _AxisMax = 
+			    IF (
+			        HASONEVALUE ( 'Customers'[Key Account Name] ),
+			        MAX( _MaxActualsInScope, _MaxTargetInScope ),
+			        CALCULATE( MAX( [Actuals MTD], [Sales Target MTD] ), REMOVEFILTERS( 'Customers'[Key Account Name] ) )
+			    ) * 1.1
+			
+			VAR _AxisRange = _SvgWidth - _SvgMin
+			
+			VAR _ActualNormalized = DIVIDE ( _Actual, _AxisMax ) * _AxisRange
+			VAR _TargetNormalized = DIVIDE ( _Target, _AxisMax ) * _AxisRange
+			
+			
+			-- Color config
+			VAR _TargetCircleColor = "#F5F5F5"
+			VAR _TargetStrokeColor = "#C7C7C7"
+			VAR _AxisColor =         "#C7C7C7"
+			
+			-- Blue
+			VAR _OnTargetFill      = "#448FD6"
+			VAR _OnTargetStroke    = "#2F6698"
+			
+			-- Red
+			VAR _OffTargetFill     = "#D64444"
+			VAR _OffTargetStroke   = "#982F2F"
+			
+			VAR _Fill = IF ( _Actual > _Target, _OnTargetFill, _OffTargetFill )
+			VAR _Stroke = IF ( _Actual > _Target, _OnTargetStroke, _OffTargetStroke )
+			
+			
+			-- Vectors and SVG specification
+			VAR _SvgPrefix = "data:image/svg+xml;utf8, <svg width='" & _SvgWidth & "' height='" & _SvgHeight & "' xmlns='http://www.w3.org/2000/svg'>"
+			
+			VAR _Sort = "<desc>" & FORMAT ( _Actual, "000000000000" ) & "</desc>"
+			
+			VAR _Axis = "<line x1='0' y1='" & _SvgHeight / 2 & "' x2='" & _SvgWidth & "' y2='" & _SvgHeight / 2 & "' stroke='" & _AxisColor & "'/>"
+			VAR _Origin = "<circle cx='2' cy='" & _SvgHeight / 2 & "' r='2' fill='" & _AxisColor & "'/>"
+			
+			VAR _ActualCircle = "<circle cx='" & _ActualNormalized & "' cy='" & _SvgHeight / 2 & "' r='4' fill='" & _Fill & "' stroke='" & _Stroke & "' stroke-width='1.5'/>"
+			VAR _TargetCircle = "<circle cx='" & _TargetNormalized & "' cy='" & _SvgHeight / 2 & "' r='4' fill='" & _TargetCircleColor & "' stroke='" & _TargetStrokeColor & "' stroke-width='1.5'/>"
+			VAR _DumbbellLine = "<line x1='" & _ActualNormalized & "' y1='" & _SvgHeight / 2 & "' x2='" & _TargetNormalized & "' y2='" & _SvgHeight / 2 & "' stroke='" & _Fill & "' stroke-width='3'/>"
+			
+			VAR _SvgSuffix = "</svg>"
+			
+			
+			-- Final result
+			VAR _Svg = 
+			    _SvgPrefix 
+			
+			    & _Sort
+			
+			    & _Axis
+			    & _Origin
+			    
+			    & _DumbbellLine
+			    & _TargetCircle
+			    & _ActualCircle
+			
+			    & _SvgSuffix
+			
+			RETURN
+				 _Svg
+			
+			```
+		isHidden
+		displayFolder: SVGs\Dumbbell Plot
+		lineageTag: 035f1541-736e-4775-8057-59e58df5fc12
+		dataCategory: ImageUrl
+
+	measure FormatColorDark =
+			
+			IF (
+			    [Pareto] < 0.8,
+			    "#c2255c",
+			    IF (
+			        [Sales Target MTD vs. Actuals (Δ)] < 0,
+			        "#bbbbbb",
+			        "#1971c2"
+			    )
+			)
+		isHidden
+		lineageTag: e8d7f59e-c918-43ee-9d50-e8f828207b0f
+
+	measure FormatColorLight = [FormatColorDark] & "99"
+		isHidden
+		lineageTag: f32232e6-c75a-4e81-ba11-aeaa9fa466bb
+
+	measure Gap = ```
+			
+			-- Retrieve only the values for which Sales PY < Sales Amount (the gap)
+			    VAR _Actuals = [Actuals MTD]
+			    VAR _Target = [Sales Target MTD]
+			    VAR _Delta = _Actuals - _Target
+			    VAR _Gap =
+			        -- Intend to only compute the cumulative percentage for the negative values
+			        IF( _Delta <= 0, ABS( _Delta ) )
+			     
+			    RETURN
+			        _Gap
+			```
+		isHidden
+		lineageTag: 937799bf-5241-4b6d-bf75-ac319c43e6e1
+
+	measure Pareto = ```
+			
+			-- Cumulative percentage of the gap to find which products have the most significant contribution to negative Sales YoY
+			VAR _Gap = [Gap]
+			 
+			VAR _ByProductName =
+			    ADDCOLUMNS (
+			        ALLSELECTED ( 'Regions' ),
+			        "@Gap", [Gap]
+			    )
+			 
+			VAR _Cumulation =
+			    FILTER (
+			        _ByProductName,
+			        [@Gap] >= _Gap
+			    )
+			 
+			VAR _CumulativeAmount =
+			    SUMX ( _Cumulation, [@Gap] )
+			 
+			VAR _Total =
+			    SUMX ( _ByProductName, [@Gap] )
+			 
+			VAR _CumulativePercentage =
+			    DIVIDE (
+			        _CumulativeAmount,
+			        _Total,
+			        BLANK ( )
+			    )
+			     
+			RETURN
+			    _CumulativePercentage
+			```
+		isHidden
+		lineageTag: 32f01610-25b3-4b7f-9f38-14f7ec6cb2a4
+
+	column Value
+		isHidden
+		lineageTag: d1682bea-c6a2-4e73-8f20-629ee3254bfb
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Value]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'New Calculated Table' = calculated
+		mode: import
+		source = { 1 }
+
+	annotation TabularEditor_TableGroup = 06. Calculation Groups
+

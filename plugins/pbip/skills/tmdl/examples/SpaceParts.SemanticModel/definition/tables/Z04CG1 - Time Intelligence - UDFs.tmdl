@@ -1,0 +1,59 @@
+table 'Z04CG1 - Time Intelligence - UDFs'
+	isHidden
+	lineageTag: 6af6ca01-2d5c-486c-9cde-473e2675765e
+
+	calculationGroup
+		precedence: 8
+
+		calculationItem Daily =
+				
+				TimeIntelligence.DatesWithSales (
+				    SELECTEDMEASURE ()
+				)
+
+		calculationItem MTD =
+				
+				TimeIntelligence.MonthToDate (
+				    SELECTEDMEASURE ()
+				)
+
+		calculationItem QTD =
+				
+				TimeIntelligence.QuarterToDate (
+				    SELECTEDMEASURE ()
+				)
+
+		calculationItem YTD =
+				
+				VAR _YTD =
+				    TimeIntelligence.YearToDate ( SELECTEDMEASURE () )
+				VAR _FULL_YTD =
+				    CALCULATE (SELECTEDMEASURE (), DATESYTD ('Date'[Date]))
+				RETURN
+				    IF (
+				        SEARCH ("Actuals", SELECTEDMEASURENAME (), , 999) <> 999,
+				        _YTD,
+				        _FULL_YTD
+				    )
+
+	column Aggregation
+		dataType: string
+		isHidden
+		lineageTag: a6286f36-2372-40f5-9515-0fa4769c5aa1
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		lineageTag: 2969fb0e-b8a5-4eb9-863c-e9832d4bc248
+		summarizeBy: sum
+		sourceColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	annotation TabularEditor_TableGroup = 06. Calculation Groups
+

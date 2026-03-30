@@ -1,6 +1,6 @@
 ---
 name: te2-cli
-version: 0.8.3
+version: 0.8.5
 description: This skill should be used when the user asks to "run TabularEditor.exe", "deploy a model via CLI", "use Tabular Editor 2 command line", "set up CI/CD for Power BI", "automate model deployment", "run BPA from command line", "save model as TMDL", "compare model schemas", or mentions TabularEditor.exe flags like -D, -S, -A, -B, -T, -O, -C. Provides CLI syntax reference for the Tabular Editor 2 CLI for deployment, scripting, BPA analysis, and CI/CD integration. Distinct from c-sharp-scripting skill which covers writing script content rather than CLI execution.
 ---
 
@@ -168,55 +168,7 @@ TabularEditor.exe "powerbi://api.powerbi.com/v1.0/myorg/Workspace" "Model" ^
 
 ## Authentication
 
-### Windows Authentication (Default)
-Used automatically for on-premises SSAS.
-
-### Service Principal (Azure AD App)
-Set environment variables:
-```bash
-set AZURE_CLIENT_ID=your-app-id
-set AZURE_TENANT_ID=your-tenant-id
-set AZURE_CLIENT_SECRET=your-secret
-```
-
-Connection string format:
-```
-Provider=MSOLAP;
-Data Source=powerbi://api.powerbi.com/v1.0/myorg/Workspace;
-User ID=app:CLIENT_ID@TENANT_ID;
-Password=CLIENT_SECRET
-```
-
-### Interactive (TE3 Only)
-```bash
-TabularEditor.exe "server" "database" --auth interactive
-```
-
-
-## CI/CD Integration
-
-### Azure DevOps Pipeline
-```yaml
-steps:
-  - task: PowerShell@2
-    displayName: 'Deploy Semantic Model'
-    inputs:
-      targetType: 'inline'
-      script: |
-        TabularEditor.exe "$(Build.SourcesDirectory)/Model.bim" `
-          -D "$(XMLA_ENDPOINT)" "$(MODEL_NAME)" -O -C
-```
-
-### GitHub Actions
-```yaml
-jobs:
-  deploy:
-    runs-on: windows-latest
-    steps:
-      - name: Deploy Model
-        run: |
-          TabularEditor.exe Model.bim -D "${{ secrets.XMLA_ENDPOINT }}" "ModelName" -O -C
-```
+For authentication methods (Windows, Service Principal, Interactive) and CI/CD integration (Azure DevOps, GitHub Actions), see **`references/auth-and-cicd.md`**.
 
 
 ## Exit Codes
@@ -246,20 +198,7 @@ jobs:
 
 ## Troubleshooting
 
-### "Database not found"
-- Check server/workspace name is exact
-- Verify you have access to the workspace
-- Ensure XMLA endpoint is enabled
-
-### "Authentication failed"
-- Verify environment variables are set correctly
-- Check service principal has workspace access
-- Confirm API permissions are granted
-
-### "Script execution failed"
-- Check C# syntax is valid
-- Verify all referenced objects exist
-- Add Info() statements to debug
+For common errors (database not found, authentication failed, script execution failed), see **`references/auth-and-cicd.md`**.
 
 
 ## Quick Reference Card

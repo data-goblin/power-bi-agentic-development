@@ -65,16 +65,15 @@ For measures defined in `reportExtensions.json`:
       "Property": "Order Lines (PY)"
     }
   },
-  "queryRef": "extension.Orders.Order Lines (PY)",
+  "queryRef": "Orders.Order Lines (PY)",
   "nativeQueryRef": "Order Lines (PY)"
 }
 ```
 
-**CRITICAL:** Extension measures require TWO things:
-1. `"Schema": "extension"` in the SourceRef
-2. `"extension."` prefix in the queryRef (e.g., `"extension.Orders.Order Lines (PY)"`)
+**Extension measures require ONE thing in the field reference:**
+- `"Schema": "extension"` in the SourceRef — this is the distinguishing marker
 
-**Common mistake:** Omitting the `extension.` prefix in queryRef will cause the visual to fail to render
+**The `queryRef` uses the standard `"Entity.Property"` format** — no `"extension."` prefix. Real example files consistently omit the prefix: `"On-Time Delivery.OTD % (Value; PY)"`, `"1) Selected Metric.Late Orders"`, etc.
 
 ### Hierarchy Level References
 
@@ -114,6 +113,8 @@ Filters store field values in the `Where` clause using the `In` operator with a 
 
 ```json
 "filter": {
+  "Version": 2,
+  "From": [{"Name": "c", "Entity": "Customers", "Type": 0}],
   "Where": [{
     "Condition": {
       "In": {
@@ -130,7 +131,7 @@ Filters store field values in the `Where` clause using the `In` operator with a 
 }
 ```
 
-**Pattern:** Each value is wrapped in nested arrays: `[[{Literal}], [{Literal}]]` for multiple values
+**Pattern:** Each value is wrapped in nested arrays: `[[{Literal}], [{Literal}]]` for multiple values. The `"Source"` alias in `SourceRef` references the `"Name"` defined in the `"From"` array — `"From"` is required whenever `SourceRef.Source` is used.
 
 ### 2. Default Slicer Selections
 
@@ -141,9 +142,17 @@ Slicers use the same filter pattern in `general.filter` to set default selection
   "properties": {
     "filter": {
       "filter": {
+        "Version": 2,
+        "From": [{"Name": "b", "Entity": "Brands", "Type": 0}],
         "Where": [{
           "Condition": {
             "In": {
+              "Expressions": [{
+                "Column": {
+                  "Expression": {"SourceRef": {"Source": "b"}},
+                  "Property": "Brand Tier"
+                }
+              }],
               "Values": [
                 [{"Literal": {"Value": "'Flagship Brand'"}}],
                 [{"Literal": {"Value": "'Growth Brand'"}}],

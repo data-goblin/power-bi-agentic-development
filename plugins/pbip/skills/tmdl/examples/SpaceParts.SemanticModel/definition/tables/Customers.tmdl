@@ -1,0 +1,157 @@
+table Customers
+	lineageTag: c247ff24-c33b-4a9e-96f6-95d1e36e4be4
+
+	measure '# Customers' =
+			
+			COUNTROWS (
+			    VALUES ( 'Customers'[Customer Sold-To Name] )
+			)
+		formatString: #,##0
+		displayFolder: Measures
+		lineageTag: b99fd2f5-eff7-4fe3-8fee-b4f9e758f2bf
+
+	measure '# Key Accounts' =
+			
+			COUNTROWS (
+			    VALUES ( 'Customers'[Key Account Name] )
+			)
+		formatString: #,##0
+		displayFolder: Measures
+		lineageTag: 19c6259b-8906-4d55-9f07-f38335a43d03
+
+	column 'Customer Key'
+		dataType: string
+		isHidden
+		displayFolder: 4. Keys
+		lineageTag: 8138d992-9c95-4468-ad79-4607af12e82e
+		summarizeBy: none
+		sourceColumn: Customer Key
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Customer Sold-To Name'
+		dataType: string
+		displayFolder: 1. Customer Hierarchy
+		lineageTag: 57a55013-2487-4f85-9924-ba95d30adf0c
+		summarizeBy: none
+		sourceColumn: Customer Sold-To Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Account Name'
+		dataType: string
+		displayFolder: 1. Customer Hierarchy
+		lineageTag: a0b900e7-c1c7-4a87-aa1a-a52a61ece17d
+		summarizeBy: none
+		sourceColumn: Account Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Key Account Name'
+		dataType: string
+		displayFolder: 1. Customer Hierarchy
+		lineageTag: 449b79b3-9236-4e65-9f9e-2ac349ace7be
+		summarizeBy: none
+		sourceColumn: Key Account Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Transaction Type'
+		dataType: string
+		displayFolder: 2. Other Customer Attributes
+		lineageTag: d288644d-e68b-417a-b6ad-c229a86c5de4
+		summarizeBy: none
+		sourceColumn: Transaction Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Account Type'
+		dataType: string
+		displayFolder: 1. Customer Hierarchy
+		lineageTag: a0a0a72d-6c54-4e38-89c2-acf0084d375a
+		summarizeBy: none
+		sourceColumn: Account Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Station
+		dataType: string
+		isHidden
+		displayFolder: 4. Keys
+		lineageTag: 22b532a7-95c9-4055-98bd-f6c8624e21ea
+		summarizeBy: none
+		sourceColumn: Station
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Account Manager'
+		dataType: string
+		displayFolder: 3. Managers
+		lineageTag: 67fe957e-20ff-43ea-ae81-6e377ee37f71
+		summarizeBy: none
+		sourceColumn: Account Manager
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Key Account Manager'
+		dataType: string
+		displayFolder: 3. Managers
+		lineageTag: 72fc9786-6102-4514-a9f0-35cfc60809b4
+		summarizeBy: none
+		sourceColumn: Key Account Manager
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Customer Hierarchy'
+		displayFolder: 1. Customer Hierarchy
+		lineageTag: 21ce8263-4484-4671-9324-29eb1d5fb394
+
+		level 'Account Type'
+			lineageTag: 63750788-6ce3-468b-acfb-48561f995e59
+			column: 'Account Type'
+
+		level 'Key Account Name'
+			lineageTag: 695025d0-549e-4b7c-b020-926a32b43d89
+			column: 'Key Account Name'
+
+		level 'Account Name'
+			lineageTag: 4701a595-a719-4c4c-a262-0961ea84c24b
+			column: 'Account Name'
+
+		level 'Customer Sold-To Name'
+			lineageTag: 24730ed3-e089-46de-bd4c-26f648c4a791
+			column: 'Customer Sold-To Name'
+
+	partition Customers = m
+		mode: import
+		queryGroup: Tables
+		source = ```
+				let
+				
+				  // Data Source
+				  Source = Sql.Database(
+				    #"SqlEndpoint", 
+				    #"Database"
+				  ), 
+				
+				  // Step
+				  Data = Source
+				    {
+				      [
+				        Schema = "Dimview", 
+				        Item   = "Customers"
+				      ]
+				    }
+				    [Data]
+				
+				// Result
+				in
+				  Data
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+	annotation TabularEditor_TableGroup = 01. Dimension Tables
+

@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "A marketplace for skills and tools for agentic Power BI development.",
-    "version": "0.8.5"
+    "version": "0.11.0"
   },
   "plugins": [
     {
@@ -20,18 +20,23 @@
     },
     {
       "name": "pbip",
-      "description": "Skills for working with Power BI Project (PBIP) files including TMDL authoring and project operations.",
+      "description": "Get this plugin if you'll work with pbip files, tmdl, or pbir. It helps with file structure and direct modifications.",
       "source": "./plugins/pbip"
     },
     {
       "name": "semantic-models",
-      "description": "Skills for auditing and standardizing naming conventions in Power BI semantic models.",
+      "description": "Get this plugin for agentic development and management of semantic models.",
       "source": "./plugins/semantic-models"
     },
     {
       "name": "reports",
-      "description": "Skills for Power BI report design and custom visuals (Deneb, R, Python, SVG).",
+      "description": "Get this plugin for agentic development and management of reports.",
       "source": "./plugins/reports"
+    },
+    {
+      "name": "fabric-cli",
+      "description": "Get this plugin to work with Fabric / Power BI service, by means of the fabric cli.",
+      "source": "./plugins/fabric-cli"
     }
   ]
 }

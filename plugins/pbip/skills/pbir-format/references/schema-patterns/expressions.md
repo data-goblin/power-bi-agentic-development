@@ -74,7 +74,7 @@ Static values with type-specific formatting.
 ### DateTime Literals
 
 ```json
-"expr": {"Literal": {"Value": "datetime'2024-01-15T00:00:00.000000"}}
+"expr": {"Literal": {"Value": "datetime'2024-01-15T00:00:00.0000000'"}}
 ```
 
 ### Null Literals
@@ -233,11 +233,21 @@ Maps numeric measure values (0-1) to color gradients:
 }
 ```
 
+**Two forms of linearGradient2:**
+
+**Explicit bounds** (fixed thresholds — min/max at known values like 0–1):
+- Include `"value"` on `min` and `max` to pin the gradient range
+
+**Data-driven min/max** (relative to data — omit `value` bounds):
+- Omit `"value"` on `min` and `max`; Power BI derives bounds from the data automatically
+
+The example above uses explicit bounds (`0D` to `1D`). For data-driven, remove the `value` entries from `min` and `max`. See [conditional-formatting.md](../schema-patterns/conditional-formatting.md) for the data-driven pattern.
+
 **Structure:**
 - `Input.Measure` - Returns numeric value (e.g., 0.75 for 75%)
 - `min.color` - Theme color reference for minimum value (e.g., 'minColor', 'badColor')
 - `max.color` - Theme color reference for maximum value (e.g., 'maxColor', 'goodColor')
-- `min.value` / `max.value` - Numeric range bounds (typically 0D and 1D)
+- `min.value` / `max.value` - Optional numeric range bounds (explicit bounds form only; typically 0D and 1D)
 - `nullColoringStrategy.strategy` - How to handle BLANK():
   - `'asZero'` - Treat null as 0
   - `'specificColor'` - Use specified color
@@ -288,7 +298,7 @@ Maps numeric measure values to three-point color gradients (min, mid, max):
       "linearGradient3": {
         "min": {
           "color": {"Literal": {"Value": "'#f0a787'"}},
-          "value": {"Literal": {"Value": "0D"}}
+          "value": {"Literal": {"Value": "-1D"}}
         },
         "mid": {
           "color": {"Literal": {"Value": "'#FFFFFF'"}},
@@ -296,7 +306,7 @@ Maps numeric measure values to three-point color gradients (min, mid, max):
         },
         "max": {
           "color": {"Literal": {"Value": "'#999999'"}},
-          "value": {"Literal": {"Value": "0D"}}
+          "value": {"Literal": {"Value": "1D"}}
         },
         "nullColoringStrategy": {
           "strategy": {"Literal": {"Value": "'asZero'"}}
@@ -592,14 +602,31 @@ Some properties require nested expr structures:
 }
 ```
 
+## SourceRef Context Rules
+
+**Critical gotcha:** `SourceRef` uses different fields depending on context.
+
+| Context | SourceRef field | Example |
+|---------|----------------|---------|
+| Query projections (`queryState`) | `"Entity"` | `{"SourceRef": {"Entity": "Sales"}}` |
+| Filter `Where` conditions (filterConfig, bookmark filters) | `"Source"` (alias from `From[]`) | `{"SourceRef": {"Source": "s"}}` |
+| scopeId selectors (formatting objects) | `"Entity"` | `{"SourceRef": {"Entity": "Products"}}` |
+
+In any context where `"Source"` is used, a `"From"` array must declare the alias:
+```json
+"From": [{"Name": "s", "Entity": "Sales", "Type": 0}]
+```
+
+Using `"Entity"` in a filter `Where` condition produces broken filter JSON. See [filter-pane.md](../filter-pane.md) and [visual-json.md](../visual-json.md) for full examples.
+
 ## Common Mistakes
 
 | Error | Cause | Fix |
 |-------|-------|-----|
 | `"smooth"` in JSON | Missing inner quotes | Use `"'smooth'"` |
 | `"Value": 50` | Missing D suffix | Use `"50D"` |
-| `"Value": "true"` | Quotes around boolean | Use `true` (no quotes) |
-| `"Value": "True"` | Wrong case | Use `true` (lowercase) |
+| `"Value": true` | Bare JSON boolean — `Value` field must always be a JSON string | Use `"Value": "true"` (string with quotes) |
+| `"Value": "True"` | Wrong case | Use `"Value": "true"` (lowercase) |
 | Measure not found | Missing Schema field | Add `"Schema": "extension"` for report measures |
 
 ## Schema Definition Path

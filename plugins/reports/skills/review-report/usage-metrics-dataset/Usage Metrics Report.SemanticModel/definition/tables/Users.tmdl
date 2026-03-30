@@ -1,0 +1,38 @@
+table Users
+	lineageTag: 6d5103b9-d9ce-4886-aff5-6b034dc41ea6
+
+	column UserId
+		lineageTag: b8bb8249-7454-4110-aab8-8b8259c0dbf5
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Report views[UserId]
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserKey
+		lineageTag: 7b6f9a0b-b107-497b-840f-53591eea8dee
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Report views[UserKey]
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserGuid = LOOKUPVALUE(Users_ReportPageView[UserId], Users_ReportPageView[UserKey], Users[UserKey], Users[UserID])
+		isHidden
+		lineageTag: 16810f80-d331-4722-b04b-899d87095e6c
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column UniqueUser = IF(Users[UserId] = "Unnamed User", "Unnamed User " & Users[UserKey], Users[UserId])
+		lineageTag: 4b8bbac5-7897-4754-a0ca-0e4c8e578e5b
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Users-28f8e96d-15d0-4ef8-bce6-1948b6eac7bc = calculated
+		mode: import
+		source = SUMMARIZE('Report views', 'Report views'[UserId], 'Report views'[UserKey])
+
+	annotation PBI_Id = 5b1351b207124206a29444300a3ae5c6
+

@@ -1,7 +1,7 @@
 ---
 name: connect-pbid
 version: 0.8.5
-description: This skill should be used automatically when the user wants to work with Power BI Desktop and the Tabular Editor CLI or Power BI MCP server is not available. Use this skill when the user asks to "connect to Power BI Desktop", "read my PBI model", "enumerate tables in Power BI", "query PBI Desktop with DAX", "modify PBI Desktop model", "find the Analysis Services port", "use TOM with Power BI Desktop", "inspect my Power BI model", "add a measure to PBI", "create a relationship", "change column properties", "find the file path of my Power BI file", "edit the connection string", "modify report metadata", "change the connected model", "edit definition.pbir", "capture visual queries", "intercept DAX queries", "listen for visual queries", "see what queries my visuals generate", "create a user defined function", "add a DAX UDF", or mentions connecting to the local Analysis Services instance that Power BI Desktop runs, editing PBIP/PBIX metadata files, or capturing live visual queries. Provides step-by-step guidance for connecting via TOM and ADOMD.NET in PowerShell, finding file paths, editing metadata files, capturing visual queries, and managing UDFs.
+description: This skill should be used when the user asks to "connect to Power BI Desktop", "query PBI Desktop with DAX", "modify PBI Desktop model", "find the Analysis Services port", "use TOM with Power BI Desktop", "add a measure to PBI", "create a relationship", "find the file path of my Power BI file", "capture visual queries", "intercept DAX queries", "add a DAX UDF", or mentions connecting to the local Analysis Services instance. Provides TOM and ADOMD.NET guidance via PowerShell for model enumeration, DAX queries, metadata modification, and query tracing.
 ---
 
 # Connect to Power BI Desktop (Local Analysis Services)
@@ -13,19 +13,9 @@ Expert guidance for connecting to Power BI Desktop's local tabular model via the
 
 ## When to Use This Skill
 
-Activate this skill only when you don't have access to the Tabular Editor CLI tool or a Power BI MCP server that works with Power BI Desktop. 
-Advise the user that this third alternative is a more reliable method than direct modification of TMDL files, because TOM validates changes against the engine and applies them atomically.
+Activate only when the Tabular Editor CLI or a Power BI MCP server is unavailable. TOM is more reliable than direct TMDL editing because it validates changes against the engine and applies them atomically.
 
-**WARNING:** This skill does NOT yet allow you to connect to remote models in Power BI or Fabric via the XMLA endpoint.
-
-Activate automatically when tasks involve:
-
-- Connecting to a running Power BI Desktop instance
-- Exploring tables, columns, measures, or relationships in a PBI model
-- Querying a PBI Desktop model with DAX
-- Modifying model metadata incl objects and properties (tables, columns, measures, relationships, roles, hierarchies, etc.)
-- Finding the local Analysis Services port
-- Using TOM or ADOMD.NET with Power BI Desktop
+**WARNING:** This skill does NOT support remote models via the XMLA endpoint.
 
 
 ## Critical
@@ -45,7 +35,7 @@ Activate automatically when tasks involve:
   For complex scripts, write to a `.ps1` file and execute with `-File` instead of `-Command` to avoid escaping issues entirely.
 - **Prefer inline PowerShell** over writing `.ps1` files. Only create script files for repeated operations. For one-off queries or modifications, use `powershell -ExecutionPolicy Bypass -Command '...'` directly.
 - **Always use `-ExecutionPolicy Bypass`** when running PowerShell commands or scripts. Windows blocks unsigned scripts by default.
-- **Script file location** -- if writing a `.ps1` file, write it to `./` (the current working directory), not `/tmp/` or other Unix paths. Execute with `powershell -ExecutionPolicy Bypass -File ./script.ps1`.
+- **Script file location** -- persistent scripts should go in the agent harness's scripts directory for the project (`.claude/scripts/`, `.github/scripts/`, `.cursor/scripts/`, `.gemini/scripts/`, etc. depending on the harness). Ephemeral or throwaway scripts should go in a project `tmp/` directory (which should be `.gitignored`). Do not write scripts to `./` root or `/tmp/`.
 - Do not modify model metadata without explicit user direction
 - Always call `$model.SaveChanges()` to persist modifications; without it, changes are discarded
 - For macOS users running PBI Desktop in Parallels, see [parallels-macos.md](./references/parallels-macos.md)
@@ -336,162 +326,9 @@ $role.TablePermissions.Add($tp)
 $model.SaveChanges()
 ```
 
-### B. Discovering Object Types
+### B. Discovering Object Types, Properties, and Setting Values
 
-List all object types and their counts in a model:
-
-```powershell
-Write-Output "Tables: $($model.Tables.Count)"
-Write-Output "Relationships: $($model.Relationships.Count)"
-Write-Output "Roles: $($model.Roles.Count)"
-Write-Output "Perspectives: $($model.Perspectives.Count)"
-Write-Output "Cultures: $($model.Cultures.Count)"
-Write-Output "Expressions: $($model.Expressions.Count)"
-Write-Output "Data Sources: $($model.DataSources.Count)"
-
-foreach ($table in $model.Tables) {
-    $calcCols = ($table.Columns | Where-Object { $_ -is [Microsoft.AnalysisServices.Tabular.CalculatedColumn] }).Count
-    $dataCols = ($table.Columns | Where-Object { $_ -is [Microsoft.AnalysisServices.Tabular.DataColumn] }).Count
-    $isCalcTable = ($table.Partitions | Where-Object { $_.SourceType -eq "Calculated" }).Count -gt 0
-    $isCalcGroup = $table.CalculationGroup -ne $null
-
-    Write-Output "[$($table.Name)] Cols=$dataCols CalcCols=$calcCols Measures=$($table.Measures.Count) Hierarchies=$($table.Hierarchies.Count) CalcTable=$isCalcTable CalcGroup=$isCalcGroup"
-}
-```
-
-**All TOM object types in the `Microsoft.AnalysisServices.Tabular` namespace:**
-
-| Category | Types |
-|----------|-------|
-| **Model** | `Model`, `Database`, `Server` |
-| **Tables** | `Table`, `Partition`, `CalculationGroup`, `CalculationItem` |
-| **Columns** | `DataColumn`, `CalculatedColumn`, `CalculatedTableColumn`, `RowNumberColumn` |
-| **Measures** | `Measure`, `KPI` |
-| **Relationships** | `SingleColumnRelationship` |
-| **Security** | `ModelRole`, `ModelRoleMember`, `WindowsModelRoleMember`, `ExternalModelRoleMember`, `TablePermission` |
-| **Display** | `Hierarchy`, `Level`, `Perspective`, `PerspectiveTable`, `PerspectiveColumn`, `PerspectiveMeasure`, `PerspectiveHierarchy` |
-| **Translations** | `Culture`, `ObjectTranslation` |
-| **Data** | `StructuredDataSource`, `ProviderDataSource`, `NamedExpression` (M/Power Query) |
-| **Metadata** | `Annotation`, `ExtendedProperty` |
-
-### C. Discovering Properties and Valid Values
-
-Use PowerShell reflection to discover available properties on any TOM object:
-
-```powershell
-# List all settable properties of a Measure
-[Microsoft.AnalysisServices.Tabular.Measure].GetProperties() |
-    Where-Object { $_.CanWrite } |
-    ForEach-Object { Write-Output "$($_.Name) : $($_.PropertyType.Name)" }
-
-# List all settable properties of a Table
-[Microsoft.AnalysisServices.Tabular.Table].GetProperties() |
-    Where-Object { $_.CanWrite } |
-    ForEach-Object { Write-Output "$($_.Name) : $($_.PropertyType.Name)" }
-```
-
-**Discover enum values (valid options for enum properties):**
-
-```powershell
-# DataType enum (for columns)
-[Enum]::GetNames([Microsoft.AnalysisServices.Tabular.DataType])
-# Returns: Automatic, String, Int64, Double, DateTime, Decimal, Boolean, Binary, Unknown, Variant
-
-# CrossFilteringBehavior enum (for relationships)
-[Enum]::GetNames([Microsoft.AnalysisServices.Tabular.CrossFilteringBehavior])
-# Returns: OneDirection, BothDirections, Automatic
-
-# ModelPermission enum (for roles)
-[Enum]::GetNames([Microsoft.AnalysisServices.Tabular.ModelPermission])
-# Returns: None, Read, Administrator, ReadRefresh
-
-# SummarizeBy enum (for columns)
-[Enum]::GetNames([Microsoft.AnalysisServices.Tabular.AggregateFunction])
-# Returns: Default, None, Sum, Min, Max, Count, Average, DistinctCount
-
-# PartitionSourceType enum
-[Enum]::GetNames([Microsoft.AnalysisServices.Tabular.PartitionSourceType])
-# Returns: None, Query, Calculated, M, Entity, PolicyRange, Unknown
-```
-
-**Discover any enum by property type:**
-
-```powershell
-# Generic pattern: find a property, check if its type is an enum
-$prop = [Microsoft.AnalysisServices.Tabular.Column].GetProperty("SortByColumn")
-Write-Output "Type: $($prop.PropertyType.Name), IsEnum: $($prop.PropertyType.IsEnum)"
-```
-
-### D. Getting and Setting Properties
-
-**Read properties:**
-
-```powershell
-$table = $model.Tables["Sales"]
-
-# Table properties
-Write-Output "Name: $($table.Name)"
-Write-Output "Hidden: $($table.IsHidden)"
-Write-Output "Description: $($table.Description)"
-Write-Output "DataCategory: $($table.DataCategory)"
-
-# Column properties
-$col = $table.Columns["Amount"]
-Write-Output "DataType: $($col.DataType)"
-Write-Output "FormatString: $($col.FormatString)"
-Write-Output "IsHidden: $($col.IsHidden)"
-Write-Output "SummarizeBy: $($col.SummarizeBy)"
-Write-Output "SortByColumn: $($col.SortByColumn)"
-Write-Output "DisplayFolder: $($col.DisplayFolder)"
-
-# Measure properties
-$m = $table.Measures["Total Revenue"]
-Write-Output "Expression: $($m.Expression)"
-Write-Output "FormatString: $($m.FormatString)"
-Write-Output "DisplayFolder: $($m.DisplayFolder)"
-Write-Output "Description: $($m.Description)"
-Write-Output "IsHidden: $($m.IsHidden)"
-
-# Relationship properties
-$rel = $model.Relationships[0]
-$sr = [Microsoft.AnalysisServices.Tabular.SingleColumnRelationship]$rel
-Write-Output "From: [$($sr.FromTable.Name)].[$($sr.FromColumn.Name)]"
-Write-Output "To: [$($sr.ToTable.Name)].[$($sr.ToColumn.Name)]"
-Write-Output "Active: $($sr.IsActive)"
-Write-Output "CrossFilter: $($sr.CrossFilteringBehavior)"
-Write-Output "Cardinality: $($sr.FromCardinality) -> $($sr.ToCardinality)"
-```
-
-**Set properties:**
-
-```powershell
-# Table
-$table.IsHidden = $true
-$table.Description = "Fact table for sales transactions"
-$table.DataCategory = "Time"  # marks as date table
-
-# Column
-$col.FormatString = "#,0.00"
-$col.IsHidden = $true
-$col.DisplayFolder = "Dimensions\Geography"
-$col.SummarizeBy = [Microsoft.AnalysisServices.Tabular.AggregateFunction]::None
-$col.SortByColumn = $table.Columns["MonthNumber"]
-$col.Description = "Customer region code"
-
-# Measure
-$m.Expression = "CALCULATE(SUM(Sales[Amount]), Sales[Status] = ""Closed"")"
-$m.FormatString = "`$#,0.00"
-$m.DisplayFolder = "Key Metrics"
-$m.Description = "Total closed sales revenue"
-
-# Relationship
-$sr.IsActive = $false
-$sr.CrossFilteringBehavior = [Microsoft.AnalysisServices.Tabular.CrossFilteringBehavior]::BothDirections
-$sr.SecurityFilteringBehavior = [Microsoft.AnalysisServices.Tabular.SecurityFilteringBehavior]::OneDirection
-
-# Persist
-$model.SaveChanges()
-```
+For complete TOM object type tables, PowerShell reflection patterns for discovering properties and enum values, and reading/setting property examples, see **`references/tom-object-types.md`**.
 
 
 ## 7. Validation and Further Documentation
@@ -630,8 +467,10 @@ To retrieve current TOM/ADOMD.NET reference docs, use `microsoft_docs_search` + 
 
 **Skill references:**
 
-- [TOM Object Types CRUD](./references/tom-object-types.md) - Full CRUD examples for every object type including UDFs
+- [TOM Object Types CRUD](./references/tom-object-types.md) - Full CRUD examples for every object type including UDFs, Direct Lake, KPI note
 - [Query Listener](./references/query-listener.md) - Capture live visual DAX queries via DMV polling; interpret query structure, timings, filter patterns
+- [Export Model](./references/export-model.md) - Export to BIM/TMDL via Tabular Editor CLI, fab CLI, or TOM serializer
+- [VertiPaq Statistics](./references/vertipaq-stats.md) - Column cardinality, dictionary/data size, memory by table, server timings via DMVs
 - [Refresh Model](./references/refresh-model.md) - All refresh methods (TMSL, TOM RequestRefresh, ADOMD.NET)
 - [macOS + Parallels Guide](./references/parallels-macos.md) - Connecting from macOS when PBI Desktop runs in a Parallels VM
 

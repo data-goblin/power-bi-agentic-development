@@ -18,7 +18,7 @@ Each visual is stored in its own `visual.json` file at:
 
 ```json
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.5.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.7.0/schema.json",
   "name": "<visualId>",
   "position": { "x": 0, "y": 0, "z": 0, "height": 200, "width": 300, "tabOrder": 0 },
   "visual": {
@@ -262,7 +262,7 @@ Each page has a `page.json` file at:
 
 ```json
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/1.2.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
   "name": "<pageId>",
   "displayName": "Page Title",
   "displayOption": "FitToPage",

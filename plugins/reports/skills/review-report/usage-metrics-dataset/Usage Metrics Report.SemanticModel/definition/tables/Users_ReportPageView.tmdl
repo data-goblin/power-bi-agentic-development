@@ -1,0 +1,28 @@
+table Users_ReportPageView
+	isHidden
+	lineageTag: aa82832b-e2c3-41df-a5e1-2b631cb28b4b
+
+	column UserId
+		isHidden
+		lineageTag: 23c49a8a-9c06-4c14-bff0-74b2aae6a09e
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Report page views[UserId]
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserKey
+		isHidden
+		lineageTag: 8e72cea5-42ee-44c0-8461-1edfd7f26b9c
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: Report page views[UserKey]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Users_ReportPageView-628922cc-a36f-44bc-af7d-7a24f725a3f8 = calculated
+		mode: import
+		source = SUMMARIZE('Report page views', 'Report page views'[UserId], 'Report page views'[UserKey])
+
+	annotation PBI_Id = eba9e7192d2f4235bb8ca43edbbe7fe1
+

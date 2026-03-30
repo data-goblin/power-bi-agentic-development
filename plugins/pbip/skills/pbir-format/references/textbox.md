@@ -10,7 +10,7 @@ Textbox visuals (`visualType: "textbox"`) are used for static text content, titl
 
 ```json
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.2.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
   "name": "visual_id",
   "position": {
     "x": 42,
@@ -22,9 +22,6 @@ Textbox visuals (`visualType: "textbox"`) are used for static text content, titl
   },
   "visual": {
     "visualType": "textbox",
-    "query": {
-      "queryState": {}
-    },
     "objects": {
       "general": [
         {
@@ -99,12 +96,8 @@ Textbox visuals (`visualType: "textbox"`) are used for static text content, titl
 ## Key Components
 
 ### Query
-Textboxes always have an empty `queryState`:
-```json
-"query": {
-  "queryState": {}
-}
-```
+
+Textboxes do **not** use a `query` object — omit it entirely. Real textbox visual.json files have no `query` key at all. Adding an empty `query: {queryState: {}}` is harmless but unnecessary and inconsistent with Power BI Desktop output.
 
 ### Paragraphs Property
 
@@ -290,7 +283,6 @@ Within a paragraph, you can have multiple text runs with different styles:
 {
   "visual": {
     "visualType": "textbox",
-    "query": {"queryState": {}},
     "objects": {
       "general": [{
         "properties": {

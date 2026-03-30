@@ -1,0 +1,44 @@
+table 'Z03CG2 - Orders Target'
+	isHidden
+	lineageTag: 03aebfe4-55ef-4d5c-9ffb-173716934b26
+
+	calculationGroup
+		precedence: 7
+
+		calculationItem '1 Year Prior' =
+				
+				[Net Orders 1YP]
+
+		calculationItem '2 Years Prior' =
+				
+				[Net Orders 2YP]
+
+		calculationItem Budget =
+				
+				BLANK()
+
+		calculationItem Forecast =
+				
+				BLANK()
+
+	column Target
+		dataType: string
+		isHidden
+		lineageTag: d301dc31-afbe-4e15-8ffb-96932ff69684
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		lineageTag: 6f45bbff-0b86-4c81-bef2-d404cc2f982d
+		summarizeBy: sum
+		sourceColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	annotation TabularEditor_TableGroup = 06. Calculation Groups
+

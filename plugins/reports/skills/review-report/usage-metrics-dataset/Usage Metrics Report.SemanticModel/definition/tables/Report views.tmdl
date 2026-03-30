@@ -1,0 +1,182 @@
+table 'Report views'
+	lineageTag: 940c0704-747b-4e04-8474-0aa28d70874b
+
+	column ReportId
+		dataType: string
+		lineageTag: 032f562b-98e8-4f3e-a8ce-fd525821f96a
+		summarizeBy: none
+		sourceColumn: ReportId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportType
+		dataType: string
+		lineageTag: 4bd76904-7eee-4aa0-a1ab-4d5ffc0d3c13
+		summarizeBy: none
+		sourceColumn: ReportType
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportName
+		dataType: string
+		isHidden
+		lineageTag: 9ec3b56b-d7a6-4613-acc8-501e1743490f
+		summarizeBy: none
+		sourceColumn: ReportName
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column AppName
+		dataType: string
+		lineageTag: 281b7e8e-d3b6-495b-8340-2ff1258ed289
+		summarizeBy: none
+		sourceColumn: AppName
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserKey
+		dataType: string
+		isHidden
+		lineageTag: 36b48f02-c55e-4357-b544-4bc573d9a40c
+		summarizeBy: none
+		sourceColumn: UserKey
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserId
+		dataType: string
+		lineageTag: 752b614b-6e16-4108-a438-0cd80334bf48
+		summarizeBy: none
+		sourceColumn: UserId
+
+		annotation SummarizationSetBy = Automatic
+
+	column UserAgent
+		dataType: string
+		lineageTag: 84c4a8ac-211d-4f52-8fc4-74dcafc178d2
+		summarizeBy: none
+		sourceColumn: UserAgent
+
+		annotation SummarizationSetBy = Automatic
+
+	column DatasetName
+		dataType: string
+		lineageTag: 63474dd7-919e-4848-aee0-5772fd0bbe7a
+		summarizeBy: none
+		sourceColumn: DatasetName
+
+		annotation SummarizationSetBy = Automatic
+
+	column CapacityId
+		dataType: string
+		lineageTag: 7cba8c27-9eca-411b-b926-eb59ee6f959f
+		summarizeBy: none
+		sourceColumn: CapacityId
+
+		annotation SummarizationSetBy = Automatic
+
+	column CapacityName
+		dataType: string
+		lineageTag: 7075d0d5-9250-41e1-a312-5e0512685124
+		summarizeBy: none
+		sourceColumn: CapacityName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date = DATE(YEAR('Report views'[CreationTime]), MONTH('Report views'[CreationTime]), DAY('Report views'[CreationTime]))
+		formatString: General Date
+		lineageTag: 52963429-b6b6-4c32-a939-070982671edc
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column CreationTime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2c26bc83-c94e-463e-80da-21dd5269def4
+		summarizeBy: none
+		sourceColumn: CreationTime
+
+		variation Variation
+			isDefault
+			relationship: ef0d9fc4-9058-4bed-a3ba-4f7948775f9d
+			defaultHierarchy: LocalDateTable_dc7eb03a-ec8b-421f-b39b-107ea1f05736.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column DistributionMethod
+		dataType: string
+		lineageTag: ee00af2d-8088-4f93-8c66-3585a9d83e9e
+		summarizeBy: none
+		sourceColumn: DistributionMethod
+
+		annotation SummarizationSetBy = Automatic
+
+	column OriginalConsumptionMethod
+		dataType: string
+		lineageTag: 8fb9ba0f-1342-46ef-8d1f-b8d9b4a5265b
+		summarizeBy: none
+		sourceColumn: OriginalConsumptionMethod
+
+		annotation SummarizationSetBy = Automatic
+
+	column ConsumptionMethod = ```
+			
+			SWITCH('Report views'[OriginalConsumptionMethod],
+			    "Embedding for your customers", "Embedded",
+			    "Embedding for your organization", "Embedded",
+			    "Power BI mobile", "Mobile",
+			    "Power BI web", "PowerBI.com",
+			    "Simplified embedding", "Embedded",
+			    "", "Not specified",
+			    BLANK(), "Not specified",
+			    "Other")
+			
+			```
+		lineageTag: 40a23e93-0f90-43fd-ba85-9de87ef22bec
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'UserAgent Hierarchy'
+		lineageTag: 843f6174-0394-4962-9b11-a8a2162aeec9
+
+		level UserAgent
+			lineageTag: 00f6a3ad-7015-492f-8ffb-ac8632fdbfc2
+			column: UserAgent
+
+		level UserId
+			lineageTag: 76aabc05-9eb6-4e48-a9e9-98831f4d7043
+			column: UserId
+
+	partition 'Report views-a09627c6-f3c7-48d4-991a-637f4032d1f7' = m
+		mode: import
+		source =
+				let
+				    Source = UsageMetricsDataConnector.GetMetricsData(BaseUrl & "/metadata/v201906/metrics/workspace/" & WorkspaceId & "/reportviews"),
+				    metricsTable = Table.FromRecords(Source),
+				    checkForEmptyTable = if Table.IsEmpty(metricsTable) then
+				                        Table.FromRows
+				                        (
+				                            {
+				                            },
+				                            {
+				                                "ReportId", "ReportType", "ReportName", "AppName", "UserKey", "UserId", "UserAgent", "DatasetName", "DistributionMethod", "CapacityId", "CapacityName", "CreationTime", "ConsumptionMethod"
+				                            }
+				                        )
+				                        else
+				                        metricsTable,
+				    finalTable = Table.TransformColumnTypes(checkForEmptyTable, {{"CreationTime", type datetime}}),
+				    #"Renamed Columns" = Table.RenameColumns(finalTable,{{"ConsumptionMethod", "OriginalConsumptionMethod"}}),
+				    #"Replaced Value" = Table.ReplaceValue(#"Renamed Columns","Apps","App",Replacer.ReplaceText,{"DistributionMethod"})
+				in
+				    #"Replaced Value"
+
+	annotation PBI_QueryRelationships = {"columnCount":13,"keyColumnNames":[],"queryRelationships":[],"columnIdentities":["Section1/Report views/checkForEmptyTable.{ReportId,0}","Section1/Report views/checkForEmptyTable.{ReportType,1}","Section1/Report views/checkForEmptyTable.{ReportName,2}","Section1/Report views/checkForEmptyTable.{AppName,3}","Section1/Report views/checkForEmptyTable.{UserKey,4}","Section1/Report views/checkForEmptyTable.{UserId,5}","Section1/Report views/checkForEmptyTable.{UserAgent,6}","Section1/Report views/checkForEmptyTable.{DatasetName,7}","Section1/Report views/Replaced Value.{DistributionMethod,8}","Section1/Report views/checkForEmptyTable.{CapacityId,9}","Section1/Report views/checkForEmptyTable.{CapacityName,10}","Section1/Report views/finalTable.{CreationTime,11}","Section1/Report views/checkForEmptyTable.{ConsumptionMethod,12}"],"ColumnCount":13,"KeyColumnNames":[],"ColumnIdentities":["Section1/Report views/checkForEmptyTable.{ReportId,0}","Section1/Report views/checkForEmptyTable.{ReportType,1}","Section1/Report views/checkForEmptyTable.{ReportName,2}","Section1/Report views/checkForEmptyTable.{AppName,3}","Section1/Report views/checkForEmptyTable.{UserKey,4}","Section1/Report views/checkForEmptyTable.{UserId,5}","Section1/Report views/checkForEmptyTable.{UserAgent,6}","Section1/Report views/checkForEmptyTable.{DatasetName,7}","Section1/Report views/Replaced Value.{DistributionMethod,8}","Section1/Report views/checkForEmptyTable.{CapacityId,9}","Section1/Report views/checkForEmptyTable.{CapacityName,10}","Section1/Report views/finalTable.{CreationTime,11}","Section1/Report views/checkForEmptyTable.{ConsumptionMethod,12}"],"RelationshipInfo":[]}
+
+	annotation PBI_ResultType = Table
+

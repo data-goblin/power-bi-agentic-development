@@ -1,0 +1,81 @@
+/// This is a disconnected table for Measure Selection.
+/// It lets you select a Period
+table '4) Selected Period'
+	lineageTag: d0747f9f-bab0-419e-87fb-7ae01f97a523
+
+	column MTD
+		isHidden
+		displayFolder: Columns\0. Select a Period
+		lineageTag: c9ee146b-ada4-4f64-b3ec-5367e8e35c2e
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [MTD]
+		sortByColumn: Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Order
+		isHidden
+		displayFolder: Columns\1. Order
+		lineageTag: 28ecb9f2-1504-4a33-9da4-5bcfcc9c3317
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Order]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Period
+		lineageTag: 1f98320e-9b80-4c14-abbd-50b713f55446
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Period]
+		sortByColumn: Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column QTD
+		isHidden
+		displayFolder: Columns\0. Select a Period
+		lineageTag: 32c56d15-bb0d-4567-b661-75ae39b13044
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [QTD]
+		sortByColumn: Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column YTD
+		isHidden
+		displayFolder: Columns\0. Select a Period
+		lineageTag: 25f552c2-f3ce-428e-a61c-dd66630c4bef
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [YTD]
+		sortByColumn: Order
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '4) Selected Period' = calculated
+		mode: import
+		source = ```
+				
+				UNION (
+				    ROW (
+				        "Period", {"Full Period"},
+				        "Order", {0},
+				        "MTD", {"Full Month"},
+				        "QTD", {"Full Quarter"},
+				        "YTD", {"Full Year"}
+				    ),
+				    ROW (
+				        "Period", {"Period-to-Date"},
+				        "Order", {1},
+				        "MTD", {"MTD"},
+				        "QTD", {"QTD"},
+				        "YTD", {"YTD"}
+				    )
+				) 
+				```
+
+	annotation TabularEditor_TableGroup = 04. Selection Tables
+

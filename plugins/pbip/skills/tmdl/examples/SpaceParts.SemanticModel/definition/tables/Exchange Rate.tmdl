@@ -1,0 +1,182 @@
+table 'Exchange Rate'
+	lineageTag: 01ee8527-a2dc-471d-9a3d-9ccfe51284ef
+
+	column 'Rate Type'
+		dataType: string
+		isHidden
+		displayFolder: 2. Other Currency Fields
+		lineageTag: 452c5cfd-c704-4b98-be56-71082368b44b
+		summarizeBy: none
+		sourceColumn: Rate Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'From Currency'
+		dataType: string
+		displayFolder: 1. Select a Currency
+		lineageTag: ee8bbaa9-0b3e-42bf-9d01-d907458159bc
+		summarizeBy: none
+		sourceColumn: From Currency
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'To Currency'
+		dataType: string
+		isHidden
+		displayFolder: 2. Other Currency Fields
+		lineageTag: 7640e9c9-9b46-48e7-bdaa-c96bb487b625
+		summarizeBy: none
+		sourceColumn: To Currency
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Currency System'
+		dataType: string
+		isHidden
+		displayFolder: 2. Other Currency Fields
+		lineageTag: ee01193c-1f42-4aec-a1fc-45db6cabfb80
+		summarizeBy: none
+		sourceColumn: Currency System
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rate
+		dataType: double
+		isHidden
+		displayFolder: 2. Other Currency Fields
+		lineageTag: c7c98d7b-101b-4fb0-b4b6-a1990adb1ecb
+		summarizeBy: sum
+		sourceColumn: Rate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Date
+		dataType: dateTime
+		isHidden
+		displayFolder: 2. Other Currency Fields
+		lineageTag: 024862a6-5e54-4cc6-a1d7-2b7b1f393ad6
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: string
+		isHidden
+		displayFolder: 2. Other Currency Fields
+		lineageTag: fe0e261d-d4be-49a5-b2d0-a644f272b0eb
+		summarizeBy: none
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Exchange Rate Composite Key'
+		dataType: string
+		isHidden
+		displayFolder: 2. Other Currency Fields
+		lineageTag: 5b3738b3-2625-4510-909a-71dd86316090
+		summarizeBy: none
+		sourceColumn: Exchange Rate Composite Key
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Currency Symbol'
+		dataType: string
+		isHidden
+		displayFolder: 2. Other Currency Fields
+		lineageTag: 5ebc638f-a523-4f0e-ae44-609c8bb9135e
+		summarizeBy: none
+		sourceColumn: Currency Symbol
+
+		annotation SummarizationSetBy = Automatic
+
+	column Position
+		dataType: string
+		isHidden
+		displayFolder: 2. Other Currency Fields
+		lineageTag: 339aa5d5-e96b-4841-8c9f-91d2518298b8
+		summarizeBy: none
+		sourceColumn: Position
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Format String'
+		dataType: string
+		isHidden
+		displayFolder: 2. Other Currency Fields
+		lineageTag: 9e55602e-4e1d-45e7-b00c-b88a0ddc696a
+		summarizeBy: none
+		sourceColumn: Format String
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Exchange Rate' = m
+		mode: import
+		queryGroup: Tables
+		source = ```
+				let
+				    Source = Sql.Database(#"SqlEndpoint",#"Database"),
+				    Data = Source{[Schema="Dimview",Item="Exchange Rate"]}[Data],
+				    
+				    
+				    // Add currency symbol column based on currency code
+				    AddCurrencySymbol = Table.AddColumn(Data, "Currency Symbol", each 
+				        if [From Currency] = "EUR" then "€"
+				        else if [From Currency] = "ZAR" then "R"
+				        else if [From Currency] = "ARC" then "₳"
+				        else if [From Currency] = "BELT" then "฿"
+				        else if [From Currency] = "BLO" then "Ł"
+				        else if [From Currency] = "BLT" then "₺"
+				        else if [From Currency] = "CAL" then "¢"
+				        else if [From Currency] = "CREDITS" then "₡"
+				        else if [From Currency] = "ELD" then "Ξ"
+				        else if [From Currency] = "HAL" then "Ħ"
+				        else if [From Currency] = "ILOS" then "ł"
+				        else if [From Currency] = "LAK" then "₭"
+				        else if [From Currency] = "MCR" then "₥"
+				        else if [From Currency] = "OTN" then "Ø"
+				        else if [From Currency] = "UPN" then "Ʉ"
+				        else null,
+				        type text),
+				    
+				    
+				    // Add position column (prefix or suffix)
+				    AddPosition = Table.AddColumn(AddCurrencySymbol, "Position", each 
+				        if List.Contains({"EUR", "BLO", "CAL", "ELD", "ILOS", "UPN"}, [From Currency]) then "suffix"
+				        else "prefix",
+				        type text),
+				    
+				    
+				    // Add format string for Power BI (without decimals)
+				    AddFormatString = Table.AddColumn(AddPosition, "Format String", each 
+				        if [From Currency] = "EUR" then "#,##0 €"
+				        else if [From Currency] = "ZAR" then "R #,##0"
+				        else if [From Currency] = "ARC" then "₳ #,##0"
+				        else if [From Currency] = "BELT" then "฿ #,##0"
+				        else if [From Currency] = "BLO" then "#,##0 Ł"
+				        else if [From Currency] = "BLT" then "₺ #,##0"
+				        else if [From Currency] = "CAL" then "#,##0 ¢"
+				        else if [From Currency] = "CREDITS" then "₡ #,##0"
+				        else if [From Currency] = "ELD" then "#,##0 Ξ"
+				        else if [From Currency] = "HAL" then "Ħ #,##0"
+				        else if [From Currency] = "ILOS" then "#,##0 ł"
+				        else if [From Currency] = "LAK" then "₭ #,##0"
+				        else if [From Currency] = "MCR" then "₥ #,##0"
+				        else if [From Currency] = "OTN" then "Ø #,##0"
+				        else if [From Currency] = "UPN" then "#,##0 Ʉ"
+				        else "#,##0",
+				        type text)
+				
+				
+				in
+				    AddFormatString
+				```
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+	annotation TabularEditor_TableGroup = 01. Dimension Tables
+

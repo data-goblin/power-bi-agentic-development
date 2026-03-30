@@ -1,0 +1,62 @@
+table 'Budget Rate'
+	isHidden
+	lineageTag: 68dde8df-0ca5-4974-9afa-a3d1fc7dcf1f
+
+	column Rate
+		dataType: double
+		isHidden
+		displayFolder: 1. Facts
+		lineageTag: 46c64843-a8c8-49af-9770-8144db4c3640
+		summarizeBy: sum
+		sourceColumn: Rate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'From Currency'
+		dataType: string
+		isHidden
+		displayFolder: 2. Keys
+		lineageTag: df013c22-0791-4223-9fe0-f45c70d95063
+		summarizeBy: none
+		sourceColumn: From Currency
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'To Currency'
+		dataType: string
+		isHidden
+		displayFolder: 3. Other Currency Fields
+		lineageTag: d7d777a5-9b43-429b-a5eb-fb1ab1549af7
+		summarizeBy: none
+		sourceColumn: To Currency
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Currency System'
+		dataType: string
+		isHidden
+		displayFolder: 3. Other Currency Fields
+		lineageTag: f92a040a-f088-449b-8486-33aeeef0c9b2
+		summarizeBy: none
+		sourceColumn: Currency System
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Budget Rate' = m
+		mode: import
+		queryGroup: Tables
+		source =
+				let
+				    Source = Sql.Database(#"SqlEndpoint",#"Database"),
+				    Data = Source{[Schema="Dimview",Item="Budget Rate"]}[Data]
+				in
+				    Data
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+	annotation TabularEditor_TableGroup = 01. Dimension Tables
+

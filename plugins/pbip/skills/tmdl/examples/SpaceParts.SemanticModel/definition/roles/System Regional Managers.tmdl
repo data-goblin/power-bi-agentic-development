@@ -1,0 +1,6 @@
+role 'System Regional Managers'
+	modelPermission: read
+
+	tablePermission Regions = RLS.ApplySimpleRLS ( 'Regions'[System Regional Managers] )
+
+	annotation PBI_Id = eaa78ebe59c245ccab75056fa76172e9

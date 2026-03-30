@@ -1,0 +1,28 @@
+table 'Refresh Stats'
+	isHidden
+	lineageTag: 9578ffab-7bde-46d8-ba4f-486559d24e82
+
+	column 'Last Refresh'
+		dataType: string
+		isHidden
+		lineageTag: fb38f4d9-5a54-42d5-9aef-7ece73930cb4
+		summarizeBy: none
+		sourceColumn: Last Refresh
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Refresh Stats-33b85724-eb70-4a42-b55f-348ec7c47579' = m
+		mode: import
+		source =
+				let
+				    Source = DateTime.LocalNow() // DateTime.LocalNow()
+				,
+				    #"Converted to Table" = #table(1, {{Source}}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Converted to Table",{{"Column1", "Last Refresh"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_ResultType = Table
+

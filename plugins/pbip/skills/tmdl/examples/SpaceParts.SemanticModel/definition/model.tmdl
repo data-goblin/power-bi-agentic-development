@@ -1,0 +1,79 @@
+model SpaceParts
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+queryGroup Parameters
+
+	annotation PBI_QueryGroupOrder = 0
+
+queryGroup 'Scalar Values'
+
+	annotation PBI_QueryGroupOrder = 1
+
+queryGroup Tables
+
+	annotation PBI_QueryGroupOrder = 2
+
+extendedProperty TabularEditor_DeploymentMetadata = {"User":"EXAMPLE\\user","Time":"2026-03-22T13:06:49.1493465+01:00","ClientMachine":"EXAMPLE","DeploymentMode":"SaveUI","TabularEditorBuild":"3.26.0.10695"}
+
+annotation TabularEditor_SerializeOptions = {"IgnoreInferredObjects":true,"IgnoreInferredProperties":true,"IgnoreTimestamps":true,"SplitMultilineStrings":true,"PrefixFilenames":false,"LocalTranslations":true,"LocalPerspectives":true,"LocalRelationships":true,"Levels":["Data Sources","Shared Expressions","Perspectives","Relationships","Roles","Tables","Tables/Columns","Tables/Hierarchies","Tables/Measures","Tables/Partitions","Tables/CalculationItems","Translations"]}
+
+annotation DataGoblins_SnekHighScore = 42
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["Brands","Budget Rate","Customers","Employees","Exchange Rate","Invoice Document Type","Products","Regions","Budget","Invoices","Orders","Forecast","Order Document Type","Order Status","SqlEndpoint","Database","RangeStart","RangeEnd","Last Refresh"]
+
+ref table Brands
+ref table 'Budget Rate'
+ref table Customers
+ref table Employees
+ref table 'Exchange Rate'
+ref table 'Invoice Document Type'
+ref table Products
+ref table Regions
+ref table Budget
+ref table Invoices
+ref table Date
+ref table 'On-Time Delivery'
+ref table Orders
+ref table Forecast
+ref table 'Order Document Type'
+ref table 'Order Status'
+ref table '1) Selected Metric'
+ref table '2) Selected Unit'
+ref table '3) Selected Target'
+ref table '4) Selected Period'
+ref table 'Z01CG1 - Quantity'
+ref table 'Z01CG2 - Value (Budget Rate)'
+ref table 'Z01CG4 - Lines'
+ref table 'Z02CG1 - Unit'
+ref table 'Z03CG1 - Sales Target'
+ref table 'Z03CG2 - Orders Target'
+ref table 'Z04CG1 - Time Intelligence'
+ref table __Measures
+ref table 'Last Refresh'
+ref table zz_ReportObjects
+ref table '__Demo UDFs'
+ref table 'FP - MTD'
+ref table 'Z04CG1 - Time Intelligence - UDFs'
+ref table __SVGs
+ref role 'Territory Managers'
+ref role 'Account Managers'
+ref role 'Brand VPs'
+ref role 'Business Line Leaders'
+ref role 'Station Sales Managers'
+ref role 'System Regional Managers'
+ref role 'System Sales Directors'
+ref role 'Key Account Managers'
+
+ref perspective 'No Measure Selection'
+ref perspective 'Measure Selection'
+
+ref cultureInfo en-US
+

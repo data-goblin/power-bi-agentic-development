@@ -1,0 +1,354 @@
+table __SVGs
+	lineageTag: 90ee41a4-3e96-4f51-a532-29d55b1d3882
+
+	measure 'SVG Bullet Chart (with Action Dots) - UDF' =
+			
+			-- Bullet Chart DAX SVG Visual
+			SVG.Chart.BulletChart.ActionDot (
+			    [MTD Turnover],                        -- Actual
+			    [MTD Turnover 1YP],                    -- Target
+			    'Customers'[Key Account Name],         -- Data scope
+			    -0.050,                                -- Very bad threshold
+			    -0.025,                                -- Bad threshold
+			     0.025,                                -- Good threshold
+			     0.050,                                -- Very good threshold
+			    "#f4ae4c",                             -- Color for very bad
+			    "#ffe075",                             -- Color for bad
+			    "#74B2FF",                             -- Color for good
+			    "#2D6390"                              -- Color for very good
+			)
+		displayFolder: Charts\Bullet Chart
+		lineageTag: 83aa4215-3dd8-4edd-ac50-4641e8a2ecbf
+		dataCategory: ImageUrl
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// SVG Bullet Chart (with Action Dots) of MTD Turnover vs. MTD Turnover 1YP, grouped by Key Account Name
+	measure 'SVG Bullet Chart (with Action Dots)' = ```
+			
+			-- Use this inside of a Table or a Matrix visual.
+			-- The 'Image size' property of the Table or Matrix should be set to a 'Height' of 25px and a 'Width' of 100px
+			
+			
+			----------------------------------------------------------------------------------------
+			-------------------- START CONFIG - SAFELY CHANGE STUFF IN THIS AREA -------------------
+			----------------------------------------------------------------------------------------
+			
+			
+			-- Input field config
+			VAR _Actual = [MTD Turnover]
+			VAR _Target = [MTD Turnover 1YP]
+			VAR _Performance = DIVIDE ( _Actual - _Target, _Target ) 
+			
+			
+			-- Sentiment config (percent)
+			VAR _VeryBad    = -0.05
+			VAR _Bad        = -0.025
+			VAR _Good       = 0.025
+			VAR _VeryGood   = 0.05
+			
+			
+			-- Chart Config
+			VAR _BarMax = 100
+			VAR _BarMin = 20
+			VAR _Scope = ALL ( 'Customers'[Key Account Name] )
+			
+			
+			-- Color config.
+			VAR _BackgroundColor = "#F5F5F5"                  -- Light grey
+			VAR _BarFillColor  = "#CFCFCF"                    -- Medium grey
+			VAR _BaselineColor = "#737373"                    -- Dark grey
+			VAR _TargetColor = "black"                        -- Black
+			
+			VAR _ActionDotFill = 
+			    SWITCH (
+			        TRUE(),
+			        _Performance < _VeryBad, "#f4ae4c",       -- Dark yellow
+			        _Performance < _Bad, "#ffe075",           -- Light yellow
+			        _Performance > _Good, "#74B2FF",          -- Light blue
+			        _Performance > _VeryGood, "#2D6390",      -- Dark blue
+			        "#FFFFFF00"                               -- Transparent
+			    )
+			
+			
+			----------------------------------------------------------------------------------------
+			----------------------- END CONFIG - BEYOND HERE THERE BE DRAGONS ----------------------
+			----------------------------------------------------------------------------------------
+			
+			
+			    -- Get axis maximum
+			    VAR _MaxActualsInScope = 
+			        CALCULATE(
+			            MAXX(
+			                _Scope,
+			                [MTD Turnover]
+			            ),
+			            REMOVEFILTERS( 'Customers'[Key Account Name] )
+			        )
+			    
+			    VAR _MaxTargetInScope = 
+			        CALCULATE(
+			            MAXX(
+			                _Scope,
+			                [MTD Turnover 1YP]
+			            ),
+			            REMOVEFILTERS( 'Customers'[Key Account Name] )
+			        )
+			    
+			    VAR _AxisMax = 
+			        IF (
+			            HASONEVALUE ( 'Customers'[Key Account Name] ),
+			            MAX( _MaxActualsInScope, _MaxTargetInScope ),
+			            CALCULATE( MAX( [MTD Turnover], [MTD Turnover 1YP] ), REMOVEFILTERS( 'Customers'[Key Account Name] ) )
+			        ) * 1.1
+			    
+			    VAR _AxisRange = 
+			        _BarMax - _BarMin
+			
+			    -- Normalize values (to get position along X-axis)
+			    VAR _ActualNormalized = ( DIVIDE ( _Actual, _AxisMax ) * _AxisRange )
+			    VAR _TargetNormalized = ( DIVIDE ( _Target, _AxisMax ) * _AxisRange ) + _BarMin - 1
+			
+			
+			-- Vectors and SVG code
+			VAR _SvgPrefix = "data:image/svg+xml;utf8, <svg xmlns='http://www.w3.org/2000/svg'>"
+			
+			VAR _Sort = "<desc>" & FORMAT ( _Actual, "000000000000" ) & "</desc>"
+			
+			VAR _ActionDot  = "<circle cx='10' cy='11' r='5' fill='" & _ActionDotFill &"'/>"
+			
+			VAR _BarBaseline = "<rect x='" & _BarMin & "' y='4' width='1' height='60%' fill='" & _BaselineColor & "'/>"
+			VAR _BarBackground = "<rect x='" & _BarMin & "' y='2' width='" & _BarMax & "' height='80%' fill='" & _BackgroundColor & "'/>"
+			VAR _ActualBar  = "<rect x='" & _BarMin & "' y='5' width='" & _ActualNormalized & "' height='50%' fill='" & _BarFillColor & "'/>"
+			VAR _TargetLine = "<rect x='" & _TargetNormalized & "' y='2' width='2' height='80%' fill='" & _TargetColor & "'/>"
+			
+			VAR _SvgSuffix = "</svg>"
+			
+			
+			-- Final result
+			VAR _SVG =
+			    _SvgPrefix 
+			
+			    & _Sort
+			
+			    & _ActionDot
+			
+			    & _BarBackground
+			    & _ActualBar
+			    & _BarBaseline
+			    & _TargetLine
+			
+			    & _SvgSuffix
+			
+			RETURN
+			    _SVG
+			
+			```
+		isHidden
+		displayFolder: Charts\Bullet Chart
+		lineageTag: 9e670279-909d-4cb7-8944-ee5cae0ef3e8
+		dataCategory: ImageUrl
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'SVG Overlapping Bars' =
+			
+			// Sales Performance Overlapping Bars
+			SVG.Chart.BarChart.OverlappingBars(
+			    [Actuals MTD],                 -- actual
+			    [Budget MTD],                  -- target
+			    'Customers'[Key Account Name], -- group_column
+			    "#686868",                     -- color_actual (charcoal)
+			    "#e1dfdd",                     -- color_target (grey)
+			    "#fab005",                     -- color_variance_negative (yellow)
+			    "#2094ff",                     -- color_variance_positive (blue)
+			    "Segoe UI",                    -- font_family
+			    10,                            -- font_size
+			    600                            -- font_weight
+			)
+		displayFolder: Charts\Bar Chart
+		lineageTag: c96c44ef-1829-4822-bc13-51a04fd79840
+		dataCategory: ImageUrl
+
+	measure 'SVG Overlapping Bars (No Label)' =
+			
+			// Clean Overlapping Bars
+			SVG.Chart.BarChart.OverlappingBarsSimple(
+			    [Actuals MTD],                 -- actual
+			    [Budget MTD],                  -- target
+			    'Customers'[Key Account Name], -- group_column
+			    "#686868",                     -- color_actual (charcoal)
+			    "#e1dfdd",                     -- color_target (grey)
+			    "#fab005",                     -- color_variance_negative (yellow)
+			    "#2094ff"                      -- color_variance_positive (blue)
+			)
+		displayFolder: Charts\Bar Chart
+		lineageTag: 585fd419-0c0c-4e5a-925b-226492bbca94
+		dataCategory: ImageUrl
+
+	measure 'Dumbbell Plot UDF' =
+			
+			// Sales Dumbbell Chart
+			SVG.Chart.DumbbellPlot(
+			    [Actuals MTD],                 -- actual
+			    [Budget MTD],                  -- target
+			    'Customers'[Key Account Name], -- column_one
+			    "#448FD6",                     -- colour_on_target_fill (blue)
+			    "#2F6698",                     -- colour_on_target_stroke (dark blue)
+			    "#D64444",                     -- colour_off_target_fill (red)
+			    "#982F2F"                      -- colour_off_target_stroke (dark red)
+			)
+		displayFolder: Charts\Dumbbell Chart
+		lineageTag: 4269644e-d142-41e3-817b-4f3430ff7461
+		dataCategory: ImageUrl
+
+	measure 'Waterfall UDF' =
+			
+			SVG.Chart.Waterfall(
+			    [Actuals MTD],                 -- actual
+			    'Customers'[Key Account Name], -- column_one
+			    "#dad9d8",                     -- colour_bar_category (light grey)
+			    "#878582",                     -- colour_bar_total (dark grey)
+			    "#333333"                      -- colour_connector (dark grey)
+			)
+		displayFolder: Charts\Waterfall Chart
+		lineageTag: 8f13880f-78c1-4997-9d36-d5aba33c3b6b
+		dataCategory: ImageUrl
+
+	/// SVG Overlapping Bar Chart (with Variance) of Actuals MTD vs. Budget MTD, grouped by Key Account Name
+	measure 'New SVG Overlapping Bar Chart (with Variance)' = ```
+			
+			-- SVG measure
+			-- Use this inside of a Table or a Matrix visual.
+			-- The 'Image size' property of the Table or Matrix must match the values in the config below
+			
+			
+			----------------------------------------------------------------------------------------
+			-------------------- START CONFIG - SAFELY CHANGE STUFF IN THIS AREA -------------------
+			----------------------------------------------------------------------------------------
+			
+			
+			-- Input field config
+			VAR _Actual = [Actuals MTD]
+			VAR _Target = [Budget MTD]
+			VAR _Performance = DIVIDE ( _Actual - _Target, _Target )
+			
+			
+			-- Font config
+			VAR _Font = "Segoe UI"
+			VAR _FontSize = 10
+			VAR _FontWeight = 600
+			
+			
+			-- Chart Config
+			VAR _BarMax = 100
+			VAR _BarMin = 30
+			VAR _Scope = ALLSELECTED ( 'Customers'[Key Account Name] )
+			
+			
+			-- Color config.
+			VAR _ActualColor        = "#686868" -- Charcoal
+			VAR _TargetColor        = "#e1dfdd" -- Grey 
+			VAR _VarianceColor     = 
+			    IF ( 
+			        _Performance < 0, 
+			        "#fab005",  -- Yellow
+			        "#2094ff"   -- Blue
+			    )
+			
+			
+			----------------------------------------------------------------------------------------
+			----------------------- END CONFIG - BEYOND HERE THERE BE DRAGONS ----------------------
+			----------------------------------------------------------------------------------------
+			
+			
+			VAR _MaxActualsInScope = 
+			    CALCULATE(
+			        MAXX(
+			            _Scope,
+			            [Actuals MTD]
+			        ),
+			        REMOVEFILTERS( 'Customers'[Key Account Name] )
+			    )
+			
+			VAR _MaxTargetInScope = 
+			    CALCULATE(
+			        MAXX(
+			            _Scope,
+			            [Budget MTD]
+			        ),
+			        REMOVEFILTERS( 'Customers'[Key Account Name] )
+			    )
+			
+			VAR _AxisMax = 
+			    IF (
+			        HASONEVALUE ( 'Customers'[Key Account Name] ),
+			        MAX( _MaxActualsInScope, _MaxTargetInScope ),
+			        CALCULATE( MAX( [Actuals MTD], [Budget MTD] ), REMOVEFILTERS( 'Customers'[Key Account Name] ) )
+			    ) * 1.1
+			
+			
+			-- Normalize values (to get position along X-axis)
+			    VAR _AxisRange = 
+			        _BarMax - _BarMin
+			    
+			    VAR _ActualNormalized = 
+			        DIVIDE ( _Actual, _AxisMax ) * _AxisRange
+			
+			    VAR _TargetNormalized = 
+			        DIVIDE ( _Target, _AxisMax ) * _AxisRange
+			
+			
+			-- Vectors and SVG code
+			VAR _SvgPrefix = "data:image/svg+xml;utf8, <svg xmlns='http://www.w3.org/2000/svg'>"
+			
+			VAR _Sort = "<desc>" & FORMAT ( _Actual, "000000000000" ) & "</desc>"
+			
+			VAR _Icon  = "<text x='" & _BarMin - 3 & "' y='13.5' font-family='Segoe UI' font-size='6' font-weight='700' text-anchor='end' fill='" & _VarianceColor & "'>" & FORMAT ( _Performance, "▲;▼;" ) & "</text>"
+			VAR _Label = "<text x='" & _BarMin - 10 & "' y='15' font-family='" & _Font & "' font-size='" & _FontSize & "' font-weight='" & _FontWeight & "' text-anchor='end' fill='" & _VarianceColor & "'>" & FORMAT ( _Performance, "#,##0%;#,##0%;#,##0%" ) & "</text>"
+			
+			VAR _ActualBar     = "<rect x='" & _BarMin & "' y='3' width='" & _ActualNormalized & "' height='12' stroke ='" & _ActualColor & "' fill='" & _ActualColor & "'/>"
+			VAR _TargetBar     = "<rect x='" & _BarMin & "' y='10' width='" & _TargetNormalized & "' height='12' stroke='" & _ActualColor & "' fill='" & _TargetColor & "'/>"
+			VAR _VarianceBar   = "<rect x='" & _BarMin + MIN( _ActualNormalized, _TargetNormalized ) + 1 & "' y='" & IF ( _Target > _Actual, 2.9, 9 ) & "' width='" & ABS( _ActualNormalized - _TargetNormalized ) - 1 & "' height='6' stroke='" & _VarianceColor & "' fill='" & _VarianceColor & "'/>"
+			
+			VAR _SvgSuffix = "</svg>"
+			
+			
+			-- Final result
+			VAR _SVG = 
+			    _SvgPrefix 
+			    
+			    & _Sort
+			
+			    & _Icon 
+			    & _Label 
+			
+			    & _TargetBar
+			    & _ActualBar 
+			    & _VarianceBar
+			
+			    & _SvgSuffix
+			
+			RETURN
+			    _SVG
+			
+			```
+		displayFolder: Charts\Bar Chart
+		lineageTag: d91b22ec-4852-48ad-8677-e4c60b372b92
+		dataCategory: ImageUrl
+
+	column Value
+		isHidden
+		lineageTag: a5b078c4-1ed5-4d7a-8e1b-1072c235c226
+		isNameInferred
+		sourceColumn: [Value]
+
+	partition __SVGs = calculated
+		mode: import
+		source = ```
+				{1} 
+				// Test changewef ef
+				```
+
+	annotation TabularEditor_TableGroup = 00. Measure Tables
+

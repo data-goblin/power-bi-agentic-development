@@ -1,0 +1,32 @@
+table 'Last Refresh'
+	lineageTag: 8df9a87e-0917-4ec3-8a2f-297dbfaa148e
+
+	column 'Last Refresh'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 427dcc41-8ebd-4730-9cb4-9295708e7591
+		summarizeBy: none
+		sourceColumn: Last Refresh
+
+		variation Variation
+			isDefault
+			relationship: cf55bb82-b832-4bdf-bc81-c415a3504ae9
+			defaultHierarchy: LocalDateTable_595bdce4-ba17-4e98-90af-2d00b0a66670.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Last Refresh-01ea78bc-dff4-4eac-b58e-527fab59801b' = m
+		mode: import
+		queryGroup: 'Scalar Values'
+		source =
+				let
+				    Source = DateTimeZone.FixedLocalNow()
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = DateTimeZone
+
+	annotation TabularEditor_TableGroup = 03. Other Tables
+

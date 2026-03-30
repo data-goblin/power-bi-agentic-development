@@ -18,8 +18,11 @@ Fabric Git integration metadata. Present when the report is synced with a Fabric
 }
 ```
 
+**metadata fields:**
 - `metadata.type` -- item type (`"Report"`, `"SemanticModel"`, etc.)
 - `metadata.displayName` -- display name in Fabric workspace
-- `config.logicalId` -- stable GUID that links the local folder to the Fabric item across renames
+- `metadata.description` -- *(optional)* human-readable description of the Fabric item
 
-Do not manually edit `logicalId` -- it's managed by the Fabric Git sync process.
+**config fields:**
+- `config.version` -- always `"2.0"`, required, do not change
+- `config.logicalId` -- stable GUID that links the local folder to the Fabric item across renames; do not manually edit — managed by the Fabric Git sync process

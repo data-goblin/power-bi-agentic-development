@@ -1,6 +1,6 @@
 ---
 name: te-docs
-version: 0.8.3
+version: 0.8.5
 description: "This skill should be used when the user asks about 'Tabular Editor documentation', 'TE docs', 'how to do X in Tabular Editor', 'Tabular Editor features', 'TE3 features', '.tmuo files', 'Tabular Editor user options', 'TE3 preferences', 'Preferences.json', 'UiPreferences.json', 'Layouts.json', 'workspace database settings', 'deployment preferences', 'data source overrides', 'keyboard shortcuts', 'DAX editor settings', 'TMDL options', 'per-model TE3 configuration', or needs to search Tabular Editor documentation. Provides Tabular Editor documentation search and configuration file guidance."
 ---
 
@@ -10,49 +10,78 @@ Guidance for searching Tabular Editor documentation and understanding TE3 config
 
 ## Documentation Search
 
-The Tabular Editor docs site (docs.tabulareditor.com) has URL redirect issues that cause 404 errors for AI agents. Local search via ripgrep is faster and more reliable.
+Use the `pbi-search` CLI — the preferred way to search Tabular Editor docs and related Power BI/DAX resources. It searches Tabular Editor docs, DAX.guide, SQLBI, Microsoft Learn (Power BI + Fabric), the TE blog, and Data Goblins simultaneously, returning clean markdown.
 
-### Setup
-
-Clone the TabularEditorDocs repository:
+Install (once):
 
 ```bash
-git clone https://github.com/TabularEditor/TabularEditorDocs.git ~/Git/TabularEditorDocs
+cargo install --git https://github.com/data-goblin/pbi-search
+pbi-search sync        # populate the local manifest cache (~13s)
 ```
 
-### Search Commands
+### Searching
 
 ```bash
-# Search by topic
-rg -i "topic" ~/Git/TabularEditorDocs/content --type md
+# Search all sources
+pbi-search search "creating measures"
 
-# Search with context
-rg -i "topic" ~/Git/TabularEditorDocs/content --type md -C 3
+# Search only Tabular Editor docs
+pbi-search search "BPA rules" --source te-docs
 
-# Search specific section
-rg -i "topic" ~/Git/TabularEditorDocs/content/features --type md
+# Search TE blog + TE docs
+pbi-search search "incremental refresh" --source te-docs --source te-blog
+
+# JSON output for structured use in agents
+pbi-search search "workspace mode" --source te-docs --json
+
+# Include content excerpts
+pbi-search search "calculated columns" --source te-docs --excerpts
 ```
 
-### Key Documentation Files
+### Fetching full docs
 
-| Topic | File |
-|-------|------|
-| BPA overview | `content/getting-started/bpa.md` |
-| C# script library | `content/features/CSharpScripts/csharp-script-library.md` |
-| DAX scripts | `content/features/dax-scripts.md` |
-| Preferences | `content/references/preferences.md` |
-| Keyboard shortcuts | `content/references/shortcuts3.md` |
-| Advanced Scripting | `content/how-tos/Advanced-Scripting.md` |
+```bash
+# Tabular Editor doc by bare path (from search results)
+pbi-search fetch features/Best-Practice-Analyzer
 
-### Directory Structure
+# Any supported URL
+pbi-search fetch https://docs.tabulareditor.com/features/workspace-mode
+pbi-search fetch https://dax.guide/calculate/
 
-| Path | Content |
-|------|---------|
-| `content/features/` | Feature docs (BPA, DAX scripts, C# scripts) |
-| `content/getting-started/` | Onboarding and setup |
-| `content/how-tos/` | Task-specific guides |
-| `content/references/` | Preferences, shortcuts, release notes |
-| `content/kb/` | Knowledge base (BPA rules, error codes) |
+# Extract a specific section
+pbi-search fetch features/Best-Practice-Analyzer --section "Creating rules"
+
+# Truncate for context budget
+pbi-search fetch features/creating-measures --max-chars 3000 --json
+```
+
+### Agent search workflow
+
+1. `pbi-search search "<topic>" --source te-docs --json` — find relevant docs
+2. Use the `path` or `url` from results: `pbi-search fetch <path>`
+3. No results? Broaden: `pbi-search search "<topic>"` (all sources)
+4. DAX questions: always add `--source dax-guide`
+
+### Available sources
+
+| ID | Content |
+|----|---------|
+| `te-docs` | Tabular Editor docs (features, how-tos, KB, references) |
+| `dax-guide` | ~480 DAX function reference pages |
+| `te-blog` | Tabular Editor blog |
+| `ms-learn` | Microsoft Learn — Power BI + Fabric (live, no sync needed) |
+| `sqlbi` | ~370 SQLBI technical articles |
+| `data-goblins` | Data Goblins Power BI posts |
+
+### Richer search quality (optional)
+
+Default sync builds a fast title-only index. For conceptual queries ("remove filters from column") run once with descriptions:
+
+```bash
+pbi-search sync --descriptions   # fetches meta descriptions; ~30s extra
+```
+
+---
 
 ## Configuration Files (.tmuo)
 
@@ -126,12 +155,9 @@ TE3 stores application-level preferences in `%LocalAppData%\TabularEditor3\`:
 - **`scripts/validate_config.py`** -- Validate TE3 config files
 - **`scripts/validate_tmuo.py`** -- Validate TMUO files
 
-## Fetching Docs
-
-Tabular Editor product docs (docs.tabulareditor.com) are not on Microsoft Learn -- use the local clone approach above. For underlying Analysis Services and Power BI concepts, use `microsoft_docs_search` + `microsoft_docs_fetch` (MCP) if available, otherwise `mslearn search` + `mslearn fetch` (CLI). Search based on the user's request and run multiple searches as needed to ensure sufficient context before proceeding.
-
 ## External
 
+- [pbi-search on GitHub](https://github.com/data-goblin/pbi-search)
 - [Tabular Editor User Options](https://docs.tabulareditor.com/references/user-options.html)
 - [Workspace Mode](https://docs.tabulareditor.com/features/workspace-mode.partial.html)
 - [Preferences Reference](https://docs.tabulareditor.com/references/preferences.html)

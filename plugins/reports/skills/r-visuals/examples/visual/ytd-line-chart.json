@@ -1,0 +1,125 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.7.0/schema.json",
+  "name": "9f8e7d6c5b4a3210",
+  "position": {
+    "x": 440,
+    "y": 80,
+    "z": 2,
+    "height": 635,
+    "width": 400,
+    "tabOrder": 2
+  },
+  "visual": {
+    "visualType": "scriptVisual",
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'R (ggplot2)'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "subTitle": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Orders",
+                      "Schema": "extension"
+                    }
+                  },
+                  "Property": "Order Lines YTD"
+                }
+              },
+              "queryRef": "Orders.Order Lines YTD",
+              "nativeQueryRef": "Order Lines YTD"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Orders",
+                      "Schema": "extension"
+                    }
+                  },
+                  "Property": "Order Lines (PY) YTD"
+                }
+              },
+              "queryRef": "Orders.Order Lines (PY) YTD",
+              "nativeQueryRef": "Order Lines (PY) YTD"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Date"
+                    }
+                  },
+                  "Property": "Calendar Month (ie Jan)"
+                }
+              },
+              "queryRef": "Date.Calendar Month (ie Jan)",
+              "nativeQueryRef": "Calendar Month (ie Jan)"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "script": [
+        {
+          "properties": {
+            "source": {
+              "expr": {
+                "Literal": {
+                  "Value": "'library(ggplot2)\nlibrary(dplyr)\n\n# Colors\ncolor_current <- \"#5B8DBE\"\ncolor_py <- \"#D4A574\"\n\n# Month order\nmonth_order <- c(\"Jan\",\"Feb\",\"Mar\",\"Apr\",\"May\",\"Jun\",\"Jul\",\"Aug\",\"Sep\",\"Oct\",\"Nov\",\"Dec\")\n\n# Prepare data\ndataset$month_factor <- factor(dataset[,3], levels=month_order)\ndataset <- dataset[order(dataset$month_factor),]\ndataset$month_index <- as.numeric(dataset$month_factor)\n\n# Reshape to long format for ggplot\ndata_long <- data.frame(\n  month_index = rep(dataset$month_index, 2),\n  month = rep(dataset[,3], 2),\n  value = c(dataset[,1], dataset[,2]),\n  series = rep(c(\"Order Lines YTD\", \"Order Lines (PY) YTD\"), each=nrow(dataset))\n)\n\n# Last index\nlast_idx <- nrow(dataset)\n\n# Last points only\ndata_last <- data_long %>%\n  filter(month_index == max(month_index))\n\n# Format function\nformat_thousands <- function(val) {\n  paste0(round(val/1000), \"K\")\n}\n\n# Max value for y-axis limit\nmax_val <- max(data_long$value, na.rm=TRUE)\n\n# Create plot\np <- ggplot(data_long, aes(x=month_index, y=value, color=series, linetype=series)) +\n  geom_line(size=1.8) +\n  geom_point(\n    data=data_last,\n    aes(x=month_index, y=value, color=series),\n    size=5,\n    shape=21,\n    fill=\"white\",\n    stroke=2.5\n  ) +\n  geom_text(\n    data=data_last,\n    aes(x=month_index + 0.4, y=value, label=format_thousands(value), color=series),\n    hjust=0,\n    size=6,\n    fontface=\"bold\",\n    show.legend=FALSE\n  ) +\n  scale_color_manual(\n    values=c(\"Order Lines YTD\"=color_current, \"Order Lines (PY) YTD\"=color_py),\n    name=\"\"\n  ) +\n  scale_linetype_manual(\n    values=c(\"Order Lines YTD\"=\"solid\", \"Order Lines (PY) YTD\"=\"dashed\"),\n    name=\"\"\n  ) +\n  scale_x_continuous(\n    breaks=1:12,\n    labels=month_order,\n    limits=c(0.5, 15),\n    expand=c(0, 0)\n  ) +\n  scale_y_continuous(\n    labels=function(x) paste0(round(x/1000),\"K\"),\n    limits=c(0, max_val * 1.15),\n    expand=c(0, 0)\n  ) +\n  theme_minimal(base_size=16) +\n  theme(\n    panel.grid.major.y=element_line(color=\"#ADB5BD\", size=0.5),\n    panel.grid.minor=element_blank(),\n    panel.grid.major.x=element_blank(),\n    axis.title.x=element_blank(),\n    axis.title.y=element_text(color=\"#495057\", size=14),\n    axis.text.x=element_text(angle=45, hjust=1, color=\"#6C757D\", size=13),\n    axis.text.y=element_text(color=\"#6C757D\", size=13),\n    legend.position=\"top\",\n    legend.text=element_text(size=13),\n    plot.margin=margin(10, 40, 10, 10, \"pt\")\n  ) +\n  labs(y=\"Order Lines YTD\")\n\nprint(p)'"
+                }
+              }
+            },
+            "provider": {
+              "expr": {
+                "Literal": {
+                  "Value": "'R'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

@@ -1,0 +1,65 @@
+table Employees
+	lineageTag: 524ed7be-f2f0-440f-9280-3b067d6f766e
+
+	column Role
+		dataType: string
+		displayFolder: Columns
+		lineageTag: 3d1387dd-01f0-4f13-ab38-811f06cd1359
+		summarizeBy: none
+		sourceColumn: Role
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Employee Name'
+		dataType: string
+		displayFolder: Columns
+		lineageTag: fc711d7b-da3f-4e5e-9c68-0073c2489c1a
+		summarizeBy: none
+		sourceColumn: Employee Name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Employee Email'
+		dataType: string
+		displayFolder: Columns
+		lineageTag: e4e18027-3292-4531-9c47-c0d2bd3d8efb
+		summarizeBy: none
+		sourceColumn: Employee Email
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Data Security Rule'
+		dataType: string
+		displayFolder: Columns
+		lineageTag: b08c9506-5704-406c-a5f5-5ea65d6623b8
+		summarizeBy: none
+		sourceColumn: Data Security Rule
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Employees = m
+		mode: import
+		queryGroup: Tables
+		source =
+				let
+				    Source = Sql.Database(#"SqlEndpoint",#"Database"),
+				    Data = Source{[Schema="Dimview",Item="Employees"]}[Data]
+				in
+				    Data
+
+	changedProperty = IsHidden
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+	annotation TabularEditor_TableGroup = 01. Dimension Tables
+

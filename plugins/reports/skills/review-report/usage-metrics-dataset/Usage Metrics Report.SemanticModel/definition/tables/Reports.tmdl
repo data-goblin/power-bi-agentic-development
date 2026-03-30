@@ -1,0 +1,74 @@
+table Reports
+	lineageTag: a70d2714-271a-4fb4-bdef-25a42c03ee19
+
+	column OrganizationId
+		dataType: string
+		isHidden
+		lineageTag: 6f0a7eca-6b5d-43f2-acf5-5143422b6f2f
+		summarizeBy: none
+		sourceColumn: OrganizationId
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportGuid
+		dataType: string
+		lineageTag: d04f80ed-b628-4cfc-859b-bd220ce893aa
+		summarizeBy: none
+		sourceColumn: ReportGuid
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReportName
+		dataType: string
+		lineageTag: 2a1b9eea-cb70-4575-aa1c-e3d83b16f3c1
+		summarizeBy: none
+		sourceColumn: ReportName
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkspaceId
+		dataType: string
+		lineageTag: 0d3e7f72-b7cb-43d0-a775-0bc678f65d8f
+		summarizeBy: none
+		sourceColumn: WorkspaceId
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsUsageMetricsReport
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: aaa9416e-121b-4837-87a4-6d04bb28ee40
+		summarizeBy: none
+		sourceColumn: IsUsageMetricsReport
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Reports-045af53d-15a1-41ad-a876-c06c5d438924 = m
+		mode: import
+		source =
+				let
+				    Source = UsageMetricsDataConnector.GetMetricsData(BaseUrl & "/metadata/v201906/metrics/workspace/" & WorkspaceId & "/reportmetadata"),
+				    #"metricsTable" = Table.FromRecords(Source),
+				    checkForEmptyTable = if Table.IsEmpty(metricsTable) then
+				                            Table.FromRows
+				                            (
+				                                {
+				                                },
+				                                {
+				                                    "OrganizationId", "ReportId", "ReportName", "WorkspaceId", "IsUsageMetricsReport"
+				                                }
+				                            )
+				                         else
+				                            metricsTable,
+				    #"Filtered Rows" = Table.SelectRows(checkForEmptyTable, each [ReportId] <> null and [ReportId] <> ""),
+				    #"Renamed Columns" = Table.RenameColumns(#"Filtered Rows",{{"ReportId", "ReportGuid"}}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"IsUsageMetricsReport", type logical}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_QueryRelationships = {"columnCount":4,"keyColumnNames":[],"queryRelationships":[],"columnIdentities":["Section1/Reports/checkForEmptyTable.{OrganizationId,0}","Section1/Reports/checkForEmptyTable.{ReportId,1}","Section1/Reports/checkForEmptyTable.{ReportName,2}","Section1/Reports/checkForEmptyTable.{WorkspaceId,3}"],"ColumnCount":4,"KeyColumnNames":[],"ColumnIdentities":["Section1/Reports/checkForEmptyTable.{OrganizationId,0}","Section1/Reports/checkForEmptyTable.{ReportId,1}","Section1/Reports/checkForEmptyTable.{ReportName,2}","Section1/Reports/checkForEmptyTable.{WorkspaceId,3}"],"RelationshipInfo":[]}
+
+	annotation PBI_ResultType = Exception
+

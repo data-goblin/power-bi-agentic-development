@@ -77,13 +77,19 @@ SUMMARIZECOLUMNS(
 
 | Visual | Grouping Roles | Measure Roles |
 |--------|----------------|---------------|
-| Card | - | Values |
-| Line/Column Chart | Category | Y |
-| Bar Chart | Category | Y |
+| card (old card) | - | Values |
+| cardVisual (new card) | - | Data |
+| lineChart | Category | Y (also Y2 for combo) |
+| barChart / clusteredBarChart / hundredPercentStackedBarChart | Category | Y |
+| columnChart / clusteredColumnChart / hundredPercentStackedColumnChart | Category | Y |
+| areaChart / stackedAreaChart / hundredPercentStackedAreaChart | Category, Series (optional breakdown) | Y |
+| waterfallChart / ribbonChart / donutChart | Category | Y |
 | Slicer | Values | - |
-| KPI | TrendLine | Indicator, Goal |
-| Table | Values (dims) | Values (measures) |
-| Scatter | X, Y | Size, Gradient |
+| KPI | TrendLine (when bound) | Indicator, Goal |
+| tableEx (standard table) | Values (columns = groupings) | Values (measures) |
+| pivotTable (matrix) | Rows, Columns | Values |
+| Scatter | Category | X, Y, Size, Tooltips |
+| multiRowCard | Values (dims) | Values (measures) |
 
 ### 3. Filters → Variables
 
@@ -131,6 +137,43 @@ SUMMARIZECOLUMNS(
 ```
 
 Note: Cards use `IGNORE()` since there are no grouping columns.
+
+### cardVisual (New Card)
+
+The new card visual uses the **`Data`** role, not `Values`. This is a direct conflict with the old `card` — use the correct role name for the visual type.
+
+**Metadata:**
+
+```json
+{
+  "visualType": "cardVisual",
+  "query": {
+    "queryState": {
+      "Data": {
+        "projections": [{
+          "field": {
+            "Measure": {
+              "Expression": {"SourceRef": {"Entity": "Sales"}},
+              "Property": "Total Revenue"
+            }
+          }
+        }]
+      }
+    }
+  }
+}
+```
+
+**Query:**
+
+```dax
+EVALUATE
+SUMMARIZECOLUMNS(
+    "Total_Revenue", IGNORE('Sales'[Total Revenue])
+)
+```
+
+Note: Same no-grouping `IGNORE()` pattern as the old card.
 
 ### Line chart
 
@@ -344,11 +387,48 @@ SUMMARIZECOLUMNS(
     'Date'[Month],
     'Date'[Month Number],
     "Budget_vs__Turnover____", 'Budget'[Budget vs. Turnover (%)],
-    "Formatting", IGNORE('_Demo of SVG Measures'[Formatting])
+    "Formatting", '_Demo of SVG Measures'[Formatting]
 )
 ```
 
-Note: Extension measures typically use `IGNORE()` wrapper.
+Note: When a chart has grouping columns (like this line chart with `'Date'[Month]`), extension measures are included **without** `IGNORE()`. Use `IGNORE()` only for visuals with **no** grouping columns (cards, KPIs) to prevent a blank row.
+
+### tableEx (Standard Table) — visualType: `tableEx`
+
+Table visuals use a single `Values` role containing a **mix** of columns (become grouping arguments) and measures (become measure aliases). This is unique — all columns and measures are in one role, unlike charts which separate grouping and measures.
+
+**K201 Table example metadata (Values role):**
+```
+- Column: Customers.Key Account Name  → grouping
+- Measure: On-Time Delivery.OTD % (Value)  → measure alias
+```
+
+**Query:**
+```dax
+EVALUATE
+SUMMARIZECOLUMNS(
+    'Customers'[Key Account Name],     -- Column from Values → grouping
+    "OTD____Value_", 'On-Time Delivery'[OTD % (Value)]  -- Measure from Values
+)
+```
+
+All columns in the `Values` role become grouping columns. All measures become measure aliases.
+
+### pivotTable (Matrix) — visualType: `pivotTable`
+
+Matrix visuals have **three** distinct roles — `Rows`, `Columns`, and `Values`. Both `Rows` and `Columns` become grouping arguments; `Values` become measure aliases. Power BI generates a SUMMARIZECOLUMNS query covering the cross-product.
+
+**Example:**
+```dax
+EVALUATE
+SUMMARIZECOLUMNS(
+    'Products'[Category],              -- Rows role
+    'Date'[Year],                      -- Columns role
+    "Revenue", 'Sales'[Revenue]        -- Values role
+)
+```
+
+Note: The matrix's row/column layout is controlled by the visual rendering, not by the DAX query. The query returns a flat table; Power BI pivots it visually.
 
 ## Quick reference
 
@@ -368,7 +448,8 @@ Note: Extension measures typically use `IGNORE()` wrapper.
 
 - `SourceRef.Schema = "extension"`
 - Add to DEFINE section
-- Include in SUMMARIZECOLUMNS (usually with `IGNORE()`)
+- Include in SUMMARIZECOLUMNS without `IGNORE()` (charts with grouping columns)
+- Use `IGNORE()` only when there are **no grouping columns** (cards and KPIs without a TrendLine bound). A KPI with a TrendLine has a grouping column — do not use `IGNORE()` in that case.
 
 **Alias naming:**
 

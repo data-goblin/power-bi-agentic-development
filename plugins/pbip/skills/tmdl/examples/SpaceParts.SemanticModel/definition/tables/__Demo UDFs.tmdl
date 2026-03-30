@@ -1,0 +1,103 @@
+table '__Demo UDFs'
+	lineageTag: 8b3ecd6a-c429-4fb3-9bf5-414278e2a423
+
+	measure 'Actuals MTD - UDF' = TimeIntelligence.MonthToDate ( [Actuals] )
+		lineageTag: 2f77baba-a836-4da2-be73-5c92b184d662
+
+		formatStringDefinition = ```
+				
+				-- An extreme example of a complex, dynamic format string
+				-- Normally this code would be 100s of lines; it's ~12 now with functions.
+				
+				-- Function for dynamic unit formatting
+				FormatString.DynamicUnits (
+				    -- What we're formatting
+				    SELECTEDMEASURE ( ),
+				    
+				    -- Currency symbol, because we want dynamic currency conversion
+				    FormatString.Component.GetCurrencySymbol ( 'Exchange Rate'[From Currency] )  ,
+				    
+				    -- Currency symbol position
+				    FormatString.Component.GetCurrencyPosition ( 'Exchange Rate'[From Currency] ),
+				    
+				    -- Custom prefix (none)
+				    "",
+				    
+				    -- Custom suffix (another measure, formatted in-line)
+				    " ("
+				        & FORMAT (
+				            [Sales Target MTD vs. Actuals (%)],
+				            "0.0%"
+				        )
+				        & ") "
+				)
+				```
+
+	measure 'Sales Target MTD - UDF' = TimeIntelligence.MonthToDate ( [Sales Target] )
+		lineageTag: 90ea6d89-e0b7-4a99-95fd-2ebb764fd73f
+
+		formatStringDefinition = ```
+				
+				-- A moderate example of a complex, dynamic format string
+				-- Normally this code would be 100s of lines; it's ~12 now with functions.
+				
+				-- Function for dynamic unit formatting
+				FormatString.DynamicUnits (
+				    -- What we're formatting
+				    SELECTEDMEASURE ( ),
+				    
+				    -- Currency symbol, because we want dynamic currency conversion
+				    -- Uses simpler approach
+				    SELECTEDVALUE ( 'Exchange Rate'[Currency Symbol] )  ,
+				    
+				    -- Currency symbol position
+				    -- Uses simpler approach
+				    SELECTEDVALUE ( 'Exchange Rate'[Position] ),
+				    
+				    -- Custom prefix (none)
+				    "",
+				    
+				    -- Custom suffix (none)
+				    ""
+				)
+				```
+
+	measure 'Sales Target vs. Actuals (%) - UDF' =
+			
+			Comparison.RelativeToTarget(
+			    [Actuals MTD],
+			    [Sales Target MTD]
+			)
+		lineageTag: 46910497-66e4-4b62-987d-67f3e9d8c4be
+
+		formatStringDefinition =
+				
+				FormatString.RelativeToTarget.Percents (
+				    "SUFFIX",   -- Position of the symbol
+				    1,          -- Number of decimal places
+				    "ARROWS",   -- Symbol type
+				    "",         -- Custom prefix
+				    ""          -- Custom suffix
+				)
+
+	measure 'Dynamic Pareto of Actuals by Station - UDF' =
+			
+			BusCalcs.Pareto(
+			    [Actuals],
+			    'Regions'[Station]
+			)
+		formatString: #,##0.0000%
+		lineageTag: e5095d5a-7db0-4ad2-b845-423e1748b525
+
+	column Value
+		isHidden
+		lineageTag: c44ed97b-0b8c-475e-a3ac-2f3eaa17cd75
+		isNameInferred
+		sourceColumn: [Value]
+
+	partition '__Demo UDFs' = calculated
+		mode: import
+		source = { 1 }
+
+	annotation TabularEditor_TableGroup = 00. Measure Tables
+

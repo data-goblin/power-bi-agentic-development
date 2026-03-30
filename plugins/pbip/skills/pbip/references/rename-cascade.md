@@ -195,7 +195,86 @@ Conditional formatting rules embed `SourceRef.Entity` inside expression trees:
 
 ### Bookmark Filter Snapshots
 
-Bookmark JSON files (in `definition/bookmarks/`) contain filter state snapshots that include `Entity` references in their `From` arrays and expression trees. These follow the same `From[].Entity` and `SourceRef.Entity` patterns shown above and must also be updated during renames.
+Bookmark JSON files (in `definition/bookmarks/`) contain filter state snapshots. Each filter entry has **two** distinct `Entity` references that must both be updated:
+
+1. `filter.From[].Entity` — the aliased filter predicate
+2. `expression.Column.Expression.SourceRef.Entity` — the top-level expression field
+
+```json
+// Before (in .bookmark.json explorationState.filters.byExpr[])
+{
+  "expression": {
+    "Column": {
+      "Expression": {"SourceRef": {"Entity": "Customers"}},  // ← must update
+      "Property": "Account Name"
+    }
+  },
+  "filter": {
+    "Version": 2,
+    "From": [{"Name": "c", "Entity": "Customers", "Type": 0}],  // ← must update
+    "Where": [...]
+  }
+}
+
+// After (renaming Customers → Customer)
+{
+  "expression": {
+    "Column": {
+      "Expression": {"SourceRef": {"Entity": "Customer"}},
+      "Property": "Account Name"
+    }
+  },
+  "filter": {
+    "Version": 2,
+    "From": [{"Name": "c", "Entity": "Customer", "Type": 0}],
+    "Where": [...]
+  }
+}
+```
+
+### Bookmark Highlight Blocks
+
+Bookmarks may also contain `highlight` blocks with `dataMap` keys in `"Table.Column"` format that must be updated on table or column renames:
+
+```json
+// Before (in .bookmark.json explorationState.sections.<page>.visualContainers.<visual>)
+{
+  "highlight": {
+    "dataMap": {
+      "Customers.Key Account Name": {...},   // ← key string must update
+      "Sales.Revenue": {...}
+    },
+    "filterExpressionMetadata": {
+      "expressions": [{
+        "Column": {
+          "Expression": {"SourceRef": {"Entity": "Customers"}},  // ← must update
+          "Property": "Key Account Name"
+        }
+      }]
+    }
+  }
+}
+
+// After (renaming Customers → Customer)
+{
+  "highlight": {
+    "dataMap": {
+      "Customer.Key Account Name": {...},
+      "Sales.Revenue": {...}
+    },
+    "filterExpressionMetadata": {
+      "expressions": [{
+        "Column": {
+          "Expression": {"SourceRef": {"Entity": "Customer"}},
+          "Property": "Key Account Name"
+        }
+      }]
+    }
+  }
+}
+```
+
+Both `dataMap` key strings AND `filterExpressionMetadata.expressions[].Column.Expression.SourceRef.Entity` must be updated.
 
 ### SparklineData Metadata Selectors
 
@@ -437,6 +516,46 @@ measure '% Customer Growth' =
 // After
 { "entity": "Customer", "name": "# Active Customers" }
 ```
+
+## Sort Definitions
+
+`sortDefinition` blocks inside visual.json contain `SourceRef.Entity` references that must be updated during table or column renames. These are **commonly missed** because they live outside the `queryState` projections.
+
+```json
+// Before (in visual.json query.sortDefinition)
+"sortDefinition": {
+  "sort": [{
+    "field": {
+      "Measure": {
+        "Expression": {
+          "SourceRef": {"Entity": "Customers"}
+        },
+        "Property": "Revenue"
+      }
+    },
+    "direction": "Descending"
+  }],
+  "isDefaultSort": true
+}
+
+// After
+"sortDefinition": {
+  "sort": [{
+    "field": {
+      "Measure": {
+        "Expression": {
+          "SourceRef": {"Entity": "Customer"}
+        },
+        "Property": "Revenue"
+      }
+    },
+    "direction": "Descending"
+  }],
+  "isDefaultSort": true
+}
+```
+
+**Note:** `sortDefinition` does not use `queryRef` — only `SourceRef.Entity` and `Property`. Search for `"sortDefinition"` across all `visual.json` files to find every instance.
 
 ## Edge Cases
 

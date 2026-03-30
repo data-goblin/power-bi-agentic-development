@@ -1,0 +1,57 @@
+/// It lets you select a Metric.
+table '1) Selected Metric'
+	lineageTag: 31535870-007d-4636-8348-2f06b750951d
+
+	measure DynamicTitle = ```
+			
+			VAR _Metric = SELECTEDVALUE( '1) Selected Metric'[Select a Measure] )
+			VAR _Target = SELECTEDVALUE( '3) Selected Target'[Select a Target] )
+			VAR _Month = FORMAT( MAX( 'Date'[Date] ), "MMMM" )
+			
+			VAR _Title = 
+			    _Metric & " vs. " & _Target & " for " & _Month
+			
+			RETURN
+			    _Title
+			```
+		lineageTag: 14be8612-d9ea-4236-bc61-37d220e83f28
+
+		annotation PBI_FormatHint = {"isText":true}
+
+	measure DynamicSubtitle =
+			
+			"Showing the " & LOWER ( SELECTEDVALUE( '4) Selected Period'[Period] ) ) & ":"
+		lineageTag: 4d973a74-6257-45b9-8318-99129d82d632
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Order
+		isHidden
+		lineageTag: 734455ee-3587-4f7b-bdd9-34f849747e7d
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Order]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Select a Measure'
+		lineageTag: 16dc4342-12d1-4da6-89d8-63ba7be01ddf
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Select a Measure]
+		sortByColumn: Order
+
+		annotation SummarizationSetBy = Automatic
+
+	partition '1) Selected Metric' = calculated
+		mode: import
+		source =
+				
+				SELECTCOLUMNS(
+				    'Z01CG2 - Value (Budget Rate)',
+				        "Select a Measure", 'Z01CG2 - Value (Budget Rate)'[Measure],
+				        "Order", 'Z01CG2 - Value (Budget Rate)'[Ordinal]
+				)
+
+	annotation TabularEditor_TableGroup = 04. Selection Tables
+

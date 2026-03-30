@@ -1,0 +1,342 @@
+table 'Model measures'
+	lineageTag: 088a20e1-ae21-42a9-b384-bdf3e6170eca
+
+	measure 'Report views' = COUNTROWS('Report views') + 0
+		formatString: #,0
+		displayFolder: Views
+		lineageTag: e30bc543-d24a-4c1c-97ba-76cb3c232692
+
+	measure 'Report viewers' = DISTINCTCOUNT('Report views'[UserKey]) + 0
+		formatString: #,0
+		displayFolder: Views
+		lineageTag: a166ded4-cd2f-45c6-a53e-fb421a373ca8
+
+	measure 'Page view share' = DIVIDE(COUNTROWS('Report page views'), CALCULATE(COUNTROWS('Report page views'), ALL('Report pages'[SectionName])), 0)
+		formatString: #,0%;-#,0%;#,0%
+		displayFolder: Views
+		lineageTag: 81811df5-4b28-4e16-8be4-9ddf691c8a88
+
+	measure 'View trend' =
+			
+			var numberOfDays = DATEDIFF(MIN('Report views'[Date]), MAX('Report views'[Date]),DAY) + 1
+			var periodLength = INT(numberOfDays/2) - 1
+			var firstPeriod = CALCULATE([Report views], DATESBETWEEN('Report views'[Date], MIN('Report views'[Date]), MIN('Report views'[Date]) + periodLength))
+			var secondPeriod = CALCULATE([Report views], DATESBETWEEN('Report views'[Date], MAX('Report views'[Date]) - periodLength, MAX('Report views'[Date])))
+			return DIVIDE(secondPeriod - firstPeriod, firstPeriod)  + 0
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Trends
+		lineageTag: 1dd53109-3e61-4cc7-ad7d-eb03d77871eb
+
+	measure P-50 = PERCENTILE.INC('Report load times'[loadTime], 0.5) + 0
+		formatString: 0.0
+		displayFolder: Load times
+		lineageTag: 3bf432cc-7c82-4db8-a036-06459d3cf2f8
+
+	measure 'P-50 7d' = CALCULATE([P-50], ALL(Dates), DATESINPERIOD('Report load times'[Date], max('Report load times'[Date]), -7, DAY)) + 0
+		formatString: 0.00
+		displayFolder: Load times
+		lineageTag: 1019dead-90a4-4576-94c7-1845f8bbaafc
+
+	measure P-25 = PERCENTILE.INC('Report load times'[loadTime], 0.25) + 0
+		displayFolder: Load times
+		lineageTag: 14078391-c661-43b0-b33e-b153b0bbaad2
+
+	measure P-10 = PERCENTILE.INC('Report load times'[loadTime], 0.1) + 0
+		formatString: 0.0
+		displayFolder: Load times
+		lineageTag: dad447f9-10c9-49ab-a653-23480fd853af
+
+	measure 'P-90 7d' = CALCULATE([P-90], ALL(Dates), DATESINPERIOD('Report load times'[Date], max('Report load times'[Date]), -7, DAY)) + 0
+		displayFolder: Load times
+		lineageTag: ee6c4532-e8ec-466b-b4dd-d9243c5bdc6e
+
+	measure 'P-10 7d' = CALCULATE([P-10], DATESINPERIOD('Report load times'[Date], max('Report load times'[Date]), -7, DAY)) + 0
+		formatString: 0.0
+		displayFolder: Load times
+		lineageTag: 2dfe41a8-9420-40b7-890e-d72c1bb7016e
+
+	measure 'Typical report opening interval' = ```
+			IF(ISBLANK(MAX('Report load times'[loadTime]) ), 
+			    "This report has no performance measurements.",
+			    IF(HASONEVALUE('Report load times'[loadTime]), 
+			        "This report only has a single performance measurement. The load time was " & MAX('Report load times'[loadTime]) & " seconds.", 
+			        IF([P-10] = [P-50] = [P-25], 
+			            "Across all measurements, this report loaded in  " & MAX('Report load times'[loadTime]) & " seconds.", 
+			            "For most of the users your report opens within " & INT([P-10 7d]) & " and " & INT([P-90 7d]) & " seconds." )))
+			```
+		displayFolder: Display strings
+		lineageTag: 5e54e9e2-73e4-4c54-88c0-a5f7d037dd75
+
+	measure 'Rank string' = IF(HASONEVALUE(Reports[ReportGuid]), IF(ISBLANK(MAX('Report rank'[ReportRank])), "", "Rank " & MAX('Report rank'[ReportRank]) & " across "& [Total Org Report Count] & " reports in the organization"), "")
+		displayFolder: Display strings
+		lineageTag: 6103e7f1-6d5a-4b66-a861-9fa85f636c51
+
+	measure 'Performance trend' =
+			
+			var numberOfDays = DATEDIFF(MIN('Report views'[Date]), MAX('Report views'[Date]),DAY) + 1
+			var periodLength = INT(numberOfDays/2) - 1
+			var firstPeriod = CALCULATE([P-50], DATESBETWEEN('Report load times'[Date], MIN('Report load times'[Date]), MIN('Report load times'[Date]) + periodLength))
+			var secondPeriod = CALCULATE([P-50], DATESBETWEEN('Report load times'[Date], MAX('Report load times'[Date]) - periodLength, MAX('Report load times'[Date])))
+			return DIVIDE(secondPeriod - firstPeriod, firstPeriod) + 0 * -1
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Trends
+		lineageTag: aec92e0b-abcf-40e5-a8e4-30ce423660bf
+
+	measure 'Typical report opening time' = [P-50] & " sec"
+		displayFolder: Display strings
+		lineageTag: 1ba7404b-f21d-48d0-9756-4cdfc797c049
+
+	/// Total number of unique viewers of all reports in the workspace
+	measure 'Workspace report viewers' = DISTINCTCOUNT('Workspace views'[UserKey]) + 0
+		formatString: #,0
+		displayFolder: Workspace
+		lineageTag: 90797c10-1972-4e29-a817-cf38190cbc02
+
+	measure 'Workspace inactive reports' = CALCULATE(DISTINCTCOUNT('Workspace reports'[ReportGuid]), 'Workspace reports'[Days with usage] = 0) + 0
+		formatString: 0
+		displayFolder: Workspace
+		lineageTag: 7def33e7-5b78-499f-8b58-31528262aff5
+
+	measure 'Workspace views' = SUM('Workspace views'[Views]) + 0
+		formatString: #,0
+		displayFolder: Workspace
+		lineageTag: 455aa6ba-3bd5-4b1b-ba21-9c183988c835
+
+	measure 'Workspace active days per report' = DISTINCTCOUNT('Report views'[Date]) + 0
+		formatString: 0
+		displayFolder: Workspace
+		lineageTag: aebe48b4-1f13-4f95-abcf-48e9428ffe45
+
+	measure 'Workspace reports' = DISTINCTCOUNT('Report views'[ReportId])
+		formatString: 0
+		displayFolder: Workspace
+		lineageTag: 6c6c26ec-8e0b-4fd6-b9e7-22bd4ba6ab95
+
+	/// Number of reports with views in the last 30 days
+	measure 'Workspace active reports' = DISTINCTCOUNT('Workspace views'[ReportId]) + 0
+		formatString: 0
+		displayFolder: Workspace
+		lineageTag: b47cd68f-271c-437a-9475-c2abe679d3a0
+
+	measure 'Workspace report view %' = DIVIDE([Workspace views], CALCULATE([Workspace views], ALL('Workspace views')))
+		formatString: 0%;-0%;0%
+		displayFolder: Workspace
+		lineageTag: ad714cab-0cdd-41a0-8112-d85315194e6d
+
+	measure 'Covered time display string' = ```
+			IF(ISBLANK(MAX('Report views'[CreationTime])), "No usage data", "Report usage based on data from " & 
+			DATE(
+			  YEAR(MIN('Report views'[CreationTime])),
+			  MONTH(MIN('Report views'[CreationTime])),
+			  DAY(MIN('Report views'[CreationTime]))
+			)
+			 & " to " & 
+			DATE(
+			  YEAR(MAX('Report views'[CreationTime])),
+			  MONTH(MAX('Report views'[CreationTime])),
+			  DAY(MAX('Report views'[CreationTime]))
+			))
+			```
+		displayFolder: Display strings
+		lineageTag: 34259b13-f5fd-4b31-a2b3-513579d14687
+
+	measure 'Embedding for your organziation' = CALCULATE([Report views], 'Report views'[OriginalConsumptionMethod] = "Embedding for your organization")
+		formatString: 0
+		displayFolder: Embedding
+		lineageTag: 40a04f9a-8c0c-4ee8-85bd-3df040c98562
+
+	measure 'Embedding for your customers' = CALCULATE([Report views], 'Report views'[OriginalConsumptionMethod] = "Embedding for your customers")
+		formatString: 0
+		displayFolder: Embedding
+		lineageTag: 7301941f-ab22-40f8-9408-f4c84ce04b5f
+
+	measure 'Simplified embedding' = CALCULATE([Report views], 'Report views'[OriginalConsumptionMethod] = "Simplified embedding")
+		formatString: 0
+		displayFolder: Embedding
+		lineageTag: e87c9425-4401-44b4-986b-3a5f7b3f193b
+
+	measure 'Workspace view trend' =
+			
+			var startDate = CALCULATE(MIN('Dates'[Date]), ALL('Dates'))
+			var endDate = CALCULATE(MAX('Dates'[Date]), ALL('Dates'))
+			var numberOfDays = DATEDIFF(startDate, endDate, DAY) + 1
+			var periodLength = INT(numberOfDays/2) - 1
+			var middleDate1 =  CALCULATE(LASTDATE(DATESBETWEEN('Dates'[Date], startDate, startDate + periodLength)) , ALL('Dates'))
+			var middleDate2 =  CALCULATE(FIRSTDATE(DATESBETWEEN('Report views'[Date], endDate - periodLength, endDate)), ALL('Dates'))
+			var firstPeriod = CALCULATE([Report views], ALL('Dates'), DATESBETWEEN('Report views'[Date], startDate, middleDate1))
+			var secondPeriod = CALCULATE([Report views], ALL('Dates'), DATESBETWEEN('Report views'[Date], middleDate2, endDate))
+			//return startDate & "  " & middleDate1 & " " & middleDate2 & "  " & numberOfDays & ", " & periodLength & ": " & firstPeriod & "  " & secondPeriod
+			return DIVIDE(secondPeriod - firstPeriod, firstPeriod, 0)
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Workspace
+		lineageTag: be7d00d2-6d1f-4656-9568-616781830d38
+
+	measure 'Last refresh time display string' = ```
+			IF(ISBLANK(MAX('Refresh Stats'[Last Refresh])), 
+				"Usage data has not been imported yet. Check the refresh history and data source credentials in the Usage Metrics Report dataset settings.", 
+				IF(DATEVALUE(MAX('Refresh Stats'[Last Refresh])) < DATE(2019,11,20),
+				"Usage data has not been imported yet. Check the refresh history and data source credentials in the Usage Metrics Report dataset settings.", 
+				IF(DATEDIFF(MAX('Refresh Stats'[Last Refresh]), TODAY(), day ) > 4, 
+					"The usage data is outdated. Check the refresh history and data source credentials in the Usage Metrics Report dataset settings.", 
+					"Dataset last refreshed: " & MAX('Refresh Stats'[Last Refresh]) & " (UTC)")))
+			```
+		displayFolder: Display strings
+		lineageTag: 954f783c-bf86-46d3-95ff-3e7cb3bac2ad
+
+	measure 'Report title' = "Usage Metrics" & IF(HASONEVALUE(Reports[ReportGuid]), ": " & MAX('Reports'[ReportName]), " (Multiple reports selected)")
+		displayFolder: Display strings
+		lineageTag: be55f47e-2bfe-4623-a8fe-a6c936b48f5a
+
+	measure 'Report Id' = IF(HASONEVALUE(Reports[ReportGuid]), MAX('Reports'[ReportGuid]), IF(DISTINCTCOUNT(Reports[ReportGuid]) = 0, "No reports selected", "Multiple reports selected"))
+		displayFolder: Display strings
+		lineageTag: 01455aa0-496d-47ba-9278-4ba5e70e4d3a
+
+	measure 'Covered perf time display string' = ```
+			IF(ISBLANK(MAX('Report load times'[Timestamp])), "No open report performance data", "Report performance based on data from " & 
+			DATE(
+			  YEAR(MIN('Report load times'[Timestamp])),
+			  MONTH(MIN('Report load times'[Timestamp])),
+			  DAY(MIN('Report load times'[Timestamp]))
+			)
+			 & " to " & 
+			DATE(
+			  YEAR(MAX('Report load times'[Timestamp])),
+			  MONTH(MAX('Report load times'[Timestamp])),
+			  DAY(MAX('Report load times'[Timestamp]))
+			))
+			```
+		displayFolder: Display strings
+		lineageTag: e4c345e9-dab4-4edd-804d-3f032555cb47
+
+	measure 'P-25 7d' = CALCULATE([P-25], ALL(Dates), DATESINPERIOD('Report load times'[Date], max('Report load times'[Date]), -7, DAY)) + 0
+		displayFolder: Load times
+		lineageTag: d35a736f-272a-4f6a-8778-83dc43a2a7d0
+
+	measure P-90 = PERCENTILE.INC('Report load times'[loadTime], 0.9) + 0
+		displayFolder: Load times
+		lineageTag: 747542eb-426c-4a6a-b4ac-ad8800c2ef01
+
+	measure P-75 = PERCENTILE.INC('Report load times'[loadTime], 0.75) + 0
+		displayFolder: Load times
+		lineageTag: 100b5383-4f9b-4795-a9b7-651724cf9324
+
+	measure 'P-75 7d' = CALCULATE([P-75], ALL(Dates), DATESINPERIOD('Report load times'[Date], max('Report load times'[Date]), -7, DAY)) + 0
+		displayFolder: Load times
+		lineageTag: 8eda2f67-66b1-480a-9ba0-d1d06f812655
+
+	measure 'Total page views' = COUNTROWS('Report page views')
+		formatString: 0
+		displayFolder: Views
+		lineageTag: c1c8ac3b-56f3-4438-acfb-d0daefdd0d98
+
+	measure 'Total page users' = DISTINCTCOUNT('Report page views'[UserKey])
+		formatString: 0
+		displayFolder: Views
+		lineageTag: aa0576ce-d3aa-4672-830a-10043aa1caf9
+
+	measure 'Weekly Viewers' = ```
+			
+			    var sop = CALCULATE(MIN('Dates'[Date]), ALL('Dates'), Dates[DoW] = 1)
+			    var eop = CALCULATE(MAX('Dates'[Date]), ALL('Dates'), Dates[DoW] = 7)
+			return
+			    IF(AND(MIN('Dates'[Date]) >= sop, MAX('Dates'[Date]) <= eop),
+			    CALCULATE(DISTINCTCOUNT('Report views'[UserKey]), DATESBETWEEN(Dates[Date], Min(Dates[fDoW]), MAX(Dates[lDoW]))),
+			    BLANK())
+			```
+		formatString: 0
+		displayFolder: Views
+		lineageTag: afdc22a3-d297-499d-a818-60a4489242da
+
+	measure 'Weekly Views' = ```
+			
+			    var sop = CALCULATE(MIN('Dates'[Date]), ALL('Dates'), Dates[DoW] = 1)
+			    var eop = CALCULATE(MAX('Dates'[Date]), ALL('Dates'), Dates[DoW] = 7)
+			return
+			    IF(AND(MIN('Dates'[Date]) >= sop, MAX('Dates'[Date]) <= eop),
+			    CALCULATE(COUNTROWS('Report views'), DATESBETWEEN(Dates[Date], Min(Dates[fDoW]), MAX(Dates[lDoW]))),
+			    BLANK())
+			```
+		formatString: 0
+		displayFolder: Views
+		lineageTag: 88fed40c-481f-469c-9213-d597fb0e6acd
+
+	measure 'P-10 trend' =
+			
+			var numberOfDays = DATEDIFF(MIN('Report views'[Date]), MAX('Report views'[Date]),DAY) + 1
+			var periodLength = INT(numberOfDays/2) - 1
+			var firstPeriod = CALCULATE([P-10], DATESBETWEEN('Report load times'[Date], MIN('Report load times'[Date]), MIN('Report load times'[Date]) + periodLength))
+			var secondPeriod = CALCULATE([P-10], DATESBETWEEN('Report load times'[Date], MAX('Report load times'[Date]) - periodLength, MAX('Report load times'[Date])))
+			return DIVIDE(secondPeriod - firstPeriod, firstPeriod) + 0 * -1
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Trends
+		lineageTag: 1eb803a5-cffd-4d4e-9033-26107335fa90
+
+	measure 'P-25 trend' =
+			
+			var numberOfDays = DATEDIFF(MIN('Report views'[Date]), MAX('Report views'[Date]),DAY) + 1
+			var periodLength = INT(numberOfDays/2) - 1
+			var firstPeriod = CALCULATE([P-25], DATESBETWEEN('Report load times'[Date], MIN('Report load times'[Date]), MIN('Report load times'[Date]) + periodLength))
+			var secondPeriod = CALCULATE([P-25], DATESBETWEEN('Report load times'[Date], MAX('Report load times'[Date]) - periodLength, MAX('Report load times'[Date])))
+			return DIVIDE(secondPeriod - firstPeriod, firstPeriod) + 0 * -1
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Trends
+		lineageTag: 0a6833ac-6c1d-423e-bc15-04ca6ab06942
+
+	measure 'P-75 trend' =
+			
+			var numberOfDays = DATEDIFF(MIN('Report views'[Date]), MAX('Report views'[Date]),DAY) + 1
+			var periodLength = INT(numberOfDays/2) - 1
+			var firstPeriod = CALCULATE([P-75], DATESBETWEEN('Report load times'[Date], MIN('Report load times'[Date]), MIN('Report load times'[Date]) + periodLength))
+			var secondPeriod = CALCULATE([P-75], DATESBETWEEN('Report load times'[Date], MAX('Report load times'[Date]) - periodLength, MAX('Report load times'[Date])))
+			return DIVIDE(secondPeriod - firstPeriod, firstPeriod) + 0 * -1
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Trends
+		lineageTag: d7c9deb7-4585-44cf-9eb1-93d4e9d32ee1
+
+	measure 'P-90 trend' =
+			
+			var numberOfDays = DATEDIFF(MIN('Report views'[Date]), MAX('Report views'[Date]),DAY) + 1
+			var periodLength = INT(numberOfDays/2) - 1
+			var firstPeriod = CALCULATE([P-90], DATESBETWEEN('Report load times'[Date], MIN('Report load times'[Date]), MIN('Report load times'[Date]) + periodLength))
+			var secondPeriod = CALCULATE([P-90], DATESBETWEEN('Report load times'[Date], MAX('Report load times'[Date]) - periodLength, MAX('Report load times'[Date])))
+			return DIVIDE(secondPeriod - firstPeriod, firstPeriod) + 0 * -1
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Trends
+		lineageTag: 8dc1bed6-fca5-40b0-8688-0bfa73517b8f
+
+	measure 'Report view share' = DIVIDE(COUNTROWS('Report views'), CALCULATE(COUNTROWS('Report views'), ALL('Report views')), 0)
+		displayFolder: Views
+		lineageTag: 5215202c-9cc3-4f5c-b323-3893ce709e68
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Workspace report days with usage' = SUM('Workspace reports'[Days with usage]) + 0
+		formatString: 0
+		displayFolder: Workspace
+		lineageTag: 2e1d29cd-0b64-47e3-82c8-5509f4179fce
+
+	measure 'Workspace viewed reports' = DISTINCTCOUNT('Workspace views'[ReportId]) + 0
+		formatString: 0
+		displayFolder: Workspace
+		lineageTag: 9dda7f11-1053-4560-ae8f-b83830c8f95c
+
+	measure 'Page views' = COUNTROWS('Report page views') + 0
+		formatString: 0
+		displayFolder: Views
+		lineageTag: c34575cb-ecf0-4081-b9b2-378223ef35d3
+
+	partition 'Model measures-25fae4d0-f5f9-4460-8de3-01c12a7d1091' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromList({}),
+				    AddWorkspaceId = Table.AddColumn(Source, "WorkspaceId", each WorkspaceId),
+				    AddBaseUrl = Table.AddColumn(AddWorkspaceId, "BaseUrl", each BaseUrl),
+				    #"Removed Columns" = Table.RemoveColumns(AddBaseUrl,{"WorkspaceId", "BaseUrl"})
+				in
+				    #"Removed Columns"
+
+	annotation PBI_QueryRelationships = {"columnCount":0,"keyColumnNames":[],"queryRelationships":[],"columnIdentities":[],"ColumnCount":0,"KeyColumnNames":[],"ColumnIdentities":[],"RelationshipInfo":[]}
+
+	annotation PBI_ResultType = Table
+

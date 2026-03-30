@@ -1,0 +1,821 @@
+table Date
+	lineageTag: 0bb45e29-3908-422d-ade4-4100434bdfa4
+	dataCategory: Time
+
+	measure '# Workdays MTD' =
+			CALCULATE(
+			    MAX( 'Date'[Workdays MTD] ),
+			    'Date'[IsDateInScope] = TRUE
+			)
+		formatString: #,##0
+		displayFolder: 5. Weekday / Workday\Measures\# Workdays
+		lineageTag: 4b0555ab-6912-4d3c-b613-0d2d542a6965
+
+	measure '# Workdays QTD' =
+			CALCULATE(
+			    MAX( 'Date'[Workdays QTD] ),
+			    'Date'[IsDateInScope] = TRUE
+			)
+		formatString: #,##0
+		displayFolder: 5. Weekday / Workday\Measures\# Workdays
+		lineageTag: a07fb670-6765-4b8b-91da-3170765e8e94
+
+	measure '# Workdays YTD' =
+			CALCULATE(
+			    MAX( 'Date'[Workdays YTD] ),
+			    'Date'[IsDateInScope] = TRUE
+			)
+		formatString: #,##0
+		displayFolder: 5. Weekday / Workday\Measures\# Workdays
+		lineageTag: 0a27905d-9841-4cda-9976-ec65d16821d4
+
+	measure '# Workdays in Selected Month' =
+			IF (
+			    HASONEVALUE ('Date'[Calendar Month Year (ie Jan 21)]),
+			    CALCULATE (
+			        MAX ('Date'[Workdays MTD]),
+			        VALUES ('Date'[Calendar Month Year (ie Jan 21)])
+			    )
+			)
+		formatString: #,##0
+		displayFolder: 5. Weekday / Workday\Measures\# Workdays
+		lineageTag: 55924c9b-cb78-47d3-824e-92cb1a525706
+
+	measure '# Workdays in Selected Quarter' =
+			IF (
+			    HASONEVALUE ('Date'[Calendar Quarter Year (ie Q1 2021)]),
+			    CALCULATE (
+			        MAX ('Date'[Workdays QTD]),
+			        VALUES ('Date'[Calendar Quarter Year (ie Q1 2021)])
+			    )
+			)
+		formatString: #,##0
+		displayFolder: 5. Weekday / Workday\Measures\# Workdays
+		lineageTag: 84ccfbbd-bf7b-43b6-8e35-df7a54d0d9e7
+
+	measure '# Workdays in Selected Year' =
+			IF (
+			    HASONEVALUE ('Date'[Calendar Year (ie 2021)]),
+			    CALCULATE (
+			        MAX ('Date'[Workdays YTD]),
+			        VALUES ('Date'[Calendar Year (ie 2021)])
+			    )
+			)
+		formatString: #,##0
+		displayFolder: 5. Weekday / Workday\Measures\# Workdays
+		lineageTag: a5eb1c3f-f13e-4d86-9fb2-d7bbb3fc3cf6
+
+	measure '% Workdays MTD' =
+			IF (
+			    HASONEVALUE ('Date'[Calendar Month Year (ie Jan 21)]),
+			    MROUND (
+			        DIVIDE ([# Workdays MTD], [# Workdays in Selected Month]),
+			        0.01
+			    )
+			)
+		formatString: #,##0%
+		displayFolder: 5. Weekday / Workday\Measures\# Workdays
+		lineageTag: 68e3c8f6-6e44-4191-9e86-90afb7ddf261
+
+	measure '% Workdays QTD' =
+			IF (
+			    HASONEVALUE ('Date'[Calendar Quarter Year (ie Q1 2021)]),
+			    MROUND (
+			        DIVIDE ([# Workdays QTD], [# Workdays in Selected Quarter]),
+			        0.01
+			    )
+			)
+		formatString: #,##0%
+		displayFolder: 5. Weekday / Workday\Measures\# Workdays
+		lineageTag: 7acd41b3-fc3c-4e8b-809c-a5edc09bc853
+
+	measure '% Workdays YTD' =
+			IF (
+			    HASONEVALUE ('Date'[Calendar Year (ie 2021)]),
+			    MROUND (
+			        DIVIDE ([# Workdays YTD], [# Workdays in Selected Year]),
+			        0.01
+			    )
+			)
+		formatString: #,##0%
+		displayFolder: 5. Weekday / Workday\Measures\# Workdays
+		lineageTag: 74c83d7c-2d91-4dc3-87f3-d129a2b220ae
+
+	measure RefDate = CALCULATE ( MAX ( 'Invoices'[Billing Date] ), REMOVEFILTERS ( ) )
+		isHidden
+		displayFolder: Measures
+		lineageTag: 75027a89-68f7-4e3f-9d0b-abbb14b92094
+
+	column Date
+		isKey
+		displayFolder: 6. Calendar Date
+		lineageTag: 09572bf6-eb54-4fb5-8ad1-1dee0c198ec0
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Date]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Year Number (ie 2021)'
+		displayFolder: 1. Year
+		lineageTag: cf2e5156-c81b-4636-b66b-f9b439f92d2d
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Calendar Year Number (ie 2021)]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Year (ie 2021)'
+		displayFolder: 1. Year
+		lineageTag: 3fb515aa-1cf5-4e35-9368-26ba9fe9609b
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Calendar Year (ie 2021)]
+		sortByColumn: 'Calendar Year Number (ie 2021)'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Quarter Year (ie Q1 2021)'
+		displayFolder: 2. Quarter
+		lineageTag: d8f8780d-8364-4be5-ad87-fb1d7e8bb57c
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Calendar Quarter Year (ie Q1 2021)]
+		sortByColumn: 'Calendar Year Quarter (ie 202101)'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Year Quarter (ie 202101)'
+		displayFolder: 2. Quarter
+		lineageTag: 6303b430-6995-46b7-82b1-4cd3102b9d6d
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Calendar Year Quarter (ie 202101)]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Month Year (ie Jan 21)'
+		displayFolder: 3. Month
+		lineageTag: edb084ec-790c-4fee-a229-e24044d12bd4
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Calendar Month Year (ie Jan 21)]
+		sortByColumn: 'Calendar Year Month (ie 202101)'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Year Month (ie 202101)'
+		displayFolder: 3. Month
+		lineageTag: 2063cb48-7333-440e-acc1-5d12b4ef4641
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Calendar Year Month (ie 202101)]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Month (ie Jan)'
+		displayFolder: 3. Month
+		lineageTag: 40d9d72e-8593-4b4b-a7bc-78a324b1decb
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Calendar Month (ie Jan)]
+		sortByColumn: 'Calendar Month # (ie 1)'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Month # (ie 1)'
+		displayFolder: 3. Month
+		lineageTag: e19f6bb4-ef58-4a9b-9938-a9f53054cfca
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Calendar Month # (ie 1)]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Week EU (ie WK25)'
+		isHidden
+		displayFolder: 4. Week
+		lineageTag: da853b79-633f-4869-b291-880aa11452ad
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Calendar Week EU (ie WK25)]
+		sortByColumn: 'Calendar Week Number EU (ie 25)'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Week Number EU (ie 25)'
+		isHidden
+		displayFolder: 4. Week
+		lineageTag: 3eb012c2-1bb5-4cc3-bf3e-4d98a1fbfd27
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Calendar Week Number EU (ie 25)]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Year Week Number EU (ie 202125)'
+		isHidden
+		displayFolder: 4. Week
+		lineageTag: 9239173d-70a1-4fb7-8ef8-b6b580e4c576
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Calendar Year Week Number EU (ie 202125)]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Week US (ie WK25)'
+		isHidden
+		displayFolder: 4. Week
+		lineageTag: 54b2a8dd-1d3d-4350-8e50-ea3c2aa70603
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Calendar Week US (ie WK25)]
+		sortByColumn: 'Calendar Week Number US (ie 25)'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Week Number US (ie 25)'
+		isHidden
+		displayFolder: 4. Week
+		lineageTag: ee4f45a3-e866-4cd7-9a08-6b8b3e96cef4
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Calendar Week Number US (ie 25)]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Year Week Number US (ie 202125)'
+		isHidden
+		displayFolder: 4. Week
+		lineageTag: 6369e90a-ee7b-4da8-9884-0457e4366927
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Calendar Year Week Number US (ie 202125)]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Week ISO (ie WK25)'
+		isHidden
+		displayFolder: 4. Week
+		lineageTag: ef48982f-eb1c-4196-8059-9a69d4a1c7fe
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Calendar Week ISO (ie WK25)]
+		sortByColumn: 'Calendar Week Number ISO (ie 25)'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Week Number ISO (ie 25)'
+		isHidden
+		displayFolder: 4. Week
+		lineageTag: ae46b8f1-44d5-450d-b322-33f5ecb3a0dc
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Calendar Week Number ISO (ie 25)]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Year Week Number ISO (ie 202125)'
+		isHidden
+		displayFolder: 4. Week
+		lineageTag: b7562b0b-32a5-49ab-8c2b-c0f933e8e272
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Calendar Year Week Number ISO (ie 202125)]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Weekday Short (i.e. Mon)'
+		displayFolder: 5. Weekday / Workday\Weekday
+		lineageTag: 41ab7d65-b8a5-4011-9814-92b110086158
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Weekday Short (i.e. Mon)]
+		sortByColumn: 'Weekday Number EU (i.e. 1)'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Weekday Name (i.e. Monday)'
+		displayFolder: 5. Weekday / Workday\Weekday
+		lineageTag: ef85b198-9069-484e-b7d7-25425c242d1a
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Weekday Name (i.e. Monday)]
+		sortByColumn: 'Weekday Number EU (i.e. 1)'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Weekday Number EU (i.e. 1)'
+		displayFolder: 5. Weekday / Workday\Weekday
+		lineageTag: 6d6d80e2-e8a9-4d10-acff-4d7531522034
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Weekday Number EU (i.e. 1)]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Month Day (i.e. Jan 05)'
+		displayFolder: 3. Month
+		lineageTag: 1b09698b-a90f-40ce-9596-6c6047ebe042
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Calendar Month Day (i.e. Jan 05)]
+		sortByColumn: 'Calendar Month Day (i.e. 0105)'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Month Day (i.e. 0105)'
+		displayFolder: 3. Month
+		lineageTag: 6e7c0f3a-b2bb-411a-a0a7-e267d7807ab4
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Calendar Month Day (i.e. 0105)]
+
+		annotation SummarizationSetBy = Automatic
+
+	column YYYYMMDD
+		isHidden
+		displayFolder: 6. Calendar Date
+		lineageTag: b8f541e5-acb5-4fdf-83b9-c031aee1e282
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [YYYYMMDD]
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsDateInScope
+		isHidden
+		displayFolder: 7. Boolean Fields
+		lineageTag: 4bca850c-4687-484d-a941-8b82c8ac9435
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [IsDateInScope]
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsBeforeThisMonth
+		isHidden
+		displayFolder: 7. Boolean Fields
+		lineageTag: 3a3ebb62-fa77-42c9-94e7-7dd38cbcc9ca
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [IsBeforeThisMonth]
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsLastMonth
+		isHidden
+		displayFolder: 7. Boolean Fields
+		lineageTag: 3cf4eb07-f6c1-4297-a58d-37d7bc7c0c5d
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [IsLastMonth]
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsYTD
+		isHidden
+		displayFolder: 7. Boolean Fields
+		lineageTag: 1be5363a-e1d5-42c9-b335-83e6b593273c
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [IsYTD]
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsActualToday
+		isHidden
+		displayFolder: 7. Boolean Fields
+		lineageTag: c158c062-5f41-4066-9b71-07040d22ea1c
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [IsActualToday]
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsRefDate
+		isHidden
+		displayFolder: 7. Boolean Fields
+		lineageTag: a0711613-1ed5-4931-be77-c97fe1f71a3d
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [IsRefDate]
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsHoliday
+		isHidden
+		displayFolder: 7. Boolean Fields
+		lineageTag: ee3e6d01-2621-4a08-b25a-591318b53703
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [IsHoliday]
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsWeekday
+		isHidden
+		displayFolder: 7. Boolean Fields
+		lineageTag: bf956c16-2355-499b-b503-b88553b552df
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [IsWeekday]
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsThisYear
+		isHidden
+		displayFolder: 7. Boolean Fields
+		lineageTag: 016d6200-8ae0-43de-85c0-fcf96e65fab3
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [IsThisYear]
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsThisMonth
+		isHidden
+		displayFolder: 7. Boolean Fields
+		lineageTag: 51bcf435-6619-4d65-8dcf-b861329e2a51
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [IsThisMonth]
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsThisQuarter
+		isHidden
+		displayFolder: 7. Boolean Fields
+		lineageTag: 3701707f-517d-4b04-a559-747ad90fa4ec
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [IsThisQuarter]
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsThisWeek
+		isHidden
+		displayFolder: 7. Boolean Fields
+		lineageTag: 19c5b6d5-141d-4298-b0db-d60212c2707e
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [IsThisWeek]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Workdays MTD' =
+			VAR _Holidays =
+			    CALCULATETABLE (
+			        DISTINCT ( 'Date'[Date] ),
+			        'Date'[IsHoliday] <> TRUE
+			    )
+			VAR _WeekdayName = CALCULATE ( SELECTEDVALUE ( 'Date'[Weekday Short (i.e. Mon)] ) )
+			VAR _WeekendDays = SWITCH (
+			        _WeekdayName,
+			        "Sat", 2,
+			        "Sun", 3,
+			        0
+			    )
+			VAR _WorkdaysMTD =
+			    CALCULATE (
+			        NETWORKDAYS (
+			            CALCULATE (
+			                MIN ( 'Date'[Date] ),
+			                ALLEXCEPT ( 'Date', 'Date'[Calendar Month Year (ie Jan 21)] )
+			            ),
+			            CALCULATE ( MAX ( 'Date'[Date] ) - _WeekendDays ),
+			            1,
+			            _Holidays
+			        )
+			    )
+			        + 1
+			RETURN
+			    IF ( _WorkdaysMTD < 1, 1, _WorkdaysMTD )
+		displayFolder: 5. Weekday / Workday\Workdays
+		lineageTag: f66ce538-103c-476a-b5b7-fdf95a7d756e
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Workdays QTD' =
+			VAR _Holidays =
+			    CALCULATETABLE (
+			        DISTINCT ('Date'[Date]),
+			        'Date'[IsHoliday] <> TRUE
+			    )
+			VAR _WeekdayName = CALCULATE ( SELECTEDVALUE ( 'Date'[Weekday Short (i.e. Mon)] ) )
+			VAR _WeekendDays = SWITCH (
+			        _WeekdayName,
+			        "Sat", 2,
+			        "Sun", 3,
+			        0
+			    )
+			VAR _WorkdaysMTD =
+			    CALCULATE (
+			        NETWORKDAYS (
+			            CALCULATE (
+			                MIN ('Date'[Date]),
+			                ALLEXCEPT ('Date', 'Date'[Calendar Quarter Year (ie Q1 2021)])
+			            ),
+			            CALCULATE (MAX ('Date'[Date]) - _WeekendDays),
+			            1,
+			            _Holidays
+			        )
+			    )
+			        + 1
+			RETURN
+			    IF (_WorkdaysMTD < 1, 1, _WorkdaysMTD)
+		displayFolder: 5. Weekday / Workday\Workdays
+		lineageTag: 9d01d75f-4942-4b6a-9217-a702574aaf64
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Workdays YTD' =
+			VAR _Holidays =
+			    CALCULATETABLE (
+			        DISTINCT ('Date'[Date]),
+			        'Date'[IsHoliday] <> TRUE
+			    )
+			VAR _WeekdayName = CALCULATE ( SELECTEDVALUE ( 'Date'[Weekday Short (i.e. Mon)] ) )
+			VAR _WeekendDays = SWITCH (
+			        _WeekdayName,
+			        "Sat", 2,
+			        "Sun", 3,
+			        0
+			    )
+			VAR _WorkdaysMTD =
+			    CALCULATE (
+			        NETWORKDAYS (
+			            CALCULATE (
+			                MIN ('Date'[Date]),
+			                ALLEXCEPT ('Date', 'Date'[Calendar Year (ie 2021)])
+			            ),
+			            CALCULATE (MAX ('Date'[Date]) - _WeekendDays),
+			            1,
+			            _Holidays
+			        )
+			    )
+			        + 1
+			RETURN
+			    IF (_WorkdaysMTD < 1, 1, _WorkdaysMTD)
+		displayFolder: 5. Weekday / Workday\Workdays
+		lineageTag: 439c9bb8-b5df-4014-92dd-384c1bcdaf5c
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Workdays MTD %' =
+			DIVIDE (
+			    'Date'[Workdays MTD],
+			    /* Number of weekdays MTD for selected month */
+			    CALCULATE (
+			        [# Workdays in Selected Month],
+			        ALLEXCEPT ( 'Date', 'Date'[Calendar Month Year (ie Jan 21)] )
+			    ),
+			    /* Total number of weekdays for selected month */
+			    0
+			)
+		formatString: 0.00%
+		displayFolder: 5. Weekday / Workday\Workdays
+		lineageTag: cd816ac9-657f-4f27-ae68-ba35c84475f5
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Calendar Quarter (ie Q1)'
+		displayFolder: 2. Quarter
+		lineageTag: 0808e9ee-085c-4934-9b9d-c647eba54590
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Calendar Quarter (ie Q1)]
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Date Hierarchy'
+		lineageTag: 1748d90b-b004-4b0d-afa9-77214627ce0f
+
+		level 'Calendar Year (ie 2021)'
+			lineageTag: ec183b08-c5d1-42ca-a087-e4dbfbcc9349
+			column: 'Calendar Year (ie 2021)'
+
+		level 'Calendar Quarter (ie Q1)'
+			lineageTag: 54cf79cd-0493-4918-9750-c334dcfe4eb5
+			column: 'Calendar Quarter (ie Q1)'
+
+		level 'Calendar Month (ie Jan)'
+			lineageTag: 7ab92588-0b9b-4b03-a4ee-a556e9b8cc1e
+			column: 'Calendar Month (ie Jan)'
+
+		level 'Calendar Week EU (ie WK25)'
+			lineageTag: 51e5883b-9124-4ff7-9600-954ef91e6f80
+			column: 'Calendar Week EU (ie WK25)'
+
+		level 'Weekday Short (i.e. Mon)'
+			lineageTag: 5aef54bd-34f0-47c9-b70c-21e5cf59e625
+			column: 'Weekday Short (i.e. Mon)'
+
+		level Date
+			lineageTag: cb95b6f4-85ff-4121-bb82-3e18125ac0db
+			column: Date
+
+	partition Date = calculated
+		mode: import
+		source = ```
+				
+				-- Reference date for the latest date in the report
+				-- Until when the business wants to see data in reports
+				VAR _Refdate_Measure = [RefDate]
+				VAR _Today = TODAY ( )
+				
+				-- Replace with "Today" if [RefDate] evaluates blank
+				VAR _ReferenceDate = IF ( ISBLANK ( _Refdate_Measure ), _Today, _Refdate_Measure )
+				    VAR _RefYear        = YEAR ( _ReferenceDate )
+				    VAR _RefQuarter     = _RefYear * 100 + QUARTER(_ReferenceDate)
+				    VAR _RefMonth       = _RefYear * 100 + MONTH(_ReferenceDate)
+				    VAR _RefWeek_EU     = _RefYear * 100 + WEEKNUM(_ReferenceDate, 2)
+				 
+				-- Earliest date in the model scope
+				VAR _EarliestDate       = DATE ( YEAR ( MIN ( 'Orders'[Order Date] ) ) - 2, 1, 1 )
+				VAR _EarliestDate_Safe  = MIN ( _EarliestDate, DATE ( YEAR ( _Today ) + 1, 1, 1 ) )
+				
+				-- Latest date in the model scope
+				VAR _LatestDate_Safe    = DATE ( YEAR ( _ReferenceDate ) + 2, 12, 1 )
+				
+				------------------------------------------
+				-- Base calendar table
+				VAR _Base_Calendar      = CALENDAR ( _EarliestDate_Safe, _LatestDate_Safe )
+				------------------------------------------
+				
+				
+				
+				------------------------------------------
+				VAR _IntermediateResult = 
+				    ADDCOLUMNS ( _Base_Calendar,
+				
+				            ------------------------------------------
+				        "Calendar Year Number (ie 2021)",           --|
+				            YEAR ([Date]),                          --|-- Year
+				                                                    --|
+				        "Calendar Year (ie 2021)",                  --|
+				            FORMAT ([Date], "YYYY"),                --|
+				            ------------------------------------------
+				
+				            ------------------------------------------
+				        "Calendar Quarter Year (ie Q1 2021)",       --|
+				            "Q" &                                   --|-- Quarter
+				            CONVERT(QUARTER([Date]), STRING) &      --|
+				            " " &                                   --|
+				            CONVERT(YEAR([Date]), STRING),          --|
+				                                                    --|
+				        "Calendar Year Quarter (ie 202101)",        --|
+				            YEAR([Date]) * 100 + QUARTER([Date]),   --|
+				                                                    --| 
+				        "Calendar Quarter (ie Q1)",                 --|
+				            "Q" &                                   --|
+				            CONVERT(QUARTER([Date]), STRING),       --|  
+				            ------------------------------------------
+				
+				            ------------------------------------------
+				        "Calendar Month Year (ie Jan 21)",          --|
+				            FORMAT ( [Date], "MMM YY" ),            --|-- Month
+				                                                    --|
+				        "Calendar Year Month (ie 202101)",          --|
+				            YEAR([Date]) * 100 + MONTH([Date]),     --|
+				                                                    --|
+				        "Calendar Month (ie Jan)",                  --|
+				            FORMAT ( [Date], "MMM" ),               --|
+				                                                    --|
+				        "Calendar Month # (ie 1)",                  --|
+				            MONTH ( [Date] ),                       --|
+				            ------------------------------------------
+				            
+				            ------------------------------------------
+				        "Calendar Week EU (ie WK25)",               --|
+				            "WK" & WEEKNUM( [Date], 2 ),            --|-- Week
+				                                                    --|
+				        "Calendar Week Number EU (ie 25)",          --|
+				            WEEKNUM( [Date], 2 ),                   --|
+				                                                    --|
+				        "Calendar Year Week Number EU (ie 202125)", --|
+				            YEAR ( [Date] ) * 100                   --|
+				            +                                       --|
+				            WEEKNUM( [Date], 2 ),                   --|
+				                                                    --|
+				        "Calendar Week US (ie WK25)",               --|
+				            "WK" & WEEKNUM( [Date], 1 ),            --|
+				                                                    --|
+				        "Calendar Week Number US (ie 25)",          --|
+				            WEEKNUM( [Date], 1 ),                   --|
+				                                                    --|
+				        "Calendar Year Week Number US (ie 202125)", --|
+				            YEAR ( [Date] ) * 100                   --|
+				            +                                       --|
+				            WEEKNUM( [Date], 1 ),                   --|
+				                                                    --|
+				        "Calendar Week ISO (ie WK25)",              --|
+				            "WK" & WEEKNUM( [Date], 21 ),           --|
+				                                                    --|
+				        "Calendar Week Number ISO (ie 25)",         --|
+				            WEEKNUM( [Date], 21 ),                  --|
+				                                                    --|
+				        "Calendar Year Week Number ISO (ie 202125)",--|
+				            YEAR ( [Date] ) * 100                   --|
+				            +                                       --|
+				            WEEKNUM( [Date], 21 ),                  --|
+				            ------------------------------------------
+				
+				            ------------------------------------------
+				        "Weekday Short (i.e. Mon)",                 --|
+				            FORMAT ( [Date], "DDD" ),               --|-- Weekday
+				                                                    --|
+				        "Weekday Name (i.e. Monday)",               --|
+				            FORMAT ( [Date], "DDDD" ),              --|
+				                                                    --|
+				        "Weekday Number EU (i.e. 1)",               --|
+				            WEEKDAY ( [Date], 2 ),                  --|
+				            ------------------------------------------
+				            
+				            ------------------------------------------
+				        "Calendar Month Day (i.e. Jan 05)",         --|
+				            FORMAT ( [Date], "MMM DD" ),            --|-- Day
+				                                                    --|
+				        "Calendar Month Day (i.e. 0105)",           --|
+				            MONTH([Date]) * 100                     --|
+				            +                                       --|
+				            DAY([Date]),                            --|
+				                                                    --|
+				        "YYYYMMDD",                                 --|
+				            YEAR ( [Date] ) * 10000                 --|
+				            +                                       --|
+				            MONTH ( [Date] ) * 100                  --|
+				            +                                       --|
+				            DAY ( [Date] ),                         --|
+				            ------------------------------------------
+				
+				
+				            ------------------------------------------
+				        "IsDateInScope",                            --|
+				            [Date] <= _ReferenceDate                      --|-- Boolean
+				            &&                                      --|
+				            YEAR([Date]) > YEAR(_EarliestDate),     --|
+				                                                    --|
+				        "IsBeforeThisMonth",                        --|
+				            [Date] <= EOMONTH ( _ReferenceDate, -1 ),     --|
+				                                                    --|
+				        "IsLastMonth",                              --|
+				            [Date] <= EOMONTH ( _ReferenceDate, 0 )       --|
+				            &&                                      --|
+				            [Date] > EOMONTH ( _ReferenceDate, -1 ),      --|
+				                                                    --|
+				        "IsYTD",                                    --|
+				            MONTH([Date])                           --|
+				            <=                                      --|
+				            MONTH(EOMONTH ( _ReferenceDate, 0 )),         --|
+				                                                    --|
+				        "IsActualToday",                            --|
+				            [Date] = _Today,                        --|
+				                                                    --|
+				        "IsRefDate",                                --|
+				            [Date] = _ReferenceDate,                      --|
+				                                                    --|
+				        "IsHoliday",                                --|
+				            MONTH([Date]) * 100                     --|
+				            +                                       --|
+				            DAY([Date])                             --|
+				                IN {0101, 0501, 1111, 1225},        --|
+				                                                    --|
+				        "IsWeekday",                                --|
+				            WEEKDAY([Date], 2)                      --|
+				                IN {1, 2, 3, 4, 5})                 --|
+				            ------------------------------------------
+				
+				VAR _Result = 
+				    
+				            --------------------------------------------
+				    ADDCOLUMNS (                                      --|
+				        _IntermediateResult,                          --|-- Boolean #2
+				        "IsThisYear",                                 --|
+				            [Calendar Year Number (ie 2021)]          --|
+				                = _RefYear,                           --|
+				                                                      --|
+				        "IsThisMonth",                                --|
+				            [Calendar Year Month (ie 202101)]         --|
+				                = _RefMonth,                          --|
+				                                                      --|
+				        "IsThisQuarter",                              --|
+				            [Calendar Year Quarter (ie 202101)]       --|
+				                = _RefQuarter,                        --|
+				                                                      --|
+				        "IsThisWeek",                                 --|
+				            [Calendar Year Week Number EU (ie 202125)]--|
+				                = _RefWeek_EU                         --|
+				    )                                                 --|
+				            --------------------------------------------
+				            
+				RETURN 
+				    _Result
+				```
+
+	annotation TabularEditor_TableGroup = 01. Dimension Tables
+
