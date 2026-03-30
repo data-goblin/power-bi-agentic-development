@@ -239,6 +239,27 @@ When orchestrating a data pipeline:
 | Failed with eviction error     | Model evicted from memory during refresh        | Retry; consider capacity sizing                    |
 | Timeout after 5 hours          | Large model exceeds default timeout             | Set `timeout` parameter; use partialBatch          |
 | InProgress stuck > 6 hours     | Capacity paused or outage                       | Check capacity status; restart after resume        |
+| Type mismatch on a table       | Source column types don't match model column types | Check model column `dataType` vs source schema; add `Table.TransformColumnTypes` in the partition expression |
+| Column does not exist          | Source column was renamed or removed            | Check source schema; update partition expression column references or `Table.RenameColumns` |
+| Duplicate value on key column  | Source has duplicate rows for a column used on the "one" side of a relationship | Add `Table.Distinct` in the partition expression; or fix the source data |
+| Calculated tables empty after import refresh | `dataOnly` refresh clears calculated objects | Follow import refresh with a `calculate` refresh to rebuild calculated tables, calc groups, and calculated columns |
+
+### Debugging per-table refresh failures
+
+When a full refresh fails, isolate the problem by refreshing one table at a time:
+
+```bash
+te refresh --table Customers --type full    # Start with dimensions
+te refresh --table Products --type full
+te refresh --table Invoices --type full     # Then facts
+te refresh --type calculate                 # Finally, recalculate all DAX-based tables
+```
+
+This identifies which specific table has the issue. Check the failing table's partition expression and compare the source schema against the model's expected column names and types.
+
+### Credentials after model copy
+
+When copying a model to a new workspace with `fab cp`, credentials are only retained if the model uses a shared cloud connection. Personal or gateway-bound credentials do not carry over; you must re-authenticate via the dataset settings in the Power BI service UI.
 
 ## Capacity Limits
 

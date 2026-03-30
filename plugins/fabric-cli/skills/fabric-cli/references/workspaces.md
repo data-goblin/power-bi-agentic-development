@@ -208,23 +208,74 @@ fab set "Production.Workspace" -q sparkSettings.pool.defaultPool -i '{
 
 ## Capacity Management
 
-### Assign Workspace to Capacity
+A workspace must be assigned to a capacity for features like XMLA endpoints, semantic model refresh, and Fabric workloads. Without a capacity, these operations fail with permission errors.
+
+### Check Current Capacity
 
 ```bash
-# Assign capacity to workspace (capacity is path arg, -W is target workspace)
-fab assign .capacities/MyCapacity.Capacity -W "Production.Workspace"
+# Returns the capacity ID, or None if no capacity assigned
+fab get "Production.Workspace" -q "capacityId"
+```
 
-# Assign domain to workspace
+### List Available Capacities
+
+```bash
+# List Fabric capacities (F SKUs only)
+fab ls .capacities
+
+# List ALL capacities including Trial and PPU (via Power BI API)
+fab api -A powerbi "capacities" -q "value[].{name:displayName, sku:sku, state:state, id:id}"
+```
+
+`fab ls .capacities` only shows Fabric (F SKU) capacities. Trial (FT1), PPU (P1), and other non-Fabric SKUs are invisible to it. Use the Power BI API to see everything.
+
+### Assign Workspace to Capacity
+
+There are two methods depending on the capacity SKU:
+
+#### Fabric Capacities (F SKUs)
+
+For F2, F4, F8, F16, F32, F64, F128, F256, F512, F1024, F2048 capacities:
+
+```bash
+fab assign .capacities/MyCapacity.Capacity -W "Production.Workspace" -f
+```
+
+#### Trial, PPU, and Non-Fabric Capacities
+
+`fab assign` only works with Fabric (F SKU) capacities. For Trial (FT1), Premium Per User (PPU/P1), or other non-Fabric SKUs, use the Power BI API directly:
+
+```bash
+# 1. Get the workspace ID
+WS_ID=$(fab get "MyWorkspace.Workspace" -q "id" | tr -d '"')
+
+# 2. Get the capacity ID from the Power BI API
+fab api -A powerbi "capacities" -q "value[].{name:displayName, sku:sku, id:id}"
+
+# 3. Assign using the Power BI API
+CAP_ID="<capacity-id-from-step-2>"
+fab api -A powerbi "groups/$WS_ID" -X patch -i "{\"capacityId\":\"$CAP_ID\"}"
+```
+
+If `fab assign` fails with `[Not a Fabric capacity]`, the capacity is not an F SKU; fall back to the Power BI API method above.
+
+### Assign Domain to Workspace
+
+```bash
 fab assign .domains/Analytics.Domain -W "Production.Workspace" -f
 ```
 
 ### Unassign from Capacity
 
 ```bash
-# Unassign capacity from workspace
-fab unassign .capacities/MyCapacity.Capacity -W "Dev.Workspace"
+# Fabric capacities
+fab unassign .capacities/MyCapacity.Capacity -W "Dev.Workspace" -f
 
-# Unassign domain from workspace
+# Trial/PPU capacities (move to shared capacity via API)
+WS_ID=$(fab get "Dev.Workspace" -q "id" | tr -d '"')
+fab api -A powerbi "groups/$WS_ID" -X patch -i '{"capacityId":"00000000-0000-0000-0000-000000000000"}'
+
+# Unassign domain
 fab unassign .domains/Analytics.Domain -W "Dev.Workspace" -f
 ```
 
@@ -294,6 +345,27 @@ fab cp "Source.Workspace" "Target.Workspace"
 fab cp "Source.Workspace/Model.SemanticModel" "Target.Workspace"
 fab cp "Source.Workspace/Report.Report" "Target.Workspace"
 fab cp "Source.Workspace/Notebook.Notebook" "Target.Workspace"
+```
+
+#### After copying a semantic model
+
+- The copy includes the model definition (schema, DAX, partition expressions) but not the data. Trigger a full refresh after copying.
+- **Credentials**: Only shared cloud connections carry over. Personal credentials or gateway-bound credentials do not; re-authenticate via the dataset settings in the Power BI service.
+- **Capacity**: The target workspace must be on a capacity (Fabric, PPU, or Trial) for XMLA endpoints and refresh to work. Assign a capacity before attempting refresh.
+- **Reports**: Copied reports retain their original model binding (pointing to the source workspace). Update the `definition.pbir` connection string to point to the copied model in the target workspace, then re-import.
+
+#### Rebinding a copied report
+
+```bash
+# 1. Export the report
+fab export "Target.Workspace/Report.Report" -o /tmp/report -f
+
+# 2. Edit definition.pbir to update the workspace name and model ID
+# Change: myorg/SourceWorkspace -> myorg/TargetWorkspace
+# Change: semanticmodelid=<old-id> -> semanticmodelid=<new-id>
+
+# 3. Re-import
+fab import "Target.Workspace/Report.Report" -i /tmp/report/Report.Report -f
 ```
 
 ## Deleting Workspaces
@@ -570,19 +642,31 @@ fab api "workspaces/<workspace-id>"
 ### Capacity Issues
 
 ```bash
-# Check workspace capacity assignment
+# Check workspace capacity assignment (None = no capacity)
 fab get "Production.Workspace" -q "capacityId"
 
-# List available capacities
+# List Fabric capacities (F SKUs only)
 fab ls .capacities
 
-# Start/stop a capacity
+# List ALL capacities including Trial/PPU
+fab api -A powerbi "capacities" -q "value[].{name:displayName, sku:sku, state:state, id:id}"
+
+# Start/stop a Fabric capacity
 fab start .capacities/MyCapacity.Capacity
 fab stop .capacities/MyCapacity.Capacity -f
 
 # Verify capacity status (via Azure API, for detailed state/SKU info)
 fab api -A azure "subscriptions/<subscription-id>/providers/Microsoft.Fabric/capacities?api-version=2023-11-01" -q "value[].{name: name, state: properties.state, sku: sku.name}"
 ```
+
+**Common capacity errors:**
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `[Not a Fabric capacity]` | `fab assign` used with Trial/PPU capacity | Use Power BI API method; see [Capacity Management](#capacity-management) |
+| `[UnexpectedError] 22` | Missing `-f` flag; stdin not a terminal | Add `-f` to the command |
+| XMLA "does not have permission to call Discover" | Workspace has no capacity or capacity doesn't support XMLA | Assign a capacity that supports XMLA (F64+, PPU, or Trial) |
+| `capacityId: None` | Workspace not on any capacity | Assign a capacity; see [Capacity Management](#capacity-management) |
 
 ### Permission Errors
 
