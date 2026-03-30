@@ -229,37 +229,38 @@ When orchestrating a data pipeline:
 
 ## Troubleshooting
 
+Quick reference for the most common failures. For the full troubleshooting guide with debugging workflows and detailed error tables, read **`references/troubleshooting.md`**.
+
 | Symptom                        | Likely Cause                                    | Resolution                                         |
 |--------------------------------|-------------------------------------------------|----------------------------------------------------|
-| 400 Bad Request                | Concurrent refresh or invalid body              | Wait for current refresh; check JSON structure     |
-| 403 Forbidden                  | Insufficient permissions                        | Verify workspace contributor role or higher        |
-| Completed but data unchanged   | Upstream source not updated                     | Run the ETL pipeline first; check source freshness |
-| Failed with credential error   | Data source credentials expired or missing      | Update credentials in Power BI service settings    |
-| Failed with gateway error      | On-premises gateway offline or misconfigured    | Check gateway status in Power BI admin portal      |
-| Failed with eviction error     | Model evicted from memory during refresh        | Retry; consider capacity sizing                    |
-| Timeout after 5 hours          | Large model exceeds default timeout             | Set `timeout` parameter; use partialBatch          |
-| InProgress stuck > 6 hours     | Capacity paused or outage                       | Check capacity status; restart after resume        |
-| Type mismatch on a table       | Source column types don't match model column types | Check model column `dataType` vs source schema; add `Table.TransformColumnTypes` in the partition expression |
-| Column does not exist          | Source column was renamed or removed            | Check source schema; update partition expression column references or `Table.RenameColumns` |
-| Duplicate value on key column  | Source has duplicate rows for a column used on the "one" side of a relationship | Add `Table.Distinct` in the partition expression; or fix the source data |
-| Calculated tables empty after import refresh | `dataOnly` refresh clears calculated objects | Follow import refresh with a `calculate` refresh to rebuild calculated tables, calc groups, and calculated columns |
+| Failed with credential error   | Credentials expired, missing, or didn't carry over after copy | Update in dataset settings; only shared cloud connections transfer with `fab cp` |
+| Type mismatch on a table       | Source column types don't match model column types | Check `te get "Table/Column" -q dataType` vs source schema; add `Table.TransformColumnTypes` in partition expression |
+| Column does not exist          | Source column renamed, removed, or differently cased | Check source schema; add `Table.RenameColumns` in partition expression |
+| Timeout (2h shared / 5h Premium) | Model too large for a single refresh window | Implement incremental refresh; use partition-level refresh via XMLA; reduce model size |
+| Calculated tables empty        | `dataOnly` refresh clears but doesn't rebuild | Follow with `te refresh --type calculate` to rebuild calculated tables and calc groups |
+| Throttled on Premium           | Too many concurrent refreshes                   | Stagger refresh schedules; refresh during off-peak |
 
-### Debugging per-table refresh failures
+### Debugging per-table failures
 
-When a full refresh fails, isolate the problem by refreshing one table at a time:
+When a full refresh fails, isolate the failing table:
 
 ```bash
-te refresh --table Customers --type full    # Start with dimensions
-te refresh --table Products --type full
+te refresh --table Customers --type full    # Dimensions first
 te refresh --table Invoices --type full     # Then facts
-te refresh --type calculate                 # Finally, recalculate all DAX-based tables
+te refresh --type calculate                 # Then calculated tables
 ```
 
-This identifies which specific table has the issue. Check the failing table's partition expression and compare the source schema against the model's expected column names and types.
+Check the failing table's partition expression and compare source schema against the model's expected column names and types with `te get` and `fab table schema`.
 
-### Credentials after model copy
+## Large Model Strategies
 
-When copying a model to a new workspace with `fab cp`, credentials are only retained if the model uses a shared cloud connection. Personal or gateway-bound credentials do not carry over; you must re-authenticate via the dataset settings in the Power BI service UI.
+Models over 1 GB or with refresh times exceeding an hour benefit from targeted approaches:
+
+- **Partition-level refresh**: Refresh individual table partitions via the enhanced REST API or XMLA endpoint instead of the full model. Requires Premium/Fabric capacity.
+- **Incremental refresh**: Automatically partition large tables by date; only recent data refreshes each cycle. Configure `RangeStart`/`RangeEnd` parameters in Power Query. Also supports detect-data-changes to skip unchanged partitions entirely.
+- **Aggregations**: Pre-aggregate large fact tables at a coarser grain into an import-mode aggregation table. Detail queries fall through to DirectQuery. Reduces both refresh time and memory.
+- **Hybrid tables**: Historical partitions in import mode; a real-time DirectQuery partition for recent data. Related tables must be Dual storage mode.
+- **Scale-out**: Isolate refresh from query workloads by enabling semantic model scale-out on Premium capacities. A read-only replica handles queries while the primary refreshes.
 
 ## Capacity Limits
 
@@ -281,6 +282,7 @@ Pro capacity supports only full-model standard refreshes. Enhanced refresh featu
 ### Reference Files
 
 - **`references/refresh-types.md`** -- Complete reference for all 7 refresh types, commit modes, parallelism, incremental policy interaction, status values, XMLA/TMSL details, and the two-phase refresh pattern
+- **`references/troubleshooting.md`** -- Comprehensive troubleshooting guide: credential errors, type/schema mismatches, timeouts, capacity limits, incremental refresh issues, debugging workflows, and large model strategies
 
 ### Scripts
 
