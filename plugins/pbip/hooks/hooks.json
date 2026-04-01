@@ -1,5 +1,5 @@
 {
-  "description": "Validates PBIP project files (JSON syntax + TMDL structure) after every Write/Edit",
+  "description": "Validates PBIP project files (JSON syntax + TMDL structure) after Write/Edit and Bash modifications",
   "hooks": {
     "PostToolUse": [
       {
@@ -14,6 +14,35 @@
             "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/validate-tmdl.sh",
             "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/validate-pbir-bash.sh",
+            "timeout": 10,
+            "if": "Bash(*.Report/*)"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/validate-pbir-bash.sh",
+            "timeout": 10,
+            "if": "Bash(*.pbir*)"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/validate-tmdl-bash.sh",
+            "timeout": 10,
+            "if": "Bash(*.SemanticModel/*.tmdl*)"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/validate-tmdl-bash.sh",
+            "timeout": 10,
+            "if": "Bash(*.Dataset/*.tmdl*)"
           }
         ]
       }
