@@ -109,6 +109,15 @@ SELECT * FROM read_csv('abfss://${WS_ID}@onelake.dfs.fabric.microsoft.com/${LH_I
 
 Use this approach whenever investigating data issues (freshness, quality, missing records), exploring source data before building a semantic model, or validating lakehouse contents after ETL runs. The same path format works for warehouses.
 
+**Before writing a final query, always do spot checks first:**
+
+1. Inspect a sample of rows (`SELECT * ... LIMIT 5`) to understand column semantics, units, and granularity
+2. Check for fan-outs and duplicates (`SELECT key, count(*) ... GROUP BY key HAVING count(*) > 1`)
+3. Verify row counts make sense for the expected grain (e.g. one row per day per user, not multiple)
+4. Use `AskUserQuestion` to clarify ambiguities; column names and units are often misleading without domain context
+
+Skipping these steps leads to silently wrong aggregations (double-counting, wrong units, inflated row counts).
+
 For full examples and common patterns, see **`references/querying-data.md`**.
 
 ## Command Reference
