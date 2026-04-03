@@ -85,44 +85,11 @@ Or keep it for future use; an empty runner consumes no capacity when idle.
 
 ## Previewing Semantic Model Partitions
 
-The most valuable use case: see the actual data a partition's Power Query returns, or inspect any intermediate step in the transformation chain.
+The most valuable use case: see the actual data a semantic model's import partition returns, validate intermediate transformation steps, limit row counts for large tables, and optionally write results to a local file or OneLake.
 
-### Extract the Partition Expression
+Extract partition expressions with `te get <Table> -q expression` and shared M parameters with `te ls expressions`. Inline the parameter values as `shared` declarations, then truncate the `let...in` to end at any step to see intermediate results.
 
-```bash
-# Get partition M expression
-te get Budget -s "MyWorkspace" -d "MyModel" -q expression
-
-# Get shared expressions (M parameters like SqlEndpoint, Database)
-te ls -s "MyWorkspace" -d "MyModel" expressions
-```
-
-### Inline Parameters and Execute
-
-Partition expressions reference M parameters (`#"SqlEndpoint"`, `#"Database"`). Replace them with `shared` declarations:
-
-```
-section Section1;
-shared SqlEndpoint = "myserver.database.windows.net";
-shared Database = "MyDatabase";
-shared Result = let
-    Source = Sql.Database(SqlEndpoint, Database),
-    Data = Source{[Schema="dbo",Item="Budget"]}[Data],
-    SelectColumns = Table.SelectColumns(Data, {"Month", "Amount"}),
-    Top10 = Table.FirstN(SelectColumns, 10)
-in Top10;
-```
-
-### Preview Any Step
-
-Change the `in` clause to end at any intermediate step:
-
-- `in Source` -- raw table listing from the database
-- `in Data` -- all columns before SelectColumns
-- `in SelectColumns` -- after column filtering
-- `in Top10` -- final result
-
-This is equivalent to clicking each step in the Power Query editor.
+See **`references/partition-preview.md`** for the full workflow: extracting expressions, inlining parameters, step-by-step preview, row limiting, and output options (local file, OneLake, lakehouse table).
 
 ## What Works Without Connections
 
@@ -149,7 +116,8 @@ Any `Sql.Database`, `Lakehouse.Contents`, `Web.Contents`, or similar connector c
 
 ## References
 
-- **`references/examples.md`** -- Full pipeline with connection binding, step preview, error handling
+- **`references/examples.md`** -- Full pipeline with connection binding, inline M, error handling
+- **`references/partition-preview.md`** -- Previewing semantic model partitions, step inspection, row limits, output to file/OneLake
 - [Execute Query API](https://learn.microsoft.com/en-us/rest/api/fabric/dataflow/query-execution/execute-query)
 - [Dataflow Definition Structure](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/dataflow-definition)
 - [Connections API](https://learn.microsoft.com/en-us/rest/api/fabric/core/connections)

@@ -178,45 +178,6 @@ curl -s -X DELETE \
 
 An idle runner consumes no capacity; safe to keep for reuse.
 
-## Previewing Semantic Model Partition Steps
-
-### Extract Expression and Parameters
-
-```bash
-# Partition M expression (JSON-escaped string)
-te get Budget -s "MyWorkspace" -d "MyModel" -q expression
-
-# Shared expressions (M parameters)
-te ls -s "MyWorkspace" -d "MyModel" expressions
-```
-
-### Preview the Final Result
-
-Inline the parameters and wrap in a section document:
-
-```
-section Section1;
-shared SqlEndpoint = "te3-training-eu.database.windows.net";
-shared Database = "SpacePartsCoDW";
-shared Result = let
-    Source = Sql.Database(SqlEndpoint, Database),
-    Data = Source{[Schema="Factview",Item="Budget"]}[Data],
-    #"Select Columns" = Table.SelectColumns(Data, {"Customer Key", "Month", "Product Key", "Total Budget"}),
-    #"Renamed Columns" = Table.RenameColumns(#"Select Columns", {{"Total Budget", "Budget (EUR)"}})
-in #"Renamed Columns";
-```
-
-### Preview an Intermediate Step
-
-Truncate the `in` clause to end at any earlier step:
-
-```
-in Data;          -- all columns before SelectColumns
-in Source;        -- raw table listing from the database
-```
-
-This is equivalent to clicking each step in the Power Query editor to see its output.
-
 ## Inline M (No Connection Needed)
 
 Test M transformations without any data source:
