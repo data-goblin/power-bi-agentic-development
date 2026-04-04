@@ -86,7 +86,7 @@ Hook checks can be individually toggled via `plugins/pbip/hooks/config.yaml`. Se
 ### Available plugins for Power BI and Fabric
 
 <details>
-<summary><strong>tabular-editor</strong></summary>
+<summary><img src="https://img.shields.io/badge/tabular--editor-2E7D32?style=flat-square&logo=table&logoColor=white" alt="tabular-editor"></summary>
 
 | Type | Name | Description |
 |------|------|-------------|
@@ -100,7 +100,7 @@ Hook checks can be individually toggled via `plugins/pbip/hooks/config.yaml`. Se
 </details>
 
 <details>
-<summary><strong>pbi-desktop</strong></summary>
+<summary><img src="https://img.shields.io/badge/pbi--desktop-F2C811?style=flat-square&logo=powerbi&logoColor=000" alt="pbi-desktop"></summary>
 
 | Type | Name | Description |
 |------|------|-------------|
@@ -110,7 +110,7 @@ Hook checks can be individually toggled via `plugins/pbip/hooks/config.yaml`. Se
 </details>
 
 <details>
-<summary><strong>pbip</strong></summary>
+<summary><img src="https://img.shields.io/badge/pbip-E87200?style=flat-square&logo=files&logoColor=white" alt="pbip"></summary>
 
 | Type | Name | Description |
 |------|------|-------------|
@@ -125,7 +125,7 @@ Hook checks can be individually toggled via `plugins/pbip/hooks/config.yaml`. Se
 </details>
 
 <details>
-<summary><strong>reports</strong></summary>
+<summary><img src="https://img.shields.io/badge/reports-D63384?style=flat-square&logo=chartbar&logoColor=white" alt="reports"></summary>
 
 | Type | Name | Description |
 |------|------|-------------|
@@ -145,7 +145,7 @@ Hook checks can be individually toggled via `plugins/pbip/hooks/config.yaml`. Se
 </details>
 
 <details>
-<summary><strong>semantic-models</strong></summary>
+<summary><img src="https://img.shields.io/badge/semantic--models-6B2FA0?style=flat-square&logo=databricks&logoColor=white" alt="semantic-models"></summary>
 
 | Type | Name | Description |
 |------|------|-------------|
@@ -159,7 +159,7 @@ Hook checks can be individually toggled via `plugins/pbip/hooks/config.yaml`. Se
 </details>
 
 <details>
-<summary><strong>fabric-cli</strong></summary>
+<summary><img src="https://img.shields.io/badge/fabric--cli-008272?style=flat-square&logo=microsoftazure&logoColor=white" alt="fabric-cli"></summary>
 
 | Type | Name | Description |
 |------|------|-------------|
