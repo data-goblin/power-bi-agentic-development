@@ -1,7 +1,7 @@
 <h1 align="center">power-bi-agentic-development</h1>
 
 <p align="center">
-  A centralized marketplace for everything agentic Power BI development <br/>
+  The best source for agentic development resources for Power BI in one marketplace <br/>
   <i> Teach agents like Claude Code or GitHub Copilot to do literally anything in Power BI </i>
 </p>
 
