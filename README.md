@@ -26,15 +26,14 @@
 
 These skills are intended for use in Claude Code, Desktop, or Cowork. However, you can use them in other tools like GitHub Copilot, Codex, Gemini CLI.
 
-<details>
-<summary><strong>Claude Code</strong></summary>
-
-Add the marketplace:
 ```bash
 claude plugin marketplace add data-goblin/power-bi-agentic-development
 ```
 
-Then install plugins via `/plugin` and navigating to the installed marketplace.
+<details>
+<summary><strong>Claude Code</strong></summary>
+
+Add the marketplace, then install plugins via `/plugin` and navigating to the installed marketplace.
 
 <table>
 <tr>
@@ -83,6 +82,8 @@ The repo contains skills, agents, and hooks.
 - **Hooks** run automatically after tool use to validate files and catch errors early. They are deterministic; they fire when a specific pattern is matched, not by LLM judgment.
 
 Hook checks can be individually toggled via `plugins/pbip/hooks/config.yaml`. Set any check to `false` to disable it; for example, set `fab_exists: false` if you don't have the Fabric CLI installed.
+
+### Available plugins for Power BI and Fabric
 
 <details>
 <summary><strong>tabular-editor</strong></summary>
