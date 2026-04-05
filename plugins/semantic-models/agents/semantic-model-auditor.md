@@ -30,8 +30,6 @@ description: Use this agent to audit semantic models for quality, performance, a
   </example>
 
 model: inherit
-color: yellow
-tools: ["Read", "Grep", "Glob", "Bash"]
 ---
 
 # Semantic Model Auditor

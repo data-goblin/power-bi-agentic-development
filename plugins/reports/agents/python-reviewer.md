@@ -11,8 +11,6 @@ New Python script created, review before user feedback.
 </example>
 
 model: haiku
-color: cyan
-tools: ["Read", "Grep", "Glob"]
 ---
 
 Review Python visual scripts for correctness and design quality.

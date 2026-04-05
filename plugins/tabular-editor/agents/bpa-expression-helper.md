@@ -21,8 +21,6 @@ description: Use this agent to help debug, improve, or explain BPA rule expressi
   </example>
 
 model: inherit
-tools: ["Read", "Grep", "Glob"]
-color: cyan
 ---
 
 # BPA Expression Helper Agent

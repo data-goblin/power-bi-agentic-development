@@ -11,8 +11,6 @@ New SVG measure created, review before user feedback.
 </example>
 
 model: haiku
-color: cyan
-tools: ["Read", "Grep", "Glob"]
 ---
 
 Review SVG DAX measures for correctness and design quality.

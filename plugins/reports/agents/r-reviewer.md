@@ -11,8 +11,6 @@ New R script created, review before user feedback.
 </example>
 
 model: haiku
-color: cyan
-tools: ["Read", "Grep", "Glob"]
 ---
 
 Review R visual scripts for correctness and design quality.

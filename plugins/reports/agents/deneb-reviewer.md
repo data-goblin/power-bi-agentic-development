@@ -19,8 +19,6 @@ Modified spec needs validation before presenting to user.
 </example>
 
 model: haiku
-color: cyan
-tools: ["Read", "Grep", "Glob"]
 ---
 
 Review Deneb visual specs for correctness and design quality.
