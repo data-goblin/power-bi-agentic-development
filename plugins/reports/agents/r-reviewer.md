@@ -1,6 +1,10 @@
 ---
 name: r-reviewer
-description: Use this agent to review an R visual script before presenting it to the user. Validates ggplot2 code, Power BI conventions, and provides design feedback. Examples:
+description: Review an R visual script before presenting it to the user. Validates ggplot2 code, Power BI conventions, and provides design feedback.
+model: sonnet
+color: cyan
+tools: ["Read", "Grep", "Glob"]
+---
 
 <example>
 Context: Agent has written a new R visual script for a violin plot
@@ -9,11 +13,6 @@ assistant: "Let me have the r-reviewer agent validate this script before we proc
 New R script created, review before user feedback.
 </commentary>
 </example>
-
-model: haiku
-color: cyan
-tools: ["Read", "Grep", "Glob"]
----
 
 Review R visual scripts for correctness and design quality.
 

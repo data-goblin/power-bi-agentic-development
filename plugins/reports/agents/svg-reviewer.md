@@ -1,6 +1,10 @@
 ---
 name: svg-reviewer
-description: Use this agent to review an SVG DAX measure before presenting it to the user. Validates SVG syntax, DAX conventions, and provides design feedback. Examples:
+description: Review an SVG DAX measure before presenting it to the user. Validates SVG syntax, DAX conventions, and provides design feedback.
+model: sonnet
+color: cyan
+tools: ["Read", "Grep", "Glob"]
+---
 
 <example>
 Context: Agent has written a new SVG sparkline DAX measure
@@ -9,11 +13,6 @@ assistant: "Let me have the svg-reviewer agent validate this measure before we p
 New SVG measure created, review before user feedback.
 </commentary>
 </example>
-
-model: haiku
-color: cyan
-tools: ["Read", "Grep", "Glob"]
----
 
 Review SVG DAX measures for correctness and design quality.
 

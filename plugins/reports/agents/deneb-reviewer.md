@@ -1,6 +1,10 @@
 ---
 name: deneb-reviewer
-description: Use this agent to review a Deneb visual spec before presenting it to the user. Validates Vega/Vega-Lite syntax, Deneb-specific conventions, and provides design feedback. Examples:
+description: Review a Deneb visual spec before presenting it to the user. Validates Vega/Vega-Lite syntax, Deneb-specific conventions, and provides design feedback.
+model: sonnet
+color: cyan
+tools: ["Read", "Grep", "Glob"]
+---
 
 <example>
 Context: Agent has written a new Deneb Vega spec for a bullet chart
@@ -17,11 +21,6 @@ assistant: "I'll run the deneb-reviewer agent to check the changes."
 Modified spec needs validation before presenting to user.
 </commentary>
 </example>
-
-model: haiku
-color: cyan
-tools: ["Read", "Grep", "Glob"]
----
 
 Review Deneb visual specs for correctness and design quality.
 

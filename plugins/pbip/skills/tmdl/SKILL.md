@@ -1,6 +1,6 @@
 ---
 name: tmdl
-version: 0.18.1
+version: 0.18.2
 description: Direct TMDL file authoring and BIM-to-TMDL conversion for semantic models in PBIP projects. Automatically invoke when the user asks to "edit TMDL", "add a measure in TMDL", "TMDL syntax", "fix formatString", "fix summarizeBy", "TMDL indentation", "convert BIM to TMDL", "add a column description", "create a calculated column in TMDL", or mentions .tmdl file editing or BIM-to-TMDL migration.
 ---
 
@@ -109,7 +109,7 @@ table Product                              // depth 0: top-level declaration
 
 ### Descriptions (`///`)
 
-Triple-slash sets the `Description` property on the **next** declaration:
+Triple-slash sets the `Description` property on the **next** declaration. This is native TMDL syntax (not a Tabular Editor extension); the TMDL spec treats `///` as first-class description support.
 
 ```tmdl
 /// Count of distinct products in the current filter context.

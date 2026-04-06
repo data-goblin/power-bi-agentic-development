@@ -1,29 +1,28 @@
 ---
 name: bpa-expression-helper
-description: Use this agent to help debug, improve, or explain BPA rule expressions. Invoke when users ask to "fix my BPA expression", "why isn't my rule working", "help with Dynamic LINQ", or need assistance writing complex BPA rule expressions. Examples:
-
-  <example>
-  Context: User has a BPA rule expression that isn't matching anything
-  user: "My BPA rule isn't catching any violations, can you help debug it?"
-  assistant: "I'll use the bpa-expression-helper agent to analyze the expression and find the issue."
-  <commentary>
-  User needs debugging help with a BPA expression; dispatch agent to analyze syntax and logic.
-  </commentary>
-  </example>
-
-  <example>
-  Context: User wants to write a new BPA rule with Dynamic LINQ
-  user: "Help me write a BPA expression that finds measures without descriptions"
-  assistant: "I'll use the bpa-expression-helper agent to help write that expression."
-  <commentary>
-  User needs help authoring a new expression; agent knows Dynamic LINQ and TOM properties.
-  </commentary>
-  </example>
-
+description: Debug, improve, or explain BPA rule expressions. Invoke when users ask to "fix my BPA expression", "why isn't my rule working", "help with Dynamic LINQ", or need assistance writing complex BPA rule expressions.
 model: inherit
 tools: ["Read", "Grep", "Glob"]
 color: cyan
 ---
+
+<example>
+Context: User has a BPA rule expression that isn't matching anything
+user: "My BPA rule isn't catching any violations, can you help debug it?"
+assistant: "I'll use the bpa-expression-helper agent to analyze the expression and find the issue."
+<commentary>
+User needs debugging help with a BPA expression; dispatch agent to analyze syntax and logic.
+</commentary>
+</example>
+
+<example>
+Context: User wants to write a new BPA rule with Dynamic LINQ
+user: "Help me write a BPA expression that finds measures without descriptions"
+assistant: "I'll use the bpa-expression-helper agent to help write that expression."
+<commentary>
+User needs help authoring a new expression; agent knows Dynamic LINQ and TOM properties.
+</commentary>
+</example>
 
 # BPA Expression Helper Agent
 
