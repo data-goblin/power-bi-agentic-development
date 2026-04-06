@@ -1,7 +1,7 @@
 ---
 name: r-visuals
-version: 0.17.2
-description: "This skill should be used when the user asks to 'create an R visual', 'add a ggplot2 chart', 'inject an R script into Power BI', 'use ggplot in Power BI', 'add an R chart to a report', 'write an R visual script', or needs guidance on R visual creation, ggplot2 patterns, or R visual best practices in PBIR reports."
+version: 0.18.0
+description: R visual creation and ggplot2 patterns for PBIR reports. Automatically invoke when the user mentions "R visual", "ggplot2", "ggplot in Power BI", or asks to "create an R visual", "add an R chart", "write an R visual script", "inject an R script into Power BI".
 ---
 
 # R Visuals in Power BI (PBIR)

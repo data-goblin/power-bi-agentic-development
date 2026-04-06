@@ -1,7 +1,7 @@
 ---
 name: te-docs
-version: 0.17.2
-description: "This skill should be used when the user asks about 'Tabular Editor documentation', 'TE docs', 'how to do X in Tabular Editor', 'Tabular Editor features', 'TE3 features', '.tmuo files', 'Tabular Editor user options', 'TE3 preferences', 'Preferences.json', 'UiPreferences.json', 'Layouts.json', 'workspace database settings', 'deployment preferences', 'data source overrides', 'keyboard shortcuts', 'DAX editor settings', 'TMDL options', 'per-model TE3 configuration', or needs to search Tabular Editor documentation. Provides Tabular Editor documentation search and configuration file guidance."
+version: 0.18.0
+description: Tabular Editor documentation search and configuration file guidance (.tmuo, Preferences.json, UiPreferences.json, Layouts.json). Automatically invoke when the user asks about "TE docs", "Tabular Editor features", "TE3 preferences", ".tmuo files", "workspace database settings", "DAX editor settings", "per-model TE3 configuration", or needs to search Tabular Editor documentation for how-to guidance.
 ---
 
 # Tabular Editor Documentation & Configuration

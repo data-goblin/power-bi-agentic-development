@@ -1,7 +1,7 @@
 ---
 name: svg-visuals
-version: 0.17.2
-description: "This skill should be used when the user asks to 'create an SVG visual', 'add a DAX sparkline', 'create an SVG measure', 'add inline graphics with DAX', 'create a progress bar in DAX', 'use SVG in Power BI', 'add a bullet chart via DAX', 'create a KPI indicator with SVG', 'add a data bar', 'create a dumbbell chart', 'add a status pill', 'create a lollipop chart', 'add overlapping bars', 'create a gauge in DAX', 'add a donut chart in DAX', 'create a boxplot in DAX', 'add an IBCS bar chart', 'create a jitter plot', 'add a box-and-whisker chart', or needs guidance on SVG generation via DAX measures, extension measures with ImageUrl data category, or inline visualization patterns in PBIR reports."
+version: 0.18.0
+description: SVG generation via DAX measures and extension measures with ImageUrl data category for inline visualizations in PBIR reports. Automatically invoke when the user mentions "SVG visual", "DAX sparkline", "SVG measure", "inline graphics with DAX", "ImageUrl data category", "extension measure", or asks to create any DAX-generated chart (progress bars, bullet charts, KPI indicators, data bars, gauges, donut charts, lollipop charts, dumbbell charts, status pills, overlapping bars, boxplots, IBCS bars, jitter plots, box-and-whisker charts).
 ---
 
 # SVG Visuals via DAX Measures (PBIR)

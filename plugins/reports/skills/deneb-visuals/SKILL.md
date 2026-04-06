@@ -1,7 +1,7 @@
 ---
 name: deneb-visuals
-version: 0.17.2
-description: "This skill should be used whenever the user mentions 'Deneb' in any context, or asks to 'create a Deneb visual', 'add a Vega-Lite chart', 'inject a Deneb spec', 'inject a Vega spec', 'build a custom visualization with Deneb', 'use Vega or Vega-Lite in Power BI', 'add cross-filtering to Deneb', 'theme a Deneb visual', 'write a Deneb spec for Power BI', 'configure Deneb interactivity', 'fix Deneb visual not rendering', 'Deneb field name escaping', 'pbiColor theme colors in Deneb', or needs guidance on Deneb visual creation, Vega/Vega-Lite spec authoring, or Deneb best practices in PBIR reports."
+version: 0.18.0
+description: Deneb visual creation, Vega/Vega-Lite spec authoring, and Deneb best practices for PBIR reports. Automatically invoke whenever the user mentions "Deneb" in any context, or asks about Vega/Vega-Lite specs in Power BI, Deneb cross-filtering, Deneb interactivity, pbiColor theme integration, Deneb field name escaping, or Deneb rendering issues.
 ---
 
 # Deneb Visuals in Power BI (PBIR)

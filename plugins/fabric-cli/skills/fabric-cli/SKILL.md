@@ -1,7 +1,7 @@
 ---
 name: fabric-cli
-version: 0.17.2
-description: This skill should be used when the user asks to "use the Fabric CLI", "run fab commands", "deploy Fabric items", "manage Fabric workspaces", "query a lakehouse", "query lakehouse data", "query OneLake", "check data freshness", "validate data quality", "explore lakehouse schema", "use DuckDB with Fabric", "refresh a semantic model via CLI", "run a Fabric notebook", "execute notebook code", "get notebook output", "manage notebook cells", "schedule a notebook", "manage OneLake files", "automate Fabric operations", or mentions fab, nb, nb-fabric, Fabric CLI, DuckDB, OneLake, Livy, or Fabric item management. Provides expert guidance for the fab CLI, nb CLI, and DuckDB covering navigation, notebook management, data querying, deployment, jobs, APIs, and automation.
+version: 0.18.0
+description: Expert guidance for the fab CLI, nb CLI, and DuckDB; covering workspace navigation, notebook management, data querying, deployment, jobs, APIs, and automation. Automatically invoke when the user mentions "fab", "nb", "Fabric CLI", "OneLake", "Livy", or asks to "deploy Fabric items", "manage Fabric workspaces", "run a Fabric notebook", "refresh a semantic model via CLI", "query a lakehouse", "automate Fabric operations", "use DuckDB with Fabric", "manage OneLake files".
 ---
 
 # Microsoft Fabric CLI Operations

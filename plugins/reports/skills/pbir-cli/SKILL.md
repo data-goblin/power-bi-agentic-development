@@ -1,6 +1,6 @@
 ---
 name: pbir-cli
-description: Advanced Power BI report manipulation using pbir CLI and object model. Auto-triggers on (1) Power BI report operations (.pbir/.pbip/.pbix), (2) visual/page/theme creation or modification, (3) DAX measures and conditional formatting, (4) report validation and quality checks, (5) bulk operations and theming, (6) Fabric workspace integration. Provides executable scripts for complex workflows, domain-specific references, and reusable templates.
+description: Advanced Power BI report manipulation and execution using pbir CLI and object model; executable scripts for complex workflows, domain-specific references, and reusable templates. Automatically invoke when the user works with .pbir/.pbip report files, or asks to create/modify visuals, pages, themes, DAX measures, conditional formatting, report validation, bulk operations, or Fabric workspace integration for reports.
 ---
 
 # pbir CLI for Power BI Report Management

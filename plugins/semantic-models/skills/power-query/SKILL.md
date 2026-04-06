@@ -1,7 +1,7 @@
 ---
 name: power-query
-version: 0.17.2
-description: This skill should be used when the user asks to "write Power Query", "edit a partition expression", "fix Power Query", "validate M code", "test a partition", "preview partition data", "debug Power Query step", "check query folding", "optimize Power Query", "rewrite M expression", or needs to author, validate, or test Power Query M expressions in semantic model partitions.
+version: 0.18.0
+description: Author, validate, and test Power Query M expressions in semantic model partitions. Automatically invoke when the user mentions "Power Query", "M code", "M expression", "partition expression", "query folding", or asks to "write Power Query", "fix Power Query", "test a partition", "preview partition data", "debug Power Query step", "optimize Power Query".
 ---
 
 # Power Query for Semantic Models

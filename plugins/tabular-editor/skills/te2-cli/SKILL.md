@@ -1,7 +1,7 @@
 ---
 name: te2-cli
-version: 0.17.2
-description: This skill should be used when the user asks to "run TabularEditor.exe", "deploy a model via CLI", "use Tabular Editor 2 command line", "set up CI/CD for Power BI", "automate model deployment", "run BPA from command line", "save model as TMDL", "compare model schemas", or mentions TabularEditor.exe flags like -D, -S, -A, -B, -T, -O, -C. Provides CLI syntax reference for the Tabular Editor 2 CLI for deployment, scripting, BPA analysis, and CI/CD integration. Distinct from c-sharp-scripting skill which covers writing script content rather than CLI execution.
+version: 0.18.0
+description: CLI syntax reference for Tabular Editor 2 and 3; deployment, scripting, BPA analysis, and CI/CD integration. Automatically invoke when the user mentions "TabularEditor.exe", TE2/TE3 CLI flags (-D, -S, -A, -B, -T, -O, -C), or asks to "deploy a model via CLI", "set up CI/CD for Power BI", "automate model deployment", "run BPA from command line", "save model as TMDL", "compare model schemas".
 ---
 
 # Tabular Editor CLI

@@ -1,6 +1,6 @@
 ---
 name: create-pbi-report
-description: "This skill should be used when the user asks to 'create a new report', 'build a Power BI report from scratch', 'make a dashboard', 'set up a report with KPIs', 'create an executive dashboard', 'add pages and visuals to a new report', 'design a report layout', or needs step-by-step guidance on creating complete Power BI reports from scratch using the pbir CLI. Covers the full workflow: model discovery, report creation, page layout, theme setup, visual placement, field binding, filtering, formatting, validation, and publishing."
+description: Step-by-step workflow for creating complete Power BI reports from scratch using pbir CLI. Covers model discovery, report creation, page layout, theme setup, visual placement, field binding, filtering, formatting, validation, and publishing. Automatically invoke when the user asks to "create a new report", "build a report from scratch", "make a dashboard", "set up a report with KPIs", "create an executive dashboard", "add pages and visuals to a new report".
 ---
 
 # Creating Power BI Reports

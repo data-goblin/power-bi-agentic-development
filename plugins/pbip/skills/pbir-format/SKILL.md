@@ -1,7 +1,7 @@
 ---
 name: pbir-format
-version: 0.17.2
-description: "This skill should be used when the user asks about 'PBIR format', 'PBIR JSON structure', 'what does this visual.json property mean', 'how do PBIR expressions work', 'objects vs visualContainerObjects', 'theme inheritance', 'conditional formatting pattern', 'extension measures', 'visual container formatting', 'how to create a visual in PBIR', 'PBIR page structure', 'visual.json format', 'PBIR sorting', 'report wallpaper', 'filter formatting', 'PBIR bookmarks', 'definition.pbir', 'query roles', 'field references in PBIR', 'change the theme', 'modify theme', 'update theme colors', 'push formatting to theme', 'theme fonts', 'theme text classes', 'set theme formatting', 'theme wildcards', 'visual type overrides in theme', 'filter pane theme styling', or needs to understand Power BI Enhanced Report metadata format idiosyncrasies. This is a format reference for understanding and authoring PBIR JSON schemas and patterns."
+version: 0.18.0
+description: Format reference for Power BI Enhanced Report (PBIR) JSON schemas and patterns. Automatically invoke when the user asks about PBIR JSON structure, visual.json properties, PBIR expressions, objects vs visualContainerObjects, theme inheritance, conditional formatting patterns, extension measures, bookmarks, field references, filter formatting, query roles, PBIR page structure, report wallpaper, or any PBIR metadata format question.
 ---
 
 # PBIR Format Reference
