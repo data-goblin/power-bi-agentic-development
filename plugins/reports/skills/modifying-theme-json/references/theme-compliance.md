@@ -150,7 +150,7 @@ The theme wildcard sets `title[0].fontSize = 14` and `title[0].fontFamily = "Seg
 
 **Detection:**
 ```bash
-jq 'select(.visual.visualContainerObjects.title != null) | .visual.visualContainerObjects.title[0].fontSize' visual.json
+jq 'select(.visual.visualContainerObjects.title != null) | .visual.visualContainerObjects.title[0].properties.fontSize.expr.Literal.Value' visual.json
 ```
 
 ### Background Explicitly Set to `false` When Theme Already Disables It

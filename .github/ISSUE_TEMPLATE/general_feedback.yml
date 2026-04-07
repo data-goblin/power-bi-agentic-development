@@ -1,0 +1,27 @@
+name: Feedback / Question
+description: Share feedback or ask a question
+title: "[Feedback]: "
+labels: ["feedback"]
+body:
+  - type: dropdown
+    id: plugin
+    attributes:
+      label: Plugin(s)
+      multiple: true
+      options:
+        - pbip
+        - reports
+        - semantic-models
+        - tabular-editor
+        - fabric-cli
+        - pbi-desktop
+        - General / all
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Feedback or question
+    validations:
+      required: true

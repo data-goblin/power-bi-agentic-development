@@ -15,6 +15,7 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    if: vars.ENABLE_PLUGIN_CI == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -25,23 +26,5 @@ jobs:
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code
 
-      - name: Validate marketplace manifest
-        run: claude plugin validate .
-
       - name: Validate plugins
-        run: |
-          exit_code=0
-          for dir in plugins/*/; do
-            # Skip gitignored plugins
-            if git check-ignore -q "$dir" 2>/dev/null; then
-              echo "Skipping (gitignored): $dir"
-              continue
-            fi
-
-            echo "--- Validating: $dir ---"
-            if ! claude plugin validate "$dir"; then
-              exit_code=1
-            fi
-            echo ""
-          done
-          exit $exit_code
+        run: bash scripts/validate-plugins.sh

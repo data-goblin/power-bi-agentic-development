@@ -1,0 +1,52 @@
+name: Bug Report
+description: Report a crash, error, or unexpected behavior
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: plugin
+    attributes:
+      label: Plugin(s)
+      multiple: true
+      options:
+        - pbip
+        - reports
+        - semantic-models
+        - tabular-editor
+        - fabric-cli
+        - pbi-desktop
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Skill
+        - Subagent
+        - Hook
+        - All
+        - Don't know
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the issue and how to reproduce it, if possible
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Any other information?
