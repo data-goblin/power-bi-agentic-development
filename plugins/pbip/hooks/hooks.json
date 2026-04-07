@@ -7,19 +7,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/validate-pbir.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-pbir.sh\"",
             "timeout": 10,
             "if": "Edit(**.Report/**)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/validate-tmdl.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-tmdl.sh\"",
             "timeout": 10,
             "if": "Edit(**/*.tmdl)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/validate-report-binding.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-report-binding.sh\"",
             "timeout": 10,
             "if": "Edit(**/definition.pbir)"
           }
@@ -30,19 +30,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/validate-pbir.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-pbir.sh\"",
             "timeout": 10,
             "if": "Write(**.Report/**)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/validate-tmdl.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-tmdl.sh\"",
             "timeout": 10,
             "if": "Write(**/*.tmdl)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/validate-report-binding.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-report-binding.sh\"",
             "timeout": 10,
             "if": "Write(**/definition.pbir)"
           }
@@ -53,19 +53,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/validate-pbir.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-pbir.sh\"",
             "timeout": 10,
             "if": "Bash(*.Report/*)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/validate-tmdl.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-tmdl.sh\"",
             "timeout": 10,
             "if": "Bash(*.tmdl*)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/validate-report-binding.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-report-binding.sh\"",
             "timeout": 10,
             "if": "Bash(*definition.pbir*)"
           }
