@@ -30,6 +30,10 @@ These skills are intended for use in Claude Code, Desktop, or Cowork. However, y
 claude plugin marketplace add data-goblin/power-bi-agentic-development
 ```
 
+### Example: Using the pbir-cli with the skills
+
+[![pbir-cli demo](https://img.youtube.com/vi/acHDorTi62U/maxresdefault.jpg)](https://www.youtube.com/watch?v=acHDorTi62U)
+
 <details>
 <summary><strong>Claude Code</strong></summary>
 
