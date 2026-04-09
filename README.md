@@ -156,6 +156,7 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 
 | Type | Name | Description |
 |------|------|-------------|
+| Skill | [`dax`](plugins/semantic-models/skills/dax/) | Optimize DAX query performance with tiered framework, trace diagnostics, and pattern catalog (DAX001–DL002) |
 | Skill | [`standardize-naming-conventions`](plugins/semantic-models/skills/standardize-naming-conventions/) | Audit and standardize naming conventions in semantic models |
 | Skill | [`review-semantic-model`](plugins/semantic-models/skills/review-semantic-model/) (Very WIP) | Review semantic models for quality, performance, AI readiness, and best practices |
 | Skill | [`refreshing-semantic-model`](plugins/semantic-models/skills/refreshing-semantic-model/) | Trigger or troubleshoot refreshes |

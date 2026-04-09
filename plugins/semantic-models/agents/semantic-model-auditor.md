@@ -207,6 +207,12 @@ Perform the following checks, categorized by severity:
 - Columns: Should match source or use consistent pattern
 - Tables: Should be singular or plural consistently
 
+## Related Skills
+
+- **[`dax`](../skills/dax/)** — For systematic DAX query performance optimization (trace diagnostics, pattern catalog DAX001–DL002). Use when audit findings reveal DAX anti-patterns or performance issues that need targeted optimization.
+- **[`review-semantic-model`](../skills/review-semantic-model/)** — Full model quality review
+- **[`standardize-naming-conventions`](../skills/standardize-naming-conventions/)** — Naming remediation
+
 ## Model Design Issues
 
 ### 20. Star Schema Violations
