@@ -32,6 +32,8 @@ claude plugin marketplace add data-goblin/power-bi-agentic-development
 
 ### Example: Using the pbir-cli with the skills
 
+[Click here for a YouTube walkthrough](https://www.youtube.com/watch?v=acHDorTi62U)
+
 [![pbir-cli demo](https://img.youtube.com/vi/acHDorTi62U/maxresdefault.jpg)](https://www.youtube.com/watch?v=acHDorTi62U)
 
 <details>
