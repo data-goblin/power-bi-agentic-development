@@ -85,10 +85,22 @@ Only consult these sections if the corresponding signal is present. All require 
 
 ### Requirements
 
-- Requires `powerbi-modeling-mcp` MCP Server for all operations.
-- Connect to the semantic model before starting: `connection_operations` → Connect.
+- **Semantic model connection** — Connect to the target semantic model before starting. For local Power BI Desktop models, use `connect-pbid`. For remote Fabric/XMLA models, use `powerbi-modeling-mcp` or an equivalent XMLA-capable tool.
+- **Trace capture** — Requires the ability to execute DAX queries with server timing trace capture. See [Trace Capture Methods](#trace-capture-methods) below.
+- **Model metadata** — Requires the ability to read measure definitions, function definitions, calculation group expressions, table metadata, and relationship metadata from the model.
 - **Tier 2:** Present the change and its output impact, wait for user approval.
-- **Tier 3/4:** Explain trade-offs, warn about downstream report risk, suggest working on a model copy, identify upstream changes (Lakehouse, Warehouse, Power Query) that cannot be made through the MCP.
+- **Tier 3/4:** Explain trade-offs, warn about downstream report risk, suggest working on a model copy, identify upstream changes (Lakehouse, Warehouse, Power Query) that may require changes beyond the semantic model itself.
+
+### Trace Capture Methods
+
+All methods use the same Analysis Services Trace API and produce identical trace events.
+
+| Method | Scope | Notes |
+|--------|-------|-------|
+| **`connect-pbid`** (PowerShell/ADOMD) | Local PBI Desktop | See [`performance-profiling.md`](../../../pbi-desktop/skills/connect-pbid/references/performance-profiling.md). Derive FE/SE split manually. |
+| **`powerbi-modeling-mcp`** (VS Code extension) | Local + remote (XMLA) | Returns pre-calculated FE/SE split, peak memory, result rows. Install: `code --install-extension analysis-services.powerbi-modeling-mcp` |
+| **DAX Studio** | Local + remote | Server Timings pane. Manual, not scriptable. |
+| **Fabric Workspace Monitoring** | Fabric workspaces | Built-in workspace-level query monitoring. |
 
 ---
 
@@ -99,11 +111,11 @@ Only consult these sections if the corresponding signal is present. All require 
 Before optimizing, fully resolve every DAX expression in the query. Partial visibility leads to incorrect or incomplete optimizations.
 
 1. **Identify measure references** in the user's query — any `[MeasureName]` pattern.
-2. **Retrieve each measure's expression** using `measure_operations` → Get (specify measure name + table).
+2. **Retrieve each measure's expression** — read the measure definition (name, table, DAX expression) from the model.
 3. **Recursively resolve dependencies** — read each expression, find nested `[OtherMeasure]` calls, fetch those too.
-4. **Retrieve user-defined functions** if referenced — use `function_operations` → Get or List.
+4. **Retrieve user-defined functions** if referenced.
 5. **Build a DEFINE block** that explicitly inlines all resolved measures and functions.
-6. **Check for active calculation groups** — use `calculation_group_operations` → ListGroups to discover groups, then GetGroup to retrieve calculation item expressions. Note any that may be active in the query context as they affect query plans for every intercepted measure.
+6. **Check for active calculation groups** — list all calculation groups in the model, retrieve their calculation item expressions. Note any that may be active in the query context as they affect query plans for every intercepted measure.
 
 **Example:** If `[Profit Margin]` = `DIVIDE([Total Profit], [Total Revenue])`, retrieve all three definitions and build:
 
@@ -119,8 +131,8 @@ SUMMARIZECOLUMNS ( 'Product'[Category], "Profit Margin", [Profit Margin] )
 
 ### Step 2: Gather Model Context
 
-1. `table_operations` → List — understand table structure and storage modes (Import, DQ, Direct Lake).
-2. `relationship_operations` → List — understand join paths and filter propagation.
+1. List all tables — understand table structure and storage modes (Import, DirectQuery, Direct Lake).
+2. List all relationships — understand join paths and filter propagation.
 
 This context helps distinguish model design issues (missing star schema, bidirectional relationships) from DAX expression problems.
 
@@ -128,9 +140,10 @@ This context helps distinguish model design issues (missing star schema, bidirec
 
 For each run:
 
-1. **Clear cache** → `dax_query_operations` ClearCache.
-2. **Execute** → `dax_query_operations` Execute with `GetExecutionMetrics=true`. Returns `CalculatedExecutionMetrics`, `ReportedExecutionMetrics`, trace events (embedded JSON), and query results (embedded CSV). **Read all embedded resources in the response.**
-3. Record TotalDuration, all metrics, and save the baseline CSV for semantic equivalence checks.
+1. **Clear cache** — clear the model's VertiPaq cache to ensure cold-cache timing.
+2. **Execute with trace capture** — run the DAX query with server timing trace enabled.
+3. **Derive key metrics** — Total Duration, FE/SE split, SE query count, peak memory, and result row count. See [Understanding FE vs. SE Metrics](#understanding-formula-engine-fe-vs-storage-engine-se-metrics) for derivation from trace events.
+4. Record all metrics, save the full trace events, and save the baseline result data for semantic equivalence checks.
 
 After all runs: discard warm-up, take the **fastest** of the 2 measured runs as the baseline. Record its full metrics, trace events, and CSV result.
 
@@ -162,8 +175,8 @@ DEFINE
 
 ### Step 2: Execute and Compare
 
-1. `dax_query_operations` ClearCache
-2. `dax_query_operations` Execute with `GetExecutionMetrics=true`.
+1. Clear the model cache.
+2. Execute the query with trace capture enabled.
 
 **During iteration:** 1 run is sufficient — columns are already resident from baseline. Reserve the full 3-run protocol (1 warm-up + 2 measured) for the **final confirmation** against the original baseline.
 
@@ -208,19 +221,19 @@ Before proceeding:
 2. Explain why the model design is causing the performance bottleneck.
 3. Warn that model changes can break downstream reports and visuals.
 4. Suggest creating a copy of the semantic model to experiment on.
-5. Identify if upstream changes are required (Lakehouse tables, Warehouse views, Power Query transformations) — these cannot be done through the modeling MCP alone.
-6. If approved, coordinate with the user's CI/CD process. Use `powerbi-semantic-model` skill for model structure changes and `fabric-cli` for workspace operations.
+5. Identify if upstream changes are required (Lakehouse tables, Warehouse views, Power Query transformations) — these cannot be done through semantic model tooling alone.
+6. If approved, coordinate with the user's CI/CD process.
 7. After applying changes, re-run the full baseline optimization workflow to measure impact.
 
 ---
 
 ## Error Handling
 
-- **Connection failure** — Verify dataset name, workspace name, or XMLA endpoint. For Desktop, ensure Power BI Desktop is running. For Service, verify XMLA read/write is enabled on the capacity.
-- **Query syntax error** — Use `dax_query_operations` Validate before executing.
+- **Connection failure** — Verify dataset name, workspace name, or XMLA endpoint. For Desktop, ensure Power BI Desktop is running and note the local port. For Service, verify XMLA read/write is enabled on the capacity.
+- **Query syntax error** — Validate DAX syntax before executing.
 - **Semantic equivalence failure** — Optimization changed calculation semantics. Review filter context, aggregation granularity, and CALCULATE filter arguments. Revert and try differently.
 - **No improvement found** — Some queries are already well-optimized at the DAX level. Check whether the bottleneck is data layout (Phase 4) or query structure (Phase 3).
-- **Trace events empty** — Ensure `GetExecutionMetrics=true` was set on the Execute call.
+- **Trace events empty** — Ensure server timing / trace capture is enabled before executing the query. Verify the trace is subscribed to the correct event types (`QueryEnd`, `VertiPaqSEQueryEnd`, `VertiPaqSEQueryCacheMatch`).
 
 ---
 
@@ -305,35 +318,36 @@ Fusion is the engine's ability to combine multiple SE scans into fewer scans. Th
 
 ### Understanding Formula Engine (FE) vs. Storage Engine (SE) Metrics
 
-When server timings are returned as `CalculatedExecutionMetrics`, use these raw field names:
+These are the critical metrics for DAX optimization, derived from Analysis Services trace events.
 
-| Metric | Raw field | Description | Target |
-|--------|-----------|-------------|--------|
-| **TotalDuration** | `totalDuration` | End-to-end query time (ms) | Lower is better |
-| **FormulaEngineDuration** | `formulaEngineDuration` | Single-threaded FE processing time (ms) | Lower is better |
-| **StorageEngineDuration** | `storageEngineDuration` | Multi-threaded SE query time (ms) | Higher % of total is better |
-| **StorageEngineQueryCount** | `storageEngineQueryCount` | Number of SE queries generated | Fewer is better |
-| **StorageEngineCpuTime** | — | Total CPU across all SE threads | Higher ratio to SE Duration is better |
-| **VertipaqCacheMatches** | `vertipaqCacheMatches` | Cache hits (SE queries answered from memory) | Only relevant on warm cache |
-| **SE Parallelism Factor** | `storageEngineCpuFactor` | CpuTime ÷ Duration | Higher is better |
-| **FE %** | `formulaEngineDurationPercentage` | FE Duration ÷ Total Duration | Lower is better |
-| **SE %** | `storageEngineDurationPercentage` | SE Duration ÷ Total Duration | Higher is better |
+| Metric | How to Derive | Description | Target |
+|--------|--------------|-------------|--------|
+| **Total Duration** | `QueryEnd.Duration` | End-to-end query time (ms) | Lower is better |
+| **FE Duration** | Total Duration − SE wall-clock time | Single-threaded FE processing time (ms) — **the #1 bottleneck in most slow queries** | Lower is better |
+| **SE Duration** | Union of overlapping `VertiPaqSEQueryEnd` intervals | Multi-threaded SE query time (ms) | Higher % of total is better |
+| **SE Query Count** | Count of `VertiPaqSEQueryEnd` events | Number of SE scans generated | Fewer is better |
+| **SE CPU Time** | Sum of all `VertiPaqSEQueryEnd.CpuTime` | Total CPU across all SE threads | Higher ratio to SE Duration is better |
+| **SE Parallelism Factor** | SE CPU Time ÷ SE Duration | Thread utilization across all scans | Higher is better (>1 = multi-threaded) |
+| **Cache Matches** | Count of `VertiPaqSEQueryCacheMatch` events | Cache hits (SE queries answered from memory) | Only relevant on warm cache |
+| **Peak Memory (KB)** | From execution metrics summary | Memory consumed during query execution | Lower is better — high values signal excessive materializations |
+| **SE Scan Row Count** | `volume` from `[Estimated size (volume, marshalling bytes): X, Y]` in `VertiPaqSEQueryEnd.TextData` | Rows materialized per SE scan | Large volumes signal excessive materialization — the SE is handing too many rows to the FE |
+| **FE %** | FE Duration ÷ Total Duration × 100 | Percentage of time in formula engine | Lower is better |
+| **SE %** | SE Duration ÷ Total Duration × 100 | Percentage of time in storage engine | Higher is better |
 
-> **Net wall-clock:** StorageEngineDuration is the *union* of overlapping SE intervals — not the sum of individual durations. Three concurrent 100ms scans = ~100ms wall clock, not 300ms.
+> **Net wall-clock:** SE Duration is the *union* of overlapping SE intervals — not the sum of individual durations. Three concurrent 100ms scans = ~100ms wall clock, not 300ms.
 
-**Parallelism — aggregate vs. per-scan:** `storageEngineCpuFactor` is the aggregate parallelism factor. When per-scan events are available, each scan has its own `cpuTime / duration`. A healthy aggregate factor can mask a single unparallelized scan where `cpuTime ≈ duration`.
+**Parallelism — aggregate vs. per-scan:** The aggregate parallelism factor is computed across all SE scans. Each individual scan has its own `CpuTime / Duration`. A healthy aggregate factor can mask a single unparallelized scan where `CpuTime ≈ Duration`.
 
-**FE processing gaps:** `formulaEngineDuration` is the sum of all time intervals where no SE query was executing — gaps between SE events on the timeline.
+**FE processing gaps:** FE Duration is the sum of all time intervals where no SE query was executing — gaps between SE events on the timeline.
 
 ### Analyzing Trace Events
 
-When `GetExecutionMetrics=true`, the Execute call returns trace events as an embedded JSON resource. Each event includes: `EventClassName`, `EventSubclassName`, `TextData`, `Duration`, `CpuTime`, `StartTime`, `EndTime`, `RequestId`, `Error`.
+Trace events are captured from the Analysis Services engine during query execution. Each event includes: `EventClass` (event type), `EventSubclass`, `TextData` (xmSQL or DAX), `Duration`, `CpuTime`, `StartTime`, `EndTime`.
 
 **Key event types:**
 - `VertiPaqSEQueryBegin` / `VertiPaqSEQueryEnd` — SE scan lifecycle. `Duration` and `CpuTime` are on the End event. `TextData` contains the xmSQL query.
 - `VertiPaqSEQueryCacheMatch` — SE query answered from cache (no scan). Count these separately.
 - `QueryBegin` / `QueryEnd` — Overall DAX query lifecycle. `Duration` on QueryEnd = total wall-clock time.
-- `ExecutionMetrics` — Summary metrics including `storageEngineQueryCount`, `formulaEngineDuration`, etc.
 - `AggregateTableRewriteQuery` — Fired when the engine rewrites a query to use an aggregation table. `TextData` contains the rewritten query. Presence indicates the engine found and used an agg table hit — absence on an agg-enabled model means the query fell through to the detail table.
 
 > **Filtering trace output:** Focus on the event types above. Ignore `VertiPaqScanInternal` subclass events — these duplicate the outer `VertiPaqScan` with internal detail (e.g., `DC_KIND="DENSE"`) and identical timing. Also ignore `CommandBegin`/`CommandEnd` (DAX execution wrapper, no diagnostic value) and `Error` events (only relevant when errors occur).

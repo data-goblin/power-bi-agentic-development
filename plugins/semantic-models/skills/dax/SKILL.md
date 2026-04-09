@@ -14,7 +14,10 @@ For systematic DAX query performance optimization, read the full reference befor
 
 **[`references/dax-performance-optimization.md`](./references/dax-performance-optimization.md)** — Tiered framework (4 tiers), phased workflow, engine internals (FE/SE, xmSQL, fusion), trace diagnostics, and pattern catalog (DAX001–DL002).
 
-For trace capture and performance profiling, use the [`connect-pbid` skill](../../pbi-desktop/skills/connect-pbid/) — specifically `performance-profiling.md` for FE/SE timing and `evaluateandlog-debugging.md` for intermediate result inspection.
+Trace capture and performance profiling:
+
+- **Local models (Power BI Desktop):** Use the [`connect-pbid` skill](../../pbi-desktop/skills/connect-pbid/) — specifically `performance-profiling.md` for FE/SE timing and `evaluateandlog-debugging.md` for intermediate result inspection.
+- **Remote models (Fabric Service / XMLA):** Use the [`powerbi-modeling-mcp`](https://marketplace.visualstudio.com/items?itemName=analysis-services.powerbi-modeling-mcp) VS Code extension for trace and query operations. Install: `code --install-extension analysis-services.powerbi-modeling-mcp`
 
 ## Related Skills
 
