@@ -1,6 +1,6 @@
 ---
 name: r-visuals
-version: 0.22.3
+version: 0.22.4
 description: R visual creation and ggplot2 patterns for PBIR reports. Automatically invoke when the user mentions "R visual", "ggplot2", "ggplot in Power BI", or asks to "create an R visual", "add an R chart", "write an R visual script", "inject an R script into Power BI".
 ---
 

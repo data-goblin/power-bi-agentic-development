@@ -1,6 +1,6 @@
 ---
 name: lineage-analysis
-version: 0.22.3
+version: 0.22.4
 description: Trace relationships between semantic models and downstream reports across Fabric workspaces. Automatically invoke when the user asks to "find downstream reports", "show report lineage", "impact analysis", "what depends on this dataset", "cross-workspace lineage", "which reports are connected", "get model dependencies", or mentions model-to-report dependency tracing.
 ---
 

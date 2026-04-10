@@ -1,6 +1,6 @@
 ---
 name: pbi-report-design
-version: 0.22.3
+version: 0.22.4
 description: Power BI report design principles, layout guidance, and formatting best practices. Automatically invoke when the user asks about "report layout", "design best practices", "visual hierarchy", "3-30-300 rule", "KPI card design", "page layout", "accessibility in reports", "visual spacing", "report canvas", "card design patterns", "table formatting", "matrix formatting", or mentions report design principles.
 ---
 

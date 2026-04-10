@@ -1,6 +1,6 @@
 ---
 name: standardize-naming-conventions
-version: 0.22.3
+version: 0.22.4
 description: Interactive naming convention standardization for TMDL-based Power BI semantic models. Automatically invoke when the user asks to "standardize naming conventions", "fix naming conventions", "clean up model names", "apply naming standards", "audit naming", "make names human readable", "rename fields", "fix abbreviations in model", or mentions renaming measures, columns, or tables for consistency across a model.
 ---
 

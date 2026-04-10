@@ -1,6 +1,6 @@
 ---
 name: pbir-format
-version: 0.22.3
+version: 0.22.4
 description: Format reference for Power BI Enhanced Report (PBIR) JSON schemas and patterns. Automatically invoke when the user asks about PBIR JSON structure, visual.json properties, PBIR expressions, objects vs visualContainerObjects, theme inheritance, conditional formatting patterns, extension measures, bookmarks, field references, filter formatting, query roles, PBIR page structure, report wallpaper, or any PBIR metadata format question.
 ---
 

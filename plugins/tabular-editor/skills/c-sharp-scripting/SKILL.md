@@ -1,6 +1,6 @@
 ---
 name: c-sharp-scripting
-version: 0.22.3
+version: 0.22.4
 description: Writing and executing C# scripts and macros against Power BI semantic models using Tabular Editor 2/3. Automatically invoke when the user mentions "C# script", "Tabular Editor script", "TOM scripting", "MacroActions.json", "XMLA", or asks to "automate model changes", "bulk update measures", "create calculation groups", "write a macro", "format DAX expressions", "manage model metadata".
 ---
 

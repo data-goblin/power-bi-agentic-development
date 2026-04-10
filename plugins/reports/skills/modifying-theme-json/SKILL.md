@@ -1,6 +1,6 @@
 ---
 name: modifying-theme-json
-version: 0.22.3
+version: 0.22.4
 description: Design, enforce, audit, and validate Power BI report themes. This skill MUST be invoked when a report uses the default or built-in theme, has a minimal custom theme (few or no visualStyles), or has accumulated many visual-level formatting overrides (objects/visualContainerObjects in visual.json); these are signs the theme needs attention. Also automatically invoke when the user asks to "create a theme", "design a theme", "enforce theme compliance", "audit theme adherence", "push formatting to theme", "clear visual overrides", "standardize report formatting", "update theme colors", "change theme typography", "set theme text classes", "validate a theme", "add visual-type overrides to the theme", "copy a theme", "download a theme", "apply a template", or mentions theme design, enforcement, compliance, or visual formatting inconsistency.
 ---
 
