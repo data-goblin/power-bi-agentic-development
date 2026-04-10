@@ -61,6 +61,16 @@ The `--measure` format is `"container.prop MeasureRef"` where:
 
 Color properties (fill, color, fontColor, strokeColor, etc.) are automatically wrapped in `{"solid": {"color": ...}}` structure.
 
+### Measure-bound axis properties
+
+`--measure` also works for non-color properties like axis bounds. This binds the property to a measure expression rather than a literal:
+
+```bash
+# Dynamic Y-axis floor and ceiling
+pbir visuals cf "Visual.Visual" --measure "valueAxis.start _Fmt.Zero"
+pbir visuals cf "Visual.Visual" --measure "valueAxis.end _Fmt.AxisCeiling"
+```
+
 ## Removing CF
 
 ```bash
