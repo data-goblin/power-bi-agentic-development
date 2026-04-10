@@ -1,0 +1,22 @@
+{
+  "name": "etl",
+  "version": "26.29.0",
+  "description": "Inspect, query, and transform lakehouse data with Spark, Livy, and DuckDB.",
+  "author": {
+    "name": "Kurt Buhler",
+    "url": "https://data-goblins.com"
+  },
+  "homepage": "https://data-goblins.com",
+  "repository": "https://github.com/data-goblin/power-bi-agentic-development",
+  "license": "GPL-3.0",
+  "keywords": [
+    "etl",
+    "spark",
+    "livy",
+    "duckdb",
+    "lakehouse",
+    "fabric",
+    "pyspark",
+    "python"
+  ]
+}

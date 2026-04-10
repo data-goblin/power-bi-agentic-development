@@ -1,6 +1,5 @@
 ---
 name: standardize-naming-conventions
-version: 0.21.1
 description: Interactive naming convention standardization for TMDL-based Power BI semantic models. Automatically invoke when the user asks to "standardize naming conventions", "fix naming conventions", "clean up model names", "apply naming standards", "audit naming", "make names human readable", "rename fields", "fix abbreviations in model", or mentions renaming measures, columns, or tables for consistency across a model.
 ---
 
@@ -129,7 +128,8 @@ Quick-reference checklist for the most common issues:
 
 1. Identify all connected reports (`.pbir` files or Power BI Service reports)
 2. Rebind visuals to use the new field names
-3. This can be done manually in Power BI Desktop, or programmatically by editing the `visual.json` files in PBIR format
+3. Repair each report with `pbir fields replace` or `pbir fields replace-table`; never edit
+   report JSON directly
 
 Always warn the user about this before applying renames. If downstream reports exist, consider:
 - Making a backup of the model before changes

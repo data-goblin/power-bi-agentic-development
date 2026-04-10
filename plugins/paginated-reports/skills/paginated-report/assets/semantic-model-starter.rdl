@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Report MustUnderstand="df"
+  xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition"
+  xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner"
+  xmlns:df="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition/defaultfontfamily">
+  <rd:ReportUnitType>Inch</rd:ReportUnitType>
+  <rd:ReportID>7c4e9a08-2d61-4f3b-9a7e-5b8c0d2f1a63</rd:ReportID>
+  <df:DefaultFontFamily>Segoe UI</df:DefaultFontFamily>
+  <AutoRefresh>0</AutoRefresh>
+  <DataSources>
+    <DataSource Name="SemanticModel">
+      <ConnectionProperties>
+        <DataProvider>PBIDATASET</DataProvider>
+        <ConnectString>Data Source=pbiazure://api.powerbi.com/;Identity Provider="https://login.microsoftonline.com/organizations, https://analysis.windows.net/powerbi/api, f0b72488-7082-488a-a7e8-eada97bd842d";Initial Catalog=sobe_wowvirtualserver-REPLACE_WITH_DATASET_GUID;Integrated Security=ClaimsToken</ConnectString>
+      </ConnectionProperties>
+      <rd:SecurityType>None</rd:SecurityType>
+      <rd:DataSourceID>9f2c1b40-3a55-4e88-bb21-c0e8d7f43e21</rd:DataSourceID>
+      <rd:PowerBIWorkspaceName>REPLACE_WITH_WORKSPACE_NAME</rd:PowerBIWorkspaceName>
+      <rd:PowerBIDatasetName>REPLACE_WITH_DATASET_NAME</rd:PowerBIDatasetName>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="dsCategories">
+      <Query>
+        <DataSourceName>SemanticModel</DataSourceName>
+        <CommandText>EVALUATE VALUES('Product'[Category]) ORDER BY 'Product'[Category]</CommandText>
+      </Query>
+      <Fields>
+        <Field Name="Category">
+          <DataField>Product[Category]</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="Sales">
+      <Query>
+        <DataSourceName>SemanticModel</DataSourceName>
+        <QueryParameters>
+          <QueryParameter Name="Category">
+            <Value>=Parameters!Category.Value</Value>
+          </QueryParameter>
+        </QueryParameters>
+        <CommandText>EVALUATE
+SUMMARIZECOLUMNS (
+  'Product'[Category],
+  TREATAS ( { @Category }, 'Product'[Category] ),
+  "Sales", [Sales Amount]
+)
+ORDER BY [Sales] DESC</CommandText>
+      </Query>
+      <Fields>
+        <Field Name="Category">
+          <DataField>Product[Category]</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Sales">
+          <DataField>[Sales]</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+  </DataSets>
+  <ReportSections>
+    <ReportSection>
+      <Body>
+        <ReportItems>
+          <Tablix Name="SalesTablix">
+            <TablixBody>
+              <TablixColumns>
+                <TablixColumn><Width>4.5in</Width></TablixColumn>
+                <TablixColumn><Width>3in</Width></TablixColumn>
+              </TablixColumns>
+              <TablixRows>
+                <TablixRow>
+                  <Height>0.3in</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="HdrCategory">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun><Value>Category</Value><Style><FontWeight>Bold</FontWeight><Color>White</Color></Style></TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border><Style>None</Style></Border>
+                            <BackgroundColor>#118dff</BackgroundColor>
+                            <PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight>
+                            <PaddingTop>3pt</PaddingTop><PaddingBottom>3pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="HdrSales">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun><Value>Sales</Value><Style><FontWeight>Bold</FontWeight><Color>White</Color></Style></TextRun>
+                              </TextRuns>
+                              <Style><TextAlign>Right</TextAlign></Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border><Style>None</Style></Border>
+                            <BackgroundColor>#118dff</BackgroundColor>
+                            <PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight>
+                            <PaddingTop>3pt</PaddingTop><PaddingBottom>3pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+                <TablixRow>
+                  <Height>0.28in</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Category">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun><Value>=Fields!Category.Value</Value><Style /></TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border><Style>None</Style></Border>
+                            <BottomBorder><Color>#e0e0e0</Color><Style>Solid</Style><Width>1pt</Width></BottomBorder>
+                            <PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight>
+                            <PaddingTop>3pt</PaddingTop><PaddingBottom>3pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Sales">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun><Value>=Fields!Sales.Value</Value><Style /></TextRun>
+                              </TextRuns>
+                              <Style><TextAlign>Right</TextAlign></Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border><Style>None</Style></Border>
+                            <BottomBorder><Color>#e0e0e0</Color><Style>Solid</Style><Width>1pt</Width></BottomBorder>
+                            <PaddingLeft>4pt</PaddingLeft><PaddingRight>4pt</PaddingRight>
+                            <PaddingTop>3pt</PaddingTop><PaddingBottom>3pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+              </TablixRows>
+            </TablixBody>
+            <TablixColumnHierarchy>
+              <TablixMembers>
+                <TablixMember />
+                <TablixMember />
+              </TablixMembers>
+            </TablixColumnHierarchy>
+            <TablixRowHierarchy>
+              <TablixMembers>
+                <TablixMember />
+                <TablixMember>
+                  <Group Name="Detail" />
+                </TablixMember>
+              </TablixMembers>
+            </TablixRowHierarchy>
+            <DataSetName>Sales</DataSetName>
+            <Top>0.1in</Top>
+            <Left>0in</Left>
+            <Height>0.58in</Height>
+            <Width>7.5in</Width>
+            <Style>
+              <Border><Style>None</Style></Border>
+            </Style>
+          </Tablix>
+        </ReportItems>
+        <Height>1in</Height>
+        <Style />
+      </Body>
+      <Width>7.5in</Width>
+      <Page>
+        <PageHeader>
+          <Height>0.7in</Height>
+          <PrintOnFirstPage>true</PrintOnFirstPage>
+          <PrintOnLastPage>true</PrintOnLastPage>
+          <ReportItems>
+            <Textbox Name="ReportTitle">
+              <CanGrow>true</CanGrow>
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun><Value>Sales by Category</Value><Style><FontSize>18pt</FontSize><Color>#252423</Color></Style></TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.1in</Top><Left>0in</Left><Height>0.3in</Height><Width>7.5in</Width>
+              <Style><Border><Style>None</Style></Border><PaddingLeft>2pt</PaddingLeft></Style>
+            </Textbox>
+            <Textbox Name="ParamEcho">
+              <CanGrow>true</CanGrow>
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun><Value>="Category: " &amp; Parameters!Category.Value</Value><Style><FontSize>9pt</FontSize><Color>#605e5c</Color></Style></TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.42in</Top><Left>0in</Left><Height>0.22in</Height><Width>7.5in</Width>
+              <Style><Border><Style>None</Style></Border><PaddingLeft>2pt</PaddingLeft></Style>
+            </Textbox>
+          </ReportItems>
+          <Style><Border><Style>None</Style></Border></Style>
+        </PageHeader>
+        <PageFooter>
+          <Height>0.3in</Height>
+          <PrintOnFirstPage>true</PrintOnFirstPage>
+          <PrintOnLastPage>true</PrintOnLastPage>
+          <ReportItems>
+            <Textbox Name="PageNumber">
+              <CanGrow>true</CanGrow>
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun><Value>=Globals!PageNumber &amp; " of " &amp; Globals!TotalPages</Value><Style><Color>#605e5c</Color><FontSize>8pt</FontSize></Style></TextRun>
+                  </TextRuns>
+                  <Style><TextAlign>Right</TextAlign></Style>
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.05in</Top><Left>0in</Left><Height>0.2in</Height><Width>7.5in</Width>
+              <Style><Border><Style>None</Style></Border><PaddingRight>2pt</PaddingRight></Style>
+            </Textbox>
+          </ReportItems>
+          <Style><Border><Style>None</Style></Border></Style>
+        </PageFooter>
+        <PageHeight>11in</PageHeight>
+        <PageWidth>8.5in</PageWidth>
+        <InteractiveHeight>11in</InteractiveHeight>
+        <InteractiveWidth>8.5in</InteractiveWidth>
+        <LeftMargin>0.5in</LeftMargin>
+        <RightMargin>0.5in</RightMargin>
+        <TopMargin>0.5in</TopMargin>
+        <BottomMargin>0.5in</BottomMargin>
+        <Style />
+      </Page>
+    </ReportSection>
+  </ReportSections>
+  <ReportParameters>
+    <ReportParameter Name="Category">
+      <DataType>String</DataType>
+      <DefaultValue>
+        <DataSetReference>
+          <DataSetName>dsCategories</DataSetName>
+          <ValueField>Category</ValueField>
+        </DataSetReference>
+      </DefaultValue>
+      <Prompt>Category</Prompt>
+      <ValidValues>
+        <DataSetReference>
+          <DataSetName>dsCategories</DataSetName>
+          <ValueField>Category</ValueField>
+          <LabelField>Category</LabelField>
+        </DataSetReference>
+      </ValidValues>
+    </ReportParameter>
+  </ReportParameters>
+  <ReportParametersLayout>
+    <GridLayoutDefinition>
+      <NumberOfColumns>1</NumberOfColumns>
+      <NumberOfRows>1</NumberOfRows>
+      <CellDefinitions>
+        <CellDefinition>
+          <ColumnIndex>0</ColumnIndex>
+          <RowIndex>0</RowIndex>
+          <ParameterName>Category</ParameterName>
+        </CellDefinition>
+      </CellDefinitions>
+    </GridLayoutDefinition>
+  </ReportParametersLayout>
+</Report>

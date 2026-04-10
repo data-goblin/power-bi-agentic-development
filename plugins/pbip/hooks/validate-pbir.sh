@@ -8,6 +8,8 @@
 #   3. Required fields per file type (from Microsoft JSON schemas)
 #   4. $schema URL format
 #   5. Visual/page name format (word chars and hyphens only)
+#   6. visualContainerObjects names against Microsoft's core visual catalog
+#      (self-contained enum check; allowlist in core-visual-catalog.json)
 #
 # Checks can be toggled via config.yaml in the same directory as this script.
 #
@@ -16,16 +18,23 @@
 #   2 - Blocking: validation error detected
 #
 
-set -uo pipefail
+# Strict mode intentionally relaxed; favors continuing execution over spurious
+# exits on Windows Git Bash. Every failing path below exits 0 or 2 explicitly.
+set -o pipefail
 
-INPUT=$(cat)
+INPUT=$(cat 2>/dev/null || printf '%s' '{}')
 
 # Skip if jq not available
 command -v jq &>/dev/null || exit 0
 
 # ── Config ──────────────────────────────────────────────────────────────────
-HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd)" || exit 0
 HOOK_CONFIG="$HOOK_DIR/config.yaml"
+
+# Master kill-switch (Windows escape hatch)
+if [[ -f "$HOOK_CONFIG" ]] && grep -qE "^all_hooks_enabled:[[:space:]]*false" "$HOOK_CONFIG" 2>/dev/null; then
+    exit 0
+fi
 
 check_enabled() {
     local check_name="$1"
@@ -154,6 +163,38 @@ validate_file() {
                     return 2
                 fi
             fi
+
+            # visualContainerObjects names against the core visual catalog allowlist.
+            # The 15 container objects are universal (same for built-in and custom
+            # visuals), so this is safe to enforce. Visual type ids are NOT checked:
+            # custom visuals use arbitrary type strings. Allowlist + catalog version
+            # in core-visual-catalog.json; degrades silently if that file is absent.
+            if check_enabled visual_catalog_enum && [[ -f "$HOOK_DIR/core-visual-catalog.json" ]]; then
+                local VCO_ALLOW BAD_VCO CATVER ALLOWED
+                VCO_ALLOW=$(jq -c '.vcoNames' "$HOOK_DIR/core-visual-catalog.json" 2>/dev/null)
+                if [[ -n "$VCO_ALLOW" && "$VCO_ALLOW" != "null" ]]; then
+                    BAD_VCO=$(jq -r --argjson allow "$VCO_ALLOW" '
+                        ((.visual.visualContainerObjects // {}) | keys) - $allow | .[]?
+                    ' "$FILE_PATH" 2>/dev/null)
+                    if [[ -n "$BAD_VCO" ]]; then
+                        CATVER=$(jq -r '.catalogVersion // "?"' "$HOOK_DIR/core-visual-catalog.json" 2>/dev/null)
+                        ALLOWED=$(jq -r '.vcoNames | join(", ")' "$HOOK_DIR/core-visual-catalog.json" 2>/dev/null)
+                        echo "PBIR validation failed: $FILE_PATH" >&2
+                        echo "" >&2
+                        echo "Unrecognized visualContainerObjects name(s):" >&2
+                        printf '  - %s\n' $BAD_VCO >&2
+                        echo "" >&2
+                        echo "Valid container objects (core visual catalog $CATVER):" >&2
+                        echo "  $ALLOWED" >&2
+                        echo "" >&2
+                        echo "Container objects are the same for every visual. Power BI silently" >&2
+                        echo "ignores an unknown name. Disable with visual_catalog_enum: false." >&2
+                        echo "" >&2
+                        echo "$SKILL_TIP" >&2
+                        return 2
+                    fi
+                fi
+            fi
             ;;
 
         page.json)
@@ -162,7 +203,8 @@ validate_file() {
                 (has("name") | tostring),
                 (has("displayName") | tostring),
                 (has("displayOption") | tostring),
-                (.name // "")
+                (.name // ""),
+                (.displayOption // "")
             ' "$FILE_PATH" 2>/dev/null) || return 0
 
             VALS=()
@@ -170,6 +212,7 @@ validate_file() {
             SCHEMA="${VALS[0]:-}"
             local HAS_NAME="${VALS[1]:-}" HAS_DISPLAY_NAME="${VALS[2]:-}"
             local HAS_DISPLAY_OPTION="${VALS[3]:-}" NAME="${VALS[4]:-}"
+            local DISPLAY_OPTION="${VALS[5]:-}"
 
             if check_enabled required_fields; then
                 MISSING=()
@@ -185,6 +228,23 @@ validate_file() {
                     echo "$SKILL_TIP" >&2
                     return 2
                 fi
+            fi
+
+            # Valid displayOption values per the Microsoft PageDisplayOption schema.
+            if check_enabled enum_values && [[ -n "$DISPLAY_OPTION" ]]; then
+                case "$DISPLAY_OPTION" in
+                    FitToPage|FitToWidth|ActualSize|DeprecatedDynamic|ActualSizeTopLeft) ;;
+                    *)
+                        echo "PBIR validation failed: $FILE_PATH" >&2
+                        echo "" >&2
+                        echo "Invalid displayOption value: '$DISPLAY_OPTION'" >&2
+                        echo "Valid: FitToPage, FitToWidth, ActualSize (DeprecatedDynamic and ActualSizeTopLeft are deprecated)." >&2
+                        echo "A 16:9 page ratio comes from height/width (e.g. 1080/1920), not displayOption." >&2
+                        echo "" >&2
+                        echo "$SKILL_TIP" >&2
+                        return 2
+                        ;;
+                esac
             fi
 
             if check_enabled schema_url && [[ -n "$SCHEMA" ]]; then
@@ -366,6 +426,8 @@ elif [[ "$TOOL_NAME" == "Bash" ]]; then
         done
         exit 2
     fi
+
+    exit 0
 fi
 
 exit 0

@@ -81,3 +81,5 @@ JOIN MyLakehouse.dbo.customers c ON o.customer_id = c.customer_id;
 ```bash
 fab rm "ws.Workspace/MyDB.SQLDatabase" -f
 ```
+
+Recovery depends on the tenant Item Recovery setting; see [reference.md > Recovering deleted items](reference.md#recovering-deleted-items).

@@ -23,6 +23,11 @@ pbir cat "Report.Report/reportExtensions"         # Raw reportExtensions.json
 
 ## Creating Extension Measures
 
+**The `-t` table must exist in the model.** A measure homed on a nonexistent
+table (e.g. `_Fmt` when the model has no such table) breaks every visual that
+references it in Desktop. Check `pbir model -d` first; do not bypass with
+`--no-validate`.
+
 ```bash
 # Basic measure
 pbir dax measures add "Report.Report" -t _Fmt -n "StatusColor" \
@@ -50,7 +55,7 @@ pbir dax measures add "Report.Report" -t Metrics -n "RevenueFormatted" \
 
 ```bash
 # Rename
-pbir dax measures rename "Report.Report" --from "_Fmt.OldName" --to "NewName"
+pbir dax measures rename "Report.Report" "OldName" "NewName"
 
 # Remove all measures
 pbir rm "Report.Report" --measures -f
@@ -88,7 +93,7 @@ Show a data label only on the most recent data point in a line chart:
 
 ```bash
 pbir dax measures add "Report.Report" -t _Fmt -n "RevenueLatestLabel" \
-  -e 'IF(SELECTEDVALUE(Date[Date]) = MAX(Date[Date]), [Revenue], BLANK())' \
+  -e "IF(SELECTEDVALUE('Date'[Date]) = MAX('Date'[Date]), [Revenue], BLANK())" \
   --data-type Decimal -F "#,0"
 ```
 
@@ -100,7 +105,7 @@ Show a percentage only when a single category is selected:
 
 ```bash
 pbir dax measures add "Report.Report" -t _Fmt -n "ShareIfSingle" \
-  -e 'IF(HASONEVALUE(Products[Category]), DIVIDE([Revenue], CALCULATE([Revenue], ALL(Products[Category]))), BLANK())' \
+  -e "IF(HASONEVALUE('Products'[Category]), DIVIDE([Revenue], CALCULATE([Revenue], ALL('Products'[Category]))), BLANK())" \
   --data-type Decimal -F "0.0%"
 ```
 

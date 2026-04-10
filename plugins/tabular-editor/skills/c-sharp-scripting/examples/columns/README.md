@@ -28,13 +28,13 @@ Scripts for managing columns in Tabular models.
 
 ### Execute Inline
 ```bash
-te "model.bim" 'foreach(var col in Model.AllColumns.Where(c => c.Name.EndsWith("ID"))) { col.IsHidden = true; }'
+te script "model.bim" -e 'foreach(var col in Model.AllColumns.Where(c => c.Name.EndsWith("ID"))) { col.IsHidden = true; }' --save
 ```
 
 ### Execute Script File
 ```bash
-te "model.bim" samples/columns/hide_key_columns.csx --file
-te "Production/Sales" samples/columns/disable_summarization.csx --file
+te script "model.bim" -S samples/columns/hide_key_columns.csx --save
+te script -s "Production" -d "Sales" -S samples/columns/disable_summarization.csx --save
 ```
 
 ### With Fabric CLI Workflow
@@ -43,8 +43,8 @@ te "Production/Sales" samples/columns/disable_summarization.csx --file
 fab export "Workspace/Model.SemanticModel" -o ./model -f
 
 # Run column scripts
-te "./model/Model.SemanticModel/model.bim" samples/columns/hide_key_columns.csx --file
-te "./model/Model.SemanticModel/model.bim" samples/columns/set_data_category.csx --file
+te script "./model/Model.SemanticModel/definition" -S samples/columns/hide_key_columns.csx --save
+te script "./model/Model.SemanticModel/definition" -S samples/columns/set_data_category.csx --save
 
 # Import back
 fab import "Workspace/Model.SemanticModel" -i ./model/Model.SemanticModel -f

@@ -1,0 +1,2139 @@
+# Reconciled metadata for 159 Fabric tenant settings.
+# human_name, description, preview, source_url: sourced 1:1 from MS Learn tenant-settings-index.
+# recommended, risk, recommendation_nuance: opinionated posture for a typical enterprise audit.
+# default: Microsoft-documented factory default (on/off) where explicitly stated in the docs;
+#          null when the per-setting MS Learn page does not state a default.
+# default_source: URL that verifies the default value.
+# needs_review: true marks entries whose recommended/nuance need a fresh re-read.
+
+AADSSOForGateway:
+  human_name: Microsoft Entra single sign-on for data gateway
+  description: Users can authenticate to on-premises data gateways with Microsoft Entra SSO, sending user
+    access token info (names and emails) to data sources through the gateway service.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#azure-ad-single-sign-on-sso-for-gateway
+  recommended: "on"
+  default: 'off'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#azure-ad-single-sign-on-sso-for-gateway
+  risk: low
+  recommendation_nuance: Ensures auth for on-prem gateway; facilitates RLS for DirectQuery semantic models,
+    improves audit trail and reduces credential reuse.
+
+ASCollectQueryTextTelemetryTenantSwitch:
+  human_name: Microsoft can store query text to aid in support investigations
+  description: Query text for certain items such as semantic models is securely stored to support Microsoft
+    support investigations; turning it off may limit Microsoft's ability to troubleshoot Fabric.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/query-text-storage
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/query-text-storage
+  risk: medium
+  recommendation_nuance: Turning off slows support case resolution because Microsoft cannot see the actual
+    queries users ran. Turn off only if your legal/compliance posture forbids Microsoft from retaining
+    query text.
+
+ASShareableCloudConnectionBindingSecurityModeTenant:
+  human_name: Enable granular access control for all data connections
+  description: Enforces strict access control for every data connection type so shared items are disconnected
+    from their sources when edited by users lacking permission to those connections.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2226159
+  recommended: "on"
+  default: 'off'
+  default_source: https://learn.microsoft.com/power-bi/connect-data/service-create-share-cloud-data-sources#granular-access-control
+  risk: medium
+  recommendation_nuance: Strong security control against unauthorized data-source reuse. Leave off only
+    if it causes unavoidable breakage in legacy shared datasets.
+
+ASWritethruContinuousExportTenantSwitch:
+  human_name: Semantic models can export data to OneLake
+  description: Semantic models set up for OneLake integration can push their import tables to OneLake
+    so the exported tables can then be used within Fabric items such as lakehouses and warehouses.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/enterprise/onelake-integration-overview
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/enterprise/onelake-integration-overview
+  risk: low
+  recommendation_nuance: Can be useful but can also lead to data duplication. Enable if you have specific
+    data re-use requirements that want to leverage OneLake (via Direct Lake) instead of composite models.
+
+AdminApisIncludeDetailedMetadata:
+  human_name: Enhance admin APIs responses with detailed metadata
+  description: Users and service principals allowed to call Power BI admin APIs can receive detailed metadata
+    about Power BI items, such as semantic model table and column names in GetScanResult responses.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-admin-api-settings#enhance-admin-apis-responses-with-detailed-metadata
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-admin-api-settings#enhance-admin-apis-responses-with-detailed-metadata
+  risk: low
+  recommendation_nuance: Required for Purview ingestion, lineage tools, and most governance catalogs to
+    function. The only reason to leave off is if you consider schema-level metadata itself sensitive,
+    which is rare.
+
+AdminApisIncludeExpressions:
+  human_name: Enhance admin APIs responses with DAX and mashup expressions
+  description: Users and service principals eligible to call Power BI admin APIs receive detailed metadata
+    about queries and expressions, such as DAX and mashup expressions in GetScanResult responses.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-admin-api-settings#enhance-admin-apis-responses-with-dax-and-mashup-expressions
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-admin-api-settings#enhance-admin-apis-responses-with-dax-and-mashup-expressions
+  risk: low
+  recommendation_nuance: Required for deep governance (auditing measure definitions, detecting hardcoded
+    secrets in M, impact analysis). Turn off only if your M expressions contain connection-string secrets
+    you do not want exposed even to admins with read access.
+
+AdminCustomDisclaimer:
+  human_name: Show a custom message before publishing reports
+  description: Users see a custom admin-defined message before a report gets published.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-help-support#show-a-custom-message-before-publishing-reports
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-help-support#show-a-custom-message-before-publishing-reports
+  risk: low
+  recommendation_nuance: Useful for reminding users of internal policy before publishing. Fill in the
+    property text with a short reminder (e.g. "Check you're publishing into the right workspace").
+
+AdminDataExploreViewPermission:
+  human_name: Users with view permission can launch Explore
+  description: Lets users who only have view permission on a semantic model launch the lightweight Explore
+    experience for ad hoc analysis from that model or items connected to it.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/power-bi/consumer/explore-data-service#permissions-and-requirements
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/power-bi/consumer/explore-data-service#permissions-and-requirements
+  risk: low
+  recommendation_nuance: A feature that can be useful for exploring data but can create confusion; you
+    might want to use personalize visuals in reports, instead.
+
+AllowAccessOverPrivateLinks:
+  human_name: Tenant-level Private Link
+  description: Allows users to connect to the Fabric tenant through a Private Link for tighter network
+    security, with setup completed in Azure by a delegated person or group.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/security/security-private-links-overview
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/security/security-private-links-overview
+  risk: medium
+  recommendation_nuance: Mandatory for regulated industries that must keep Fabric traffic on a private
+    network. Enabling requires Azure-side Private Endpoint provisioning, DNS zones, and a clear routing
+    plan; rolling it out half-configured will break user access.
+
+AllowCVAuthenticationTenant:
+  human_name: AppSource Custom Visuals SSO
+  description: Enables SSO for AppSource custom visuals so they can obtain Microsoft Entra ID access tokens
+    for signed-in users via the Authentication API; tokens contain user names and emails and may cross
+    regional and compliance boundaries.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/organizational-visuals#appsource-custom-visuals-sso
+  recommended: "off"
+  default: 'off'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/organizational-visuals#appsource-custom-visuals-sso
+  risk: medium
+  recommendation_nuance: Only enable if there are specific requests or scenarios where this is required.
+
+AllowCVLocalStorageV2Tenant:
+  human_name: Allow access to the browser's local storage
+  description: When enabled, custom visuals can store information in the user's browser local storage.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/organizational-visuals#appsource-custom-visuals-sso
+  recommended: "off"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/organizational-visuals#local-storage
+  risk: low
+  recommendation_nuance: Low risk on its own but expands the attack surface of custom visuals. Not typically
+    an issue.
+
+AllowCVToExportDataToFileTenant:
+  human_name: Allow downloads from custom visuals
+  description: Custom visuals can download information available to the visual (such as summarized data
+    and configuration) with user consent, independent of other export restrictions.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/admin/organizational-visuals#export-data-to-file
+  recommended: "off"
+  default: 'off'
+  default_source: https://learn.microsoft.com/en-us/power-bi/admin/organizational-visuals#export-data-to-file
+  risk: medium
+  recommendation_nuance: Helps to limit exposure / risks from custom visuals. However, can lead to inconvenience
+    for reports that are heavily leaning on custom visuals. Discuss with report creators if necessary.
+
+AllowCapacityMetricsReportUserMask:
+  human_name: Show user data in the Fabric Capacity Metrics app and reports
+  description: When enabled, active user identifiers such as names and email addresses appear in the Fabric
+    Capacity Metrics app and its reports.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-audit-usage#show-user-data-in-the-fabric-capacity-metrics-app-and-reports
+  risk: low
+  recommendation_nuance: Needed for capacity admins to troubleshoot noisy-neighbor scenarios and identify
+    users driving CU spikes. Same privacy trade-off as usage metrics user-level data.
+
+AllowEndorsementMasterDataSwitch:
+  human_name: Endorse master data
+  description: Permits chosen users or security groups to endorse items such as lakehouses, warehouses,
+    or datamarts as core sources for the organization's data records; the endorser's name and email appear
+    with the badge.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/governance/endorsement-overview
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/endorsement-master-data-enable
+  risk: low
+  recommendation_nuance: Same rationale as certification. Restrict to a named steward SG.
+
+AllowExternalDataSharingReceiverSwitch:
+  human_name: Users can accept external data shares
+  description: Users can accept a read-only link to data from another organization's Fabric tenant and
+    then view, build on, and share that data inside or outside their own tenant.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/governance/external-data-sharing-overview
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/governance/external-data-sharing-overview
+  risk: medium
+  recommendation_nuance: Turn on if you expect to collaborate with other tenants.
+
+AllowExternalDataSharingSwitch:
+  human_name: External data sharing
+  description: Users can share a read-only link to OneLake data with collaborators outside the organization,
+    who can then view, build on, and reshare the data using their own tenants and capacities.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/governance/external-data-sharing-overview
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/governance/external-data-sharing-overview
+  risk: medium
+  recommendation_nuance: Powerful for external collaboration scenarios where you want to share data. Ensure
+    strict access controls and governance/monitoring are in place.
+
+AllowFreeTrial:
+  human_name: Users can try Microsoft Fabric paid features
+  description: Users who sign up for a Microsoft Fabric trial can access Fabric paid features free of
+    charge for 60 days from sign-up.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-help-support#users-can-try-microsoft-fabric-paid-features
+  recommended: "off"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-help-support#users-can-try-microsoft-fabric-paid-features
+  risk: low
+  recommendation_nuance: Trials can create shadow-IT content that eventually needs migration. Turn off
+    in regulated tenants; leave on if you actively encourage experimentation.
+
+AllowGetOneLakeUDK:
+  human_name: Use short-lived user-delegated SAS tokens
+  description: Allows applications to access OneLake data via short-lived SAS tokens tied to a Fabric
+    user's Entra identity, with reduced permissions and a maximum one-hour lifetime.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2268260
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/onelake/security/fabric-onelake-security
+  risk: medium
+  recommendation_nuance: Modern least-privilege pattern; required if third-party apps need OneLake access
+    without full Entra bearer tokens.
+
+AllowGuestLookup:
+  human_name: Users can see guest users in lists of suggested people
+  description: When on, people-picker suggestions include both organization users and guest users from
+    Microsoft Entra; when off, only internal users appear, though sharing with a guest by full email still
+    works.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#users-can-see-guest-users-in-lists-of-suggested-people
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#users-can-see-guest-users-in-lists-of-suggested-people
+  risk: low
+  recommendation_nuance: Only enable when you expect collaboration with external guest users. If this
+    is a normal part of how you will share and distribute content you may want to enable more widely.
+    An example is when you have multiple legal entities / domains in a single, large organization.
+
+AllowGuestUserToAccessSharedContent:
+  human_name: Guest users can access Microsoft Fabric
+  description: Guest users added to your Microsoft Entra directory can sign in to Microsoft Fabric and
+    access any Fabric items for which they have permission.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/enterprise/powerbi/service-admin-entra-b2b
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#guest-users-can-access-microsoft-fabric
+  risk: medium
+  recommendation_nuance: Sharing to external guest users can be a source of data exfiltration if unexpected
+    or unpermitted. Use with caution but it may be a necessary and expected mode to distribute / share
+    content with guest users.
+
+AllowNonEntraADAuthInEventStream:
+  human_name: Allow non-Entra ID auth in Eventstream
+  description: Users can harden Eventstream security by disabling key-based authentication in the Custom
+    Endpoint so that only Microsoft Entra ID authentication is allowed.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#allow-non-entra-id-auth-in-eventstream
+  risk: medium
+  recommendation_nuance: Entra-only is the modern default. Turn on only if you have legacy ingestion pipelines
+    that cannot use Entra auth.
+
+AllowNotebookDataExport:
+  human_name: Users with read or write permission can download data from notebooks
+  description: Users with read or write permission can download or export data from tables shown in notebook
+    outputs.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2299416
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing
+  risk: medium
+  recommendation_nuance: Consider disabling if you have exceptionally sensitive data.
+
+AllowOneLakeUDK:
+  human_name: Authenticate with OneLake user-delegated SAS tokens
+  description: Allows applications to authenticate to OneLake using SAS tokens created from user delegation
+    keys, which requires the short-lived user-delegated SAS tokens setting to also be on and is capped
+    at a one-hour lifetime.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2268260
+  recommended: "on"
+  default: 'off'
+  default_source: https://learn.microsoft.com/en-us/fabric/onelake/security/fabric-onelake-security
+  risk: medium
+  recommendation_nuance: Dependency of AllowGetOneLakeUDK. Enable together.
+
+AllowPowerBIASDQOnTenant:
+  human_name: Allow DirectQuery connections to Power BI semantic models
+  description: DirectQuery connections allow users to make changes to existing semantic models or use
+    them to build new ones.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#allow-directquery-connections-to-power-bi-semantic-models
+  recommended: "on:sg"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#allow-directquery-connections-to-power-bi-semantic-models
+  risk: low
+  recommendation_nuance: You should gate this behind a specific training. Composite models are very powerful,
+    but they have many special design and performance considerations; it's easy to make a mess with this.
+    However, it's strongly recommended that you enable this so that people can extend centralized, quality
+    models with additional data sources to get more value and add more flexibility from existing semantic
+    models.
+
+AllowSendAOAIDataToOtherRegions:
+  human_name: Data sent to Azure OpenAI can be processed outside your capacity's geographic region, compliance
+    boundary, or national cloud instance
+  description: For Copilot and AI features in Fabric whose capacity region lies outside the EU Data Boundary
+    or the US, turning this on allows data sent to Azure OpenAI to be processed outside the capacity's
+    geographic region, compliance boundary, or national cloud instance.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/azure/azure-maps/geographic-scope
+  recommended: "off"
+  default: 'off'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-copilot
+  risk: medium
+  recommendation_nuance: Disable if you have specific data residency and compliance requirements.
+
+AllowServicePrincipalsCreateAndUseProfiles:
+  human_name: Allow service principals to create and use profiles
+  description: Allows service principals in the organization to create and use profiles for multi-tenancy
+    scenarios.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/developer/embedded/embed-multi-tenancy
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-developer#allow-service-principals-to-create-and-use-profiles
+  risk: medium
+  recommendation_nuance: Only relevant for multi-tenant embedded scenarios; leave off otherwise.
+
+AllowServicePrincipalsUseReadAdminAPIs:
+  human_name: Service principals can access read-only admin APIs
+  description: Apps registered in Microsoft Entra ID can authenticate to read-only admin APIs using service
+    principals added to an allowed security group, giving them read access to all information exposed
+    by those APIs.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/enterprise/read-only-apis-service-principal-authentication
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/enterprise/read-only-apis-service-principal-authentication
+  risk: medium
+  recommendation_nuance: Required for any governance automation (Purview scanning, scanner API, lineage
+    tools, admin auditing). Leaving off blocks programmatic inventory. Restricting via a dedicated SG
+    ("PowerBI_ServicePrincipals" or similar) keeps the read surface bounded to explicitly approved SPs.
+    Main risk is for data exfiltration by compromised SPs.
+
+AllowServicePrincipalsUseWriteAdminAPIs:
+  human_name: Service principals can access admin APIs used for updates
+  description: Permits Entra ID registered apps in allowed security groups to use service principals instead
+    of user credentials when calling admin APIs that perform updates, granting full access to the metadata
+    those APIs return.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/enable-service-principal-admin-apis
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/enable-service-principal-admin-apis
+  risk: very high
+  recommendation_nuance: Needed for unattended admin automation and agents (tenant-setting drift remediation,
+    bulk label application, automating admin audit actions). Only enable when ready to implement this;
+    enable via a narrow SG otherwise. A compromised SP with write access can reconfigure the tenant, so
+    audit the SG membership regularly.
+
+AllowStoreAOAIDataInOtherRegions:
+  human_name: Data sent to Azure OpenAI can be stored outside your capacity's geographic region, compliance
+    boundary, or national cloud instance
+  description: Applies only to customers using Copilot or AI features in Fabric whose capacity region
+    is outside the EU Data Boundary or the United States; when on, data sent to Azure OpenAI can be stored
+    outside the capacity's geographic region, compliance boundary, or national cloud instance.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/fundamentals/copilot-fabric-overview#available-regions
+  recommended: "off"
+  default: 'off'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-copilot
+  risk: medium
+  recommendation_nuance: Enable if you don't have regional compliance requirements for Copilot / Data
+    Agents.
+
+AppPush:
+  human_name: Push apps to end users
+  description: Users can share apps directly with end users without requiring installation from AppSource.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-create-distribute-apps#automatically-install-apps-for-end-users
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-app#push-apps-to-end-users
+  risk: low
+  recommendation_nuance: You can optionally restrict this to a sg for individuals who are expected to
+    share and distribute content. This is generally a convenient option that makes the use of workspace
+    apps have less friction.
+
+ArtifactDBTItemTenantSwitch:
+  human_name: Users can create dbt job items (preview)
+  description: Users can import, author, and run dbt (data build tool) projects directly in Fabric, accessing
+    a SQL-based transformation engine without having to configure a CLI environment.
+  preview: true
+  source_url: https://aka.ms/dbtjob_docs
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/data-factory/dbt-job-sample-tutorial
+  risk: low
+  recommendation_nuance: Enable if your data teams use dbt and want Fabric-hosted execution.
+
+ArtifactGraphPreview:
+  human_name: User can create Graph (preview)
+  description: Users can create Graph items to visualize data for deeper insights and richer context.
+  preview: true
+  source_url: https://go.microsoft.com/fwlink/?linkid=2282471
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-microsoft-fabric-tenant-settings
+  risk: low
+  recommendation_nuance: Preview; leave off unless piloting.
+
+ArtifactOrgAppPreview:
+  human_name: Users can discover and create org apps (preview)
+  description: Lets users create org apps as first-class items that permitted viewers can browse, with
+    any existing org app items hidden if the setting is later turned off.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/power-bi/consumer/org-app-items/org-app-items
+  recommended: "on"
+  default: 'off'
+  default_source: https://learn.microsoft.com/en-us/power-bi/consumer/org-app-items/org-app-items
+  risk: low
+  recommendation_nuance: OrgApps are an improved way to distribute content in Fabric and recommended instead
+    of traditional workspace apps.
+
+ArtifactPlanningPreview:
+  human_name: Users can create Plan (preview) items
+  description: Lets users create a Plan item in Fabric and use no-code integrated planning on top of Power
+    BI semantic models, Fabric SQL, and OneLake.
+  preview: true
+  source_url: https://aka.ms/planningdocs
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-microsoft-fabric-tenant-settings
+  risk: low
+  recommendation_nuance: Preview; enable when piloting planning workloads.
+
+ArtifactSearchTenant:
+  human_name: Use global search for Power BI
+  description: When on, users can use the global search bar at the top of the Power BI page.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/consumer/end-user-search-sort
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#use-global-search-for-power-bi
+  risk: low
+  recommendation_nuance: Core usability; no reason to disable.
+
+AutoInstallPowerBIAppInTeamsTenant:
+  human_name: Install Power BI app for Microsoft Teams automatically
+  description: The Power BI app for Microsoft Teams is installed automatically for users accessing Microsoft
+    Fabric, provided their Teams admin allows it; once installed they receive Teams notifications and
+    can open Fabric content.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2171149
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-microsoft-teams-app#install-the-power-bi-app-for-teams-automatically
+  risk: low
+  recommendation_nuance: Convenient but silently pushes the app to users; prefer to discuss with your
+    Teams governance team before turning on.
+
+AutomatedInsightsEntryPoints:
+  human_name: Show entry points for insights (preview)
+  description: Users in the organization can see and use entry points to request insights inside reports.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-insights
+  risk: low
+  recommendation_nuance: Insights are typically false signals.
+
+AutomatedInsightsTenant:
+  human_name: Receive notifications for top insights (preview)
+  description: Allows users in the organization to enable notifications for top insights from report settings.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/power-bi/create-reports/insights
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/create-reports/insights
+  risk: low
+  recommendation_nuance: Top insights are typically false signals.
+
+AutomaticallyUsePBIR:
+  human_name: Automatically convert and store reports using Power BI enhanced metadata format (PBIR) (preview)
+  description: When enabled, reports are automatically converted to the PBIR format when edited and saved
+    in the workspace, and new reports are also created in PBIR; PBIR offers source-control-friendly file
+    structures that improve co-development.
+  preview: true
+  source_url: https://go.microsoft.com/fwlink/?linkid=2263123
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/portal-workspace#automatically-convert-and-store-reports-using-power-bi-enhanced-metadata-format-pbir-preview
+  risk: low
+  recommendation_nuance: Enables source-control-friendly report format. Strongly recommend to turn on.
+
+AzureMaps:
+  human_name: Users can use the Azure Maps visual
+  description: Users can create and view the Azure Maps visual; data may be temporarily stored and processed
+    by Microsoft for essential services such as resolving location names to coordinates.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/azure/azure-maps/power-bi-visual-get-started
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#users-can-use-the-azure-maps-visual
+  risk: low
+  recommendation_nuance: Standard geospatial visualization; keep on.
+
+AzureMapsCrossRegionDataProcessing:
+  human_name: Data sent to Azure Maps can be processed outside your tenant's geographic region, compliance
+    boundary, or national cloud instance
+  description: When on, data sent to Azure Maps may be processed in a region where the service is available,
+    which could be outside the tenant's geographic region, compliance boundary, or national cloud instance.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2289253
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/visuals/power-bi-visual-azure-maps-admin
+  risk: medium
+  recommendation_nuance: Keep off to enforce data-residency if you have specific compliance requirements.
+
+AzureMapsInFabric:
+  human_name: Users can use Azure Maps services
+  description: Users can access Fabric features powered by Azure Maps services, subject to Azure Maps
+    terms of use.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2310613
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/azure/azure-maps/about-azure-maps
+  risk: low
+  recommendation_nuance: Low-risk geospatial feature. Disable only if your tenant is in a region where
+    Azure Maps is unavailable or if geospatial visuals are considered unnecessary attack surface.
+
+AzureMapsInFabricCrossRegionDataProcessing:
+  human_name: Data sent to Azure Maps can be processed outside your capacity's geographic region, compliance
+    boundary or national cloud instance
+  description: Permits Azure Maps requests to be handled in any region where the service is available,
+    which may be outside your capacity's geographic region, compliance boundary, or national cloud instance.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2289253
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/visuals/power-bi-visualization-azure-maps-admin
+  risk: medium
+  recommendation_nuance: Turn off to keep map queries inside your compliance boundary. Turn on if your
+    tenant is in a region where Azure Maps does not have local presence and you need the visuals to work.
+
+AzureMapsThirdPartyDataProcessing:
+  human_name: Data sent to Azure Maps can be processed by Microsoft Online Services Subprocessors
+  description: Some Azure Maps visual services, such as the selection tool and location-name processing
+    in certain regions, rely on Microsoft Online Services subprocessors who may process the necessary
+    data in the United States or other countries where Microsoft or its subprocessors operate.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2289928
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#data-sent-to-azure-maps-can-be-processed-by-microsoft-online-services-subprocessors
+  risk: medium
+  recommendation_nuance: Disable if you have specific data residency/compliance requirements.
+
+AzureMapsWeatherServices:
+  human_name: Users can use Azure Maps Weather Services (Preview)
+  description: When enabled, users can access weather data from Azure Maps Weather, sourced from AccuWeather.
+  preview: true
+  source_url: https://go.microsoft.com/fwlink/?linkid=2340279
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/map-settings#access-to-azure-maps-weather-services-preview
+  risk: low
+  recommendation_nuance: Niche feature.
+
+BingMap:
+  human_name: Map and filled map visuals
+  description: Allow users in the organization to use the map and filled map visualizations in their reports.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/visuals/power-bi-visualization-filled-maps-choropleths
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#map-and-filled-map-visuals
+  risk: low
+  recommendation_nuance: N/A
+
+BlockAccessFromPublicNetworks:
+  human_name: Block Public Internet Access
+  description: Blocks public internet access to the Fabric tenant so only users with the Private Link
+    can reach it.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/enterprise/service-security-private-links
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/enterprise/service-security-private-links
+  risk: high
+  recommendation_nuance: The strict posture for regulated tenants. Do not enable until Private Link is
+    fully operational and tested end-to-end, or the entire tenant goes dark (including for admins). Only
+    enable this if you have clear and concrete compliance requirements; don't default to the strictest
+    controls out of knee-jerk fear reactions. Don't overcomplicate something that's already very complicated.
+
+BlockAutoDiscoverAndPackageRefresh:
+  human_name: Block republish and disable package refresh
+  description: Disables package refresh and restricts publishing of semantic model updates to the semantic
+    model owner.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-dataset-security#block-republish-and-disable-package-refresh
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-dataset-security#block-republish-and-disable-package-refresh
+  risk: low
+  recommendation_nuance: Can be a good way to better govern XMLA-managed models, but can also cause confusion
+    when people don't "see" models simply because they aren't the owner, since the concept of owner is
+    still relatively new and not clearly surfaced.
+
+BlockProtectedLabelSharingToEntireOrg:
+  human_name: Restrict content with protected labels from being shared via link with everyone in your
+    organization
+  description: Prevents content carrying a sensitivity label with protection settings from being shared
+    with the entire organization through a shareable link.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-information-protection#restrict-content-with-protected-labels-from-being-shared-via-link-with-everyone-in-your-organization
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-information-protection#restrict-content-with-protected-labels-from-being-shared-via-link-with-everyone-in-your-organization
+  risk: medium
+  recommendation_nuance: Strong guardrail against accidental org-wide exposure of sensitive content. Generally,
+    you want to disable organization-wide sharing anyway.
+
+BlockResourceKeyAuthentication:
+  human_name: Block ResourceKey Authentication
+  description: Blocks resource-key-based authentication for extra security, preventing users from using
+    the streaming semantic models API via resource key.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-developer#block-resourcekey-authentication
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-developer#block-resourcekey-authentication
+  risk: medium
+  recommendation_nuance: Enables Entra-only posture for streaming datasets. Turn on unless you have legacy
+    streaming pipelines that still depend on resource keys, in which case migrate them first.
+
+CDSAManagement:
+  human_name: Create and use Gen1 dataflows
+  description: Users in the organization can create and use Gen1 dataflows.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/transform-model/dataflows/dataflows-introduction-self-service
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/transform-model/dataflows/dataflows-introduction-self-service
+  risk: low
+  recommendation_nuance: Gen1 dataflows are still used for many Power BI ETL scenarios. Turning off breaks
+    existing content with no direct replacement; prefer to leave on until users migrate to Gen2 dataflows
+    or pipelines. Note that without training people might over-create dataflows and cause resource constraints
+    on Fabric capacity. Note also that Gen1 dataflows are being retired in favor of Gen2 dataflows.
+
+CertifiedCustomVisualsTenant:
+  human_name: Add and use certified visuals only (block uncertified)
+  description: Restricts users with visual-add permissions to adding and using only certified Power BI
+    visuals; visuals on the Organizational visuals page are unaffected.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/admin/organizational-visuals#certified-power-bi-visuals
+  recommended: "off"
+  default: 'off'
+  default_source: https://learn.microsoft.com/en-us/power-bi/admin/organizational-visuals#certified-power-bi-visuals
+  risk: medium
+  recommendation_nuance: Can be a good way to allow people to use valuable custom visuals but restrict
+    to only those that have been approved. Note that certification doesn't mean the visual is quality
+    or perfect. Enable if you have concerns about custom visuals.
+
+CertifyDatasets:
+  human_name: Certification
+  description: Controls whether users in the organization, or only specific security groups, can certify
+    items such as apps, reports, or datamarts as trusted sources, with the certifier's contact details
+    shown on the certification badge.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/admin/service-admin-setup-certification
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/admin/service-admin-setup-certification
+  risk: low
+  recommendation_nuance: Endorsement is a key governance signal/feature. Restrict certification to a small
+    named SG of steward-level users; if anyone can certify, the badge loses meaning. Has a CertificationDocumentationUrl
+    property you can use to point users at your internal rubric/criteria.
+
+ConfigureArtifactRetentionPeriod:
+  human_name: Fabric item recovery
+  description: When on, deleted Fabric items are retained for a configurable period (minimum 7, maximum
+    90 days) before permanent deletion; when off, deletion is immediate and some Fabric item types do
+    not support recovery.
+  preview: false
+  source_url: https://aka.ms/FabricItemRecovery
+  recommended: "on"
+  default: 'off'
+  default_properties:
+    retentionPeriod: '7'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/retention-recovery#item-soft-delete-and-recovery-preview
+  risk: low
+  recommendation_nuance: Soft-deleted items continue to incur OneLake storage billing for the retention
+    window, so long retentions can add cost. Name collisions on same-name re-create are blocked for a
+    few minutes even after purge. Weigh recovery safety against automation patterns.
+
+ConfigureFabricIdentityTenantLimit:
+  human_name: Define maximum number of Fabric identities in a tenant
+  description: Lets admins set the maximum number of Fabric identities that can be created in a tenant;
+    when disabled, up to 10,000 Fabric identities can be created.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-developer#define-maximum-number-of-fabric-identities-in-a-tenant
+  recommended: "off"
+  default: 'off'
+  default_properties:
+    MaxFabricIdentities: '10000'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-developer#define-maximum-number-of-fabric-identities-in-a-tenant
+  risk: low
+  recommendation_nuance: Only needed in very large tenants at risk of hitting the 10k default. Most orgs
+    will never reach the limit.
+
+ConfigureFolderRetentionPeriod:
+  human_name: Define workspace retention period
+  description: Turn on to define how long deleted workspaces are retained (up to 90 days for collaborative
+    workspaces) so that workspaces and their items can be restored before permanent deletion; off defaults
+    to the 7-day minimum.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/workspace-retention#set-up-the-retention-period-for-deleted-collaborative-workspaces
+  recommended: "on"
+  default: 'off'
+  default_properties:
+    ArtifactRetentionPeriod: '7'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/workspace-retention#set-up-the-retention-period-for-deleted-collaborative-workspaces
+  risk: low
+  recommendation_nuance: Recovery safety net. Personal workspaces (My Workspace) are fixed at 30 days
+    regardless. No downside to enabling.
+
+ConfigureWorkspaceLevelIPFirewallRules:
+  human_name: Configure workspace-level IP firewall rules and trusted resource instances (preview)
+  description: Workspace admins can configure IP firewall rules and trusted resource instances in workspace
+    settings, allowing access from specific IPs and resources even when the tenant blocks public access.
+  preview: true
+  source_url: https://go.microsoft.com/fwlink/?linkid=2223103
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/security/security-workspace-enable-inbound-access-protection
+  risk: medium
+  recommendation_nuance: Useful when some workspaces need exceptions to tenant-wide network blocks (for
+    example, CI runners on known egress IPs). Delegating this to workspace admins weakens a pure zero-trust
+    posture; leave off if you centralize network control.
+
+CopilotCapacitySetupPermissionSwitch:
+  human_name: Capacities can be designated as Fabric Copilot capacities
+  description: Lets capacity admins flag capacities as Fabric Copilot capacities so the organization can
+    consolidate Copilot usage and billing on one capacity, with visibility into item names tied to Copilot
+    activity.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-copilot#capacities-can-be-designated-as-fabric-copilot-capacities
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-copilot#capacities-can-be-designated-as-fabric-copilot-capacities
+  risk: low
+  recommendation_nuance: Turn on if you want to centralize Copilot spend on one capacity. Note that capacity
+    admins can then see items associated with users' Copilot activity, which may be a privacy concern.
+
+CreateAppWorkspaces:
+  human_name: Create workspaces
+  description: Lets users in the organization create workspaces to collaborate on dashboards, reports,
+    and other content; workspaces are still created automatically when a template app is installed even
+    if this setting is off.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/portal-workspace#create-workspaces
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/portal-workspace#create-workspaces
+  risk: medium
+  recommendation_nuance: Tenant-wide workspace creation leads to workspace sprawl. Restrict via SG or
+    require self-service via an internal request workflow. Common reason for governance issues.
+
+CustomVisualsTenant:
+  human_name: Allow visuals created using the Power BI SDK
+  description: Users can add, view, share, and interact with visuals imported from AppSource or from a
+    file; visuals allowed on the Organizational visuals page are unaffected by this setting.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/admin/organizational-visuals#visuals-from-appsource-or-a-file
+  recommended: "on:sg"
+  default: 'off'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/organizational-visuals#visuals-from-appsource-or-a-file
+  risk: medium
+  recommendation_nuance: Custom visuals can have malicious code or be problematic in their UX and performance.
+    It's strongly recommended that you consider using custom visuals, but in the "age of AI", you should
+    be more restrictive.
+
+DataSecurityForAIInteractions:
+  human_name: Allow Microsoft Purview to secure AI interactions
+  description: Lets Microsoft Purview access, process, and store Copilot prompts, responses, and metadata
+    for data security and compliance scenarios such as SIT classification, DSPM for AI, Audit, Insider
+    Risk Management, Communication Compliance, and eDiscovery.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2296824
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/purview/ai-microsoft-purview
+  risk: medium
+  recommendation_nuance: Requires paid Purview capabilities. Turn on if you run Copilot in Fabric and
+    have Purview licensing.
+
+DatamartTenant:
+  human_name: Create Datamarts (preview)
+  description: Users in the organization can create Datamarts.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/power-bi/transform-model/datamarts/datamarts-administration
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-datamart
+  risk: low
+  recommendation_nuance: Datamarts are deprecated. Don't use them.
+
+DatasetExecuteQueries:
+  human_name: Semantic Model Execute Queries REST API
+  description: Allows users in the organization to query semantic models with DAX via the Power BI REST
+    APIs.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/rest/api/power-bi/datasets/execute-queries
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/rest/api/power-bi/datasets/execute-queries
+  risk: low
+  recommendation_nuance: Required for embedded scenarios, agentic development, dashboard tools, and agentic
+    access patterns. Turn off only if you have a specific reason to exclude.
+
+DevelopServiceApps:
+  human_name: Publish template Workspace apps
+  description: Lets users in the organization publish template apps for distribution to Power BI or Fabric
+    users outside the organization. Only applies to workspace apps and not Fabric OrgApps.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/connect-data/service-template-apps-overview
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-template-app#publish-template-apps
+  risk: medium
+  recommendation_nuance: Only enable this if you are providing the template Workspace apps for marketing
+    or training purposes. In practice this is not a very valuable activity and a very niche thing to do.
+    It's possible that someone accidentally publishes a workspace app as a template app and it's therefore
+    a vector for data exfiltration out of the organization; just disable it...
+
+DigitalOperationsPreview:
+  human_name: Users can create Digital Twin Builder (preview) items
+  description: Users can create Digital Twin Builder items to construct digital twins of real-world environments
+    and processes for big-picture analysis and operational efficiency.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/real-time-intelligence/digital-twin-builder/overview
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-microsoft-fabric-tenant-settings#users-can-create-digital-twin-builder-preview-items
+  risk: low
+  recommendation_nuance: Enable only if specifically needed.
+
+DiscoverDatasetsConsumption:
+  human_name: Discover content
+  description: Allow users to find and request access to content they do not have access to, provided
+    its owners made it discoverable.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/governance/onelake-catalog-overview
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/governance/onelake-catalog-overview
+  risk: low
+  recommendation_nuance: The user-facing half of the discovery feature; without it, discoverable content
+    is invisible to consumers. Strongly recommended.
+
+DiscoverDatasetsSettingsCertified:
+  human_name: Make certified content discoverable
+  description: Users with certification rights can make content they certify discoverable by people who
+    don't yet have access to it.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-discovery
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-discovery
+  risk: low
+  recommendation_nuance: Same rationale as promoted discoverability. Turn on alongside your endorsement
+    program. Endorsement is a very high-value feature for data discoverability and governance.
+
+DiscoverDatasetsSettingsPromoted:
+  human_name: Make promoted content discoverable
+  description: Lets users who are able to promote content also make their promoted content discoverable
+    to users who do not yet have access to it.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-discovery
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-discovery
+  risk: low
+  recommendation_nuance: Foundational for self-service content discovery and the OneLake catalog. No reason
+    to leave off. Endorsement is a very high-value feature for data discoverability and governance.
+
+DremioSSO:
+  human_name: Dremio SSO
+  description: Enables single sign-on for Dremio; when on, user access token information including name
+    and email is sent to Dremio for authentication.
+  preview: false
+  source_url: https://powerquery.microsoft.com/blog/azure-ad-based-single-sign-on-for-dremio-cloud-and-power-bi
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#dremio-sso
+  risk: medium
+  recommendation_nuance: Sends user name and email to Dremio to preserve authentication or data security
+    rules.
+
+EimInformationProtectionDataSourceInheritanceSetting:
+  human_name: Apply sensitivity labels from data sources to their data in Power BI
+  description: Applies sensitivity labels from supported data sources to the data they provide in Power
+    BI; see documentation for supported sources and label behavior.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/enterprise/service-security-sensitivity-label-inheritance-from-data-sources
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-information-protection#apply-sensitivity-labels-from-data-sources-to-their-data-in-power-bi
+  risk: low
+  recommendation_nuance: Keeps labels consistent across the data path. Leave off only if you are seeing
+    unwanted auto-labeling.
+
+EimInformationProtectionDefaultLabelDomainSetting:
+  human_name: Domain admins can set default sensitivity labels for their domains (preview)
+  description: Domain admins can assign a default sensitivity label for their domain that overrides tenant-wide
+    Purview defaults (when its priority is higher) and automatically applies to new Fabric items created
+    in the domain.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/governance/domain-default-sensitivity-label
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/governance/domain-default-sensitivity-label
+  risk: medium
+  recommendation_nuance: Delegates label policy to domain owners. Useful in federated governance; avoid
+    in tenants with centralized InfoSec control. Requires that you have a clear governance and DLP plan.
+
+EimInformationProtectionDownstreamInheritanceSetting:
+  human_name: Automatically apply sensitivity labels to downstream content
+  description: When a sensitivity label is applied or changed on Fabric content, the label is automatically
+    propagated to eligible downstream content.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/enterprise/service-security-sensitivity-label-downstream-inheritance
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/power-bi/enterprise/service-security-sensitivity-label-downstream-inheritance
+  risk: low
+  recommendation_nuance: Reduces label drift across lineage. Keep on.
+
+EimInformationProtectionEdit:
+  human_name: Allow users to apply sensitivity labels for content
+  description: Lets users apply Microsoft Purview Information Protection sensitivity labels that the organization
+    has published, subject to the documented prerequisite steps and the limits on where label-based access
+    control is enforced.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-information-protection#allow-users-to-apply-sensitivity-labels-for-content
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-information-protection#allow-users-to-apply-sensitivity-labels-for-content
+  risk: low
+  recommendation_nuance: Required for any sensitivity-label program. Turn off only if you are not using
+    sensitivity labels at all.
+
+EimInformationProtectionWorkspaceAdminsOverrideAutomaticLabelsSetting:
+  human_name: Allow workspace admins to override automatically applied sensitivity labels
+  description: When on, workspace admins can change or remove sensitivity labels that Fabric applied automatically,
+    for example through label inheritance.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/enterprise/service-security-sensitivity-label-change-enforcement#relaxations-to-accommodate-automatic-labeling-scenarios
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/enterprise/service-security-sensitivity-label-change-enforcement#relaxations-to-accommodate-automatic-labeling-scenarios
+  risk: medium
+  recommendation_nuance: Relaxation for accommodation scenarios (e.g. auto-label applied incorrectly on
+    a public dashboard). Leave off for strict label-enforcement postures.
+
+ElevatedGuestsTenant:
+  human_name: Guest users can browse and access Fabric content
+  description: Users can invite guest users to browse and request access to Fabric content.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/enterprise/powerbi/service-admin-entra-b2b
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#guest-users-can-browse-and-access-fabric-content
+  risk: medium
+  recommendation_nuance: Only enable if it's expected that you'll collaborate with external guest users.
+    Sharing with guest users is a standard and expected sharing/distribution pattern. However it's also
+    a vector for potential data exfiltration outside of the organization.
+
+EmailSecurityGroupsOnOutage:
+  human_name: Receive email and Teams notifications for service outages or incidents
+  description: Designated mail-enabled security groups receive email and Teams notifications when the
+    tenant is impacted by a service outage or incident.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  risk: low
+  recommendation_nuance: Lightweight incident awareness; fill in the EmailList property with your platform
+    team's DL.
+
+EmailSubscriptionTenant:
+  human_name: Users can set up email subscriptions
+  description: Users can create email subscriptions to reports and dashboards.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/collaborate-share/end-user-subscribe
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#users-can-set-up-email-subscriptions
+  risk: low
+  recommendation_nuance: Core business feature. Disable only if you have a specific alerting/notification
+    platform you want to funnel users through. Note that this bypasses usage metrics and will result in
+    many users checking reports only via their email and not via the Power BI or Fabric platform, so it
+    makes it difficult to track who is actually using/viewing the reports.
+
+EmailSubscriptionsToB2BUsers:
+  human_name: B2B guest users can set up and be subscribed to email subscriptions
+  description: Allows B2B guest users in the Entra directory to create email subscriptions and receive
+    them, and can be turned off to block guest users from any subscription involvement.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#b2b-guest-users-can-set-up-and-be-subscribed-to-email-subscriptions
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#b2b-guest-users-can-set-up-and-be-subscribed-to-email-subscriptions
+  risk: medium
+  recommendation_nuance: Enables scheduled data delivery to external recipients. Should only use if you
+    expect to share and distribute content this way with external guest users.
+
+EmailSubscriptionsToExternalUsers:
+  human_name: Users can send email subscriptions to external users
+  description: Lets users include external recipients (people not added to the tenant's Microsoft Entra
+    ID) in email subscriptions; turning it off stops users from subscribing external recipients.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#users-can-send-email-subscriptions-to-external-users
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#users-can-send-email-subscriptions-to-external-users
+  risk: high
+  recommendation_nuance: Allows sending data to arbitrary email addresses not managed in Entra; turn off
+    unless you have a deliberate external-reporting program.
+
+Embedding:
+  human_name: Embed content in apps
+  description: Users can embed Power BI dashboards and reports in web applications using the 'Embed for
+    your customers' method.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/developer/embedded/embedded-analytics-power-bi
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-developer#embed-content-in-apps
+  risk: medium
+  recommendation_nuance: Required for ISV or customer-facing embedding scenarios. Leave off if you don't
+    anticipate that you will use this sharing/distribution method.
+
+EnableAOAI:
+  human_name: Users can use Copilot and other features powered by Azure OpenAI
+  description: When enabled, users can access Fabric features powered by Azure OpenAI, including Copilot
+    and Fabric AI agents; manageable at both tenant and capacity levels.
+  preview: false
+  source_url: https://aka.ms/fabric/copilot-ai-feature-status
+  recommended: "off"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-copilot#users-can-use-copilot-and-other-features-powered-by-azure-openai
+  risk: medium
+  recommendation_nuance: Enables an entire family of AI features. Evaluate Copilot strategy, licensing,
+    and data-handling implications before turning on. Can be scoped per-capacity if tenant-wide enablement
+    is too broad. This should only be implemented once you have a specific plan to use Copilot; don't
+    yolo an implementation of an AI feature. Enable it once the planning is in place and then iterate.
+
+EnableDatasetInPlaceSharing:
+  human_name: Allow specific users to turn on external data sharing
+  description: Controls whether all or specific users can enable external data sharing, letting them share
+    semantic models with authorized guest users who can then use them in their own Power BI tenants.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-dataset-external-org-share-admin#allow-specific-users-to-turn-on-external-data-sharing
+  recommended: "on:sg"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-dataset-external-org-share-admin#allow-specific-users-to-turn-on-external-data-sharing
+  risk: high
+  recommendation_nuance: This should only be granted for very limited priviliged users who have the autonomy
+    to make such decisions. Requires good governance and auditing and training of these users. An example
+    might be someone leading a specific decentralized analytics or reporting team in a large organization.
+
+EnableEsriLibraries:
+  human_name: ArcGIS GeoAnalytics for Fabric Runtime
+  description: Lets users tap Esri's ArcGIS GeoAnalytics inside the Fabric Spark Runtime, adding spatial
+    SQL functions and analysis tools to big data workloads.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2281344
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/data-engineering/spark-arcgis-geoanalytics
+  risk: low
+  recommendation_nuance: Only useful if you actively run spatial analytics in Spark; turn on per-need.
+
+EnableExcelYellowIntegration:
+  human_name: Allow Power BI featured tables in Excel organization data types
+  description: Lets users access and perform calculations on data from featured tables, which are defined
+    in Power BI Desktop's modeling view and surfaced through the Excel data types gallery.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-excel-featured-tables
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-excel-featured-tables
+  risk: low
+  recommendation_nuance: Only necessary for advanced Excel users; very niche and rare in practice. Only
+    enable it if there are specific user requets for analysts using and preferring Excel.
+
+EnableReassignDataDomainSwitch:
+  human_name: Allow tenant and domain admins to override workspace assignments (preview)
+  description: Tenant and domain admins can reassign workspaces previously assigned to one domain over
+    to another domain.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-domain-management-settings#allow-tenant-and-domain-admins-to-override-workspace-assignments-preview
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-domain-management-settings#allow-tenant-and-domain-admins-to-override-workspace-assignments-preview
+  risk: low
+  recommendation_nuance: Needed for any org using Fabric domains as a governance boundary. Leave off only
+    if you have no domain strategy yet.
+
+EsriVisual:
+  human_name: Use ArcGIS Maps for Power BI
+  description: Users in the organization can use the ArcGIS Maps for Power BI visualization provided by
+    Esri.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/visuals/power-bi-visualizations-arcgis
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/visuals/power-bi-visualizations-arcgis
+  risk: low
+  recommendation_nuance: Sends geospatial queries to Esri; may not fit tenants with strict third-party
+    data flow rules.
+
+ExpFlightingTenant:
+  human_name: Help Power BI optimize your experience
+  description: Users in the organization receive minor user-experience variations (content, layout, design)
+    that the Power BI team is experimenting with before general release.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  risk: low
+  recommendation_nuance: Disable; can lead to disruptive experiences for end-users.
+
+ExportReport:
+  human_name: Download reports
+  description: Allows users in the organization to download .pbix files and paginated reports.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/create-reports/service-export-to-pbix
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/create-reports/service-export-to-pbix
+  risk: medium
+  recommendation_nuance: Standard request but typically indicative of poor development practices. Authors
+    / creators should strive for publishing to be uni-directional; content should be published but not
+    downloaded. As an alternative, use the APIs (ideally via Fabric CLI) to retrieve and push item definitions.
+
+ExportToCsv:
+  human_name: Export to .csv
+  description: Lets users in the organization export data from a tile, visualization, or paginated report
+    into a .csv file.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/paginated-reports/report-builder/export-csv-file-report-builder
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#export-to-csv
+  risk: low
+  recommendation_nuance: One of the most-used features; disabling is theatre because users can copy-paste
+    or might use Analyze in Excel. Use sensitivity labels and DLP instead.
+
+ExportToExcelSetting:
+  human_name: Export to Excel
+  description: Users in the organization can export data from a visualization or paginated report to an
+    Excel file.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/visuals/power-bi-visualization-export-data
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#export-to-excel
+  risk: low
+  recommendation_nuance: Easily the most contentious setting; disabling it will cause a riot. Instead
+    try to set up specific adoption or training initiatives to mitigate governance risks. Use sensitivity
+    labels and DLP to control, instead.
+
+ExportToImage:
+  human_name: Export reports as image files
+  description: Users can use the export-report-to-file API to export reports as image files. Note that
+    this can consume a surprisingly high amount of capacity. Obstinent users can cause capacity strain
+    with this API/action.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/paginated-reports/report-builder/export-image-file-report-builder
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/paginated-reports/report-builder/export-image-file-report-builder
+  risk: low
+  recommendation_nuance: Only enable for people who have permission to set up specific automated workflows.
+
+ExportToMHTML:
+  human_name: Export reports as HTML documents
+  description: Users in the organization can export paginated reports to HTML documents.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#export-reports-as-mhtml-documents
+  risk: low
+  recommendation_nuance: Paginated-report specific; no reason to disable.
+
+ExportToPowerPoint:
+  human_name: Export reports as PowerPoint presentations or PDF documents
+  description: Lets users in the organization export their reports to PowerPoint presentations or PDF
+    documents.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#export-reports-as-powerpoint-presentations-or-pdf-documents
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#export-reports-as-powerpoint-presentations-or-pdf-documents
+  risk: low
+  recommendation_nuance: Standard business workflow; rely on sensitivity labels for protection or restriction.
+
+ExportToWord:
+  human_name: Export reports as Word documents
+  description: Lets users in the organization export paginated reports as Microsoft Word documents.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/paginated-reports/report-builder/export-microsoft-word-report-builder
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#export-reports-as-word-documents
+  risk: low
+  recommendation_nuance: Paginated-report specific; no reason to disable.
+
+ExportToXML:
+  human_name: Export reports as XML documents
+  description: Users in the organization can export paginated reports as XML documents.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/paginated-reports/report-builder/export-xml-report-builder
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#export-reports-as-xml-documents
+  risk: low
+  recommendation_nuance: Paginated-report specific; no reason to disable.
+
+ExportVisualImageTenant:
+  human_name: Copy and paste visuals
+  description: Users in the organization can copy visuals from a tile or report visual and paste them
+    as static images into external applications.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  risk: low
+  recommendation_nuance: No reason to disable unless you have specific IP or strict security / privacy
+    reasons.
+
+ExternalDatasetSharingTenant:
+  human_name: Guest users can work with shared semantic models in their own tenants
+  description: Authorized guest users can discover semantic models shared with them via the OneLake data
+    hub in Power BI Desktop and work with those models in their own Power BI tenants.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-dataset-external-org-share-admin#allow-guest-users-to-work-with-shared-datasets-in-their-own-tenants
+  recommended: "on"
+  default: 'off'
+  default_source: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-dataset-external-org-share-admin#allow-guest-users-to-work-with-shared-datasets-in-their-own-tenants
+  risk: medium
+  recommendation_nuance: Enables cross-tenant dataset sharing. Only turn on if you are actively partnering
+    with another Fabric tenant and expect this type of self-service or data distribution. Make sure that
+    the collaborating tenant also has the appropriate settings to be able to see and use the shared semantic
+    model.
+
+ExternalSharingV2:
+  human_name: Users can invite guest users to collaborate through item sharing and permissions
+  description: Lets users share Fabric items with people outside the organization and grant them permissions,
+    adding accepted external users to the Entra directory as guest users.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/enterprise/powerbi/service-admin-entra-b2b#invite-guest-users
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/enterprise/powerbi/service-admin-entra-b2b#invite-guest-users
+  risk: high
+  recommendation_nuance: Only allow for specific priviliged users who have more autonomy over deciding
+    who and how they distribute and share content in and outside of the organization. Otherwise it is
+    a potential vector for data exfiltration.
+
+FabricAddPartnerWorkload:
+  human_name: Capacity admins and contributors can add and remove additional workloads
+  description: Lets capacity admins, or users with Contributor permission on a capacity, add and remove
+    additional workloads on that capacity; existing workloads and their items continue to function if
+    the setting is turned off, and interacting with workloads sends user data and tokens to the publisher.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/workload-development-kit/environment-setup#enable-the-development-tenant-setting
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/workload-development-kit/environment-setup#enable-the-development-tenant-setting
+  risk: medium
+  recommendation_nuance: Same governance concerns as the workspace-scoped version. Turn on when deliberately
+    onboarding partner workloads at capacity scope; leave off for regulated tenants. Has an OnlyCapacityAdmins
+    property that narrows the blast radius if you must enable.
+
+FabricAddWorkloadToWorkspace:
+  human_name: Workspace admins can add and remove additional workloads (preview)
+  description: Workspace admins can add and remove workloads in their workspaces; existing workloads and
+    items continue to work if the setting is later turned off, and interacting with workloads sends user
+    data and tokens to the publisher. Note that sensitivity labels aren't applied to workload-created
+    items!
+  preview: true
+  source_url: https://go.microsoft.com/fwlink/?linkid=2268082
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-additional-workloads#workspace-admins-can-add-and-remove-additional-workloads-preview
+  risk: medium
+  recommendation_nuance: Sensitivity labels and encryption are not applied to items created under additional
+    workloads, which breaks most governance stories. Turn on only if you are piloting a specific vetted
+    partner workload and have reviewed the publisher's data handling.
+
+FabricFeedbackTenantSwitch:
+  human_name: Product Feedback
+  description: Allows Microsoft to prompt users for feedback through in-product surveys within Microsoft
+    Fabric and Power BI; user participation is voluntary and responses are used to improve features and
+    services.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/fundamentals/feedback
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/fundamentals/feedback
+  risk: low
+  recommendation_nuance: These things are annoying, turn them off.
+
+FabricGAWorkloads:
+  human_name: Users can create Fabric items
+  description: Users can use production-ready features to create Fabric items; does not affect Power BI
+    item creation and can be managed at tenant and capacity level.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/fabric-switch
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/fabric-switch
+  risk: low
+  recommendation_nuance: Turning off reverts the tenant to Power BI only. Only disable if you are keeping
+    a Power-BI-only posture.
+
+FabricPromotionTenantSwitch:
+  human_name: Users can be informed of upcoming conferences featuring Microsoft Fabric when they are logged
+    in to Fabric
+  description: Allows Fabric to surface in-product messages about upcoming Microsoft Fabric conferences,
+    some of which may be organized and hosted by third parties.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-microsoft-fabric-tenant-settings#users-can-be-informed-of-upcoming-conferences-featuring-microsoft-fabric-when-they-are-logged-in-to-fabric
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-microsoft-fabric-tenant-settings#users-can-be-informed-of-upcoming-conferences-featuring-microsoft-fabric-when-they-are-logged-in-to-fabric
+  risk: low
+  recommendation_nuance: Pure marketing; usually turned off.
+
+FabricThirdPartyWorkloads:
+  human_name: Workspace admins can develop partner workloads
+  description: Lets workspace admins develop partner workloads using a local-machine development environment;
+    turning it off stops developers from uploading to the workspace.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/workload-development-kit/environment-setup#enable-the-development-tenant-setting
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/workload-development-kit/environment-setup#enable-the-development-tenant-setting
+  risk: medium
+  recommendation_nuance: Only enable if you expect or plan to use the workload development kit. Requires
+    pre-requisite, specific research and planning for this scenario.
+
+GitHubTenantSettings:
+  human_name: Users can sync workspace items with GitHub repositories
+  description: Users can select GitHub as their Git provider and synchronize items in their workspaces
+    with GitHub repositories.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/git-integration-admin-settings#users-can-sync-workspace-items-with-github-repositories
+  recommended: "on"
+  default: 'off'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/git-integration-admin-settings#users-can-sync-workspace-items-with-github-repositories
+  risk: low
+  recommendation_nuance: Needed if any team uses GitHub rather than Azure DevOps. Note that the configuration
+    is more complex, as users have to provide repo access tokens which expire and are not trivial to automate.
+    Note that it is possible to do this with both public and private repos.
+
+GitIntegrationCrossGeoTenantSwitch:
+  human_name: Users can export items to Git repositories in other geographical locations
+  description: Allows users to export workspace items to Git repositories that reside in a different geography
+    than the workspace.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/git-integration-admin-settings#users-can-export-items-to-git-repositories-in-other-geographical-locations
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/git-integration-admin-settings#users-can-export-items-to-git-repositories-in-other-geographical-locations
+  risk: medium
+  recommendation_nuance: Most orgs run their Git instance in the same geo as their tenant; allowing cross-geo
+    export is an unnecessary data-residency exposure. Turn on only if your Git host is legitimately in
+    a different region.
+
+GitIntegrationSensitivityLabelsTenantSwitch:
+  human_name: Users can export workspace items with applied sensitivity labels to Git repositories
+  description: Allows users to export workspace items that have sensitivity labels applied to Git repositories.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/git-integration-admin-settings#users-can-export-workspace-items-with-applied-sensitivity-labels-to-git-repositories
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/git-integration-admin-settings#users-can-export-workspace-items-with-applied-sensitivity-labels-to-git-repositories
+  risk: medium
+  recommendation_nuance: Sensitivity labels do not propagate into Git; allowing labeled items to leave
+    Fabric weakens label enforcement. Leave off if you use sensitivity labels or gate behind a security
+    group.
+
+GitIntegrationTenantSwitch:
+  human_name: Users can synchronize workspace items with their Git repositories
+  description: Lets users import and export workspace items to Git repositories for collaboration and
+    source control; turning it off prevents any workspace-to-Git synchronization.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/cicd/git-integration/intro-to-git-integration
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/cicd/git-integration/intro-to-git-integration
+  risk: medium
+  recommendation_nuance: Foundational for any mature Fabric dev lifecycle. Turn off only if you have an
+    explicit reason or are gate behind a security group if you are concerned that users may try to link
+    with unofficial Git repositories, which can be a data exfiltration or governance risk.
+
+GoogleBigQuerySSO:
+  human_name: Google BigQuery SSO
+  description: Enables single sign-on for Google BigQuery; when on, user access token information including
+    name and email is sent to BigQuery for authentication.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-query/connectors/google-bigquery-aad
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-query/connectors/google-bigquery-aad
+  risk: medium
+  recommendation_nuance: Sends user name and email to Google BigQuery to preserve authentication or data
+    security rules.
+
+ImmersiveTenantAdminSwitch:
+  human_name: Users can access a standalone, cross-item Power BI Copilot experience (preview)
+  description: When on, users can access a dedicated Copilot tab in the Power BI navigation pane to find,
+    analyze, and discuss different Fabric items across the service.
+  preview: true
+  source_url: https://go.microsoft.com/fwlink/?linkid=2306434
+  recommended: "off"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/power-bi/create-reports/copilot-enable-power-bi#enable-the-standalone-power-bi-copilot-experience-preview
+  risk: low
+  recommendation_nuance: Depends on EnableAOAI. Turn on if you want users to have an always-available
+    Copilot surface; leave off if you prefer Copilot only inside specific items. Similarly only enable
+    it once you have gone through the appropriate Copilot preparation, adoption, implementation actions.
+
+InstallNonvalidatedTemplateApps:
+  human_name: Install template apps not listed in AppSource
+  description: Permitted users in the organization can install template apps that were not published to
+    Microsoft AppSource.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2091200
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-template-app#install-template-apps-not-listed-in-appsource
+  risk: medium
+  recommendation_nuance: Non-AppSource apps bypass Microsoft validation; turn off unless you have a specific
+    need.
+
+InstallServiceApps:
+  human_name: Install template apps
+  description: Users in the organization can install template apps created outside the organization; installing
+    one creates an upgraded workspace.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-template-app#install-template-apps
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-template-app#install-template-apps
+  risk: medium
+  recommendation_nuance: Generally not necessary or recommended unless there are specific template apps
+    which you have reviewed that would provide value to people in the organization.
+
+LiveConnection:
+  human_name: Users can work with semantic models in Excel using a live connection (enable Analyze-in-Excel)
+  description: Lets users export data to Excel from report visuals or semantic models, and use Analyze
+    in Excel, through a live XMLA endpoint connection. Also required for composite models.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-analyze-in-excel
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-analyze-in-excel
+  risk: medium
+  recommendation_nuance: You should gate this behind a security group to ensure that the only people who
+    can use this have gone through a pre-requisite training. Often, users might use Analyze-in-Excel as
+    a way to export data, or they try to use it inappropriately which strains capacity. Note that Analyze-in-Excel
+    sends MDX queries and not DAX queries, which generally perform poorer and result in a worse user experience.
+    Consider using this as a secondary or tertiary mode of data consumption for users who need Excel for
+    analysis; consider training users to better leverage Power BI and not just default to Excel all the
+    time.
+
+LogAnalyticsAttachForWorkspaceAdmins:
+  human_name: Azure Log Analytics connections for workspace administrators
+  description: Allows Power BI Premium (Fabric) workspace administrators to connect their workspaces to
+    Azure Log Analytics so workspace logs are sent to the configured Log Analytics workspace.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/transform-model/log-analytics/desktop-log-analytics-configure
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/transform-model/log-analytics/desktop-log-analytics-configure
+  risk: low
+  recommendation_nuance: Generally a valuable activity to get better logs and usage metrics with higher
+    granularity, but requires that you have the capacity to set this up.
+
+M365DataSharing:
+  human_name: Share Fabric data with your Microsoft 365 services
+  description: When enabled, Microsoft Fabric data such as report titles, chart axis labels, data agent
+    instructions, and sharing history can be stored and shown in Microsoft 365 services to improve experiences
+    like search and recommended content.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/admin-share-power-bi-metadata-microsoft-365-services
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/admin-share-power-bi-metadata-microsoft-365-services
+  risk: medium
+  recommendation_nuance: Required for M365 search to find Fabric content. Property M365DataSharingAcrossGeos
+    controls whether metadata can cross geographic boundaries.
+
+MLModelEndpointsTenantSwitch:
+  human_name: ML models can serve real-time predictions from API endpoints (preview)
+  description: When on, users can generate real-time predictions from ML model and version endpoints;
+    batch predictions remain available even when real-time endpoints are off.
+  preview: true
+  source_url: https://aka.ms/MLModelEndpointsLearnMore
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/data-science/model-endpoints
+  risk: low
+  recommendation_nuance: N/A
+
+ODSPRefreshEnforcementTenantAllowAutomaticUpdate:
+  human_name: Semantic model owners can choose to automatically update semantic models from files imported
+    from OneDrive or SharePoint
+  description: Semantic model owners can opt in to having semantic models automatically updated when the
+    source Power BI file in OneDrive or SharePoint changes, including new or modified data connections.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/connect-data/refresh-desktop-file-onedrive
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/connect-data/refresh-desktop-file-onedrive
+  risk: low
+  recommendation_nuance: Can be convenient for those who collaborate with OneDrive or SharePoint, like
+    the other, related tenant settings. Note, however, that this "OneDrive Refresh" is problematic to
+    reverse and can lead to challenges when you want to update the model via other means (like agentic
+    development or APIs) leading to regressions or breaking errors.
+
+OnPremAnalyzeInExcel:
+  human_name: Allow XMLA endpoints and Analyze in Excel with on-premises semantic models
+  description: Lets users view and interact with on-premises Power BI semantic models from Excel, and
+    also permits connections to XMLA endpoints.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-analyze-in-excel
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#allow-xmla-endpoints-and-analyze-in-excel-with-on-premises-datasets
+  risk: low
+  recommendation_nuance: Required for nearly every pro user tool (Tabular Editor, DAX Studio, Analyze
+    in Excel). You may want to make sure that users get a training about external tools before they use
+    it.
+
+OneDriveSharePointAllowSharingTenantSetting:
+  human_name: Users can share links to Power BI files stored in OneDrive and SharePoint through Power
+    BI Desktop (preview)
+  description: Lets users who have saved Power BI .pbix files in OneDrive or SharePoint share links to
+    those files directly from Power BI Desktop.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#users-can-share-links-to-power-bi-files-stored-in-onedrive-and-sharepoint-through-power-bi-desktop-preview
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#users-can-share-links-to-power-bi-files-stored-in-onedrive-and-sharepoint-through-power-bi-desktop-preview
+  risk: low
+  recommendation_nuance: Useful for people who manage content and Power BI files in OneDrive / SharePoint.
+    Not typically recommended unless users are heavily working / collaborating in OneDrive / SharePoint;
+    instead, users should primarily work through Power BI or Fabric workspaces.
+
+OneDriveSharePointViewerIntegrationTenantSettingV2:
+  human_name: Users can view Power BI files saved in OneDrive and SharePoint (preview)
+  description: Users in the organization can view Power BI files stored in OneDrive for Business or SharePoint
+    document libraries, with save and share permissions governed by OneDrive and SharePoint.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-sharepoint-viewer
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#users-can-view-power-bi-files-saved-in-onedrive-and-sharepoint-preview
+  risk: low
+  recommendation_nuance: Useful for people who manage content and Power BI files in OneDrive / SharePoint.
+    This is generally a stopgap for self-service creators; you should encourage all creators to become
+    familiar with using Git either manually or with agents. With agents it is much more accessible and
+    much less complex, and the value is much higher than SharePoint.
+
+OneLakeDiagnosticLogsEUII:
+  human_name: Include end-user identifiers in OneLake diagnostic logs
+  description: Controls whether OneLake diagnostic logs capture end-user identifiable information such
+    as email addresses and IP addresses; when disabled these fields are redacted from new events.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2335502
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/onelake/onelake-diagnostics-overview#personal-data
+  risk: low
+  recommendation_nuance: Required for useful diagnostics and incident investigation; trade-off is additional
+    PII in logs. Align with your telemetry retention policy.
+
+OneLakeFileExplorer:
+  human_name: Users can sync data in OneLake with the OneLake File Explorer app
+  description: Allows users to use the OneLake File Explorer app, which syncs OneLake items to Windows
+    File Explorer similar to OneDrive.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/onelake/onelake-file-explorer
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/onelake/onelake-file-explorer
+  risk: low
+  recommendation_nuance: Convenient for analysts editing OneLake files locally. Generally good, but you
+    should be aware of the limitations and considerations, and cases that can lead to loss of data or
+    destructive operations.
+
+OneLakeForThirdParty:
+  human_name: Users can access data stored in OneLake with apps external to Fabric
+  description: Lets users reach OneLake data from tools outside Fabric such as custom ADLS API apps, OneLake
+    File Explorer, and Databricks, alongside the built-in Fabric engines.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/onelake/security/fabric-onelake-security#allow-apps-running-outside-of-fabric-to-access-data-via-onelake
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/onelake/security/fabric-onelake-security#allow-apps-running-outside-of-fabric-to-access-data-via-onelake
+  risk: medium
+  recommendation_nuance: Review depending on your other data platform usage and requirements.
+
+OntologyPreview:
+  human_name: Users can create Ontology (preview) items
+  description: Lets users create Ontology items that unify enterprise semantics across data, models, and
+    logic to enable context-aware AI agents for decision intelligence.
+  preview: true
+  source_url: https://aka.ms/ontologyitem-overview
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-microsoft-fabric-tenant-settings#users-can-create-ontology-preview-items
+  risk: low
+  recommendation_nuance: Ontology is an important feature to store context and semantics alongside semantic
+    models, which ensures that your data can be better leveraged by AI for both development and conversational
+    BI experiences. Note that Ontologies do not sit ON TOP of semantic models; they exist in parallel
+    and help ensure re-use of semantic models
+
+PlatformMonitoringTenantSetting:
+  human_name: Workspace admins can turn on monitoring for their workspaces (preview)
+  description: Workspace admins can enable workspace monitoring, which provisions a read-only Eventhouse
+    with a KQL database in the workspace and begins sending log data to it.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/fundamentals/enable-workspace-monitoring
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-audit-usage#workspace-admins-can-turn-on-monitoring-for-their-workspaces
+  risk: low
+  recommendation_nuance: Strong operational visibility for Fabric workloads. Ensure that you are going
+    to use it properly. Combine ideally with activity log and other ways to monitor usage metrics and
+    activity.
+
+PowerBIGoalsTenant:
+  human_name: Create and use Scorecards
+  description: Users in the organization can create and use Scorecards.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-goals-settings
+  risk: low
+  recommendation_nuance: Turn on if your org uses Scorecards; typically a niche feature without much adoption.
+
+PowerBIMCP:
+  human_name: Users can use the Power BI Model Context Protocol server endpoint (preview)
+  description: Enables the Power BI Model Context Protocol server endpoint so MCP clients (for example
+    GitHub Copilot in Visual Studio) can interact with users' permissioned Power BI artifacts; service
+    principal access requires the Fabric public APIs setting.
+  preview: true
+  source_url: https://go.microsoft.com/fwlink/?linkid=2338916
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/developer/mcp/overview
+  risk: medium
+  recommendation_nuance: Works for both the modelling MCP and the query MCP. Note that this only affects
+    these two, official MCP servers. If you disable this then people can still interact with models through
+    code, CLIs, and unofficial MCP servers or agents that leverage APIs or the XMLA endpoint. You should
+    consider not blocking agents but rather educating users about agentic development and conversational
+    BI; the same as export to Excel... blocking makes it worse.
+
+PreppedForCopilotContentDiscovery:
+  human_name: Only show approved items in the standalone Copilot in Power BI experience (preview)
+  description: Restricts the standalone Copilot in Power BI experience to surface only apps, data agents,
+    and items flagged as approved for Copilot, though users can still manually attach other items and
+    permissions always apply.
+  preview: true
+  source_url: https://go.microsoft.com/fwlink/?linkid=2311781
+  recommended: "on"
+  default: 'off'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-copilot#only-show-approved-items-in-the-standalone-copilot-in-power-bi-experience-preview
+  risk: low
+  recommendation_nuance: Ensures that only items prepared for AI will be usable by Copilot experiences.
+    Strongly recommend that you use this always if you are using Copilot.
+
+Printing:
+  human_name: Print dashboards and reports
+  description: Lets users in the organization print dashboards and reports.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/consumer/end-user-print
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/consumer/end-user-print
+  risk: low
+  recommendation_nuance: Blocking print is typically security theatre; sensitivity labels and DLP are
+    the right controls.
+
+PromoteContent:
+  human_name: Featured content
+  description: Users in the organization can promote their published content to the Featured section of
+    Power BI Home.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-featured-content
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#featured-content
+  risk: low
+  recommendation_nuance: Restrict to an editorial SG to keep the Featured section curated rather than
+    free-for-all.
+
+PublishContentPack:
+  human_name: Publish apps to the entire organization
+  description: Users in the organization can publish Workspace apps to the entire organization.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-create-distribute-apps#publish-the-app-to-your-entire-organization
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-app#publish-apps-to-the-entire-organization
+  risk: medium
+  recommendation_nuance: Governance risk; you should only enable this if there is a true need for organizational
+    distribution. It's common that other users will accidentally or intentionally share to the entire
+    organization creating dependencies and giving people access to data that they shouldn't or don't need
+    access to. Enable with specific security groups if really necessary.
+
+PublishToWeb:
+  human_name: Publish to web
+  description: Users in the organization can publish reports publicly on the web without authentication;
+    admins manage embed codes in the admin portal.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#publish-to-web
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#publish-to-web
+  risk: very high
+  recommendation_nuance: One of the most well-known causes for data exfiltration in Power BI. Publish-to-web
+    should only be used when both the report visuals AND the underlying semantic model data contain NO
+    sensitive information; ALL data can be access anonymously even if not in report visuals. ONLY enable
+    when you have specific scenarios for public distribution. A common example is portfolio or public-interest
+    data.
+
+QnaFeedbackLoop:
+  human_name: Review Q&A questions
+  description: Lets semantic model owners review the questions users have asked about their data in Q&A.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-qa
+  risk: low
+  recommendation_nuance: Q&A is deprecated. Might replace for Copilot; currently unclear.
+
+QnaLsdlSharing:
+  human_name: Synonym sharing
+  description: Lets users share Linguistic schema definition language / Copilot / Prep data for AI synonyms
+    within the organization.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/natural-language/q-and-a-tooling-intro#field-synonyms
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/natural-language/q-and-a-tooling-intro#field-synonyms
+  risk: low
+  recommendation_nuance: Improves quality of Copilot outputs. However, consider investing in Ontologies
+    instead of limited and fragile linguistic schemas.
+
+QueryScaleOutTenant:
+  human_name: Scale out queries for large semantic models
+  description: For semantic models using the large semantic model storage format, Power BI Premium can
+    automatically distribute queries across extra replicas when query volume is high.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/enterprise/service-premium-scale-out
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/power-bi/enterprise/service-premium-scale-out
+  risk: low
+  recommendation_nuance: No downside beyond minor capacity CU overhead; keep on.
+
+RScriptVisual:
+  human_name: Interact with and share R and Python visuals
+  description: Users in the organization can interact with and share visuals created with R or Python
+    scripts.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-r-python-visuals#interact-with-and-share-r-and-python-visuals
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-r-python-visuals#interact-with-and-share-r-and-python-visuals
+  risk: medium
+  recommendation_nuance: R/Python visuals can execute arbitrary code in the rendering path with permitted
+    libraries. Disable it unless people have undergone specific trainings and accountability agreements
+    for the risks. Can be a great way to extend the capabilities of Power BI reports.
+
+RTHAnomalyDetectionTenantSwitch:
+  human_name: Detect anomalies in Real-Time Intelligence (Preview)
+  description: Allows users to apply statistical detection algorithms to identify anomalies in real-time
+    data.
+  preview: true
+  source_url: https://aka.ms/AD_docs
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/real-time-intelligence/anomaly-detection
+  risk: low
+  recommendation_nuance: Preview; enable when piloting real-time analytics.
+
+RTHOperationalAgentsTenantSwitch:
+  human_name: Enable Operations Agents (Preview)
+  description: Lets users create operations agents that leverage Azure OpenAI to generate operations plans
+    and recommended actions from real-time data, with messages routed through the Azure AI Bot Service
+    inside the EU Data Boundary.
+  preview: true
+  source_url: https://go.microsoft.com/fwlink/?linkid=2338555
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/real-time-intelligence/operations-agent
+  risk: medium
+  recommendation_nuance: Only enable if you have a specific use case and have undergone a proper pilot
+    experimenting with these types of agents.
+
+RedshiftSSO:
+  human_name: Redshift SSO
+  description: Enables single sign-on for Amazon Redshift; when on, user access token information including
+    name and email is sent to Redshift for authentication.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/connect-data/service-gateway-sso-overview
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#redshift-sso
+  risk: medium
+  recommendation_nuance: Sends user name and email to Redshift to preserve authentication or data security
+    rules.
+
+RestrictMyFolderCapacity:
+  human_name: Block users from reassigning personal workspaces (My Workspace)
+  description: When on, users are prevented from reassigning their personal My Workspace to/from Fabric
+    capacity.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/portal-workspace#block-users-from-reassigning-personal-workspaces-my-workspace
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/portal-workspace#block-users-from-reassigning-personal-workspaces-my-workspace
+  risk: low
+  recommendation_nuance: General good governance practice, but there are cases where you might want to
+    allow this so that people who engage with Personal BI usage scenarios can access Fabric items. Note
+    that governing Personal workspaces is a known pain in the ass, so you should make sure that people
+    are properly trained before doing this.
+
+ServicePrincipalAccessGlobalAPIs:
+  human_name: Service principals can create workspaces, connections, and deployment pipelines
+  description: Allows service principals to create workspaces, connections, and deployment pipelines;
+    calling the rest of Fabric public APIs additionally requires the 'Service principals can call Fabric
+    public APIs' setting.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-developer#service-principals-can-create-workspaces-connections-and-deployment-pipelines
+  recommended: "on:sg"
+  default: 'off'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-developer#service-principals-can-create-workspaces-connections-and-deployment-pipelines
+  risk: high
+  recommendation_nuance: Needed for CI/CD and IaC pipelines that provision Fabric content. Restrict to
+    a specific CI/CD SP SG so random apps cannot create workspaces.
+
+ServicePrincipalAccessPermissionAPIs:
+  human_name: Service principals can call Fabric public APIs
+  description: Allows service principals with the appropriate roles and item permissions to call Fabric
+    public APIs; a separate setting controls workspace, connection, and deployment pipeline creation.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-developer#service-principals-can-call-fabric-public-apis
+  recommended: "on:sg"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-developer#service-principals-can-call-fabric-public-apis
+  risk: high
+  recommendation_nuance: Foundational for any SP-driven automation or agentic development (refresh orchestration,
+    data movement, tool integrations). Restrict to an approved SP SG; without it, no SP automation works.
+
+ShareLinkToEntireOrg:
+  human_name: Allow shareable links to grant access to everyone in your organization
+  description: Enables shareable links that grant access to anyone inside the organization who holds the
+    link, while excluding external users.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#allow-shareable-links-to-grant-access-to-everyone-in-your-organization
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#allow-shareable-links-to-grant-access-to-everyone-in-your-organization
+  risk: medium
+  recommendation_nuance: Typically a governance risk and annoyance; there's very few reasons why someone
+    would want or need to share across the entire organization like this. It's always better to share
+    with specific individuals or with security groups.
+
+ShareToTeamsTenant:
+  human_name: Enable Microsoft Teams integration
+  description: Lets people in the organization use features tied to the Microsoft Teams and Power BI integration,
+    such as launching Teams chats from the Power BI service, installing the Power BI app for Teams, and
+    receiving Power BI notifications in Teams; full enablement may also require Teams admin action.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-collaborate-microsoft-teams
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#enable-microsoft-teams-integration
+  risk: low
+  recommendation_nuance: Disable if you use Slack or other platforms instead of Teams.
+
+ShowActivatorEntryPointsTenantSwitch:
+  human_name: All Power BI users can see "Set alert" button to create Fabric Activator alerts
+  description: When enabled, all Power BI users see the Set alert button on reports, though only users
+    with permission to create Fabric items can actually configure Fabric Activator alerts that send real-time
+    notifications based on data conditions.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2331953
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-microsoft-fabric-tenant-settings#all-power-bi-users-can-see-set-alert-button-to-create-fabric-activator-alerts
+  risk: low
+  recommendation_nuance: Disable if you aren't using Fabric Activator.
+
+SnowflakeSSO:
+  human_name: Snowflake SSO
+  description: Enables SSO for Snowflake; when on, user access token information including name and email
+    is sent to Snowflake for authentication.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/connect-data/service-connect-snowflake
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/connect-data/service-connect-snowflake#admin-portal
+  risk: medium
+  recommendation_nuance: Sends user name and email to Snowflake to preserve authentication or data security
+    rules.
+
+StorytellingTenant:
+  human_name: Enable Power BI add-in for PowerPoint
+  description: Lets people embed Power BI data into PowerPoint presentations; requires the Microsoft Office
+    admin to have enabled add-in support.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#enable-power-bi-add-in-for-powerpoint
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-export-sharing#enable-power-bi-add-in-for-powerpoint
+  risk: low
+  recommendation_nuance: Requires Office-add-in support at the M365 admin center. Can be valuable for
+    people who want to add Power BI visuals to PowerPoint, or specific scenarios like autoplaying presentations
+    that show data visuals, or data storytelling (data storytelling doesn't happen in Power BI reports
+    and dashboards).
+
+TemplatePublish:
+  human_name: Create template organizational workspace apps
+  description: Lets users in the organization build template apps from semantic models that are based
+    on a single Power BI Desktop data source. Doesn't apply to Fabric OrgApps.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/connect-data/service-template-apps-create
+  recommended: "off"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/connect-data/service-template-apps-create
+  risk: low
+  recommendation_nuance: Same as the organizational apps and template app settings; this can occasionally
+    be helpful for self-service users who want to create and distribute workspace apps. Enable for specific
+    security groups if needed.
+
+TenantSettingPublishGetHelpInfo:
+  human_name: Publish "Get Help" information
+  description: Lets users in the organization access internal help and support resources from the Power
+    BI help menu.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-help-support#publish-get-help-information
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-help-support#publish-get-help-information
+  risk: low
+  recommendation_nuance: Costs nothing and directs users to your internal support channels; fill in the
+    property URLs (TrainingDocumentation, DiscussionForum, LicensingRequests, HelpDesk) with proper resources
+    and ensure that these resources are regularly updated and maintained. Stale resources can lead to
+    confusion, frustration, and mistakes.
+
+ThirdPartyPrivateWorkloads:
+  human_name: Users can see and work with additional workloads not validated by Microsoft
+  description: Allows users to discover and use additional workloads that Microsoft has not validated;
+    admins should only add workloads from trusted publishers that meet organizational policies.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/workload-development-kit/publish-workload-requirements
+  recommended: "on:sg"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-additional-workloads#users-can-see-and-work-with-additional-workloads-not-validated-by-microsoft
+  risk: medium
+  recommendation_nuance: Unverified workloads can be helpful but provide a potential security risk. Ensure
+    that you audit any workloads that people are using with the activity logs and other admin APIs. Can
+    be an interesting and valuable way to extend Fabric for those who want or need to use it, but requires
+    a reasonably high maturity level for users to leverage this properly.
+
+UsageMetrics:
+  human_name: Usage metrics for content creators
+  description: Users in the organization can view usage metrics for dashboards, reports, and semantic
+    models that they have appropriate permissions to.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-modern-usage-metrics
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-modern-usage-metrics
+  risk: low
+  recommendation_nuance: Basic self-service telemetry for creators; no reason to disable. If you need
+    org-wide usage analytics, combine with the Activity Events (activity log) and other APIs.
+
+UsageMetricsTrackUserLevelInfo:
+  human_name: Per-user data in usage metrics for content creators
+  description: Usage metrics reports for content creators expose the display names and email addresses
+    of users accessing the content.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-modern-usage-metrics#exclude-user-information-from-usage-metrics-reports
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-audit-usage
+  risk: low
+  recommendation_nuance: Useful for understanding usage and adoption trends by user; in particular, it's
+    useful to filter out developers, consultants, and support staff from usage metrics, or to identify
+    trends for MVP users or individuals who are using more/less than average. Strongly recommended.
+
+UseDatasetsAcrossWorkspaces:
+  human_name: Use semantic models across workspaces
+  description: Lets users in the organization consume semantic models that live in other workspaces, provided
+    they have Build permission on those models.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/portal-workspace#use-semantic-models-across-workspaces
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/connect-data/service-datasets-admin-across-workspaces
+  risk: low
+  recommendation_nuance: Essential for the "golden dataset" reuse pattern; no reason to disable.
+
+VisualizeListInPowerBI:
+  human_name: Integration with SharePoint and Microsoft Lists
+  description: Lets users launch Power BI from SharePoint lists and Microsoft Lists, build reports on
+    top of that list data, and publish the reports back to the lists.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#integration-with-sharepoint-and-microsoft-lists
+  recommended: "on"
+  default: 'on'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-integration#integration-with-sharepoint-and-microsoft-lists
+  risk: low
+  recommendation_nuance: Useful productivity integration; low risk.
+
+WebContentTilesTenant:
+  human_name: Web content on dashboard tiles
+  description: Users in the organization can add and view web content tiles on Power BI dashboards; docs
+    warn this may expose the org to security risks from malicious web content.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-bi/create-reports/service-dashboard-add-widget#add-web-content
+  recommended: "off"
+  default: 'off'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-dashboard#web-content-on-dashboard-tiles
+  risk: medium
+  recommendation_nuance: Web content tiles can load arbitrary URLs, which is an XSS/phishing vector. Turn
+    off unless you have a specific use case and a review process for tile URLs.
+
+WebModelingTenantSwitch:
+  human_name: Users can edit semantic models in the Power BI service
+  description: Allows users to edit semantic models in the Power BI service; does not apply to DirectLake
+    semantic models or edits made through an API or XMLA endpoint.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2227332
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/power-bi/transform-model/service-edit-data-models
+  risk: low
+  recommendation_nuance: Only real risk is that changes are saved automatically. Can be useful for MacOS
+    users or for those who work primarily from Power BI service / Fabric, but isn't recommended as a primary
+    way to develop or manage semantic models except for limited self-service scenarios. The UI also differs
+    from Power BI Desktop and there's typically a lag in the available features, too.
+
+WorkspaceBlockInboundAccess:
+  human_name: Configure workspace-level inbound network rules
+  description: Workspace admins can configure inbound private link access protection in workspace settings;
+    workspaces restricting inbound network access cannot be reached via existing tenant-level private
+    links.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2272575
+  recommended: "on"
+  default: 'off'
+  default_source: https://learn.microsoft.com/en-us/fabric/security/security-workspace-enable-inbound-access-protection
+  risk: medium
+  recommendation_nuance: Useful when different workspaces must honor different inbound network policies.
+    Only enable if your workspace admins are network-aware; otherwise centralize at tenant level.
+
+WorkspaceBlockOutboundAccess:
+  human_name: Configure workspace-level outbound network rules
+  description: Lets workspace admins configure outbound access protection in workspace settings; disabling
+    this tenant setting also removes outbound protection from every workspace.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2310620
+  recommended: "on"
+  default: null
+  default_source: https://learn.microsoft.com/en-us/fabric/security/workspace-outbound-access-protection-overview
+  risk: medium
+  recommendation_nuance: Enables fine-grained exfiltration control per workspace (e.g. blocking outbound
+    calls to unapproved SaaS connectors). Only useful if network policy differs across workspaces.
+
+WorkspaceCmk:
+  human_name: Apply customer-managed keys
+  description: When on, users can configure workspace-level encryption using customer-managed keys to
+    protect their data; when off, Fabric uses Microsoft-managed keys by default.
+  preview: false
+  source_url: https://go.microsoft.com/fwlink/?linkid=2308801
+  recommended: "on"
+  default: 'off'
+  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-encryption#enable-cmk-for-fabric-workspaces-tenant-setting
+  risk: medium
+  recommendation_nuance: Required for BYOK compliance regimes. Enabling requires an Azure Key Vault, MI
+    configuration, and a rotation plan. Enable if you have specific compliance or architecture requirements
+    for this setup.

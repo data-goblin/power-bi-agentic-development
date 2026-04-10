@@ -1,0 +1,138 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.7.0/schema.json",
+  "name": "79523ed91e7fb66cbb63",
+  "position": {
+    "x": 32,
+    "y": 224,
+    "z": 1,
+    "height": 192,
+    "width": 320,
+    "tabOrder": 1
+  },
+  "visual": {
+    "visualType": "kpi",
+    "query": {
+      "queryState": {
+        "Goal": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Orders"
+                    }
+                  },
+                  "Property": "Order Lines PY"
+                }
+              },
+              "queryRef": "Orders.Order Lines PY",
+              "nativeQueryRef": "Order Lines PY"
+            }
+          ]
+        },
+        "Indicator": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Orders"
+                    }
+                  },
+                  "Property": "Order Lines"
+                }
+              },
+              "queryRef": "Orders.Order Lines",
+              "nativeQueryRef": "Order Lines"
+            }
+          ]
+        },
+        "TrendLine": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Date"
+                    }
+                  },
+                  "Property": "Calendar Year Number (ie 2021)"
+                }
+              },
+              "queryRef": "Date.Calendar Year Number (ie 2021)",
+              "nativeQueryRef": "Calendar Year Number (ie 2021)"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "Orders"
+                  }
+                },
+                "Property": "Order Lines"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "b6e62a410b6fe25dce90",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Orders"
+              }
+            },
+            "Property": "Order Lines"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "aca3703da90b6557173c",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Orders"
+              }
+            },
+            "Property": "Order Lines PY"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "6c05e0c5395e46dce77a",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Date"
+              }
+            },
+            "Property": "Calendar Year Number (ie 2021)"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
+  }
+}

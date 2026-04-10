@@ -14,13 +14,13 @@ Scripts for managing relationships between tables in Tabular models.
 
 ### Execute Inline
 ```bash
-te "model.bim" 'Model.AddRelationship().FromColumn = Model.Tables["Sales"].Columns["ProductKey"]; Model.Relationships.Last().ToColumn = Model.Tables["Product"].Columns["ProductKey"];'
+te script "model.bim" -e 'Model.AddRelationship().FromColumn = Model.Tables["Sales"].Columns["ProductKey"]; Model.Relationships.Last().ToColumn = Model.Tables["Product"].Columns["ProductKey"];' --save
 ```
 
 ### Execute Script File
 ```bash
-te "model.bim" samples/relationships/add-relationship.csx --file
-te "Production/Sales" samples/relationships/create-relationships-by-naming-convention.csx --file
+te script "model.bim" -S samples/relationships/add-relationship.csx --save
+te script -s "Production" -d "Sales" -S samples/relationships/create-relationships-by-naming-convention.csx --save
 ```
 
 ### With Fabric CLI Workflow
@@ -29,7 +29,7 @@ te "Production/Sales" samples/relationships/create-relationships-by-naming-conve
 fab export "Workspace/Model.SemanticModel" -o ./model -f
 
 # Create relationships
-te "./model/Model.SemanticModel/model.bim" samples/relationships/add-relationship.csx --file
+te script "./model/Model.SemanticModel/definition" -S samples/relationships/add-relationship.csx --save
 
 # Import back
 fab import "Workspace/Model.SemanticModel" -i ./model/Model.SemanticModel -f

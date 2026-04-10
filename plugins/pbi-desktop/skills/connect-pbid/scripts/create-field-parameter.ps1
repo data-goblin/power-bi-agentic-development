@@ -39,6 +39,8 @@ param(
     [string]$TableGroup = "05. Parameters"
 )
 
+$ErrorActionPreference = "Stop"
+
 
 #region Prerequisites
 
@@ -110,92 +112,97 @@ Write-Output $daxExpr
 #endregion
 
 
-#region Create table
+#region Create and configure table
 
-$fpTable = New-Object Microsoft.AnalysisServices.Tabular.Table
-$fpTable.Name = $Name
+try {
+    $fpTable = New-Object Microsoft.AnalysisServices.Tabular.Table
+    $fpTable.Name = $Name
 
-$partition = New-Object Microsoft.AnalysisServices.Tabular.Partition
-$partition.Name = $Name
-$partition.Source = New-Object Microsoft.AnalysisServices.Tabular.CalculatedPartitionSource
-$partition.Source.Expression = $daxExpr
-$fpTable.Partitions.Add($partition)
+    $partition = New-Object Microsoft.AnalysisServices.Tabular.Partition
+    $partition.Name = $Name
+    $partition.Source = New-Object Microsoft.AnalysisServices.Tabular.CalculatedPartitionSource
+    $partition.Source.Expression = $daxExpr
+    $fpTable.Partitions.Add($partition)
 
-$model.Tables.Add($fpTable)
-$model.SaveChanges()
+    $model.Tables.Add($fpTable)
+    $model.SaveChanges() | Out-Null
 
-Write-Output "Table created. Refreshing to populate columns..."
+    Write-Output "Table created. Refreshing to populate columns..."
 
-$model.Tables[$Name].RequestRefresh([Microsoft.AnalysisServices.Tabular.RefreshType]::Calculate)
-$model.SaveChanges()
+    $model.Tables[$Name].RequestRefresh([Microsoft.AnalysisServices.Tabular.RefreshType]::Calculate)
+    $model.SaveChanges() | Out-Null
 
-#endregion
+    # Re-fetch the table after refresh (columns are now auto-inferred)
+    $fpTable = $model.Tables[$Name]
 
+    # Identify the three auto-generated CalculatedTableColumns by SourceColumn
+    $nameCol = $fpTable.Columns | Where-Object { $_.SourceColumn -eq "[Value1]" }
+    $fieldsCol = $fpTable.Columns | Where-Object { $_.SourceColumn -eq "[Value2]" }
+    $orderCol = $fpTable.Columns | Where-Object { $_.SourceColumn -eq "[Value3]" }
 
-#region Configure columns
+    if (-not $nameCol -or -not $fieldsCol -or -not $orderCol) {
+        throw "Could not identify auto-generated columns. Expected [Value1], [Value2], [Value3]."
+    }
 
-# Re-fetch the table after refresh (columns are now auto-inferred)
-$fpTable = $model.Tables[$Name]
+    # Rename
+    $nameCol.Name = $Name
+    $fieldsCol.Name = "$Name Fields"
+    $orderCol.Name = "$Name Order"
 
-# Identify the three auto-generated CalculatedTableColumns by SourceColumn
-$nameCol = $fpTable.Columns | Where-Object { $_.SourceColumn -eq "[Value1]" }
-$fieldsCol = $fpTable.Columns | Where-Object { $_.SourceColumn -eq "[Value2]" }
-$orderCol = $fpTable.Columns | Where-Object { $_.SourceColumn -eq "[Value3]" }
+    # Visibility
+    $fieldsCol.IsHidden = $true
+    $orderCol.IsHidden = $true
 
-if (-not $nameCol -or -not $fieldsCol -or -not $orderCol) {
-    Write-Error "Could not identify auto-generated columns. Expected [Value1], [Value2], [Value3]."
+    # Sort name column by order column
+    $nameCol.SortByColumn = $orderCol
+
+    # Sort fields column by order column
+    $fieldsCol.SortByColumn = $orderCol
+
+    # Set groupBy relationship (name column grouped by fields column)
+    $gbc = New-Object Microsoft.AnalysisServices.Tabular.GroupByColumn
+    $gbc.GroupingColumn = $fieldsCol
+    $rcd = New-Object Microsoft.AnalysisServices.Tabular.RelatedColumnDetails
+    $rcd.GroupByColumns.Add($gbc)
+    $nameCol.RelatedColumnDetails = $rcd
+
+    # Set ParameterMetadata extended property on fields column
+    $ep = New-Object Microsoft.AnalysisServices.Tabular.JsonExtendedProperty
+    $ep.Name = "ParameterMetadata"
+    $ep.Value = '{"version":3,"kind":2}'
+    $fieldsCol.ExtendedProperties.Add($ep)
+
+    # Format order column
+    $orderCol.FormatString = "0"
+
+    # Tabular Editor table group annotation
+    $fpTable.Annotations.Add(
+        (New-Object Microsoft.AnalysisServices.Tabular.Annotation -Property @{
+            Name = "TabularEditor_TableGroup"
+            Value = $TableGroup
+        })
+    )
+
+    $model.SaveChanges() | Out-Null
+}
+catch {
+    Write-Output "ERROR: $($_.Exception.Message)"
+    # Remove the half-created table so the model is left as found
+    $partial = $model.Tables[$Name]
+    if ($partial) {
+        $model.Tables.Remove($partial)
+        $model.SaveChanges() | Out-Null
+        Write-Output "Cleanup: removed partially created table [$Name]."
+    }
     $server.Disconnect()
+    Write-Output "Field parameter creation FAILED; no changes were kept."
     exit 1
 }
 
-# Rename
-$nameCol.Name = $Name
-$fieldsCol.Name = "$Name Fields"
-$orderCol.Name = "$Name Order"
-
-# Visibility
-$fieldsCol.IsHidden = $true
-$orderCol.IsHidden = $true
-
-# Sort name column by order column
-$nameCol.SortByColumn = $orderCol
-
-# Sort fields column by order column
-$fieldsCol.SortByColumn = $orderCol
-
-# Set groupBy relationship (name column grouped by fields column)
-$nameCol.RelatedColumnDetails = New-Object Microsoft.AnalysisServices.Tabular.RelatedColumnDetails
-$nameCol.RelatedColumnDetails.GroupByColumn = $fieldsCol
-
-# Set ParameterMetadata extended property on fields column
-$fieldsCol.SetExtendedProperty(
-    "ParameterMetadata",
-    '{"version":3,"kind":2}',
-    [Microsoft.AnalysisServices.Tabular.ExtendedPropertyType]::Json
-)
-
-# Format order column
-$orderCol.FormatString = "0"
-
 #endregion
 
 
-#region Annotations
-
-# Tabular Editor table group
-$fpTable.Annotations.Add(
-    (New-Object Microsoft.AnalysisServices.Tabular.Annotation -Property @{
-        Name = "TabularEditor_TableGroup"
-        Value = $TableGroup
-    })
-)
-
-#endregion
-
-
-#region Save and report
-
-$model.SaveChanges()
+#region Report
 
 Write-Output ""
 Write-Output "Field parameter [$Name] created with $($measureList.Count) measures:"

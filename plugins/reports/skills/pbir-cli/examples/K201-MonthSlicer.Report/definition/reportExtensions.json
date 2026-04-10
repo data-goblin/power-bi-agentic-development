@@ -1,0 +1,105 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json",
+  "name": "extension",
+  "entities": [
+    {
+      "name": "On-Time Delivery",
+      "measures": [
+        {
+          "name": "OTD % (Value; PY REPT)",
+          "dataType": "Double",
+          "expression": "CALCULATE( [OTD % (Value)], DATEADD( 'Date'[Date], -1, YEAR ) )",
+          "formatString": "0.00\\ %;-0.00\\ %;0.00\\ %",
+          "references": {
+            "measures": [
+              {
+                "entity": "On-Time Delivery",
+                "name": "OTD % (Value)"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Cond. Color",
+          "dataType": "Text",
+          "expression": "IF ( MIN ( 'Date'[Date] ) < [RefDate], IF ( [OTD % (Value)] > [OTD % (Value; PY REPT)], 1, 0 ) )",
+          "references": {
+            "measures": [
+              {
+                "entity": "Date",
+                "name": "RefDate"
+              },
+              {
+                "entity": "On-Time Delivery",
+                "name": "OTD % (Value)"
+              },
+              {
+                "schema": "extension",
+                "entity": "On-Time Delivery",
+                "name": "OTD % (Value; PY REPT)"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Cond. Color 2",
+          "dataType": "Text",
+          "expression": "\nVAR _Actual = [OTD % (Value)]\nVAR _Target = [OTD % (Value; PY)]\nVAR _Performance = DIVIDE ( _Actual - _Target, _Target ) \n\n-- Sentiment config (percent)\nVAR _VeryBad    = -0.075\nVAR _Bad        = -0.025\nVAR _Good       = 0.025\nVAR _VeryGood   = 0.075\n\n-- Color config.\nVAR _ActionDotFill = \n    SWITCH (\n        TRUE(),\n        _Performance < _VeryBad, \"#c2255c\",       -- Dark red\n        -- _Performance < _Bad, \"#e6c5da\",           -- Light red\n        -- _Performance > _Good, \"#74B2FF\",          -- Light blue\n        -- _Performance > _VeryGood, \"#2D6390\",      -- Dark blue\n        \"#333333\"                               -- Transparent\n    )\nRETURN\n    _ActionDotFill",
+          "references": {
+            "measures": [
+              {
+                "entity": "On-Time Delivery",
+                "name": "OTD % (Value)"
+              },
+              {
+                "entity": "On-Time Delivery",
+                "name": "OTD % (Value; PY)"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Cond. Color 3",
+          "dataType": "Text",
+          "expression": "\r\nVAR _Actual = [OTD % (Value)]\r\nVAR _Target = [OTD % (Value; PY)]\r\nVAR _Performance = DIVIDE ( _Actual - _Target, _Target ) \r\n\r\n-- Sentiment config (percent)\r\nVAR _VeryBad    = -0.075\r\nVAR _Bad        = -0.025\r\nVAR _Good       = 0.025\r\nVAR _VeryGood   = 0.075\r\n\r\n-- Color config.\r\nVAR _ActionDotFill = \r\n    SWITCH (\r\n        TRUE(),\r\n        _Performance < _VeryBad, \"#c2255c\",       -- Dark red\r\n        _Performance < _Bad, \"#e6c5da\",           -- Light red\r\n        _Performance > _Good, \"#74B2FF\",          -- Light blue\r\n        _Performance > _VeryGood, \"#2D6390\",      -- Dark blue\r\n        \"#ABABAB\"                                 -- Transparent\r\n    )\r\nRETURN\r\n    _ActionDotFill",
+          "references": {
+            "measures": [
+              {
+                "entity": "On-Time Delivery",
+                "name": "OTD % (Value)"
+              },
+              {
+                "entity": "On-Time Delivery",
+                "name": "OTD % (Value; PY)"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Title - \"OTD % (Value) for < Month >\"",
+          "dataType": "Text",
+          "expression": "\nVAR _Title  = \"OTD % (Value) for \"\nVAR _Months = \n    SELECTEDVALUE( \n        'Date'[Calendar Month (ie Jan)], \n        CONCATENATEX( \n            VALUES( 'Date'[Calendar Month (ie Jan)] ), \n            'Date'[Calendar Month (ie Jan)], \n            \", \" \n        )\n    )\n\nRETURN\n    _Title & _Months"
+        }
+      ]
+    },
+    {
+      "name": "1) Selected Metric",
+      "measures": [
+        {
+          "name": "Late Orders",
+          "dataType": "Double",
+          "expression": "CALCULATE ( [Total Net Order Value], 'Order Status'[Order Status Code] IN { \"Late Open Order\", \"Overdue\" } )",
+          "formatString": "#,0.00",
+          "references": {
+            "measures": [
+              {
+                "entity": "Orders",
+                "name": "Total Net Order Value"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

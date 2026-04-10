@@ -10,7 +10,7 @@ Usage:
     python3 get-downstream-reports.py "Claude Code's Workspace" "SpaceParts"
 
     # By dataset GUID directly (skips model lookup)
-    python3 get-downstream-reports.py --dataset-id 8f2a2a29-0738-444a-8a5a-f83d26ec1f7f
+    python3 get-downstream-reports.py --dataset-id <dataset-guid>
 
     # JSON output for piping
     python3 get-downstream-reports.py "ws" "model" --json

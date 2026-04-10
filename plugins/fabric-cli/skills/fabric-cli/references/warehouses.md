@@ -84,3 +84,5 @@ Requires Runtime 1.3+. Known to produce opaque errors from `fab job run`; use `f
 ```bash
 fab rm "ws.Workspace/MyWarehouse.Warehouse" -f
 ```
+
+Recovery depends on the tenant Item Recovery setting; see [reference.md > Recovering deleted items](reference.md#recovering-deleted-items).

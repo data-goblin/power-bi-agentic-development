@@ -62,18 +62,18 @@ Periods: `Last7Days`, `Last14Days`, `Last30Days`, `Last3Months`, `Last6Months`, 
 ```bash
 pbir filters list "Report.Report"                         # List report filters
 pbir filters list "Report.Report/Page.Page"               # List page filters
-pbir filters set "Report.Report/filter:Year" --values "2024,2025"  # Set values
-pbir filters clear "Report.Report/filter:Year"            # Clear selections
-pbir filters hide "Report.Report/filter:Year"             # Hide in view mode
-pbir filters lock "Report.Report/filter:Year"             # Lock (users can't change)
-pbir filters unlock "Report.Report/filter:Year"           # Unlock
-pbir filters json "Report.Report/filter:Year"             # Raw JSON
+pbir filters set "Report.Report/Year.Filter" --values "2024" --values "2025"  # Set values
+pbir filters clear "Report.Report/Year.Filter"            # Clear selections
+pbir filters hide "Report.Report/Year.Filter"             # Hide in view mode
+pbir filters lock "Report.Report/Year.Filter"             # Lock (users can't change)
+pbir filters unlock "Report.Report/Year.Filter"           # Unlock
+pbir filters json "Report.Report/Year.Filter"             # Raw JSON
 ```
 
 ## Removing Filters
 
 ```bash
-pbir rm "Report.Report/filter:Year" -f
+pbir rm "Report.Report/filter:Year" -f                    # rm uses filter: prefix
 ```
 
 ## Changing Filter Type
@@ -81,7 +81,7 @@ pbir rm "Report.Report/filter:Year" -f
 Filter type cannot be changed in place because each type has a different JSON structure. Remove and recreate:
 
 ```bash
-pbir rm "Report.Report/filter:Brand" -f
+pbir rm "Report.Report/filter:Brand" -f                   # rm uses filter: prefix
 pbir add filter Brands Brand -r "Report.Report" --type TopN --n 10 \
   --by-table Invoices --by-field "Net Invoice Value"
 ```
@@ -92,7 +92,7 @@ pbir add filter Brands Brand -r "Report.Report" --type TopN --n 10 \
 pbir filters pane-hide "Report.Report/Page.Page"          # Hide filter pane
 pbir filters pane-collapse "Report.Report/Page.Page"      # Collapse filter pane
 pbir filters pane-get "Report.Report/Page.Page"           # Show pane config
-pbir filters pane-set "Report.Report/Page.Page" --background-color "#F0F0F0"
+pbir filters pane-set "Report.Report/Page.Page" --bg-color "#F0F0F0"
 pbir filters pane-card "Report.Report/Page.Page" --border-color "#CCCCCC"
 ```
 

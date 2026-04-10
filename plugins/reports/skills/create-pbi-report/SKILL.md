@@ -7,6 +7,10 @@ description: Step-by-step workflow for creating complete Power BI reports from s
 
 Create and scaffold Power BI reports using `pbir` CLI. Install with `uv tool install pbir-cli` or `pip install pbir-cli`. Load the `pbir-cli` and `pbi-report-design` skills alongside this one.
 
+## Vague or Underspecified Prompts
+
+When the user's request lacks specific measures, audience context, structural preferences, or formatting direction (e.g., "make me a dashboard", "create something with KPIs"), consult **`references/vague-prompts.md`** before proceeding. Close the gap between intent and specification with targeted questions; then apply sensible defaults (sqlbi theme, executive dashboard pattern, model-driven KPI selection) for anything the user can't or won't specify.
+
 ## Rules
 
 - Visuals must not overlap one another
@@ -21,8 +25,9 @@ Create and scaffold Power BI reports using `pbir` CLI. Install with `uv tool ins
 
 1. Get the workspace and semantic model from the user. If the user wants to connect to Power BI Desktop or create a report with source data, explain that a published semantic model in Fabric or Power BI is required first.
 2. Analyze the user's requirements. Consider missing information -- charts, filters, formatting, analyses. Use `AskUserQuestion` if something is unclear.
-3. Consider missing semantic model objects -- not just what the user asks for, but targets (1 year prior), baselines (avg for period), or trend aggregations (14-day rolling) that enrich visuals.
-4. Create a project folder and report (default format is PBIP):
+3. Assemble a design brief (audience, purpose, decision questions, page list with per-page intent, committed design identity, delivery target); get user approval before building; see `references/design-brief.md`.
+4. Consider missing semantic model objects -- not just what the user asks for, but targets (1 year prior), baselines (avg for period), or trend aggregations (14-day rolling) that enrich visuals.
+5. Create a project folder and report (default format is PBIP):
 
     ```bash
     mkdir -p /path/to/report-name
@@ -30,16 +35,19 @@ Create and scaffold Power BI reports using `pbir` CLI. Install with `uv tool ins
     pbir new report "Name.Report" -c "Workspace/Model.SemanticModel"
     ```
 
-5. Rename the default page (do NOT add a new page unless the report needs multiple pages): `pbir pages rename "Name.Report/Page 1.Page" "Overview"`
-6. Only if the user requests a custom theme: `pbir theme apply-template "Name.Report" template-name` (the sqlbi theme is already included by default)
-7. Discover model fields: `pbir model "Name.Report" -d`
-8. Query field values for filters or formatting: `pbir model "Name.Report" -q "EVALUATE VALUES('Table'[Column])"`
-9. Inspect field data types: `pbir model "Name.Report" -d -t Table`
-10. Add visuals (the page already has a textbox for the title): `pbir add visual kpi "Name.Report/Overview.Page" --title "Revenue"`
-11. Validate: `pbir validate "Name.Report"`
-12. Publish: `pbir publish "Name.Report" "Workspace.Workspace/Name.Report"`
-13. Open in Fabric after publish: `pbir publish "Name.Report" "Workspace.Workspace/Name.Report" -o`
-14. Or open locally in Power BI Desktop: `pbir open "Name.Report"`
+6. Rename the default page (do NOT add a new page unless the report needs multiple pages): `pbir pages rename "Name.Report/Page 1.Page" --to "Overview" -f`
+7. Only if the user requests a custom theme: `pbir theme apply-template "Name.Report" template-name` (the sqlbi theme is already included by default)
+8. Discover model fields: `pbir model "Name.Report" -d`
+9. Query field values for filters or formatting: `pbir model "Name.Report" -q "EVALUATE VALUES('Table'[Column])"`
+10. Inspect field data types: `pbir model "Name.Report" -d -t Table`
+11. Add visuals (the page already has a textbox for the title): `pbir add visual kpi "Name.Report/Overview.Page" --title "Revenue"`
+12. Configure query reduction (slicers + heavy visuals): see `references/interactivity.md`
+13. Wire cross-filter overrides and page navigation: see `references/interactivity.md`
+14. Add filters and slicers; configure slicer sync and reset: see `references/interactivity.md`
+15. Validate: `pbir validate "Name.Report"`
+16. Publish: `pbir publish "Name.Report" "Workspace.Workspace/Name.Report"`
+17. Open in Fabric after publish: `pbir publish "Name.Report" "Workspace.Workspace/Name.Report" -o`
+18. Or open locally in Power BI Desktop: `pbir open "Name.Report"`
 
 ## Step-by-Step Process
 
@@ -62,9 +70,17 @@ Present a concrete proposal via `AskUserQuestion` before building anything. The 
 
 Iterate on the design before executing -- revising a plan is cheaper than rebuilding visuals.
 
+### Step 1b: Assemble and Lock the Design Brief
+
+Consolidate the Step 1 exploration and any vague-prompt findings into one design brief. This is not a second round of requirements gathering; it freezes what is already known into a single spec the build steps execute against. The brief names the audience, the purpose, the 2-5 decision questions a viewer must answer, a page list where each page carries one stated intent, the committed design identity (tone plus signature), and the delivery target. See **`references/design-brief.md`** for the copy-able template and how to fill each field.
+
+Present the brief once via `AskUserQuestion` for explicit "yes" or "change X" approval. On approval, treat it as frozen: the build steps run against it without re-litigating scope, and any later scope change re-opens the brief rather than silently drifting the visuals.
+
+The approved brief routes to the **`pbi-report-design`** skill (which owns the design canon: commit the identity there, and map each page intent to a concrete layout), then into the build steps below. Reference identity and page-intent-to-layout by concept; `pbi-report-design` is the home for that reasoning, so do not restate it here.
+
 ### Step 2: Identify Location and Connection
 
-Determine where to create the report and what model it connects to. Use `AskUserQuestion` to understand the report's purpose, audience, and what decisions it should support.
+Determine where to create the report and which model it connects to. Purpose, audience, and decision questions are already settled in the locked brief (Step 1b); do not re-elicit them here.
 
 ```bash
 pbir model                                       # List all known reports/models
@@ -100,7 +116,7 @@ sales-dashboard/
 The report comes with a default "Page 1" that already has a textbox for the page title. Rename it rather than creating a new page. Only add additional pages if needed.
 
 ```bash
-pbir pages rename "Sales.Report/Page 1.Page" "Overview"          # Rename default page
+pbir pages rename "Sales.Report/Page 1.Page" --to "Overview" -f  # Rename default page
 pbir add page "Sales.Report/Detail.Page" -n "Detail"              # Add extra pages only if needed
 pbir pages active-page "Sales.Report" "Overview"
 ```
@@ -137,7 +153,27 @@ Key principles:
 - **No redundant titles**: Page title = subject ("Order Lines"), visual titles = differentiator ("by Key Account", "Monthly Trend"). Hide subtitles: `pbir visuals subtitle "path" --no-show`
 - **Sorting**: Charts auto-sort descending by first measure. After `pbir visuals bind`, set sort explicitly: `pbir visuals sort "path" -f "Table.Measure" -d Descending`
 
-### Step 7: Add Filters
+For reports where users pick which measure or dimension to view, use field parameters to collapse N near-duplicate visuals into one. See **`references/interactivity.md`** (Field Parameters section).
+
+### Step 7: Configure Query Reduction
+
+For any report with slicers or a busy page (matrices, maps, high-cardinality tables), apply query reduction at creation -- not after. Retrofitting leaves stale interaction pairs and the page may already have unintended cross-filtering wired in.
+
+The three components (see **`references/interactivity.md`** for full detail):
+
+1. Add `NoFilter` `visualInteractions` pairs from each slicer to heavy visuals
+2. Enable the filter-pane Apply button: `pbir filters pane-set`
+3. Enable per-slicer Apply buttons: `pbir visuals format` on each slicer
+
+For Import-mode reports with cheap queries, evaluate whether disabling cross-highlight is worth the loss of interactivity before applying.
+
+### Step 8: Wire Interactions and Navigation
+
+After placing visuals, set cross-filter overrides and build navigation. Default is everything cross-filters everything, so author only the exceptions. For multi-page reports, add a `pageNavigator` visual rather than individual buttons.
+
+See **`references/interactivity.md`** (Wiring Interactions and Navigation section) for the step-by-step and pitfalls.
+
+### Step 9: Add Filters and Slicers
 
 ```bash
 pbir add filter Date Year -r "Sales.Report" --values 2025
@@ -145,7 +181,9 @@ pbir add filter Geography Region -r "Sales.Report"
 pbir add filter Products Category -p "Sales.Report/Detail.Page"
 ```
 
-### Step 8: Format Visuals
+For slicer type selection, sync groups, and reset/persist filter patterns, see **`references/interactivity.md`** (Slicer Type, Sync, and Reset section).
+
+### Step 10: Format Visuals
 
 Most formatting should come from the theme (Step 5). Apply bespoke formatting only for genuinely one-off cases.
 
@@ -159,14 +197,33 @@ pbir visuals title "Sales.Report/Overview.Page/Revenue.Visual" --fontSize 14 --b
 pbir visuals background "Sales.Report/Overview.Page/Revenue.Visual" --color "#F8F9FA"
 ```
 
-### Step 9: Validate
+For titles that react to slicer selections or change color with status, use a `_Report` extension measure:
+
+```bash
+# Author a selection-aware title measure
+pbir dax measures add \
+  "Sales.Report" \
+  -n "Title_Sales" \
+  -e 'IF(ISFILTERED(Region[Region]), "Sales: " & SELECTEDVALUE(Region[Region], "multiple regions"), "Sales: all regions")' \
+  -t _Report
+
+# Bind via title CF, or drive a textbox text run with the measure
+```
+
+Key rules for dynamic titles:
+- `SELECTEDVALUE(..., "<fallback>")` is mandatory; without it the title disappears under multi-select
+- Keep the text measure and color measure separate (one returns the string, one returns a theme token like "good"/"bad"); each is independently testable
+- A measure-driven title and a literal title cannot coexist; clear the literal first
+- Test across no/single/multi selection by reasoning about `ISFILTERED`/`HASONEVALUE`, then confirm via render
+
+### Step 11: Validate
 
 ```bash
 pbir validate "Sales.Report"
 pbir tree "Sales.Report" -v
 ```
 
-### Step 10: Publish or Open
+### Step 12: Publish or Open
 
 ```bash
 pbir publish "Sales.Report" "MyWorkspace.Workspace/Sales.Report"      # Publish
@@ -199,4 +256,8 @@ pbir open "Sales.Report"                                               # Open in
 
 ## Reference Files
 
-- **`references/layout-example.md`** -- Complete layout with coordinates, spacing verification, time granularity table
+- **`references/vague-prompts.md`** -- Handling underspecified prompts: targeted questions, sensible defaults, propose-before-building workflow
+- **`references/design-brief.md`** -- Locked design-brief template: decision questions, per-page intent, committed design identity (tone plus signature), delivery target, approval gate, routing to pbi-report-design
+- **`references/layout-example.md`** -- Complete layout with coordinates, spacing verification, time granularity guidance
+- **`references/interactivity.md`** -- Query reduction, cross-filter wiring, navigation, slicer type/sync/reset, field parameters
+- **`references/limitations.md`** -- Agent limitations to communicate to users

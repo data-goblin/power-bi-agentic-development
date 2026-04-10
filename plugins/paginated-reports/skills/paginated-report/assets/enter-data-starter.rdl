@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Report MustUnderstand="df"
+  xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition"
+  xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner"
+  xmlns:df="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition/defaultfontfamily">
+  <rd:ReportUnitType>Inch</rd:ReportUnitType>
+  <rd:ReportID>3a1b6c2e-9f4d-4a17-8b2c-1e5d7f0a4c91</rd:ReportID>
+  <df:DefaultFontFamily>Segoe UI</df:DefaultFontFamily>
+  <AutoRefresh>0</AutoRefresh>
+  <DataSources>
+    <DataSource Name="EnterData">
+      <ConnectionProperties>
+        <DataProvider>ENTERDATA</DataProvider>
+        <ConnectString />
+      </ConnectionProperties>
+      <rd:SecurityType>None</rd:SecurityType>
+      <rd:DataSourceID>00000000-0000-0000-0000-0000000000ed</rd:DataSourceID>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="SalesData">
+      <Query>
+        <DataSourceName>EnterData</DataSourceName>
+        <CommandText>&lt;Query&gt;&lt;XmlData&gt;&lt;Rows&gt;&lt;Row&gt;&lt;Country&gt;USA&lt;/Country&gt;&lt;Year&gt;2024&lt;/Year&gt;&lt;Sales&gt;125000&lt;/Sales&gt;&lt;/Row&gt;&lt;Row&gt;&lt;Country&gt;United Kingdom&lt;/Country&gt;&lt;Year&gt;2024&lt;/Year&gt;&lt;Sales&gt;87000&lt;/Sales&gt;&lt;/Row&gt;&lt;Row&gt;&lt;Country&gt;Germany&lt;/Country&gt;&lt;Year&gt;2024&lt;/Year&gt;&lt;Sales&gt;94500&lt;/Sales&gt;&lt;/Row&gt;&lt;/Rows&gt;&lt;/XmlData&gt;&lt;/Query&gt;</CommandText>
+      </Query>
+      <Fields>
+        <Field Name="Country">
+          <DataField>Country</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Year">
+          <DataField>Year</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Sales">
+          <DataField>Sales</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+  </DataSets>
+  <ReportSections>
+    <ReportSection>
+      <Body>
+        <ReportItems>
+          <Tablix Name="SalesTablix">
+            <TablixBody>
+              <TablixColumns>
+                <TablixColumn><Width>3in</Width></TablixColumn>
+                <TablixColumn><Width>2.25in</Width></TablixColumn>
+                <TablixColumn><Width>2.25in</Width></TablixColumn>
+              </TablixColumns>
+              <TablixRows>
+                <TablixRow>
+                  <Height>0.3in</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="HdrCountry">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Country</Value>
+                                  <Style><FontWeight>Bold</FontWeight><Color>White</Color></Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border><Style>None</Style></Border>
+                            <BackgroundColor>#118dff</BackgroundColor>
+                            <PaddingLeft>4pt</PaddingLeft>
+                            <PaddingRight>4pt</PaddingRight>
+                            <PaddingTop>3pt</PaddingTop>
+                            <PaddingBottom>3pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="HdrYear">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Year</Value>
+                                  <Style><FontWeight>Bold</FontWeight><Color>White</Color></Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style><TextAlign>Right</TextAlign></Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border><Style>None</Style></Border>
+                            <BackgroundColor>#118dff</BackgroundColor>
+                            <PaddingLeft>4pt</PaddingLeft>
+                            <PaddingRight>4pt</PaddingRight>
+                            <PaddingTop>3pt</PaddingTop>
+                            <PaddingBottom>3pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="HdrSales">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Sales</Value>
+                                  <Style><FontWeight>Bold</FontWeight><Color>White</Color></Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style><TextAlign>Right</TextAlign></Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border><Style>None</Style></Border>
+                            <BackgroundColor>#118dff</BackgroundColor>
+                            <PaddingLeft>4pt</PaddingLeft>
+                            <PaddingRight>4pt</PaddingRight>
+                            <PaddingTop>3pt</PaddingTop>
+                            <PaddingBottom>3pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+                <TablixRow>
+                  <Height>0.28in</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Country">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Country.Value</Value>
+                                  <Style />
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border><Style>None</Style></Border>
+                            <BottomBorder><Color>#e0e0e0</Color><Style>Solid</Style><Width>1pt</Width></BottomBorder>
+                            <PaddingLeft>4pt</PaddingLeft>
+                            <PaddingRight>4pt</PaddingRight>
+                            <PaddingTop>3pt</PaddingTop>
+                            <PaddingBottom>3pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Year">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!Year.Value</Value>
+                                  <Style />
+                                </TextRun>
+                              </TextRuns>
+                              <Style><TextAlign>Right</TextAlign></Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border><Style>None</Style></Border>
+                            <BottomBorder><Color>#e0e0e0</Color><Style>Solid</Style><Width>1pt</Width></BottomBorder>
+                            <PaddingLeft>4pt</PaddingLeft>
+                            <PaddingRight>4pt</PaddingRight>
+                            <PaddingTop>3pt</PaddingTop>
+                            <PaddingBottom>3pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Sales">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=CDbl(Fields!Sales.Value)</Value>
+                                  <Style><Format>'$'#,0</Format></Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style><TextAlign>Right</TextAlign></Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <Style>
+                            <Border><Style>None</Style></Border>
+                            <BottomBorder><Color>#e0e0e0</Color><Style>Solid</Style><Width>1pt</Width></BottomBorder>
+                            <PaddingLeft>4pt</PaddingLeft>
+                            <PaddingRight>4pt</PaddingRight>
+                            <PaddingTop>3pt</PaddingTop>
+                            <PaddingBottom>3pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                  </TablixCells>
+                </TablixRow>
+              </TablixRows>
+            </TablixBody>
+            <TablixColumnHierarchy>
+              <TablixMembers>
+                <TablixMember />
+                <TablixMember />
+                <TablixMember />
+              </TablixMembers>
+            </TablixColumnHierarchy>
+            <TablixRowHierarchy>
+              <TablixMembers>
+                <TablixMember />
+                <TablixMember>
+                  <Group Name="Detail" />
+                </TablixMember>
+              </TablixMembers>
+            </TablixRowHierarchy>
+            <DataSetName>SalesData</DataSetName>
+            <Top>0.1in</Top>
+            <Left>0in</Left>
+            <Height>0.58in</Height>
+            <Width>7.5in</Width>
+            <Style>
+              <Border><Style>None</Style></Border>
+            </Style>
+          </Tablix>
+        </ReportItems>
+        <Height>1in</Height>
+        <Style />
+      </Body>
+      <Width>7.5in</Width>
+      <Page>
+        <PageHeader>
+          <Height>0.6in</Height>
+          <PrintOnFirstPage>true</PrintOnFirstPage>
+          <PrintOnLastPage>true</PrintOnLastPage>
+          <ReportItems>
+            <Textbox Name="ReportTitle">
+              <CanGrow>true</CanGrow>
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>Sales by Country</Value>
+                      <Style><FontSize>18pt</FontSize><Color>#252423</Color></Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style />
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.1in</Top>
+              <Left>0in</Left>
+              <Height>0.4in</Height>
+              <Width>7.5in</Width>
+              <Style>
+                <Border><Style>None</Style></Border>
+                <PaddingLeft>2pt</PaddingLeft>
+              </Style>
+            </Textbox>
+          </ReportItems>
+          <Style>
+            <Border><Style>None</Style></Border>
+          </Style>
+        </PageHeader>
+        <PageFooter>
+          <Height>0.3in</Height>
+          <PrintOnFirstPage>true</PrintOnFirstPage>
+          <PrintOnLastPage>true</PrintOnLastPage>
+          <ReportItems>
+            <Textbox Name="PageNumber">
+              <CanGrow>true</CanGrow>
+              <KeepTogether>true</KeepTogether>
+              <Paragraphs>
+                <Paragraph>
+                  <TextRuns>
+                    <TextRun>
+                      <Value>=Globals!PageNumber &amp; " of " &amp; Globals!TotalPages</Value>
+                      <Style><Color>#605e5c</Color><FontSize>8pt</FontSize></Style>
+                    </TextRun>
+                  </TextRuns>
+                  <Style><TextAlign>Right</TextAlign></Style>
+                </Paragraph>
+              </Paragraphs>
+              <Top>0.05in</Top>
+              <Left>0in</Left>
+              <Height>0.2in</Height>
+              <Width>7.5in</Width>
+              <Style>
+                <Border><Style>None</Style></Border>
+                <PaddingRight>2pt</PaddingRight>
+              </Style>
+            </Textbox>
+          </ReportItems>
+          <Style>
+            <Border><Style>None</Style></Border>
+          </Style>
+        </PageFooter>
+        <PageHeight>11in</PageHeight>
+        <PageWidth>8.5in</PageWidth>
+        <InteractiveHeight>11in</InteractiveHeight>
+        <InteractiveWidth>8.5in</InteractiveWidth>
+        <LeftMargin>0.5in</LeftMargin>
+        <RightMargin>0.5in</RightMargin>
+        <TopMargin>0.5in</TopMargin>
+        <BottomMargin>0.5in</BottomMargin>
+        <Style />
+      </Page>
+    </ReportSection>
+  </ReportSections>
+</Report>

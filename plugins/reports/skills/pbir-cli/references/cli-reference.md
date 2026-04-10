@@ -1,4 +1,4 @@
-# pbir CLI -- Complete Command Reference
+# pbir CLI; Complete Command Reference
 
 Complete command reference for the pbir CLI. All commands prefixed with `pbir`.
 
@@ -9,12 +9,17 @@ Complete command reference for the pbir CLI. All commands prefixed with `pbir`.
 - [Page Operations](#page-operations)
 - [Visual Operations](#visual-operations)
 - [Theme Operations](#theme-operations)
+- [Color Operations](#color-operations)
+- [Font Operations](#font-operations)
 - [DAX Operations](#dax-operations)
 - [Field Operations](#field-operations)
 - [Filter Operations](#filter-operations)
 - [Bookmark Operations](#bookmark-operations)
 - [Annotation Operations](#annotation-operations)
+- [Best Practice Analyzer (BPA)](#best-practice-analyzer-bpa)
 - [Connection and Fabric](#connection-and-fabric)
+- [Desktop Operations (Windows)](#desktop-operations-windows)
+- [Usage Metrics](#usage-metrics)
 - [Configuration and Setup](#configuration-and-setup)
 - [Visual Types Reference](#visual-types-reference)
 
@@ -29,9 +34,10 @@ pbir ls --tree                                   # All reports with tree structu
 pbir ls "Report.Report"                          # Contents of a report (pages, filters, theme)
 pbir ls "Report.Report/Page.Page"                # Visuals on a page
 
-# Tree structure
-pbir tree "Report.Report"                        # Hierarchical view
-pbir tree "Report.Report" -v                     # Verbose: include field bindings per visual
+# Tree structure (pbir ls --tree is the canonical form; pbir tree is a retained alias)
+pbir ls "Report.Report" --tree                   # Hierarchical view (-T short flag)
+pbir ls "Report.Report" --tree -v                # Verbose: include field bindings per visual
+pbir tree "Report.Report" -v                     # Equivalent alias
 
 # Display JSON content
 pbir cat "Report.Report/Page.Page"               # Page JSON
@@ -45,9 +51,6 @@ pbir find "Report.Report/**/*.Visual"            # All visuals in report
 pbir find "**/*card*.Visual"                     # All card-named visuals
 pbir find "**/*.Visual" --type visual --count    # Count all visuals
 pbir find "**/*.Page" --json                     # JSON output
-
-# Compare (use theme diff for themes)
-pbir theme diff "R1.Report" "R2.Report"          # Compare themes
 ```
 
 ## Property Management
@@ -106,11 +109,19 @@ pbir rm "Report.Report" --theme -f                 # Remove custom theme
 pbir rm "Report.Report" --annotations -f           # Remove all annotations
 pbir rm "Report.Report" --all -f                   # Remove filters+bookmarks+annotations
 
+# Rename and link to a published report
+pbir report rename "Report.Report" "Q4 Sales Dashboard"   # Renames folder + .platform displayName (--no-rename-folder to keep folder)
+pbir report link "Report.Report"                          # Show the local report's link to its published copy
+pbir report link "Report.Report" "Sales.Workspace/Exec.Report"  # Set the link (used by pbir usage; set automatically by download/publish/connect)
+pbir report unlink "Report.Report"                        # Remove the link
+
 # Other
 pbir report clear-diagram "Report.Report"          # Delete diagram layout
 pbir open "Report.Report"                          # Open in Power BI Desktop
 pbir validate "Report.Report"                      # Validate structure
 ```
+
+`report link` records the published identity locally (never in the report definition); `pbir usage` and other remote commands read it to skip re-resolving. It differs from `report rebind`, which re-points a report at a different model.
 
 ## Page Operations
 
@@ -122,7 +133,7 @@ pbir add page "Report.Report/Page.Page" --from-template executive-dashboard
 pbir add page --list-templates
 
 # Rename and move
-pbir pages rename "Report.Report/Old.Page" "New Name"
+pbir pages rename "Report.Report/Old.Page" --to "New Name" -f   # Single-page rename; new name via --to
 pbir pages move "Report.Report/Sales.Page" --to 1
 
 # Resize and type
@@ -135,14 +146,18 @@ pbir pages hide "Report.Report/Page.Page"                 # Hide in view mode
 pbir pages hide "Report.Report/Page.Page" --show           # Show (unhide)
 
 # Styling
-pbir pages background "Report.Report/Page.Page" --color "#F0F8FF"
-pbir pages background "Report.Report/Page.Page" --image bg.png
-pbir pages wallpaper "Report.Report/Page.Page" --color "#2B579A"
+pbir pages background "Report.Report/Page.Page" --image bg.png    # Canvas background image (--scaling Fit|Fill, --transparency); color lives on wallpaper
+pbir pages wallpaper "Report.Report/Page.Page" --color "#2B579A"  # Outspace/wallpaper color (or --image)
 
 # Active page and interactions
 pbir pages active-page "Report.Report" "HomePage"
-pbir pages interactions "Report.Report/Page.Page"          # List visual interactions
+pbir pages interactions "Report.Report/Page.Page"          # List/set visual interactions (cross-filter/highlight/none)
 pbir pages json "Report.Report/Page.Page"                  # Raw page JSON
+
+# Drillthrough, tooltip pages, and theme conformance
+pbir pages drillthrough "Report.Report/Details.Page" --table Products --field Category  # Add a drillthrough field (--cross-report, --show, --clear)
+pbir pages set-tooltip "Report.Report/Tooltip.Page" --width 400 --height 300            # Make a page a tooltip page (--clear to revert)
+pbir pages conform "Report.Report/Page.Page" --properties title,background --force --no-dry-run  # Conform visuals to the theme (dry-run by default)
 
 # Copy/move between reports
 pbir cp "R1.Report/Page.Page" "R2.Report/NewPage.Page"
@@ -162,7 +177,10 @@ pbir add visual tableEx "Report.Report/Page.Page" --title "Detail"
 pbir add visual kpi "Report.Report/Page.Page" -d "Indicator:Sales.Revenue"
 pbir add visual --list                            # List all 50+ visual types with data roles
 
-# Bulk creation from JSON
+# Role names match the visual list (Values, Category, Y, Series, Indicator, ...).
+# The CLI matches role names case-insensitively, so lowercase also works.
+
+# Import a pre-existing bulk-creation spec; do not edit report JSON directly
 pbir add visual "Report.Report/Page.Page" --from-json visuals.json
 # JSON format: [{"visual_type": "card", "x": 0, "y": 0, "title": "Sales", "fields": {"Values": "Sales.Revenue"}}]
 
@@ -187,7 +205,19 @@ pbir visuals align "Report.Report/Page.Page" distribute-horizontal V1 V2 V3
 pbir visuals z-order "Visual.Visual"             # View/manage layer stacking
 pbir visuals snap "Visual.Visual"                # Snap to grid
 pbir visuals mobile "Visual.Visual"              # Get/set mobile layout
-pbir visuals group "Report.Report/Page.Page"     # Manage visual groups
+
+# Visual groups (scale/position multiple visuals together)
+pbir visuals group "Report.Report/Page.Page" --list
+pbir visuals group "Report.Report/Page.Page" --create "KPI Group"
+pbir visuals group "Report.Report/Page.Page/KPI Group.Visual" --add "Card.Visual" --add "KPI.Visual"
+pbir visuals group "Report.Report/Page.Page/KPI Group.Visual" --remove "Card.Visual"
+pbir visuals group "Report.Report/Page.Page/Visual.Visual" --ungroup     # Remove visual from its group
+pbir visuals group "Report.Report/Page.Page/KPI Group.Visual" --ungroup  # Delete group, free members
+
+# Style presets (curated formatting bundles)
+pbir visuals preset --list                                               # minimal, bold, clean, emphasis, presentation
+pbir visuals preset "Report.Report/Page.Page/Visual.Visual" --name minimal
+pbir visuals preset "Report.Report/**/*.Visual" --name presentation
 ```
 
 ### Container Formatting (all visual types)
@@ -234,8 +264,8 @@ pbir visuals clear-formatting "Report.Report/**/*.Visual" --dry-run            #
 pbir visuals legend "Visual.Visual" --show --position Right
 
 # Axes
-pbir visuals axis "Visual.Visual" --axis category --show --title "Category"
-pbir visuals axis "Visual.Visual" --axis value --show --title "Amount"
+pbir visuals axis "Visual.Visual" category --show --title "Category"
+pbir visuals axis "Visual.Visual" value --show --title "Amount"
 
 # Data labels (22 visual types)
 pbir visuals labels "Visual.Visual" --show --fontSize 10
@@ -243,6 +273,19 @@ pbir visuals labels "Visual.Visual" --show --fontSize 10
 # Sorting
 pbir visuals sort "Visual.Visual" -f "Sales.Revenue" -d Descending
 pbir visuals sort "Visual.Visual" --remove
+
+# Reference lines (add creates the entry; style it via pbir set with id())
+pbir visuals reference-line add "Visual.Visual" --value 100        # Constant line; --value also accepts a field ref
+pbir visuals reference-line list "Visual.Visual"
+pbir visuals reference-line remove "Visual.Visual" --id 1
+pbir set "Visual.Visual.y1AxisReferenceLine.id(1).displayName" --value "Target"   # Style after creation
+# `add` is NOT idempotent (each call appends); it prints the new id to stdout for chaining: ID=$(pbir visuals reference-line add ...)
+
+# Error bars (upsert per series; style via pbir set with field())
+pbir visuals error-bars add "Visual.Visual" --series "Sales.Revenue" --upper "Sales.Target" --lower "Sales.Target"
+pbir visuals error-bars list "Visual.Visual"
+pbir visuals error-bars remove "Visual.Visual" --series "Sales.Revenue"
+pbir set "Visual.Visual.error.field(Sales.Revenue).markerShape" --value "diamond"  # Style after creation
 ```
 
 ### Data Binding
@@ -260,33 +303,62 @@ pbir visuals bind "Visual.Visual" -a "Values:Sales.TotalSales" -t Measure
 # Remove and clear
 pbir visuals bind "Visual.Visual" -r "Values:Sales.Revenue"
 pbir visuals bind "Visual.Visual" -c "Values"    # Clear entire role
+
+# Field-well behavior
+pbir visuals show-all "Visual.Visual" --role Category               # Show empty subcategory rows (--off to disable)
+pbir visuals field-hidden "Visual.Visual" --role Y --field "Sales.Revenue"  # Hide a bound field in the field well (--show to reveal); stays bound and active
+
+# Click action (buttons, shapes, images)
+pbir visuals action "Visual.Visual" --type PageNavigation --target "Details"  # Also: WebUrl, Bookmark, Back, Drillthrough, Q&A
+pbir visuals action "Visual.Visual" --show                          # Inspect current action
+pbir visuals action "Visual.Visual" --clear
 ```
 
 ### Conditional Formatting
 
+Two surfaces share one model:
+
+- **`pbir set` / `pbir get`**. dot-path reads and scalar edits on existing CF entries.
+- **`pbir visuals cf`**. structural authoring (create, copy, convert).
+
 ```bash
-# Apply measure-based formatting to component property
+# Create measure-based CF (structural. stays on `visuals cf`)
 pbir visuals cf "Visual.Visual" --measure "labels.color _Fmt.StatusColor"
 pbir visuals cf "Visual.Visual" --measure "dataPoint.fill _Fmt.BarColor"
 
-# Inspect/remove
-pbir visuals cf "Visual.Visual" --info labels.color
-pbir visuals cf "Visual.Visual" --remove labels.color
+# Read CF via pbir get (.cf tail)
+pbir get "Visual.Visual.dataPoint.fill.cf"                              # ASCII summary
+pbir get "Visual.Visual.dataPoint.fill.cf.gradient.min.color"           # scalar leaf
+pbir get "Visual.Visual.dataPoint.fill.cf" --json                       # raw JSON
+pbir get "Report.Report/**/*.Visual.**.cf"                              # bulk read
 
-# Per-field formatting (positional: VISUAL_PATH COMPONENT PROPERTY)
-pbir visuals format-field "Visual.Visual" values fontColor -f "Sales.Revenue" -v "#118DFF"
+# Edit CF leaves via pbir set
+pbir set "Visual.Visual.dataPoint.fill.cf.gradient.min.color" --value "bad"
+pbir set "Visual.Visual.dataPoint.fill.cf.gradient.max.value" --value 250
+pbir set "Visual.Visual.labels.color.cf.rules.case[0].color" --value "alertRed"
+pbir set "Visual.Visual.labels.color.cf.rules.else.color"   --value "foreground"
+pbir set "Visual.Visual.dataPoint.fill.cf.measure"          --value "_Fmt.NewColor"
 
-# Interaction state formatting (positional: VISUAL_PATH COMPONENT PROPERTY)
-pbir visuals format-state "Visual.Visual" labels fontColor -s hover -v "#E3F2FD"
+# Remove CF (aliases: --remove / --clear)
+pbir set "Visual.Visual.dataPoint.fill.cf" --remove
+pbir set "Visual.Visual.**.cf" --remove -f                              # bulk wipe
 
-# Manage all conditional formatting
-pbir visuals cf "Visual.Visual"                  # List all CF on visual
-pbir visuals cf "Visual.Visual" --info dataPoint.fill          # CF type and field details
-pbir visuals cf "Visual.Visual" --has-cf dataPoint             # Check if container has CF
-pbir visuals cf "Visual.Visual" --remove dataPoint             # Remove CF from container
-pbir visuals cf "Visual.Visual" --set-color "dataPoint.fill min=bad max=good"  # Update colors
-pbir visuals cf "Visual.Visual" --theme-colors "dataPoint.fill"               # Hex -> theme tokens
-pbir visuals cf "Visual.Visual" --to-measure dataPoint.fill    # Convert to extension measure
+# Per-field / per-series / interaction-state selectors compose with .cf
+pbir set "Visual.Visual.values.field(Sales.Revenue).fontColor" --value "#118DFF"
+pbir set "Visual.Visual.dataPoint.series(Cities.City=Antwerp).fill" --value "#E66C37"
+pbir set "Visual.Visual.y1AxisReferenceLine.id(2).lineColor" --value "#FF0000"
+pbir set "Visual.Visual.labels.hover.fontColor" --value "#E3F2FD"
+
+# Convert / copy / theme-tokenize (structural. retained on `visuals cf`)
+pbir visuals cf "Visual.Visual" --theme-colors "dataPoint.fill"             # Hex -> theme tokens
+pbir visuals cf "Visual.Visual" --to-measure dataPoint.fill                 # Convert to extension measure
+pbir visuals cf "Target.Visual" --copy-from "Source.Visual"                 # Copy CF between visuals
+
+# Note: `pbir visuals cf --info`/`--list`/`--has`/`--set-color`/`--remove`/
+# `--remove-all` are deprecated and redirect to the `pbir set`/`pbir get`
+# forms above. `pbir visuals format-field` and `pbir visuals format-state`
+# are also deprecated redirects. Running any of them prints the equivalent
+# command and exits non-zero.
 ```
 
 ### Custom Visuals
@@ -310,31 +382,58 @@ pbir visuals json "Visual.Visual"                # Raw visual.json
 ```bash
 # Inspection
 pbir cat "Report.Report/theme"                  # Full theme JSON
-pbir theme colors "Report.Report"                # Color palette with usage audit
-pbir theme text-classes "Report.Report"          # Text style definitions
-pbir theme fonts "Report.Report"                 # Font usage
+pbir theme colors "Report.Report"                # Palette: analyze, normalize, bind literals to the theme
+pbir theme fonts "Report.Report"                 # Show the theme's fonts per level (title, label, callout, header, ...)
 pbir theme validate "Report.Report"              # Validate theme structure
-pbir theme diff "R1.Report" "R2.Report"          # Compare themes
 
 # Modification
 pbir theme set-colors "Report.Report" --good "#00B050" --bad "#FF0000"
-pbir theme set-text-classes "Report.Report" title --font-size 18
-pbir theme set-formatting "Report.Report" "card.*.title.fontSize" --value 14
-pbir theme push-visual "Visual.Visual"           # Push visual formatting to theme defaults
+pbir theme set-fonts "Report.Report" title --font-size 14 --font-face "Segoe UI Semibold"  # Theme fonts per level
+pbir theme set-formatting "Report.Report" "card.*.title.fontSize" --value 14   # Wildcard or per-visual-type
+pbir theme push-visual "Visual.Visual"           # Push visual formatting to theme defaults or a named preset
 pbir theme background "Report.Report" --image bg.png
 pbir theme icons "Report.Report" --set custom-icon --url "data:image/svg+xml;utf8,..."
 pbir theme rename "Report.Report" "NewThemeName"
 
-# Serialize/build workflow (for detailed theme editing)
-pbir theme serialize "Report.Report" -o CustomTheme.Theme    # Extract to editable files
-# ... edit files in CustomTheme.Theme/ ...
-pbir theme build "CustomTheme.Theme"                         # Rebuild from files
+# Import/export only; do not hand-edit serialized theme JSON
+pbir theme serialize "Report.Report" -o CustomTheme.Theme    # Read-only export for inspection
+pbir theme build "Provided.Theme"                            # Build a user-provided theme folder
 
 # Templates
 pbir theme list-templates
 pbir theme apply-template "Report.Report" sqlbi
-pbir theme create-template "Report.Report" --name my-theme
+pbir theme create-template --new-template my-theme.json --name my-theme   # Register a theme JSON file as a template
 ```
+
+## Color Operations
+
+`pbir color` audits and replaces a color across the whole report AND its theme in one pass: visual properties, the visual container, page/canvas background, conditional-formatting stops/cases, and the theme palette.
+
+```bash
+pbir color list "Report.Report"                                        # Audit: distinct colors + usage counts (report + theme)
+pbir color replace "Report.Report" --from "#FF0000" --to "#00FF00"     # Preview the replacement (default is dry-run)
+pbir color replace "Report.Report" --from "#FF0000" --to "#00FF00" -f  # Apply everywhere (--force)
+pbir color replace "Report.Report" --from "#FF0000" --to "#00FF00" --theme   # Scope to the theme palette only
+pbir color replace "Report.Report" --from "#FF0000" --to "#00FF00" --report  # Scope to report colors only (not theme)
+```
+
+`color replace` previews unless `-f/--force` is given. `--theme` and `--report` scope the pass; default touches both. `-j/--json` for machine-readable output. For palette/token edits prefer `pbir theme set-colors`; use `color replace` for a literal hex sweep across report + theme.
+
+## Font Operations
+
+`pbir fonts` is the typography mirror of `pbir color`: audit and replace font families across the whole report AND theme (text classes + visualStyles) in one pass, and clear per-visual font/format overrides so the theme default applies.
+
+```bash
+pbir fonts list "Report.Report"                                        # Audit: families, sizes, weights, styles (report + theme)
+pbir fonts available                                                   # Built-in Power BI font families
+pbir fonts replace "Report.Report" --from "Calibri" --to "Segoe UI"    # Preview the family swap (default is dry-run)
+pbir fonts replace "Report.Report" --from "Calibri" --to "Segoe UI" -f # Apply everywhere (--theme / --report to scope)
+pbir fonts clear "Report.Report" --size --weight -f                    # Drop size + bold overrides so the theme default wins
+pbir fonts clear "Report.Report" --all -f                              # Clear family/size/weight/style/display-units/decimals/format
+pbir fonts clear "Report.Report/Page.Page/Visual.Visual" --family -f   # Scope to a page or visual via the path
+```
+
+`fonts clear` (alias `fonts reset`) only removes overrides from visuals/pages; it never edits theme.json. `clear` flags: `--family`, `--size`, `--weight`, `--style`, `--display-units`, `--decimals`, `--format`, `--all`. To author the THEME's own fonts instead, use `pbir theme set-fonts` / `pbir theme fonts`.
 
 ## DAX Operations
 
@@ -345,16 +444,20 @@ pbir dax measures add "Report.Report" -t _Measures -n "YoY Growth" \
   -e 'DIVIDE([Sales]-[PY Sales],[PY Sales])' --data-type Double
 pbir dax measures add "Report.Report" -t _Fmt -n "StatusColor" \
   -e 'IF([Sales]>[Target],"good","bad")' --data-type Text
+pbir dax measures update "Report.Report" "YoY Growth" -e '<new expression>'  # edit an existing measure
 pbir dax measures rename "Report.Report" "OldName" "NewName"
-pbir rm "Report.Report" --measure "MeasureName" -f
+pbir rm "Report.Report" --measure "MeasureName" -f         # remove ONE measure
+pbir dax measures clear "Report.Report" -f                 # remove ALL measures (destructive); --table to scope, --dry-run to preview
 pbir dax measures json "Report.Report"
 
 # Visual calculations (inline DAX on visuals)
 pbir dax viscalcs list "Report.Report"
 pbir dax viscalcs add "R.Report/P.Page/V.Visual" -n "Running Total" \
   -e "RUNNINGSUM([Revenue])"
+pbir dax viscalcs update "R.Report/P.Page/V.Visual" "Running Total" -e "<new expression>"  # edit existing
 pbir dax viscalcs rename "R.Report/P.Page/V.Visual" "OldName" "NewName"
-pbir rm "R.Report/P.Page/V.Visual" --viscalc "CalcName" -f
+pbir rm "R.Report/P.Page/V.Visual" --viscalc "CalcName" -f  # remove ONE viscalc
+pbir dax viscalcs clear "R.Report/P.Page/V.Visual" -f       # remove ALL viscalcs (destructive); --dry-run to preview
 pbir dax viscalcs json "R.Report/P.Page/V.Visual"
 ```
 
@@ -364,10 +467,11 @@ pbir dax viscalcs json "R.Report/P.Page/V.Visual"
 pbir fields list "Report.Report"                              # All unique fields with types
 pbir fields list "Report.Report/Page.Page"                    # Fields on a page
 pbir fields find "Revenue" "Report.Report"                    # Fuzzy search with locations
-pbir fields replace "Report.Report" --from "Sales.Revenue" --to "Finance.Revenue"
-pbir fields clear "Report.Report/Page.Page" -f                # Clear all bindings on page
-pbir fields rename "Report.Report"                            # Rename field display names
-pbir fields add "Report.Report/Page.Page/Visual.Visual" Values Sales.Revenue  # Add field
+pbir fields where-used "Report.Report" "Sales.Revenue"        # Every known location that references a field (--contains for substring)
+pbir fields replace "Report.Report" --from "Sales.Revenue" --to "Finance.Revenue"   # Repoint a field everywhere
+pbir fields replace-table "Report.Report" --from "f_invoices" --to "Invoices"        # Rename a TABLE across all references (--dry-run)
+pbir fields rename "Report.Report" "Sales.Revenue" "Total Sales"   # Set a field's display name (--list to view, --clear to reset)
+pbir fields add "Report.Report/Page.Page/Visual.Visual" --bucket Values --field Sales.Revenue
 ```
 
 ## Filter Operations
@@ -375,10 +479,10 @@ pbir fields add "Report.Report/Page.Page/Visual.Visual" Values Sales.Revenue  # 
 ```bash
 # Management
 pbir filters list "Report.Report"
-pbir filters set "Report.Report/Date.Year.Filter" --values "2024,2025"
+pbir filters set "Report.Report/Date.Year.Filter" --values 2024 --values 2025   # Repeat --values per value (not comma-separated)
 pbir filters set "Report.Report/Date.Date.Filter" --type RelativeDate
 pbir filters clear "Report.Report/Date.Year.Filter"
-pbir filters rename "Report.Report/OldName.Filter" "New Display Name"
+pbir filters rename "Report.Report" "OldName" "New Display Name"
 pbir filters json "Report.Report"
 
 # Visibility and locking
@@ -422,6 +526,22 @@ pbir annotations rename "Report.Report" old-key new-key
 pbir add annotation "Report.Report" --name version --value "1.0"
 ```
 
+## Best Practice Analyzer (BPA)
+
+```bash
+# Run BPA over a report
+pbir bpa run "Report.Report"
+pbir bpa run "Report.Report" --fail-on error -o json   # CI-friendly, exit code follows severity
+pbir bpa run "Report.Report" --fix --save              # Apply automatically-safe fixes in place
+
+# Manage rules
+pbir bpa rules list                                    # All rules with IDs and severities
+pbir bpa rules ignore PBIR_DROP_SHADOW "Report.Report"
+pbir bpa rules unignore PBIR_DROP_SHADOW "Report.Report"
+```
+
+Pair `pbir validate` (schema and structure) with `pbir bpa run` (design and layout rules). See `references/bpa.md` for the full workflow.
+
 ## Connection and Fabric
 
 ```bash
@@ -454,6 +574,52 @@ pbir model "Report.Report" -q "EVALUATE VALUES('Sales'[Region])"
 pbir model "Report.Report" -q "EVALUATE 'Sales'" -F json  # JSON output
 ```
 
+Model query routing: thin reports (`byConnection`) query the Power BI / Fabric service (EVALUATE DAX only; DMVs rejected). Thick reports (`byPath`) open in Power BI Desktop query the local Analysis Services engine; requires the .NET Framework ADOMD client (auto-detected from DAX Studio or Desktop installs; override with `PBIR_ADOMD_DIR`).
+
+## Desktop Operations (Windows)
+
+Requires Power BI Desktop running with the report open and the preview feature "Enable external tool access to Power BI Desktop through secure local APIs" enabled.
+
+```bash
+pbir desktop list                                # Running instances (PID, open file, unsaved state, pages)
+pbir desktop status                              # Alias of list
+
+# Reload the on-disk definition into the canvas (refresh and reload are aliases)
+pbir desktop refresh "Report.Report"
+pbir desktop reload "Report.Report"              # Alias of refresh
+pbir desktop refresh "Report.Report" -m          # --model: also re-apply the model (TMDL) definition
+pbir desktop refresh --pid 1234                  # Reload a specific instance (omit the path)
+
+# Screenshots
+pbir desktop screenshot "Report.Report/Page.Page"             # PNG of a specific page
+pbir desktop screenshot "Report.Report/Page.Page" -o out.png  # Explicit output path (single page)
+pbir desktop screenshot "Report.Report" --all                 # Every page -> --output-dir (default ./screenshots)
+pbir desktop screenshot "Report.Report" --all --output-dir ./shots --settle 500
+pbir desktop screenshot "Report.Report" --scale 3             # Render scale, clamped 1-3 (default 2)
+pbir desktop screenshot "Report.Report" --pid 1234            # Disambiguate instances
+```
+
+Screenshot flags: `--all` (every page), `-o/--output` (single-page PNG path), `--output-dir` (folder for `--all`, default `screenshots`), `--scale` (clamped 1-3, default 2), `--settle` (ms delay before the first capture, with `--all`), `--pid`, `--json`.
+
+Notes: screenshots need the Desktop window in the Report view. Refresh on an instance with unsaved changes makes Desktop save first (rewrites the definition on disk). PBIX files support screenshot but not refresh. `PBIR_DESKTOP_AUTO_REFRESH=1` auto-reloads the canvas after every pbir mutation. See `desktop-integration.md` for the full workflow.
+
+## Usage Metrics
+
+`pbir usage` reports view/viewer/page/load-time metrics for a published report or a whole workspace, pulled from the Power BI service. Auth uses the existing `az login` Power BI token (same tenant as the report); region is auto-detected.
+
+```bash
+pbir usage "Report.Report"                       # Local report; auto-resolves its published identity (see report link)
+pbir usage "Sales.Workspace"                     # Workspace overview
+pbir usage "Sales.Workspace/Exec.Report"         # Single published report
+pbir usage -w Sales -r Exec                      # Same, via flags (names or GUIDs; GUIDs skip lookup)
+pbir usage "Sales.Workspace" -n 25               # Top 25 viewers (default 10)
+pbir usage -w Sales -r Exec --model -y           # Add the usage metrics model for richer page/viewer detail
+pbir usage "Sales.Workspace" --no-datahub        # Skip the last-visited lookup
+pbir usage "Sales.Workspace" -o json             # JSON for piping
+```
+
+A local report resolves its published identity from a saved link (`pbir report link`), the model's workspace, or a prompt. By default the output shows views, viewers, pages, load times, and last-visited. `--model` (`-m`) opts into the workspace usage metrics model for richer detail; it needs Contributor+ and generating it creates a hidden model in the workspace, so it prompts unless `-y/--yes` (or `--no-input` to refuse). `--region` is a fallback only when auto-detection fails. These endpoints are undocumented Power BI service telemetry; see `.claude/rules/undocumented-apis.md` for the underlying WABI metrics APIs.
+
 ## Configuration and Setup
 
 ```bash
@@ -462,20 +628,19 @@ pbir config show                                 # Current settings
 pbir config init                                 # Create config file
 pbir config set debug true                       # Set config value
 
-# Setup
-pbir setup                                       # Initialize .pbir/ context files
-pbir setup --force                               # Overwrite existing files
-pbir setup --claude-code                         # Install Claude Code skills
-pbir setup report MyReport.Report --claude-hooks # Add agent config files
+# Plugin installation guidance
+pbir setup                                       # Prints native marketplace installation instructions
 
-# Schema management (hidden)
-pbir schema status                               # Compare local vs remote versions
-pbir schema fetch                                # Download latest schemas
-pbir schema check "Report.Report"                # Check file schema versions
-pbir schema upgrade "Report.Report"              # Upgrade to latest schemas
-pbir schema describe "card"                      # Show properties for visual type
-pbir schema containers "card"                    # List containers
-pbir schema types                                # List all visual/entity types
+# Schema discovery and management (pbir capabilities is an alias of pbir schema)
+pbir schema status                               # Compare local vs remote schema versions
+pbir schema fetch                                # Download latest schemas from GitHub
+pbir schema regenerate                           # Regenerate flattened schemas from raw Microsoft schemas
+pbir schema check "Report.Report"                # Check report file schema versions
+pbir schema upgrade "Report.Report"              # Upgrade report file schemas to latest
+pbir schema types                                # List available visual and entity types
+pbir schema describe "card"                      # A visual type's objects + properties
+pbir schema describe "card" "title"              # One object's properties and allowed values
+pbir schema roles "lineChart"                    # Canonical PBIR data roles (required? multiple? Column/Measure)
 ```
 
 ## Visual Types Reference
@@ -516,8 +681,23 @@ pbir schema types                                # List all visual/entity types
 
 ## Global Flags
 
-```bash
-pbir --quiet              # Suppress animations, tips, spinners
-pbir --debug              # Enable tracebacks and timing
-pbir --version            # Show version
+Global flags go BEFORE the subcommand: `pbir -q new report ...`, not `pbir new report -q ...`.
+
+```text
+--quiet / -q              # Suppress animations, tips, spinners (agent-friendly)
+--output-format text|json # Structured stdout for commands that support it
+--error-format text|json  # Structured stderr where supported
+--debug                   # Enable tracebacks, timing, and resolution logging
+--version / -V            # Show version
+--interactive / -i        # Launch the interactive browser (human users)
+
+# Validation bypass (pbir validates implicitly on mutations; these relax that)
+--rawdog                  # Skip EVERY validation check (umbrella for --skip all)
+--skip <category>         # Skip validation categories; repeatable, comma-separated.
+                          # Categories: structure, schema, schema-version, fields,
+                          #             enums, qa, roles, layout, theme
+# Example: author a visual whose field is not in the model yet
+pbir --skip fields set "R.Report/P.Page/V.Visual.title.text" --value "Draft"
 ```
+
+Use global `--output-format json` before the subcommand when supported. Command-specific `-f/--force`, `--json`, and `-F json` go after their subcommand; check `pbir <command> --help` because availability varies.

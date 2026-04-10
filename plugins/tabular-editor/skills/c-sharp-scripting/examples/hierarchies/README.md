@@ -13,13 +13,13 @@ Scripts for managing hierarchies in Tabular models.
 
 ### Execute Inline
 ```bash
-te "model.bim" 'var h = Model.Tables["Geography"].AddHierarchy("Geography Hierarchy"); h.AddLevel("Country"); h.AddLevel("State"); h.AddLevel("City");'
+te script "model.bim" -e 'var h = Model.Tables["Geography"].AddHierarchy("Geography Hierarchy"); h.AddLevel("Country"); h.AddLevel("State"); h.AddLevel("City");' --save
 ```
 
 ### Execute Script File
 ```bash
-te "model.bim" samples/hierarchies/add-hierarchy.csx --file
-te "Production/Sales" samples/hierarchies/list-hierarchies.csx --file
+te script "model.bim" -S samples/hierarchies/add-hierarchy.csx --save
+te script -s "Production" -d "Sales" -S samples/hierarchies/list-hierarchies.csx
 ```
 
 ### With Fabric CLI Workflow
@@ -28,7 +28,7 @@ te "Production/Sales" samples/hierarchies/list-hierarchies.csx --file
 fab export "Workspace/Model.SemanticModel" -o ./model -f
 
 # Create hierarchies
-te "./model/Model.SemanticModel/model.bim" samples/hierarchies/add-hierarchy.csx --file
+te script "./model/Model.SemanticModel/definition" -S samples/hierarchies/add-hierarchy.csx --save
 
 # Import back
 fab import "Workspace/Model.SemanticModel" -i ./model/Model.SemanticModel -f

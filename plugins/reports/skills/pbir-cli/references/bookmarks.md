@@ -115,12 +115,6 @@ pbir cp "Source.Report/bookmark:BookmarkName" "Target.Report/bookmark:BookmarkNa
 
 **Important**: When copying bookmarks between reports, the bookmark's `explorationState` contains references to page IDs (`activeSection`) and visual IDs (`targetVisualNames`). If the target report has different page/visual IDs, these references must be updated or the bookmark will not work correctly. Use `AskUserQuestion` to confirm which pages and visuals the copied bookmarks should target.
 
-## Comparing Bookmarks Between Reports
-
-```bash
-pbir diff "Report1.Report" "Report2.Report" --bookmarks
-```
-
 ## Finding Buttons That Use Bookmarks
 
 Action buttons and bookmark navigators reference bookmarks by name. After renaming or removing bookmarks, find and update these references.

@@ -13,6 +13,12 @@ Note that this is not an exhaustive list. Please pull the schema files directly 
 
 Valid `visualType` values. **[K201]** = confirmed in K201 example; **[theme]** = confirmed from bundled theme files.
 
+The authoritative enumeration of built-in `visualType` ids and valid objects is the core visual
+catalog bundled by `pbir`. Run `pbir add visual --list` for type ids,
+`pbir visuals properties --registry` for the registry, and
+`pbir schema describe <type> [object]` for properties and allowed values. The list below is only a
+convenience subset; custom visuals can use other ids.
+
 ```
 --- Charts ---
 lineChart                          [K201] [theme]

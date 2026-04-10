@@ -4,6 +4,9 @@
 > in PBIR report files that must be updated during table, column, or measure renames.
 > For the full rename cascade (including TMDL files), see the `pbip` skill's
 > `references/rename-cascade.md`.
+>
+> Use `pbir fields replace` or `pbir fields replace-table` for the mutation. The structures below
+> are diagnostic context, not a text-replacement checklist.
 
 Detailed documentation of the JSON structures found in Power BI Report files, focusing on patterns that contain table, column, and measure references.
 

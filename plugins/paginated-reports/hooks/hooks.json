@@ -1,0 +1,29 @@
+{
+  "description": "Validates paginated report (.rdl) structure with validate_rdl.py after Write/Edit modifications",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-rdl.sh\"",
+            "timeout": 10,
+            "if": "Edit(**/*.rdl)"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-rdl.sh\"",
+            "timeout": 10,
+            "if": "Write(**/*.rdl)"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "version": "2.0",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/platform/platformProperties.json",
+  "config": {
+    "logicalId": "00000000-0000-0000-0000-000000000000"
+  },
+  "metadata": {
+    "type": "PaginatedReport",
+    "displayName": "REPLACE_WITH_REPORT_NAME",
+    "description": ""
+  }
+}

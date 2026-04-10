@@ -1,42 +1,159 @@
 # Conditional Formatting Reference
 
-Complete guide to managing conditional formatting (CF) in PBIR reports via the `pbir visuals cf` command.
+Complete guide to managing conditional formatting (CF) in PBIR reports.
+
+Two surfaces share one model:
+
+- **`pbir set` / `pbir get`**. dot-path reads and scalar edits on existing CF entries. Primary surface for daily work.
+- **`pbir visuals cf`**. structural authoring: create CF from scratch, copy CF between visuals, convert to theme tokens, convert to measure-driven.
+
+The old `pbir visuals cf --info`/`--list`/`--has`/`--set-color`/`--remove`/`--remove-all` flags are **deprecated** and redirect to `pbir set`/`pbir get`. See the [Deprecated Flags](#deprecated-flags) section.
 
 ## CF Types
 
 | Type | Description | Expression |
 |------|-------------|------------|
-| **Measure-driven** | Extension measure returns theme token | `Measure` with `dataViewWildcard` |
 | **Gradient** | 2- or 3-color scale on a numeric field | `FillRule` with `linearGradient2/3` |
 | **Rules** | Conditional cases (if/else logic) | `Conditional` with `Cases` |
+| **Measure-driven** | Extension measure returns theme token | `Measure` with `dataViewWildcard` |
 | **Data bars** | Inline bars showing magnitude | `dataBars` property |
 | **Icons** | Icon sets based on thresholds | Icon-specific CF structure |
 
 CF entries live in `visual.objects` (not `visualContainerObjects`). Each container (e.g., `dataPoint`, `labels`) can hold both regular entries and CF entries. CF entries are identified by `dataViewWildcard` selectors, `FillRule`/`Conditional` expressions, or `dataBars` properties.
 
-## Listing and Inspecting
+## Reading CF with `pbir get`
+
+The `.cf` tail on any color-bearing property path surfaces the CF state.
+
+### Summary read
 
 ```bash
-# List all CF containers on a visual (discovers dynamically)
-pbir visuals cf "Report.Report/Page.Page/Visual.Visual"
+# ASCII summary (kind, input measure, stops/cases/else, source)
+pbir get "Report.Report/Page.Page/Visual.Visual.dataPoint.fill.cf"
 
-# List CF across all visuals in report
-pbir visuals cf "Report.Report/**/*.Visual"
-
-# Check if a container has CF
-pbir visuals cf "Visual.Visual" --has dataPoint
-
-# Inspect CF type and details for container.prop
-pbir visuals cf "Visual.Visual" --info dataPoint.fill
-pbir visuals cf "Visual.Visual" --info labels.fontColor
+# Kind-specific filter
+pbir get "Visual.Visual.dataPoint.fill.cf.gradient"
+pbir get "Visual.Visual.labels.color.cf.rules"
 ```
 
-## Applying Measure-Based CF (Preferred)
-
-Measure-driven CF is the preferred pattern. Create a DAX measure returning theme sentiment tokens (`"good"`, `"bad"`, `"neutral"`), then bind it to a visual property. When the theme changes, all CF updates automatically.
+### Scalar leaf read
 
 ```bash
-# Step 1: Create formatting measure
+# Single leaf value (e.g., min stop color, case threshold, measure ref)
+pbir get "Visual.Visual.dataPoint.fill.cf.gradient.min.color"
+pbir get "Visual.Visual.dataPoint.fill.cf.gradient.max.value"
+pbir get "Visual.Visual.labels.color.cf.rules.case[0].color"
+pbir get "Visual.Visual.dataPoint.fill.cf.measure"
+```
+
+### Bulk read (glob)
+
+```bash
+# All CF across a report (replaces the deprecated `visuals cf --list`)
+pbir get "Report.Report/**/*.Visual.**.cf"
+
+# JSON mode
+pbir get "Visual.Visual.dataPoint.fill.cf" --json
+```
+
+## Editing CF with `pbir set`
+
+Scalar leaf edits on **existing** CF entries. Creating CF from scratch stays in `pbir visuals cf` (see below).
+
+### Gradient leaves
+
+```bash
+# Change a gradient stop color
+pbir set "Visual.Visual.dataPoint.fill.cf.gradient.min.color" --value "bad"
+pbir set "Visual.Visual.dataPoint.fill.cf.gradient.max.color" --value "#00FF00"
+
+# Change a threshold value
+pbir set "Visual.Visual.dataPoint.fill.cf.gradient.max.value" --value 250
+
+# Set the null coloring strategy (e.g. for blank values)
+pbir set "Visual.Visual.dataPoint.fill.cf.gradient.null.color" --value "#888888"
+
+# Rebind the input measure of a gradient
+pbir set "Visual.Visual.dataPoint.fill.cf.gradient.measure" --value "Sales.Margin"
+```
+
+### Rules leaves
+
+```bash
+# Update a specific case color
+pbir set "Visual.Visual.labels.color.cf.rules.case[0].color" --value "alertRed"
+
+# Update a case threshold (op + value)
+pbir set "Visual.Visual.labels.color.cf.rules.case[1].value" --value 500
+pbir set "Visual.Visual.labels.color.cf.rules.case[1].op" --value "gte"
+
+# Set the else color (default when no case matches)
+pbir set "Visual.Visual.labels.color.cf.rules.else.color" --value "foreground"
+```
+
+### Measure-driven leaves
+
+```bash
+# Rebind the measure driving a measure-based CF
+pbir set "Visual.Visual.dataPoint.fill.cf.measure" --value "_Fmt.NewStatusColor"
+```
+
+### Bulk edits with glob + `--where`
+
+```bash
+# Update the min color of every gradient CF on column charts
+pbir set "Report.Report/**/*.Visual.dataPoint.fill.cf.gradient.min.color" \
+  --value "bad" --where "visual_type=clusteredBarChart" -f
+
+# Preview before applying
+pbir set "Report.Report/**/*.Visual.dataPoint.fill.cf.gradient.min.color" \
+  --value "bad" --dry-run
+```
+
+### Kind mismatch is a hard error
+
+If a visual has a **gradient** CF on `dataPoint.fill` and you try to write a **rules** leaf there, `pbir set` hard-errors with a pointer at the fix:
+
+```
+dataPoint.fill has CF kind 'gradient-2', not 'rules'.
+Use `pbir set "...dataPoint.fill.cf" --remove` and then
+`pbir visuals cf --rules ...` to change kinds.
+```
+
+No automatic morphing. To change CF kind, remove + recreate explicitly.
+
+## Removing CF
+
+Both `--remove` and `--clear` are aliases. use either. For `.cf` paths, the remove verb wipes the CF entry at the addressed depth and preserves sibling state overrides.
+
+```bash
+# Wipe CF on one container.prop
+pbir set "Visual.Visual.dataPoint.fill.cf" --remove
+pbir set "Visual.Visual.dataPoint.fill.cf" --clear     # identical
+
+# Wipe a specific kind (same effect. one CF per container.prop)
+pbir set "Visual.Visual.dataPoint.fill.cf.gradient" --remove
+
+# Bulk wipe every CF on a visual
+pbir set "Visual.Visual.**.cf" --remove -f
+
+# Bulk wipe across a report
+pbir set "Report.Report/**/*.Visual.**.cf" --remove -f --dry-run  # preview first
+```
+
+Removal preserves non-CF entries (state overrides like `id: "default"` or `id: "selection:selected"`).
+
+## Creating CF with `pbir visuals cf`
+
+Structural authoring stays in the builder command. Reads and edits live on `pbir set`/`pbir get`.
+
+### Measure-Based CF (Preferred)
+
+Measure-driven CF is the preferred pattern. Create a DAX measure returning theme sentiment tokens (`"good"`, `"bad"`, `"neutral"`), then bind it to a visual property.
+
+```bash
+# Step 1: Create formatting measure (-t table must exist in the model;
+# measures on phantom tables break every referencing visual in Desktop)
 pbir dax measures add "Report.Report" -t _Fmt -n "RevenueColor" \
   -e 'IF([Revenue] >= [Target], "good", IF([Revenue] >= [Target] * 0.8, "neutral", "bad"))' \
   --data-type Text
@@ -48,58 +165,81 @@ pbir theme set-colors "Report.Report" --good "#00B050" --bad "#FF0000" --neutral
 pbir visuals cf "Report.Report/Page.Page/Visual.Visual" \
   --measure "labels.color _Fmt.RevenueColor"
 
-# Apply to data point fills (bar/column)
+# Common targets
 pbir visuals cf "Visual.Visual" --measure "dataPoint.fill _Fmt.RevenueColor"
-
-# Apply to font color
 pbir visuals cf "Visual.Visual" --measure "values.fontColor _Fmt.OTDColor"
 ```
 
 The `--measure` format is `"container.prop MeasureRef"` where:
-- `container.prop` targets a visual object container and property (e.g., `labels.color`, `dataPoint.fill`)
-- `MeasureRef` is the measure reference in `Table.Measure` format (e.g., `_Fmt.StatusColor`)
+- `container.prop` targets a visual object container and property.
+- `MeasureRef` is the measure reference in `Table.Measure` format.
 
-Color properties (fill, color, fontColor, strokeColor, etc.) are automatically wrapped in `{"solid": {"color": ...}}` structure.
+Color properties (fill, color, fontColor, strokeColor, etc.) are automatically wrapped in `{"solid": {"color": ...}}`.
 
-## Removing CF
+### Measure-bound axis properties
 
-```bash
-# Remove CF from specific container.prop
-pbir visuals cf "Visual.Visual" --remove dataPoint.fill
-
-# Remove CF from entire container (all props)
-pbir visuals cf "Visual.Visual" --remove dataPoint
-
-# Remove all CF from visual
-pbir visuals cf "Visual.Visual" --remove-all
-
-# Bulk remove via glob
-pbir visuals cf "Report.Report/**/*.Visual" --remove-all
-```
-
-Removal preserves non-CF entries (state overrides like `id: "default"` or `id: "selection:selected"`).
-
-## Updating Colors
-
-Change colors in existing CF without rebuilding:
+`--measure` also works for non-color properties like axis bounds:
 
 ```bash
-# Update gradient colors (theme tokens or hex)
-pbir visuals cf "Visual.Visual" --set-color "dataPoint.fill min=bad max=good"
-
-# Update 3-color gradient
-pbir visuals cf "Visual.Visual" --set-color "dataPoint.fill min=bad mid=neutral max=good"
-
-# Update rules CF by case index
-pbir visuals cf "Visual.Visual" --set-color "values.backColor case0=#E66C37 case1=#118DFF"
-
-# Positional shorthand (min = first case, max = last case)
-pbir visuals cf "Visual.Visual" --set-color "values.backColor min=#E66C37 max=#118DFF"
+pbir visuals cf "Visual.Visual" --measure "valueAxis.start _Fmt.Zero"
+pbir visuals cf "Visual.Visual" --measure "valueAxis.end _Fmt.AxisCeiling"
 ```
+
+### Gradient and Data Bars
+
+```bash
+# 2-color gradient
+pbir visuals cf "Report.Report/Page.Page/Visual.Visual" \
+  --gradient --field "Invoices.Net Invoice Value" --min-color bad --max-color good
+
+# 3-color gradient (omit --mid-value for an automatic midpoint)
+pbir visuals cf "Visual.Visual" \
+  --gradient --field "Table.Field" --min-color "#FF0000" --max-color "#00FF00" --mid-color "#FFFF00"
+
+# 3-color gradient with an explicit midpoint value
+pbir visuals cf "Visual.Visual" \
+  --gradient --field "Table.Field" --min-color bad --mid-color neutral --max-color good --mid-value 0
+
+# Gradient on a specific container.prop
+pbir visuals cf "Visual.Visual" \
+  --gradient --field "Table.Field" --min-color bad --max-color good --on labels.fontColor
+
+# Data bars
+pbir visuals cf "Visual.Visual" \
+  --data-bars --field "Invoices.Net Invoice Value"
+
+# Data bars with custom colors
+pbir visuals cf "Visual.Visual" \
+  --data-bars --field "Table.Field" --positive-color good --negative-color bad
+```
+
+### Rules and Icons
+
+```bash
+# Rules CF
+pbir visuals cf "Visual.Visual" --rules --field "Invoices.Net Invoice Value" \
+  --rule "gt 1000 good" --rule "lt 0 bad"
+
+# Rules CF on a specific container
+pbir visuals cf "Visual.Visual" --rules --field "Table.Field" \
+  --rule "gt 100 good" --rule "lte 100 neutral" --on labels.fontColor
+
+# Icons CF (pass --on values for table/matrix; icons render before the value)
+pbir visuals cf "Visual.Visual" --icons --field "Invoices.Net Invoice Value" \
+  --rule "gt 0 circle_green" --rule "lte 0 circle_red" --on values
+```
+
+Rule format: `"operator value color_or_icon"`. Operators: `gt`, `lt`, `gte`, `lte`, `eq`, `neq`.
+
+Friendly icon names: `circle_`/`traffic_`/`flag_` + `red|yellow|green`; `arrow_up/right/down`; `triangle_up/dash/down`; `star_full/half/empty`; `bar_full/three_quarter/half/quarter/empty`; `check`/`exclamation`/`x`.
+
+Raw PBIR names (`TriangleHigh`, `SignalBarFull`, ...) follow `<Shape><Level>` (High=green, Medium=yellow, Low=red). Unknown names are rejected -- Desktop renders them as broken images. Icons default to the `Before` layout; use `layout("icon_only")` (Python API) for icon-only columns.
+
+Shared flags: `--field` (required), `--min-color`, `--max-color`, `--mid-color`, `--mid-value`, `--positive-color`, `--negative-color`, `--on container.prop`.
+
+Re-applying a builder on the same property and scope replaces the entry; different column scopes coexist.
 
 ## Copying CF Between Visuals
-
-Copy all CF entries from one visual to another. Existing CF on the target is overwritten; non-CF entries are preserved.
 
 ```bash
 # Copy all CF from source to target
@@ -117,29 +257,25 @@ pbir visuals cf "Report.Report/Page.Page/*.Visual" \
 source = Visual.load("Report.Report/Page.Page/Source.Visual")
 target = Visual.load("Report.Report/Page.Page/Target.Visual")
 
-# Copy all CF
-target.cf.copy_from(source)
-
-# Copy specific containers only
-target.cf.copy_from(source, containers=["dataPoint", "labels"])
-
+target.cf.copy_from(source)                                   # all containers
+target.cf.copy_from(source, containers=["dataPoint", "labels"])  # specific
 target.save()
 ```
 
 ### Copy Behavior
 
-- Deep copies CF entries from source `visual.objects` to target
-- Removes existing CF on target containers first (overwrite)
-- Non-CF entries in target containers are preserved
-- Returns list of container names where CF was copied
-- Source visual is not modified
+- Deep copies CF entries from source `visual.objects` to target.
+- Removes existing CF on target containers first (overwrite).
+- Non-CF entries in target containers are preserved.
+- Returns list of container names where CF was copied.
+- Source visual is not modified.
 
-### When to Use CF Copy
+### When to use CF copy
 
-- Standardizing CF across multiple visuals of the same type
-- Applying a "CF template" from a reference visual to new visuals
-- Migrating CF after duplicating a page (visuals lose CF on copy in some workflows)
-- Batch-applying consistent bar chart data point coloring across a report
+- Standardizing CF across multiple visuals of the same type.
+- Applying a "CF template" from a reference visual to new visuals.
+- Migrating CF after duplicating a page (visuals lose CF on copy in some workflows).
+- Batch-applying consistent bar chart data point coloring across a report.
 
 ## Converting to Theme Tokens
 
@@ -162,6 +298,18 @@ pbir visuals cf "Visual.Visual" --to-measure dataPoint.fill
 # Creates measure _Fmt.CF Datapoint Fill with equivalent DAX
 ```
 
+## Changing CF Type
+
+Re-running a builder on the same property and scope replaces the entry, so changing kinds is one command:
+
+```bash
+# dataPoint.fill holds a gradient; this replaces it with rules
+pbir visuals cf "Visual.Visual" --rules --field "Table.Field" \
+  --rule "gt 100 good" --rule "lt 0 bad"
+```
+
+`pbir set` leaf edits never morph kinds (hard error). To drop CF entirely: `pbir set "Visual.Visual.dataPoint.fill.cf" --remove`.
+
 ## Common Containers and Properties
 
 | Container | Property | Typical Use |
@@ -176,82 +324,32 @@ pbir visuals cf "Visual.Visual" --to-measure dataPoint.fill
 | `columnFormatting` | `backColor` | Matrix column header background |
 | `accentBar` | `color` | KPI accent bar color |
 | `fillCustom` | `color` | Card fill color |
-| `value` | `color` | Card value font color |
+| `value` | `fontColor` | Card visual value font color (`value.color` does not exist) |
 | `referenceLabel` | `color` | KPI reference label color |
 | `referenceLabelDetail` | `color` | KPI reference label detail |
 
+## Deprecated Flags
+
+The following `pbir visuals cf` flags are **deprecated** and will be removed in 1.0.0. They emit a red error, print the equivalent `pbir set` / `pbir get` command, and exit with status 1. Update your scripts using the rewrite table below.
+
+| Deprecated flag | Replacement |
+|---|---|
+| `--info dataPoint.fill` | `pbir get "<path>.dataPoint.fill.cf"` |
+| `--list` | `pbir get "<path>.**.cf"` |
+| `--has dataPoint` | `pbir get "<path>.dataPoint.**.cf"` (non-empty summary proves CF exists) |
+| `--set-color "dataPoint.fill min=bad max=good"` | Two commands: `pbir set "<path>.dataPoint.fill.cf.gradient.min.color" --value bad` and `pbir set "<path>.dataPoint.fill.cf.gradient.max.color" --value good` |
+| `--remove dataPoint.fill` | `pbir set "<path>.dataPoint.fill.cf" --remove` |
+| `--remove-all` | `pbir set "<path>.**.cf" --remove -f` |
+
+Retained flags (create, copy, convert): `--gradient`, `--rules`, `--icons`, `--data-bars`, `--measure`, `--to-measure`, `--theme-colors`, `--copy-from`.
+
 ## Best Practices
 
-1. **Theme colors over hex** -- Use sentiment tokens ("good", "bad", "neutral") so theme changes cascade to all CF
-2. **Measure-driven preferred** -- Extension measures returning tokens are easier to maintain than built-in gradient/rules
-3. **Apply sparingly** -- CF should highlight exceptions, not decorate everything. Format variance columns, not raw values
-4. **Accessible palettes** -- Blue/orange instead of red/green. Always pair color with a secondary cue (icon, text)
-5. **Theme-first** -- Check `pbir theme set-colors` for sentiment colors before applying CF. Create them if missing.
-
-## Gradient and Data Bars via CLI
-
-Apply gradient CF and data bars directly from the CLI using the fluent builder flags:
-
-```bash
-# 2-color gradient (min/max)
-pbir visuals cf "Report.Report/Page.Page/Visual.Visual" \
-  --gradient --field "Invoices.Net Invoice Value" --min-color bad --max-color good
-
-# 3-color gradient (min/mid/max)
-pbir visuals cf "Visual.Visual" \
-  --gradient --field "Table.Field" --min-color "#FF0000" --max-color "#00FF00" --mid-color "#FFFF00"
-
-# Gradient on specific container.prop
-pbir visuals cf "Visual.Visual" \
-  --gradient --field "Table.Field" --min-color bad --max-color good --on labels.fontColor
-
-# Data bars
-pbir visuals cf "Visual.Visual" \
-  --data-bars --field "Invoices.Net Invoice Value"
-
-# Data bars with custom colors
-pbir visuals cf "Visual.Visual" \
-  --data-bars --field "Table.Field" --positive-color good --negative-color bad
-```
-
-Shared flags: `--field` (required), `--min-color`, `--max-color`, `--mid-color`, `--positive-color`, `--negative-color`, `--on container.prop`.
-
-## Changing CF Type
-
-To change a filter's CF type (e.g. gradient to rules), remove and reapply:
-
-```bash
-pbir visuals cf "Visual.Visual" --remove dataPoint.fill
-pbir visuals cf "Visual.Visual" --gradient --field "Table.Field" --min-color bad --max-color good
-```
-
-Built-in CF can also be converted to measure-driven:
-
-```bash
-pbir visuals cf "Visual.Visual" --to-measure dataPoint.fill
-```
-
-## Rules and Icons CF via CLI
-
-Apply rules-based and icon-based CF using repeatable `--rule` flags:
-
-```bash
-# Rules CF: color by value thresholds
-pbir visuals cf "Visual" --rules --field "Invoices.Net Invoice Value" \
-  --rule "gt 1000 good" --rule "lt 0 bad"
-
-# Rules CF on specific container
-pbir visuals cf "Visual" --rules --field "Table.Field" \
-  --rule "gt 100 good" --rule "lte 100 neutral" --on labels.fontColor
-
-# Icons CF: icon by value thresholds
-pbir visuals cf "Visual" --icons --field "Invoices.Net Invoice Value" \
-  --rule "gt 0 circle_green" --rule "lte 0 circle_red"
-```
-
-Rule format: `"operator value color_or_icon"`. Operators: `gt`, `lt`, `gte`, `lte`, `eq`, `neq`.
-
-Icon names: `circle_red`, `circle_yellow`, `circle_green`, `arrow_up`, `arrow_right`, `arrow_down`, `flag_red`, `flag_yellow`, `flag_green`, `check`, `x`, `exclamation`.
+1. **Theme colors over hex**. Use sentiment tokens (`good`, `bad`, `neutral`) so theme changes cascade to all CF.
+2. **Measure-driven preferred**. Extension measures returning tokens are easier to maintain than built-in gradient/rules.
+3. **Apply sparingly**. CF should highlight exceptions, not decorate everything. Format variance columns, not raw values.
+4. **Accessible palettes**. Blue/orange instead of red/green. Always pair color with a secondary cue (icon, text).
+5. **Theme-first**. Check `pbir theme set-colors` for sentiment colors before applying CF. Create them if missing.
 
 ## Copy Formatting Between Visuals
 

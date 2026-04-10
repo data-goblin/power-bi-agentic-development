@@ -4,6 +4,12 @@
 # All checks are enabled by default. Set to false to disable.
 # Changes take effect immediately (no restart needed).
 
+# Master kill-switch for all hooks in this plugin.
+# Set to false if you see noisy "PostToolUse hook error" messages on Windows,
+# or while troubleshooting unrelated issues. Leaves individual checks below
+# intact; flip this back to true to re-enable everything.
+all_hooks_enabled: true
+
 # JSON syntax validation (jq empty)
 json_syntax: true
 
@@ -16,6 +22,9 @@ required_fields: true
 # $schema URL format validation
 schema_url: true
 
+# Enumerated property values (e.g. page displayOption) must match the schema enum
+enum_values: true
+
 # Visual/page name format (word chars and hyphens only)
 name_format: true
 
@@ -27,3 +36,12 @@ fab_exists: true
 
 # TMDL structural syntax validation (requires tmdl-validate binary)
 tmdl_syntax: true
+
+# visualContainerObjects names checked against Microsoft's core visual catalog.
+# Self-contained: allowlist + catalog version live in core-visual-catalog.json,
+# no pbir CLI dependency. On by default because the 15 container objects are a
+# closed, universal set (same for built-in and custom visuals), so it won't
+# false-positive on custom visuals. Visual type ids are intentionally not
+# enforced. Set to false if the bundled catalog lags a newly added container
+# object. (Replaces the former pbir-delegated `semantic_validation` toggle.)
+visual_catalog_enum: true

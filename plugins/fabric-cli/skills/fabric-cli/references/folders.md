@@ -46,9 +46,9 @@ fab api -X post "workspaces/$WS_ID/folders" -i "{\"displayName\": \"Bronze\", \"
 {
   "status_code": 201,
   "text": {
-    "id": "c92e1cfb-2983-49d6-8cb1-40875f18f396",
+    "id": "<folder-id>",
     "displayName": "ETL",
-    "workspaceId": "6f356f2f-8428-4249-a6a7-f6ee438717d4"
+    "workspaceId": "<workspace-id>"
   }
 }
 ```
@@ -86,7 +86,7 @@ fab api -X get "workspaces/$WS_ID/items?type=Notebook" | jq '.text.value[] | {di
 
 ## Delete Folder
 
-To delete items before removing a folder, use `fab rm "Workspace/Item.Notebook"` rather than the API.
+To delete items before removing a folder, use `fab rm "Workspace/Item.Notebook"` rather than the API. Recovery of removed items depends on the tenant Item Recovery setting; see [reference.md > Recovering deleted items](reference.md#recovering-deleted-items).
 
 ```bash
 WS_ID=$(fab get "MyWorkspace.Workspace" -q "id")

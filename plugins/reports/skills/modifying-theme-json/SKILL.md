@@ -1,293 +1,139 @@
 ---
 name: modifying-theme-json
-version: 0.21.1
-description: Design, enforce, audit, and validate Power BI report themes. This skill MUST be invoked when a report uses the default or built-in theme, has a minimal custom theme (few or no visualStyles), or has accumulated many visual-level formatting overrides (objects/visualContainerObjects in visual.json); these are signs the theme needs attention. Also automatically invoke when the user asks to "create a theme", "design a theme", "enforce theme compliance", "audit theme adherence", "push formatting to theme", "clear visual overrides", "standardize report formatting", "update theme colors", "change theme typography", "set theme text classes", "validate a theme", "add visual-type overrides to the theme", "copy a theme", "download a theme", "apply a template", or mentions theme design, enforcement, compliance, or visual formatting inconsistency.
+description: Design, enforce, audit, and validate Power BI report themes through the pbir CLI. Invoke when a report uses a default or minimal theme, visuals have inconsistent formatting or many local overrides, or the user asks to create, copy, apply, standardize, rebrand, audit, or validate a theme; change theme colors or typography; promote visual formatting into the theme; clear overrides; or improve theme compliance.
 ---
 
-# Power BI Report Themes
+# Power BI report themes
 
-## Why Themes Matter
+Use this skill for theme design and compliance decisions. Use the `pbir-cli` skill for command details.
 
-A report without a well-designed theme accumulates formatting debt. Every visual ends up with its own bespoke title size, shadow toggle, border style, and hardcoded colors in `visual.json`. This creates three problems:
+## Non-negotiable tooling rule
 
-1. **Inconsistency.** Visuals drift apart as authors format each one individually. One card has 14pt titles, another has 12pt; one chart has shadows, another doesn't. The report looks unfinished.
-2. **Fragility.** Rebranding or updating the visual style means touching every visual.json individually. A report with 40 visuals across 8 pages means 40 files to edit. With a theme, it's one file.
-3. **Bloated visual JSON.** Each bespoke override adds lines to visual.json, making reports harder to diff, review, and maintain. A clean visual.json should contain field bindings, position, and conditional formatting; everything else should come from the theme.
+Use `pbir` for every report and theme mutation. Never edit `theme.json`, `visual.json`, serialized `.Theme` fragments, or other report JSON directly. Never fall back to `jq`, shell replacement, or a JSON-editing skill. If `pbir` lacks the required operation, stop and report the missing capability.
 
-Reports using the default Power BI theme or a minimal custom theme (just `dataColors` and a name) are leaving most formatting to Power BI's built-in defaults, which change between Desktop releases. A well-designed theme locks in the intended appearance.
+Read JSON only through `pbir cat`, `pbir get`, or read-only examples. Prefer structured CLI inspection commands because they explain the formatting cascade and usage.
 
-**Signs a theme needs attention:**
-- Many visuals have `objects` or `visualContainerObjects` with redundant formatting
-- Visuals of the same type look inconsistent (different title fonts, shadows on some but not others)
-- The theme JSON has few or no `visualStyles` entries
-- The report uses a built-in theme like "Default" or "Classic" without customization
+## Why themes matter
 
-> **Tooling preference:** Use `pbir` CLI when available (`pbir theme colors`, `pbir visuals clear-formatting`). Fall back to direct `jq` modification when unavailable. Always validate after every write.
+A theme centralizes formatting that would otherwise drift across visuals. It should own repeated choices such as:
 
-> **Tip:** Theme JSON files can be 75KB+ and 2000+ lines. Do not read the full monolithic file. Use `pbir theme serialize` to split into small editable files (see Author/Modify workflow below), or use `jq` to extract only specific keys. Serialized fragments from the serialize/build workflow are small and safe to read directly.
+- Data-series palette and semantic good/neutral/bad colors
+- Background, foreground, structural, gradient, hyperlink, and null colors
+- Font family, size, weight, and hierarchy
+- Wildcard container defaults such as titles, borders, padding, and shadows
+- Visual-type defaults for cards, slicers, charts, tables, textboxes, and images
 
-For PBIR JSON mechanics (property names, filter pane selectors, ThemeDataColor syntax, `jq` patterns), see the **`pbir-format`** skill (pbip plugin) -> `references/theme.md`.
+Visual-level overrides should remain only for content-specific exceptions or conditional formatting. Theme-first reports are easier to rebrand, diff, and maintain.
 
-## The Formatting Hierarchy
+## Formatting cascade
 
-Power BI applies visual formatting through a four-level cascade. Each level overrides the level above it:
-
-```
-Level 1  Power BI built-in defaults
-         |
-Level 2  Theme wildcard     visualStyles["*"]["*"]           applies to ALL visuals
-         |
-Level 3  Theme visual-type  visualStyles["lineChart"]["*"]   overrides wildcard for that type
-         |
-Level 4  Visual instance    visual.json objects +            overrides everything
-                            visualContainerObjects
+```text
+Power BI defaults
+  -> theme wildcard defaults
+  -> theme visual-type defaults
+  -> visual instance overrides
 ```
 
-### Core Principle
+The last layer wins. Diagnose unexpected rendering with `pbir visuals format`, which reports the effective value and source; do not inspect or patch `visual.json`.
 
-Push as much formatting as possible into levels 2 and 3. A well-designed theme means:
+## Audit before changing
 
-- Visual JSON files stay lean — no bespoke formatting noise cluttering visual.json
-- Global style changes require editing one file
-- New visuals automatically inherit correct defaults without manual intervention
-
-Visual-level overrides (level 4) should exist only for true one-offs: content-specific formatting, exceptions to the visual-type default, or conditional formatting expressions.
-
-### Diagnosing Why a Visual Looks the Way It Does
-
-When a visual renders unexpectedly, walk up the cascade:
-
-1. Check `visual.json` → `objects` and `visualContainerObjects` (level 4 always wins)
-2. Check theme `visualStyles["<type>"]["*"]` for that visual type (level 3)
-3. Check theme `visualStyles["*"]["*"]` wildcard (level 2)
-4. If absent everywhere, Power BI is applying a built-in default
-
-## Workflow: Audit Theme Compliance
-
-Use when assessing whether a report's visuals are inheriting from the theme or have accumulated stale overrides.
-
-**Step 1 — Locate the custom theme:**
 ```bash
-THEME_NAME=$(jq -r '.themeCollection.customTheme.name' Report.Report/definition/report.json)
-THEME="Report.Report/StaticResources/RegisteredResources/$THEME_NAME"
-```
-
-**Step 2 — Review what the theme sets at wildcard level:**
-```bash
-# Preferred
 pbir theme colors "Report.Report"
-pbir theme text-classes "Report.Report"
-
-# Fallback
-jq '.visualStyles["*"]["*"] | keys' "$THEME"
+pbir theme fonts "Report.Report"
+pbir color list "Report.Report"
+pbir fonts list "Report.Report"
+pbir visuals format "Report.Report/Page.Page/Visual.Visual"
+pbir bpa run "Report.Report"
 ```
 
-**Step 3 — Continue with full audit process** — see **`references/theme-compliance.md`** for the complete workflow: scanning all visuals for bespoke overrides, classifying stale vs intentional vs CF, severity levels, and fix decision tree.
+Look for hard-coded colors, repeated visual-level font or container overrides, inconsistent visual types, weak contrast, excessive palette size, and sentiment colors that change meaning between visuals.
 
-## Workflow: Enforce Theme (Clear Overrides)
+## Design rules
 
-After applying a new theme or making significant theme changes, stale visual-level overrides prevent the new theme from rendering correctly.
+1. Limit the data palette to the number of categories the report genuinely needs.
+2. Reserve saturated accent colors for focus, selection, exceptions, and key comparisons.
+3. Assign one stable meaning to each semantic color. Good, neutral, bad, selected, disabled, and hyperlink colors must not trade roles across pages.
+4. Keep structural colors quiet. Axes, borders, gridlines, and backgrounds should support reading rather than compete with data.
+5. Use one portable font family and a small type scale. Express hierarchy through size and weight, not many colors.
+6. Prefer wildcard defaults, then visual-type defaults, then rare instance overrides.
+7. Preserve accessible contrast and never rely on hue alone to communicate state.
 
-**With `pbir` CLI (preferred):**
-```bash
-# Clears bespoke formatting while preserving conditional formatting expressions
-pbir visuals clear-formatting "Report.Report/**/*.Visual" --keep-cf -f
-```
+## Author through `pbir`
 
-**With `jq` (manual, per-visual):**
-```bash
-# Safe: clear container chrome only (title, border, background, shadow, padding)
-# Does NOT touch chart-specific objects or conditional formatting
-jq 'del(.visual.visualContainerObjects)' visual.json > tmp && mv tmp visual.json
-
-# Aggressive: clear everything including chart-specific overrides
-# WARNING: also removes conditional formatting — only use if CF is confirmed absent
-jq 'del(.visual.objects) | del(.visual.visualContainerObjects)' visual.json > tmp && mv tmp visual.json
-
-# Always validate after
-jq empty visual.json
-```
-
-> When in doubt, clear `visualContainerObjects` only. Leave `objects` unless you have confirmed no conditional formatting exists in that visual.
-
-## Workflow: Author or Modify a Theme
-
-When building or substantially revising a theme, use the **serialize/build workflow** via `pbir` CLI. This splits the monolithic theme JSON into small, focused files that are easy to read and edit without loading 2000+ lines of JSON into context.
-
-### Serialize/Build Workflow (Recommended)
-
-> **IMPORTANT:** Serialize to a temporary folder outside the `.Report/` directory. The PBIR validation hooks monitor `.Report/` for JSON changes and will flag the serialized fragments as invalid PBIR files. Use `/tmp/`, a sibling folder, or the `-o` flag to place the `.Theme` folder elsewhere.
-
-**Step 1 — Serialize the theme into editable files:**
-```bash
-# From a report (outputs to a .Theme folder)
-pbir theme serialize "Report.Report" -o /tmp/MyTheme.Theme
-
-# From a standalone theme JSON file
-pbir theme serialize theme.json -o /tmp/MyTheme.Theme
-```
-
-This produces small, focused files: `_config.json` (colors, text classes, named colors), `_wildcards.json` (wildcard visual styles), and one file per visual-type override (e.g., `slicer.json`, `page.json`).
-
-**Step 2 — Edit the serialized files.** Each file is small enough to read and edit directly. Focus on:
-1. `_config.json` — `dataColors`, semantic colors, `textClasses`, background/foreground variants
-2. `_wildcards.json` — container defaults (title, border, shadow, padding)
-3. Visual-type files — overrides for specific types (textbox, image, card, etc.)
-
-**Step 3 — Build and apply back to the report:**
-```bash
-# Build only (produces a merged theme.json)
-pbir theme build /tmp/MyTheme.Theme
-
-# Build and apply directly to the report
-pbir theme build /tmp/MyTheme.Theme -o "Report.Report" -f --clean
-```
-
-The `--clean` flag removes the `.Theme` folder after building.
-
-### Quick Modifications (No Serialize Needed)
-
-For small, targeted changes, use the CLI directly without serializing:
+Start from a valid template or the report's existing theme; do not author an empty theme.
 
 ```bash
-pbir theme set-colors "Report.Report" --good "#00B050" --bad "#FF0000"
-pbir theme set-text-classes "Report.Report" title --font-size 14 --font-face "Segoe UI Semibold"
+# Apply a known base when requested
+pbir theme list-templates
+pbir theme apply-template "Report.Report" sqlbi
+
+# Set palette and semantic colors
+pbir theme set-colors "Report.Report" \
+  --data-colors '["#1971C2","#F08C00","#2F9E44","#7048E8"]' \
+  --good "#2E7D32" --neutral "#6B7280" --bad "#C62828" \
+  --background "#FFFFFF" --foreground "#252525"
+
+# Set typography by semantic level
+pbir theme set-fonts "Report.Report" title --font-face "Segoe UI Semibold" --font-size 14
+pbir theme set-fonts "Report.Report" label --font-face "Segoe UI" --font-size 10
+pbir theme set-fonts "Report.Report" callout --font-face "Segoe UI Semibold" --font-size 32
+
+# Set repeated formatting at theme level
 pbir theme set-formatting "Report.Report" "*.*.dropShadow.show" --value false
+pbir theme set-formatting "Report.Report" "*.*.border.show" --value false
+pbir theme set-formatting "Report.Report" "card.*.title.fontSize" --value 14
 ```
 
-See the **`pbir-cli`** skill → `references/modifying-theme.md` for full CLI command reference.
+Run `pbir schema describe <visualType> <object>` before authoring unfamiliar formatting properties.
 
-### Design Sequence
+## Promote a good visual into the theme
 
-Whether using serialize/build or direct CLI commands, follow this order:
-
-1. **Start from a valid base.** Use a template (`pbir theme apply-template`), the SQLBI/Data Goblins theme, or a [community template](https://github.com/deldersveld/PowerBI-ThemeTemplates). Do not author from an empty `{}`.
-2. **Design the color system first** (`dataColors`, semantic colors, background/foreground variants). Color decisions cascade everywhere.
-3. **Set typography** (`textClasses`) — font face and size for `title`, `header`, `label`, `callout`, `dataTitle`. Stick to Segoe UI / Segoe UI Semibold; custom fonts will not render on other users' machines.
-4. **Set wildcard container defaults** (`visualStyles["*"]["*"]`): title visibility/font/size, `dropShadow.show: false`, padding, border, filter pane.
-5. **Add visual-type overrides** for types that differ from the wildcard — at minimum, `textbox` and `image` to suppress title/border/background/shadow.
-6. **Validate** with `pbir theme validate "Report.Report"`, deploy, and visually verify.
-
-For detailed design guidance, see **`references/theme-authoring.md`**. For visual-type override patterns, see **`references/visual-type-overrides.md`**.
-
-## Workflow: Promote Bespoke Formatting to Theme
-
-When a `visual.json` has formatting that should become a theme default — either for that visual type or for all visuals — promote it.
-
-**With `pbir` CLI (preferred):**
 ```bash
-# Preview what would be pushed from a well-formatted visual into the theme
-pbir theme push-visual "Report.Report/Page.Page/Card.Visual" --dry-run
-
-# Push formatting to theme as the default for that visual type
-pbir theme push-visual "Report.Report/Page.Page/Card.Visual"
-
-# Push only specific components (title, background, border, etc.)
-pbir theme push-visual "Report.Report/Page.Page/Card.Visual" --components title,background,border
+pbir theme push-visual "Report.Report/Page.Page/BestCard.Visual" --dry-run
+pbir theme push-visual "Report.Report/Page.Page/BestCard.Visual"
 ```
 
-**Manual process** (when CLI is unavailable):
+Use this when a well-designed instance should become the default for its visual type. Inspect the dry run first so content-specific formatting is not promoted accidentally.
 
-1. **Identify** what's in `visual.objects` (chart-specific) and `visual.visualContainerObjects` (container chrome)
-2. **Decide** whether it belongs in the wildcard (`["*"]["*"]`) or a visual-type section (`["lineChart"]["*"]`)
-3. **Write** the value into the theme, then validate
-4. **Remove** the override from the visual, then validate
-5. **Verify** the visual still renders correctly
+## Enforce theme inheritance
 
-Both `objects` and `visualContainerObjects` properties map to the same `visualStyles[type][state]` section in the theme. The distinction in visual.json doesn't exist in the theme.
+Clearing overrides is destructive and must be confirmed with the user. Preserve conditional formatting unless the user explicitly wants it removed.
 
-For complete property mapping tables, wildcard vs visual-type decision guide, color handling, and batch promotion across many visuals, see **`references/promoting-formatting.md`**.
-
-## Workflow: Validate a Theme
-
-**With `pbir` CLI (preferred):**
 ```bash
-# Validate a report's theme (checks JSON syntax, structure, and completeness)
+pbir visuals clear-formatting "Report.Report/**/*.Visual" --keep-cf --dry-run -f
+pbir visuals clear-formatting "Report.Report/**/*.Visual" --keep-cf -f
+pbir theme colors "Report.Report" --normalize
+pbir theme colors "Report.Report" --normalize --apply
+```
+
+For selective cleanup, use the flags documented by `pbir visuals clear-formatting --help` rather than broad file edits.
+
+## Copy or replace a theme
+
+```bash
+pbir cp "Source.Report/theme" "Target.Report/theme" -f
+pbir theme validate "Target.Report"
+```
+
+After a theme swap, clear stale visual overrides, normalize surviving color literals, and inspect foreground/background polarity so text does not become invisible.
+
+## Validate and render
+
+Use one confidence pass after a coherent batch:
+
+```bash
 pbir theme validate "Report.Report"
-
-# Validate a standalone theme file
-pbir theme validate "theme.json"
-
-# Validate a serialized .Theme folder before building
-pbir theme validate "MyTheme.Theme"
+pbir validate "Report.Report" --all
+pbir desktop refresh "Report.Report"
+pbir desktop screenshot "Report.Report" --all --output-dir screenshots
 ```
 
-**Manual validation** (when CLI is unavailable):
-```bash
-# 1. JSON syntax
-jq empty "$THEME" && echo "JSON valid"
+Desktop refresh does not reload theme resources. Close and reopen the report before judging theme changes, then capture screenshots. If Desktop is unavailable, ask before publishing to a sandbox workspace for rendered verification.
 
-# 2. Required top-level keys
-jq '{dataColors: (.dataColors | type), visualStyles: (.visualStyles | type), textClasses: (.textClasses | type)}' "$THEME"
+## Detailed references
 
-# 3. Wildcard section
-jq 'if .visualStyles["*"]["*"] then "wildcard exists" else "MISSING wildcard" end' "$THEME"
-
-# 4. Valid hex colors
-jq '[.dataColors[] | select(test("^#[0-9A-Fa-f]{6}$") | not)]' "$THEME"
-
-# 5. No null visual-type sections
-jq '[.visualStyles | to_entries[] | select(.value == null) | .key]' "$THEME"
-```
-
-After validation, deploy and visually verify:
-- Wildcard container chrome (titles, borders, shadows) applies to all visuals
-- Filter pane and filter cards render correctly on all pages
-- Visual-type overrides correctly suppress the wildcard for exempt types (e.g., textboxes have no title)
-- Data colors cycle correctly on multi-series charts
-
-## Schema and Documentation
-
-| Resource | URL |
-|----------|-----|
-| Official report theme JSON schema (versioned, Draft 7) | [microsoft/powerbi-desktop-samples — Report Theme JSON Schema](https://github.com/microsoft/powerbi-desktop-samples/tree/main/Report%20Theme%20JSON%20Schema) |
-| Latest schema (v2.152, March 2026, exploration v5.71) — **check repo for newer** | [reportThemeSchema-2.152.json](https://github.com/microsoft/powerbi-desktop-samples/blob/main/Report%20Theme%20JSON%20Schema/reportThemeSchema-2.152.json) |
-| Raw schema URL (for `$schema` IDE integration) — **update version as needed** | `https://raw.githubusercontent.com/microsoft/powerbi-desktop-samples/main/Report%20Theme%20JSON%20Schema/reportThemeSchema-2.152.json` |
-| Microsoft Learn — Use report themes in Power BI Desktop | https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-report-themes |
-| Microsoft Learn — Report theme JSON file format | https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-report-themes#report-theme-json-file-format |
-| Community theme templates | [deldersveld/PowerBI-ThemeTemplates](https://github.com/deldersveld/PowerBI-ThemeTemplates) |
-| PBIR item schemas | [microsoft/powerbi-desktop-samples — item-schemas](https://github.com/microsoft/powerbi-desktop-samples/tree/main/item-schemas) |
-
-### IDE Integration (`$schema`)
-
-Add a `$schema` property to the theme JSON to enable autocomplete and validation in VS Code (or any JSON Schema-aware editor):
-
-```json
-{
-  "$schema": "https://raw.githubusercontent.com/microsoft/powerbi-desktop-samples/main/Report%20Theme%20JSON%20Schema/reportThemeSchema-2.152.json",
-  "name": "MyTheme",
-  "dataColors": ["#1971c2", ...]
-}
-```
-
-The schema is used verbatim by Power BI Desktop to validate themes on import — if the JSON fails schema validation, Power BI Desktop will reject the theme. Always target the schema version that matches the Power BI Desktop version in use. Schemas follow the pattern `reportThemeSchema-2.{version}.json` where the version matches the monthly Desktop release.
-
-## Theme Top-Level Keys
-
-| Key | Type | Purpose |
-|-----|------|---------|
-| `name` | string | Display name shown in Power BI UI |
-| `dataColors` | string[] | Ordered hex palette for data series |
-| `good` / `bad` / `neutral` | string | Flat hex keys for CF measure semantic colors |
-| `maximum` / `center` / `minimum` | string | Gradient color extremes (flat hex keys) |
-| `foreground` variants | string | `foreground`, `foregroundLight`, `foregroundDark`, `foregroundNeutralSecondary`, etc. |
-| `background` variants | string | `background`, `backgroundLight`, `backgroundNeutral`, `backgroundDark` |
-| `textClasses` | object | Typography per semantic role (`title`, `label`, `callout`, `header`, `boldLabel`, etc.) |
-| `visualStyles` | object | `[visualType][state]` formatting cascade |
-
-## References
-
-- **`references/theme-authoring.md`** — Color system design, typography, wildcard minimum set, schema integration
-- **`references/serialize-build.md`** — Serialize/build workflow: splitting themes into editable files, editing, rebuilding, validation, temporary folder guidance
-- **`references/applying-themes.md`** — Applying templates, post-apply enforcement, clearing visual overrides, normalizing hardcoded colors
-- **`references/copying-themes.md`** — Copying themes between reports, extracting/downloading themes, comparing themes, consolidating across a portfolio
-- **`references/promoting-formatting.md`** — Promoting bespoke visual.json formatting to theme: push-visual CLI, objects vs visualContainerObjects, wildcard vs visual-type, property mapping tables
-- **`references/theme-compliance.md`** — Systematic audit workflow, stale override classification, severity levels, fix decision tree
-- **`references/visual-type-overrides.md`** — Override patterns for textbox, image, shape, card, kpi, slicer, lineChart, barChart, tableEx, and matrix
-
-## Related Skills
-
-- **`pbir-cli`** → `references/modifying-theme.md` — Full CLI command reference for theme operations (serialize/build, set-colors, set-text-classes, set-formatting, push-visual, fonts, background, icons, diff)
-- **`pbir-cli`** → `references/apply-theme.md` — Applying templates, copying themes between reports, clearing visual overrides
-- **`pbir-format`** (pbip plugin) — Full theme mechanics: ThemeDataColor syntax, filter pane selectors, jq modification patterns, clearing overrides
-- **`pbi-report-design`** — Report design principles: 3-30-300 rule, layout, spacing, color usage, accessibility
+- `pbir-cli` -> `references/modifying-theme.md`: colors, fonts, formatting, normalization, validation
+- `pbir-cli` -> `references/apply-theme.md`: templates, copying, clearing overrides
+- `pbir-cli` -> `references/format-visuals.md`: cascade inspection and property discovery
+- `pbi-report-design`: layout, restrained color use, hierarchy, and accessibility

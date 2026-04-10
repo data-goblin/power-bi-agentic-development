@@ -46,17 +46,11 @@ Write-Output "Exported to $tmdlFolder"
 
 ## Via TOM — BIM (TMSL JSON)
 
-TOM doesn't have a built-in BIM serializer. The closest approach is scripting via XMLA:
+TOM has a built-in BIM serializer: `Microsoft.AnalysisServices.Tabular.JsonSerializer` (`scripts/load-tmdl.ps1` uses it for both load and save):
 
 ```powershell
-# Use ScriptCreateOrReplace to generate TMSL, then save to file
-# Simpler: just call Tabular Editor CLI against the port (see above)
-# If you must use PowerShell only:
-$json = [Newtonsoft.Json.JsonConvert]::SerializeObject(
-    $db.Model,
-    [Newtonsoft.Json.Formatting]::Indented
-)
-Set-Content -Path "C:\export\model.bim" -Value $json
+$json = [Microsoft.AnalysisServices.Tabular.JsonSerializer]::SerializeDatabase($db)
+[System.IO.File]::WriteAllText("C:\export\model.bim", $json)
 ```
 
-> This produces a partial JSON dump, not a fully valid BIM. Use TE CLI for reliable BIM output.
+> Requires `Microsoft.AnalysisServices.Tabular.Json.dll` loaded alongside Core and Tabular (see SKILL.md Section 3). Deserialize with `[Microsoft.AnalysisServices.Tabular.JsonSerializer]::DeserializeDatabase($json)`.

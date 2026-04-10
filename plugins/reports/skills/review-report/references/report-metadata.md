@@ -29,9 +29,9 @@ fab api -A powerbi "groups/{wsId}/reports/{reportId}" \
 fab ls "{workspace}.Workspace" -l
 ```
 
-### DataHub V2 Fields for Models
+### DataHub V2 Fields for Models (undocumented)
 
-The DataHub V2 API (`/metadata/datahub/V2/artifacts` with `supportedTypes: ["Model"]`) returns rich model metadata not available via standard APIs:
+The DataHub V2 API (`/metadata/datahub/V2/artifacts` with `supportedTypes: ["Model"]`) returns rich model metadata not available via standard APIs. The API is undocumented internal Microsoft surface area and may break without notice. The fields below are accessible via `scripts/search_across_workspaces.py` in the fabric-cli plugin (which surfaces them ahead of the identity fields shared with `fab find`).
 
 | Field | Location | Description |
 |---|---|---|

@@ -44,7 +44,7 @@ pbir dax viscalcs add "Report.Report/Page.Page/Visual.Visual" \
 ```bash
 # Rename
 pbir dax viscalcs rename "Report.Report/Page.Page/Visual.Visual" \
-  --from "OldName" --to "NewName"
+  "OldName" "NewName"
 
 # Remove a specific visual calculation
 pbir rm "Report.Report/Page.Page/Visual.Visual" --viscalc "Name" -f

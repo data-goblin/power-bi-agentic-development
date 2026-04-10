@@ -19,7 +19,7 @@ pbir validate "Report.Report"                    # Health check
 ```bash
 # Report metadata and settings
 pbir get "Report.Report"                         # Report name, pages, theme
-pbir report json "Report.Report"                 # Full report.json
+pbir cat "Report.Report/report"                  # Full report.json
 pbir model "Report.Report"                       # Model connection (workspace, model name/ID)
 pbir model "Report.Report" -d                    # Model tables, columns, measures
 
@@ -72,8 +72,7 @@ pbir model "Report.Report" -q "EVALUATE INFO.TABLES()"
 ```bash
 pbir cat "Report.Report/theme"                  # Full theme JSON
 pbir theme colors "Report.Report"                # Color palette with visual usage audit
-pbir theme text-classes "Report.Report"          # Text style definitions
-pbir theme fonts "Report.Report"                 # Font usage
+pbir theme fonts "Report.Report"                 # Theme font levels (title, label, callout, etc.)
 pbir theme validate "Report.Report"              # Theme structure validation
 ```
 

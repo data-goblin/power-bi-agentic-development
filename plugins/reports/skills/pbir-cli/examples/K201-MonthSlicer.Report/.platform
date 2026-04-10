@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "K201 - MonthSlicer"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "1b2a96e3-19f0-4ace-a2b9-55decaf15cb3"
+  }
+}

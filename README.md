@@ -1,30 +1,41 @@
+<p align="center">
+  <img src="media/bg42-11-4.png" alt="" width="800">
+</p>
+
 <h1 align="center">power-bi-agentic-development</h1>
 
 <p align="center">
-  The best source for agentic development resources for Power BI in one marketplace <br/>
-  <i> Teach agents like Claude Code or GitHub Copilot to do literally anything in Power BI </i>
+  The best source for Power BI AI skills and agentic development resources in one marketplace <br></br>
+  <i> Teach AI agents like Claude Code or GitHub Copilot Power BI and Microsoft Fabric </i>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.21.1-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-26.28-blue" alt="Version">
   <img src="https://img.shields.io/badge/Power_BI-F2C811?logo=powerbi&logoColor=000" alt="Power BI">
   <img src="https://img.shields.io/badge/Microsoft_Fabric-008272" alt="Microsoft Fabric">
   <img src="https://img.shields.io/badge/Tabular_Editor-2E7D32" alt="Tabular Editor">
   <img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="License">
 </p>
 
-> [!NOTE]
-> These skills are under active development with a daily release cadence and regular renaming or restructuring.
+> [!WARNING]
+> These skills are under active development with a weekly release cadence, so expect regular renaming and restructuring.
+>
+> **Versions 26.26 through 26.38 are a deliberate breaking transition.** Skills may be
+> consolidated, renamed, removed, or made less automatic between weekly releases in this range.
+> Pin **26.25 or earlier** if you need the pre-transition skill structure and behavior; do not
+> assume compatibility from one transition release to the next.
 
 ---
 
-<p align="center">
-  <img src="media/bg42-11-3.png" alt="" width="800">
-</p>
+### What is agentic development?
+
+- *Agentic development* is when you use agents to help you build, manage, and optimize artifacts and software. This includes semantic models, reports, and the things around them, like workspaces, deployment pipelines, and also processes.
+- A *marketplace* hosts *plugins* that you can install. Plugins are a collection of resources that help coding agents perform better. They are typically special instruction files and scripts. Plugins can contain skills, subagents, hooks, and MCP servers focused on special topics or tasks.
+- This marketplace is focused on everything to help your agent work well with Power BI and Fabric: Power BI skills, Fabric skills, subagents, and hooks for coding agents. Read further for more information.
 
 ## Installation
 
-These skills are intended for use in Claude Code, Desktop, or Cowork. However, you can use them in other tools like GitHub Copilot, Codex, Gemini CLI.
+Here's how you get started in Claude Code; run this in the terminal to get the marketplace: 
 
 ```bash
 claude plugin marketplace add data-goblin/power-bi-agentic-development
@@ -36,8 +47,7 @@ claude plugin marketplace add data-goblin/power-bi-agentic-development
 
 [![pbir-cli demo](https://img.youtube.com/vi/acHDorTi62U/maxresdefault.jpg)](https://www.youtube.com/watch?v=acHDorTi62U)
 
-<details>
-<summary><strong>Claude Code</strong></summary>
+### Claude Code
 
 Add the marketplace, then install plugins via `/plugin` and navigating to the installed marketplace.
 
@@ -63,18 +73,69 @@ claude plugin install pbip@power-bi-agentic-development
 claude plugin install fabric-cli@power-bi-agentic-development
 ```
 
+### Copilot CLI
+
+The standalone [Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli) supports plugin installation from GitHub repos. Copilot CLI reads the same `.claude-plugin/marketplace.json` manifest this repo uses, so the marketplace and child-plugin layout works without modification.
+
+<details>
+<summary><strong>Windows long paths</strong></summary>
+
+TMDL files have a problem with repository-relative paths over 260 characters. Windows' legacy MAX_PATH blocks `git clone` from writing them unless long path support is enabled at both the OS and git level. Without this, `copilot plugin install` aborts with `Filename too long`.
+
+Check [`useful-stuff/agent-scripts/enable-windows-longpaths.ps1`](useful-stuff/agent-scripts/enable-windows-longpaths.ps1) as an example of a script you can run from an elevated ps environment to enable long paths; there are other routes to do this that you can find online, too... just ask Copilot. A reboot is recommended after the registry change. This is a Windows OS limitation, documented at [Maximum Path Length Limitation](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation).
+
+See also the below `git config` command:
+
+```powershell
+git config --system core.longpaths true
+```
+
 </details>
 
 <details>
-<summary><strong>GitHub Copilot</strong></summary>
+<summary><strong>Additional installation instructions</strong></summary>
 
-The standalone [Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli) supports plugin installation from GitHub repos. Consult the Copilot documentation for specifics, or open an issue in this repo.
+This repository is an [Anthropic-format plugin marketplace](https://code.claude.com/docs/en/plugin-marketplaces) (a set of plugins), not a single distributable plugin, so the root `.claude-plugin/` contains only `marketplace.json`. Two documented install paths work:
+
+**1. Register the marketplace once, then install named child plugins. Example:**
 
 ```bash
-copilot plugin install data-goblin/power-bi-agentic-development
+copilot plugin marketplace add data-goblin/power-bi-agentic-development
+copilot plugin install tabular-editor@power-bi-agentic-development
 ```
 
-Some plugin features like agents and hooks may behave differently across tools. The core knowledge in the skill files is tool-agnostic.
+**2. Or install a single plugin directly from its subdirectory, no marketplace registration needed. Example:**
+
+```bash
+copilot plugin install data-goblin/power-bi-agentic-development:plugins/pbip
+```
+
+Both forms are documented in the [Copilot CLI plugin reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference) and the [plugins how-to](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing). Inside an interactive Copilot session, `/plugin install PLUGIN-NAME@MARKETPLACE-NAME` is the equivalent of (1). The bare `copilot plugin install data-goblin/power-bi-agentic-development` (no qualifier) will not install anything useful, because the root is a marketplace catalog, not a plugin.
+
+</details>
+
+<details>
+<summary><strong>Verify installation in Copilot CLI</strong></summary>
+
+Inside Copilot CLI:
+
+```
+/env                    # Loaded instructions, MCP servers, skills, agents, plugins, LSPs, extensions
+/plugin list            # Installed plugins
+/skills list            # Available skills
+/skills info pbip       # Details for a specific skill
+/agent                  # Browse installed agents
+```
+
+</details>
+
+<details>
+<summary><strong>Compatibility notes</strong></summary>
+
+- **Skills** load identically; Copilot CLI reads `skills/<name>/SKILL.md`.
+- **Agents** use the `*.agent.md` extension required by Copilot CLI's documented convention. Claude Code matches any `*.md` file in `agents/`, so the dual extension works in both tools.
+- **MCP servers** load from `.mcp.json` (plugin root) or `.github/mcp.json`. The plugins in this repo do not currently ship MCP servers.
+- **Hooks** are registered via `hooks.json` and reference scripts using `${CLAUDE_PLUGIN_ROOT}`. Copilot CLI **≥ 1.0.26** (2026-04-14) sets `CLAUDE_PLUGIN_ROOT` for plugin hooks ([changelog](https://github.com/github/copilot-cli/blob/main/changelog.md)); older builds do not, which causes hook commands to resolve to broken paths. Run `copilot update` if hooks fail to fire. Native Windows bash users may also hit a separate path-format bug tracked upstream at [claude-code#11984](https://github.com/anthropics/claude-code/issues/11984).
 
 </details>
 
@@ -91,7 +152,20 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 - `plugins/pbip/hooks/config.yaml` -- PBIR, TMDL, and report binding validation
 - `plugins/pbi-desktop/hooks/config.yaml` -- DAX references, measure metadata, referential integrity, metadata cache
 
-### Available plugins for Power BI and Fabric
+### Power BI and Fabric skills, agents, and hooks: available plugins
+
+> [!WARNING]
+> Don't install every plugin. Each skill competes for the agent's attention and context window, so install a plugin only when you need it and remove it when you don't. Prefer installing plugins scoped to a project rather than to your user, so each project carries only the skills it actually uses.
+
+<details>
+<summary><strong>goblin-mode</strong> &ensp; Get started, set up your tools, and audit and improve your whole agentic setup</summary>
+
+| Type | Name | Description |
+|------|------|-------------|
+| Skill | [`help-me-get-started`](plugins/goblin-mode/skills/help-me-get-started/) | A slow, friendly, jargon-free guide to agentic development for people new to agents; talks through what you want to do, feels out your role and access, teaches the five pillars (model, context, prompt, tools, environment) with local interactive explainers, and checks and installs what you need (Windows/macOS commands). Adapts pace: full tutorial or a fast install run |
+| Skill | [`improve-my-agent-setup`](plugins/goblin-mode/skills/improve-my-agent-setup/) | Setup-wide health check with modes (shallow/deep/ultra/yolo): skills, memory, tools, STT, model independence, other clients, harness config, git, permission/isolation, network and autonomous-agent exposure, safety enforcement, secrets and PII hygiene, and workflow habits; then offers to fix what's weak. Absorbs the old `/audit-context` |
+
+</details>
 
 <details>
 <summary><img src="media/icons/tabular-editor.svg" alt="" height="20"> <strong>tabular-editor</strong> &ensp; BPA rules, C# scripting, and CLI automation for Tabular Editor</summary>
@@ -100,10 +174,11 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 |------|------|-------------|
 | Skill | [`bpa-rules`](plugins/tabular-editor/skills/bpa-rules/) | Create and improve Best Practice Analyzer rules for models |
 | Skill | [`c-sharp-scripting`](plugins/tabular-editor/skills/c-sharp-scripting/) | C# scripting and macros for TE |
+| Skill | [`te-cli`](plugins/tabular-editor/skills/te-cli/) | Cross-platform Tabular Editor CLI (`te`, preview) for semantic models from the terminal |
 | Skill | [`te2-cli`](plugins/tabular-editor/skills/te2-cli/) | Tabular Editor 2 CLI usage and automation (not TE3) |
 | Skill | [`te-docs`](plugins/tabular-editor/skills/te-docs/) | Tabular Editor documentation search, TE3 config files. Uses [`pbi-search`](https://github.com/data-goblin/pbi-search) CLI |
 | Command | [`/suggest-rule`](plugins/tabular-editor/commands/suggest-rule.md) | Generate BPA rules from descriptions |
-| Agent | [`bpa-expression-helper`](plugins/tabular-editor/agents/bpa-expression-helper.md) | Debug and improve BPA rule expressions |
+| Agent | [`bpa-expression-helper`](plugins/tabular-editor/agents/bpa-expression-helper.agent.md) | Debug and improve BPA rule expressions |
 
 </details>
 
@@ -112,8 +187,8 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 
 | Type | Name | Description |
 |------|------|-------------|
-| Skill | [`connect-pbid`](plugins/pbi-desktop/skills/connect-pbid/) | Explore, query, and modify a model in Power BI Desktop |
-| Agent | [`query-listener`](plugins/pbi-desktop/agents/query-listener.md) | Capture DAX queries from Power BI Desktop visuals in real time |
+| Skill | [`connect-pbid`](plugins/pbi-desktop/skills/connect-pbid/) | Explore, query, and modify a model in Power BI Desktop, and reload/screenshot the report canvas via the Desktop Bridge |
+| Agent | [`query-listener`](plugins/pbi-desktop/agents/query-listener.agent.md) | Capture DAX queries from Power BI Desktop visuals in real time |
 | Hook | DAX reference validation | Validates table, column, and measure references against the connected model; suggests corrections |
 | Hook | Measure metadata enforcement | Blocks adding measures without DisplayFolder, Description, and FormatString |
 | Hook | Referential integrity check | Reports unmatched many-side keys after relationship or column changes |
@@ -130,7 +205,7 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 | Skill | [`pbip`](plugins/pbip/skills/pbip/) | Power BI Project (PBIP) format, structure, and file types |
 | Skill | [`tmdl`](plugins/pbip/skills/tmdl/) | Author and edit TMDL files directly |
 | Skill | [`pbir-format`](plugins/pbip/skills/pbir-format/) | Author and edit PBIR metadata files directly (visual.json, report.json, themes, filters, report extensions, visual calculations) |
-| Agent | [`pbip-validator`](plugins/pbip/agents/pbip-validator.md) | Validate PBIP project structure, TMDL syntax, and PBIR schemas |
+| Agent | [`pbip-validator`](plugins/pbip/agents/pbip-validator.agent.md) | Validate PBIP project structure, TMDL syntax, and PBIR schemas |
 | Hook | PBIR validation | Validates PBIR structure, required fields, naming conventions, and schema URLs |
 | Hook | Report binding validation | Validates semantic model binding (byPath directory exists; byConnection model exists via `fab exists`) |
 | Hook | TMDL validation | Validates TMDL structural syntax |
@@ -149,11 +224,11 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 | Skill | [`python-visuals`](plugins/reports/skills/python-visuals/) | Custom Python visuals in Power BI reports |
 | Skill | [`svg-visuals`](plugins/reports/skills/svg-visuals/) | SVG visuals via DAX measures in Power BI reports |
 | Skill | [`review-report`](plugins/reports/skills/review-report/) (WIP) | Review Power BI reports for usage metrics and best practices |
-| Skill | [`pbir-cli`](plugins/reports/skills/pbir-cli/) | Programmatic report manipulation via the [`pbir` CLI](https://github.com/maxanatsko/pbir.tools) |
-| Agent | [`deneb-reviewer`](plugins/reports/agents/deneb-reviewer.md) | Review Deneb visual specs for Vega/Vega-Lite syntax and conventions |
-| Agent | [`svg-reviewer`](plugins/reports/agents/svg-reviewer.md) | Review SVG DAX measures for syntax and design quality |
-| Agent | [`r-reviewer`](plugins/reports/agents/r-reviewer.md) | Review R visual scripts (ggplot2) for Power BI conventions |
-| Agent | [`python-reviewer`](plugins/reports/agents/python-reviewer.md) | Review Python visual scripts (matplotlib/seaborn) for Power BI conventions |
+| Skill | [`pbir-cli`](plugins/reports/skills/pbir-cli/) | Programmatic report manipulation via the [`pbir` CLI](https://github.com/maxanatsko/pbir.tools), including live Power BI Desktop refresh and page screenshots |
+| Agent | [`deneb-reviewer`](plugins/reports/agents/deneb-reviewer.agent.md) | Review Deneb visual specs for Vega/Vega-Lite syntax and conventions |
+| Agent | [`svg-reviewer`](plugins/reports/agents/svg-reviewer.agent.md) | Review SVG DAX measures for syntax and design quality |
+| Agent | [`r-reviewer`](plugins/reports/agents/r-reviewer.agent.md) | Review R visual scripts (ggplot2) for Power BI conventions |
+| Agent | [`python-reviewer`](plugins/reports/agents/python-reviewer.agent.md) | Review Python visual scripts (matplotlib/seaborn) for Power BI conventions |
 
 </details>
 
@@ -162,12 +237,13 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 
 | Type | Name | Description |
 |------|------|-------------|
+| Skill | [`semantic-model`](plugins/semantic-models/skills/semantic-model/) | Design, build, refresh, and review semantic models through a `te`-first tool cascade |
 | Skill | [`standardize-naming-conventions`](plugins/semantic-models/skills/standardize-naming-conventions/) | Audit and standardize naming conventions in semantic models |
-| Skill | [`review-semantic-model`](plugins/semantic-models/skills/review-semantic-model/) (Very WIP) | Review semantic models for quality, performance, AI readiness, and best practices |
-| Skill | [`refreshing-semantic-model`](plugins/semantic-models/skills/refreshing-semantic-model/) | Trigger or troubleshoot refreshes |
+| Skill | [`refresh-semantic-model`](plugins/semantic-models/skills/refresh-semantic-model/) | Trigger or troubleshoot refreshes |
 | Skill | [`lineage-analysis`](plugins/semantic-models/skills/lineage-analysis/) | Trace downstream reports from a semantic model across workspaces |
 | Skill | [`power-query`](plugins/semantic-models/skills/power-query/) | Write M expressions, debug query folding, execute M locally or via Fabric API |
-| Agent | [`semantic-model-auditor`](plugins/semantic-models/agents/semantic-model-auditor.md) | Audit semantic models for quality, memory, DAX, and design issues |
+| Skill | [`dax`](plugins/semantic-models/skills/dax/) | Write, debug, and optimize DAX in semantic models. Contributed by [Justin Martin](https://daxnoob.blog) |
+| Agent | [`semantic-model-auditor`](plugins/semantic-models/agents/semantic-model-auditor.agent.md) | Audit semantic models for quality, memory, DAX, and design issues |
 
 </details>
 
@@ -177,8 +253,16 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 | Type | Name | Description |
 |------|------|-------------|
 | Skill | [`fabric-cli`](plugins/fabric-cli/skills/fabric-cli/) | Fabric CLI (fab) for any remote operation in Power BI or Fabric (works fully on Pro, PPU; Fabric not required) |
-| Command | [`/audit-context`](plugins/fabric-cli/commands/audit-context.md) | Review project context files (CLAUDE.md, agents.md, memory files) |
 | Command | [`/migrating-fabric-trial-capacities`](plugins/fabric-cli/commands/migrating-fabric-trial-capacities.md) | Migrate workspaces from trial to production capacity |
+
+</details>
+
+<details>
+<summary><img src="media/icons/fabric-cli.svg" alt="" height="20"> <strong>fabric-admin</strong> &ensp; Tenant settings audits, governance, delegated overrides; requires fabric-cli</summary>
+
+| Type | Name | Description |
+|------|------|-------------|
+| Skill | [`audit-tenant-settings`](plugins/fabric-admin/skills/audit-tenant-settings/) | Audit Fabric and Power BI tenant settings, delegated overrides, and Entra security group membership |
 
 </details>
 
@@ -189,7 +273,7 @@ General-purpose agent resources that don't fit into a plugin: defensive hooks, p
 
 ## Use or re-use of these skills
 
-These skills are intended for free community use.
+These plugins are intended for free community use.
 
 You do not have the license to copy and incorporate them into your own products, trainings, courses, or tools. If you copy these skills - manually or by using an agent to rewrite them - you must include attribution and a link to this original project. That includes you, Microsoft.
 

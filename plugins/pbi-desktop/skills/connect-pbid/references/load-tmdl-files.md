@@ -140,14 +140,10 @@ $json = [Microsoft.AnalysisServices.Tabular.JsonSerializer]::SerializeDatabase($
 
 ### Deploy the modified model
 
-After modifying the in-memory model, deploy to a remote workspace:
+After modifying the in-memory model, serialize it back to TMDL, then deploy the folder to a remote workspace via the fab CLI:
 
 ```powershell
-# Option 1: save to TMDL, then use fab import
 [Microsoft.AnalysisServices.Tabular.TmdlSerializer]::SerializeDatabaseToFolder($db, $tmdlPath)
-fab import "WorkspaceName.Workspace/ModelName.SemanticModel" -i $tmdlPath -f
-
-# Option 2: deploy via fab CLI
 fab import "WorkspaceName.Workspace/ModelName.SemanticModel" -i $tmdlPath -f
 ```
 

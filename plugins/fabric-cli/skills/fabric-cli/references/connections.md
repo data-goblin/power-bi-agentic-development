@@ -112,10 +112,23 @@ PATCH https://api.fabric.microsoft.com/v1/connections/{connectionId}
 
 Update display name or credential details. Cannot change credential type (e.g. OAuth2 to WorkspaceIdentity).
 
+Via `fab`:
+
+```bash
+fab set ".connections/<Name>.Connection" -q displayName -i "New Name"
+fab set ".connections/<Name>.Connection" -q credentialDetails -i @creds.json
+```
+
 ## Delete Connection
 
 ```
 DELETE https://api.fabric.microsoft.com/v1/connections/{connectionId}
+```
+
+Via `fab`:
+
+```bash
+fab rm ".connections/<Name>.Connection" -f
 ```
 
 ## Get Connection Details

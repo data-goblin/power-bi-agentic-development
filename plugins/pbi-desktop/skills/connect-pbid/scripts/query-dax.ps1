@@ -64,8 +64,9 @@ try {
         $values = @()
         for ($i = 0; $i -lt $reader.FieldCount; $i++) {
             $val = $reader.GetValue($i)
-            if ($val -is [System.DBNull]) { $val = "(null)" }
-            $values += $val.ToString()
+            # Blank DAX results come back as CLR null (not just DBNull)
+            if ($null -eq $val -or $val -is [System.DBNull]) { $val = "(null)" }
+            $values += "$val"
         }
         Write-Output ($values -join "`t")
         $rowCount++

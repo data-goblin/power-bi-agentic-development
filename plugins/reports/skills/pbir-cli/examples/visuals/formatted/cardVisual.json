@@ -1,0 +1,562 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.7.0/schema.json",
+  "name": "4fed2dd804bed06315c6",
+  "position": {
+    "x": 850,
+    "y": 701.4285714285714,
+    "z": 8000,
+    "height": 300,
+    "width": 377.14285714285717,
+    "tabOrder": 8000
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "1. Measures"
+                    }
+                  },
+                  "Property": "blank"
+                }
+              },
+              "queryRef": "1. Measures.blank",
+              "nativeQueryRef": "blank"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "1. Measures"
+                  }
+                },
+                "Property": "blank"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "objects": {
+      "general": [
+        {
+          "properties": {}
+        }
+      ],
+      "fillCustom": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "outline": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "lineColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 0,
+                      "Percent": -0.2
+                    }
+                  }
+                }
+              }
+            },
+            "weight": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "id": "default"
+          }
+        }
+      ],
+      "image": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "padding": {
+              "expr": {
+                "Literal": {
+                  "Value": "0L"
+                }
+              }
+            },
+            "position": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Bottom'"
+                }
+              }
+            },
+            "imageType": {
+              "expr": {
+                "Literal": {
+                  "Value": "'imageUrl'"
+                }
+              }
+            },
+            "imageUrl": {
+              "expr": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "3. Report-Specific SVG Measures"
+                    }
+                  },
+                  "Property": "KPI Trend Line"
+                }
+              }
+            }
+          },
+          "selector": {
+            "id": "default"
+          }
+        }
+      ],
+      "padding": [
+        {
+          "properties": {
+            "paddingSelection": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Custom'"
+                }
+              }
+            },
+            "leftMargin": {
+              "expr": {
+                "Literal": {
+                  "Value": "0L"
+                }
+              }
+            },
+            "topMargin": {
+              "expr": {
+                "Literal": {
+                  "Value": "0L"
+                }
+              }
+            },
+            "bottomMargin": {
+              "expr": {
+                "Literal": {
+                  "Value": "0L"
+                }
+              }
+            },
+            "rightMargin": {
+              "expr": {
+                "Literal": {
+                  "Value": "0L"
+                }
+              }
+            }
+          },
+          "selector": {
+            "id": "default"
+          }
+        }
+      ],
+      "layout": [
+        {
+          "properties": {
+            "cellPadding": {
+              "expr": {
+                "Literal": {
+                  "Value": "0L"
+                }
+              }
+            },
+            "alignment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'top'"
+                }
+              }
+            },
+            "orientation": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            },
+            "columnCount": {
+              "expr": {
+                "Literal": {
+                  "Value": "1L"
+                }
+              }
+            },
+            "rowCount": {
+              "expr": {
+                "Literal": {
+                  "Value": "1L"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "value": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "label": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          },
+          "selector": {
+            "id": "default"
+          }
+        }
+      ],
+      "spacing": [
+        {
+          "properties": {
+            "verticalSpacing": {
+              "expr": {
+                "Literal": {
+                  "Value": "0L"
+                }
+              }
+            }
+          },
+          "selector": {
+            "id": "default"
+          }
+        }
+      ],
+      "shadowCustom": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "shadowPositionPreset": {
+              "expr": {
+                "Literal": {
+                  "Value": "'center'"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 0,
+                      "Percent": -0.2
+                    }
+                  }
+                }
+              }
+            },
+            "position": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Outer'"
+                }
+              }
+            }
+          },
+          "selector": {
+            "id": "default"
+          }
+        }
+      ],
+      "glowCustom": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'KPI TREND LINE '"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#658E95'"
+                    }
+                  }
+                }
+              }
+            },
+            "fontFamily": {
+              "expr": {
+                "Literal": {
+                  "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 5,
+                      "Percent": -0.25
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "background": [
+        {
+          "properties": {
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "ThemeDataColor": {
+                      "ColorId": 0,
+                      "Percent": 0
+                    }
+                  }
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "subTitle": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "11D"
+                }
+              }
+            },
+            "fontFamily": {
+              "expr": {
+                "Literal": {
+                  "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#94AEC0'"
+                    }
+                  }
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'SIMPLE COMPARISION TO TARGET'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "Filter4c9db5a0f780c6cf7385",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Date"
+              }
+            },
+            "Property": "Month (MMM)"
+          }
+        },
+        "type": "Categorical",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "d",
+              "Entity": "Date",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "In": {
+                  "Expressions": [
+                    {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Source": "d"
+                          }
+                        },
+                        "Property": "Month (MMM)"
+                      }
+                    }
+                  ],
+                  "Values": [
+                    [
+                      {
+                        "Literal": {
+                          "Value": "'Jan'"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "howCreated": "User"
+      }
+    ]
+  },
+  "_comment": {
+    "svg_measures": {
+      "KPI Trend Line": "ERROR: Measure 'KPI Trend Line' not found in TMDL file"
+    },
+    "description": "This visual uses SVG-based measures. The DAX code for each measure is included below."
+  },
+  "annotations": [
+    {
+      "name": "svg_dax_code",
+      "value": "-- For illustrative and educational purposes.\n-- You'll need to adjust these SVG measures for use in your own solutions.\n\n-- When using SVG measures, be aware that they're custom 'microvisuals'.\n-- They require more time and effort to build, test, and maintain.\n\n\n/* SETUP */\n// INSERT YOUR SETUP VARIABLES HERE\nVAR _width = 365 // Width size of the SVG\nVAR _height = 230 // Height size of the SVG\nVAR _padding = 15 // Padding between SVG image and border\nVAR _preparedTbl = // Insert your table, quantitative column and measure\n    ADDCOLUMNS(\n        SELECTCOLUMNS( SUMMARIZE( 'Table', 'Date'[Date] ), \"@xAxis\", 'Date'[Date] ),\n        \"@vl\", [Sum]\n    )\n\n/* COLOR DEFINITION */\nVAR _positive = \"#658E95\" // Positive Color\nVAR _negative = \"#7D1D3A\" // Negative Color\nVAR _darkGrey = \"#808080\" // Will be used for all text\nVAR _targetLineColor = \"#A8A8A8\" // Will be used for target line\n\n/* PRECALCULATIONS */\nVAR _maxValue = MAXX( _preparedTbl, [@vl] )\nVAR _target = AVERAGEX( _preparedTbl, [@vl] )\nVAR _counter = COUNTROWS( _preparedTbl )\nVAR _half = _counter / 2\nVAR _targetFulfillment = COUNTROWS( FILTER( _preparedTbl, [@vl] >= _target ) )\n\n/* STYLE DECLARATIONS */\nVAR _style =\n    \"<style> \ntext{\n    font-size:95%;\n    font-family: Segoe UI;\n    dominant-baseline: hanging;\n    fill:\" & _darkGrey\n        & \";\n}\n.bolder{ font-weight: bold; }\n.italic{ font-style: italic; }\n.lineChart{\n    stroke:\"\n        & _targetLineColor\n        & \";\n    stroke-width:2.5;\n    fill: none;\n}\n.positiveBar{\n    fill:\"\n        & _positive\n        & \";\n    opacity: 0.15;\n}\n.stateColor{ fill:\"\n        & IF( _targetFulfillment >= _half, _positive, _negative )\n        & \"; }\n.negativeResult{ fill:\"\n        & _negative\n        & \"; }\n.positiveResult{ fill:\"\n        & _positive\n        & \"; }\n</style>\"\n\n\n/* SVG DECLARTIONS */\nVAR _svgDeclaration = \"data:image/svg+xml;utf8,\"\nVAR _svgHeader = \"<svg xmlns='http://www.w3.org/2000/svg' width='\" & _width & \"' height='\" & _height & \"'>\"\nVAR _svgEnd = \"</svg>\"\n\n/* CALCULATION */\nVAR _doubePadding = _padding * 2\nVAR _updatedHeight = ( _height - _doubePadding )\nVAR _usableWidth = _width - _doubePadding\nVAR _scale = 0.45\nVAR _usableHeight = _updatedHeight * _scale\nVAR _revertedHeight = _updatedHeight * ( 1 - _scale )\nVAR _targetHeight = ( _usableHeight - ( ( _target / _maxValue ) * _usableHeight ) )\nVAR _targetHeightModificator = _usableHeight * 0.15\nVAR _rowsCounter = COUNTROWS( _preparedTbl )\nVAR _spaceBetweenPoitns = _usableWidth / _rowsCounter\nVAR _targetSum = ROUND( _target, 1 ) * _counter\nVAR _resultText = IF( _targetSum > _maxValue, \"negativeResult\", \"positiveResult\" )\nVAR _lineChart =\n    \"<path class='lineChart' d='\"\n        & CONCATENATEX(\n            _preparedTbl,\n            VAR _rowNumber = ROWNUMBER( _preparedTbl, ORDERBY( [@xAxis], ASC BLANKS DEFAULT ) )\n            VAR _xPostion = ( _rowNumber * _spaceBetweenPoitns )\n            VAR _yPosition = ( _usableHeight - ( ( [@vl] / _maxValue ) * _usableHeight ) ) + _revertedHeight\n            RETURN\n                IF( _rowNumber = 1, \"M \", \" L \" ) & _xPostion & \" \" & _yPosition\n        )\n        & \"' />\"\nVAR _positiveBar =\n    \"<rect class='positiveBar' x='\" & _padding & \"' y='\" & _revertedHeight - _targetHeightModificator & \"' width='\"\n        & _usableWidth\n        & \"' height='\"\n        & _targetHeight + _targetHeightModificator\n        & \"'  />\"\nVAR _textations =\n    \"\n    <text x='\" & _padding & \"' y='\" & _padding & \"'><tspan class='stateColor bolder'>\"\n        & COUNTROWS( FILTER( _preparedTbl, [@vl] >= _target ) )\n        & \"x</tspan> was target hit <tspan class='italic'>~ \"\n        & FORMAT( DIVIDE( _targetFulfillment, _counter ), \"0.0%\" )\n        & \"</tspan></text>\n    <text x='\"\n        & _padding\n        & \"' y='\"\n        & _padding * 2.5\n        & \"'>Monthly target was \"\n        & ROUND( _target, 1 )\n        & \", <tspan class='bolder \"\n        & _resultText\n        & \"'>\"\n        & _targetSum\n        & \"</tspan> in total.</text>\n    <text x='\"\n        & _padding\n        & \"' y='\"\n        & _padding * 4\n        & \"'>Total sales were <tspan class='bolder \"\n        & _resultText\n        & \"'>\"\n        & _maxValue\n        & \"</tspan> ~ \"\n        & IF(\n            _targetSum > _maxValue,\n            \"<tspan class='negativeResult bolder'>CLAIM NOT APPROVED</tspan>\",\n            \"<tspan class='positiveResult bolder'>CLAIM APPROVED</tspan>\"\n        )\n        & \"</text>\"\nVAR _result = _svgDeclaration & _svgHeader & _style & _positiveBar & _lineChart & _textations & _svgEnd\nRETURN\n    _result\n\nisHidden\ndisplayFolder: SVG Measures\nlineageTag: 73f8e70a-d500-4cde-88ed-bdebb5133b12"
+    }
+  ]
+}

@@ -113,7 +113,20 @@ Each property category is an array of objects, each with a `properties` key and 
 
 **Schema 2.4.0+:** Splits them. Container properties move to `visualContainerObjects`. Visual-specific properties stay in `objects`.
 
-Both are found in real reports. When editing an older report, container properties in `objects` are legitimate and correct for that schema version. Don't "fix" them unless upgrading the schema.
+Both are found in real reports. Container properties in `objects` can be legitimate in an older
+schema. Do not move them by hand; let `pbir` preserve the report's schema unless an upgrade is
+intentional.
+
+## Where the valid names come from
+
+For built-in visuals, the valid `visualType` ids, the `objects` names per visual type, and the 15 `visualContainerObjects` names are enumerated by the core visual catalog that the pbir CLI bundles and pins, so it is the authoritative source for these names rather than reverse-engineering them from theme files or the format pane.
+
+The catalog is preview (0.1.x) and can lag the shipping product, so treat its enumeration as advisory: unknown but plausible names may still be valid, and custom visuals are out of scope. Use it as a quick check, not a hard gate.
+
+- `pbir add visual --list` lists the built-in visual type ids
+- `pbir visuals properties --registry` shows the visual type registry
+- `pbir schema describe <type> [object]` shows valid objects, properties, values, and ranges
+- `pbir validate --semantic` (or `--all`) flags `visualType`, `objects`, and `visualContainerObjects` names that the catalog does not recognize; `--strict` promotes those advisories to errors
 
 ## Common Container Configurations
 
@@ -151,15 +164,42 @@ Both are found in real reports. When editing an older report, container properti
 
 ### Accessible visual (with altText)
 
+`altText` lives at `visualContainerObjects.general[].properties.altText`, NOT inside `objects`. The value is an `expr`, so it can be either a static literal or a dynamic measure reference.
+
+**Static (literal):**
 ```json
 "visualContainerObjects": {
   "general": [{
     "properties": {
-      "altText": {"expr": {"Literal": {"Value": "'Bar chart showing revenue by region, Q4 2024'"}}}
+      "altText": {"expr": {"Literal": {"Value": "'Revenue by region, current fiscal year'"}}}
     }
   }]
 }
 ```
+
+**Dynamic (preferred for filtered visuals):** Author a `_Report` extension measure returning a readable sentence, then bind via a `Measure` expression. The measure re-reads when filter context changes, so the description stays accurate.
+```json
+"visualContainerObjects": {
+  "general": [{
+    "properties": {
+      "altText": {
+        "expr": {
+          "Measure": {
+            "Expression": {"SourceRef": {"Schema": "extension", "Entity": "_Report"}},
+            "Property": "Alt revenue by region"
+          }
+        }
+      }
+    }
+  }]
+}
+```
+
+Pitfalls:
+- Placing `altText` under `objects.general` instead of `visualContainerObjects.general` is valid JSON but the screen reader will not pick it up
+- A measure that can return BLANK must guard: `IF(COUNTROWS(...) > 0, ..., "No data for current selection.")`
+- Do not duplicate the title text; the screen reader already speaks title + visual type before alt text
+- Decorative shapes/images should have no alt text and should be removed from tab order (`tabOrder: -1`)
 
 ## Theme Interaction
 

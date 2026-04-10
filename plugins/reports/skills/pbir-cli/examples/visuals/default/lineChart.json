@@ -1,0 +1,157 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.7.0/schema.json",
+  "name": "746f879cb31043f07001",
+  "position": {
+    "x": 24,
+    "y": 120,
+    "z": 1,
+    "height": 480,
+    "width": 576,
+    "tabOrder": 1
+  },
+  "visual": {
+    "visualType": "lineChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Date"
+                    }
+                  },
+                  "Property": "Workdays MTD"
+                }
+              },
+              "queryRef": "Date.Workdays MTD",
+              "nativeQueryRef": "Workdays MTD",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Actuals"
+                    }
+                  },
+                  "Property": "Actuals MTD"
+                }
+              },
+              "queryRef": "Actuals.Actuals MTD",
+              "nativeQueryRef": "Actuals MTD"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Comparison"
+                    }
+                  },
+                  "Property": "Sales Target MTD"
+                }
+              },
+              "queryRef": "Comparison.Sales Target MTD",
+              "nativeQueryRef": "Sales Target MTD"
+            },
+            {
+              "field": {
+                "NativeVisualCalculation": {
+                  "Language": "dax",
+                  "Expression": "\r\nIF (\r\n     [Workdays MTD] = LAST( [Workdays MTD] ), \r\n     LAST( [Actuals MTD] ), \r\n     BLANK() \r\n    )",
+                  "Name": "Actuals MTD (Latest)"
+                }
+              },
+              "queryRef": "select",
+              "nativeQueryRef": "Actuals MTD (Latest)"
+            },
+            {
+              "field": {
+                "NativeVisualCalculation": {
+                  "Language": "dax",
+                  "Expression": "\r\nIF ( \r\n    [Workdays MTD] = LAsT( [Workdays MTD] ), \r\n    LAST( [Sales Target MTD] ),\r\n    BLANK()\r\n)",
+                  "Name": "Target MTD (Latest)"
+                }
+              },
+              "queryRef": "select1",
+              "nativeQueryRef": "Target MTD (Latest)"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "Actuals"
+                  }
+                },
+                "Property": "Actuals MTD"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "0fcc13fac42f818d1a19",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Date"
+              }
+            },
+            "Property": "Workdays MTD"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "c9ebe1326619fbedd230",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Actuals"
+              }
+            },
+            "Property": "Actuals MTD"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "cebefdad765f430e0468",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Comparison"
+              }
+            },
+            "Property": "Sales Target MTD"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
+  }
+}

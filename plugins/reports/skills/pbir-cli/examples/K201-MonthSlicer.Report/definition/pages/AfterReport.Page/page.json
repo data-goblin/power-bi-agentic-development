@@ -1,0 +1,70 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json",
+    "name": "5b9de88f152744001bbe",
+    "displayName": "After Report",
+    "displayOption": "FitToPage",
+    "height": 720,
+    "width": 1280,
+    "objects": {
+        "background": [
+            {
+                "properties": {
+                    "color": {
+                        "solid": {
+                            "color": {
+                                "expr": {
+                                    "ThemeDataColor": {
+                                        "ColorId": 0,
+                                        "Percent": -0.1
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "image": {
+                        "image": {
+                            "name": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "''"
+                                    }
+                                }
+                            },
+                            "url": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "''"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "transparency": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "55D"
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "visualInteractions": [
+        {
+            "source": "3955e85d8809d7f82fda",
+            "target": "334f657dc353ca090e20",
+            "type": "NoFilter"
+        },
+        {
+            "source": "3955e85d8809d7f82fda",
+            "target": "a88ff02b171dae1805f6",
+            "type": "NoFilter"
+        },
+        {
+            "source": "a88ff02b171dae1805f6",
+            "target": "3955e85d8809d7f82fda",
+            "type": "NoFilter"
+        }
+    ]
+}

@@ -42,8 +42,9 @@ if ($Port -gt 0) {
     $netstat = netstat -ano | Select-String "LISTENING"
     foreach ($line in $netstat) {
         $parts = ($line -split "\s+") | Where-Object { $_ -ne "" }
-        $pid = $parts[-1]
-        if ($pids -contains [int]$pid) {
+        # $pid is a read-only automatic variable in PowerShell; use another name
+        $ownerPid = $parts[-1]
+        if ($pids -contains [int]$ownerPid) {
             $portNum = ($parts[1] -split ":")[-1]
             if ($ports -notcontains $portNum) {
                 $ports += $portNum

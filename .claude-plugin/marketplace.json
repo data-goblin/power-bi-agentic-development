@@ -5,38 +5,63 @@
   },
   "metadata": {
     "description": "A marketplace for skills and tools for agentic Power BI development.",
-    "version": "0.21.1"
+    "version": "26.29.0"
   },
   "plugins": [
     {
+      "name": "goblin-mode",
+      "description": "Set up, audit, and improve your agentic Power BI development workspace.",
+      "source": "./plugins/goblin-mode"
+    },
+    {
       "name": "tabular-editor",
-      "description": "Agentic development tools for Power BI semantic models with Tabular Editor.",
+      "description": "Automate semantic models from the terminal with Tabular Editor.",
       "source": "./plugins/tabular-editor"
     },
     {
       "name": "pbi-desktop",
-      "description": "Connect to Power BI Desktop's local Analysis Services instance to enumerate models, query with DAX, refresh data, and modify metadata via TOM. No MCP server required.",
+      "description": "Inspect and query the live Power BI Desktop model via TOM and ADOMD.NET.",
       "source": "./plugins/pbi-desktop"
     },
     {
       "name": "pbip",
-      "description": "Get this plugin if you'll work with pbip files, tmdl, or pbir. It helps with file structure and direct modifications.",
+      "description": "Edit and understand PBIP projects, including TMDL, PBIR, and project structure.",
       "source": "./plugins/pbip"
     },
     {
       "name": "semantic-models",
-      "description": "Get this plugin for agentic development and management of semantic models.",
+      "description": "Design, build, optimize, and review Power BI semantic models.",
       "source": "./plugins/semantic-models"
     },
     {
       "name": "reports",
-      "description": "Get this plugin for agentic development and management of reports.",
+      "description": "Build, format, optimize, and review interactive Power BI reports.",
       "source": "./plugins/reports"
     },
     {
+      "name": "paginated-reports",
+      "description": "Author, validate, publish, and test print-ready paginated reports.",
+      "source": "./plugins/paginated-reports"
+    },
+    {
       "name": "fabric-cli",
-      "description": "Get this plugin to work with Fabric / Power BI service, by means of the fabric cli.",
+      "description": "Connect to, read, and modify anything in Fabric via the CLI.",
       "source": "./plugins/fabric-cli"
+    },
+    {
+      "name": "fabric-admin",
+      "description": "Audit tenant settings, governance, security groups, and Fabric admin state.",
+      "source": "./plugins/fabric-admin"
+    },
+    {
+      "name": "custom-visuals",
+      "description": "Build Deneb, Python, R, SVG, and pbiviz custom visuals for Power BI.",
+      "source": "./plugins/custom-visuals"
+    },
+    {
+      "name": "etl",
+      "description": "Inspect, query, and transform lakehouse data with Spark, Livy, and DuckDB.",
+      "source": "./plugins/etl"
     }
   ]
 }
