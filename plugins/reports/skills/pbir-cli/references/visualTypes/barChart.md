@@ -91,6 +91,16 @@ pbir filters add "Visual.Visual" -f "Geography.Region" --type TopN --top 10 \
 pbir visuals legend "Visual.Visual" --no-show
 ```
 
+9. **Pin axis bounds with measures (optional).** Bind `valueAxis.start` and `valueAxis.end` to extension measures to control the value axis range dynamically. Common pattern: pin `start` to zero and set `end` to 120% of the max so labels have room. Use `pbir visuals cf --measure` for measure-bound axis properties
+
+```bash
+# Pin value axis floor to zero
+pbir visuals cf "Visual.Visual" --measure "valueAxis.start _Fmt.Zero"
+
+# Dynamic ceiling
+pbir visuals cf "Visual.Visual" --measure "valueAxis.end _Fmt.AxisCeiling"
+```
+
 ## Examples
 
 Working `visual.json` files demonstrating these patterns:

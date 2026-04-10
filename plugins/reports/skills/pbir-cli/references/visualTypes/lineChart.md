@@ -95,6 +95,16 @@ pbir visuals format-field "Visual.Visual" labels show -f "_Fmt.Revenue Latest" -
 pbir visuals legend "Visual.Visual" --no-show
 ```
 
+8. **Pin axis bounds with measures (optional).** Bind `valueAxis.start` and `valueAxis.end` to extension measures to control the Y-axis range dynamically. Common patterns: pin `start` to zero so the axis doesn't float; set `end` to 120% of the max value so the latest-point label has room. Use `pbir visuals cf --measure` for measure-bound axis properties
+
+```bash
+# Pin Y-axis floor to zero
+pbir visuals cf "Visual.Visual" --measure "valueAxis.start _Fmt.Zero"
+
+# Dynamic ceiling at 120% of max
+pbir visuals cf "Visual.Visual" --measure "valueAxis.end _Fmt.AxisCeiling"
+```
+
 ## Examples
 
 Working `visual.json` files demonstrating these patterns:
