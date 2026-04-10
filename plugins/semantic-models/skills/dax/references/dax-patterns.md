@@ -109,7 +109,7 @@ RETURN SUMX( 'Sales', 'Sales'[Quantity] * _AvgPrice * 1.1 )
 
 ---
 
-### DAX004: Remove Duplicate / Redundant Filters
+### DAX004: Remove Duplicate and Redundant Filters
 
 Applying the same filter condition twice — whether as duplicate CALCULATE arguments or as a variable that restates an existing predicate — causes redundant SE evaluation.
 
@@ -311,7 +311,7 @@ SUMX(VALUES('Sales'[CustomerKey]), 1)
 
 ---
 
-### DAX012: Use ALLEXCEPT Instead of ALL + VALUES Restoration
+### DAX012: Use ALLEXCEPT Instead of ALL and VALUES Restoration
 
 When clearing filter context with ALL() and then restoring specific columns via VALUES(), ALLEXCEPT achieves the same in one operation.
 
@@ -414,7 +414,7 @@ MAXX( ALL('Date'[Date]),                     CALCULATE(MAX('Sales'[DateKey])) * 
 
 ---
 
-### DAX018: Replace DIVIDE() with / Operator in Iterators
+### DAX018: Replace DIVIDE with Division Operator in Iterators
 
 DIVIDE() includes divide-by-zero protection that forces FE callbacks inside iterators. Use the native `/` operator to keep the expression SE-native. Only use `/` when the denominator is guaranteed non-zero. If zero is possible, pre-filter: `CALCULATETABLE('Items', 'Items'[LocationAdjustment] <> 0)`.
 

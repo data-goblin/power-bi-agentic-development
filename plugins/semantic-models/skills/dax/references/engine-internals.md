@@ -42,7 +42,7 @@ FROM Sales
 
 **Semi-join projections:** Appear as `DEFINE TABLE $Filter0 ... ININDEX` in xmSQL — an initial dimension scan builds a key index injected into the fact WHERE clause.
 
-**Callbacks:** Occur whenever the SE must compute an expression that exceeds VertiPaq's native capabilities — forcing row-by-row evaluation back in the FE. Example: `IF('Sales'[Amount] > 1000, 1, 0)` inside an iterator requires a callback because the SE cannot evaluate conditional logic. Replace with `INT('Sales'[Amount] > 1000)` to keep the expression SE-native. See [DAX002](./dax-patterns.md#dax002-replace-addcolumnssummarize-with-summarizecolumns), [DAX007](./dax-patterns.md#dax007-replace-if-with-int-for-boolean-conversion), [DAX008](./dax-patterns.md#dax008-context-transition-in-iterator), [DAX018](./dax-patterns.md#dax018-replace-divide-with-operator-in-iterators) for callback elimination patterns.
+**Callbacks:** Occur whenever the SE must compute an expression that exceeds VertiPaq's native capabilities — forcing row-by-row evaluation back in the FE. Example: `IF('Sales'[Amount] > 1000, 1, 0)` inside an iterator requires a callback because the SE cannot evaluate conditional logic. Replace with `INT('Sales'[Amount] > 1000)` to keep the expression SE-native. See [DAX002](./dax-patterns.md#dax002-replace-addcolumnssummarize-with-summarizecolumns), [DAX007](./dax-patterns.md#dax007-replace-if-with-int-for-boolean-conversion), [DAX008](./dax-patterns.md#dax008-context-transition-in-iterator), [DAX018](./dax-patterns.md#dax018-replace-divide-with-division-operator-in-iterators) for callback elimination patterns.
 
 ---
 
