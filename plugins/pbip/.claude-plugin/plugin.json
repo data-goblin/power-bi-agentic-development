@@ -1,6 +1,6 @@
 {
   "name": "pbip",
-  "version": "0.22.2",
+  "version": "0.22.3",
   "description": "Get this plugin if you'll work with pbip files, tmdl, or pbir. It helps with file structure and direct modifications.",
   "author": {
     "name": "Kurt Buhler",

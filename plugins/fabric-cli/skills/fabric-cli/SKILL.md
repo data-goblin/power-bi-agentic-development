@@ -1,6 +1,6 @@
 ---
 name: fabric-cli
-version: 0.22.2
+version: 0.22.3
 description: Expert guidance for the fab CLI, nb CLI, and DuckDB; covering workspace navigation, notebook management, data querying, deployment, jobs, APIs, and automation. Automatically invoke when the user mentions "fab", "nb", "Fabric CLI", "OneLake", "Livy", or asks to "deploy Fabric items", "manage Fabric workspaces", "run a Fabric notebook", "refresh a semantic model via CLI", "query a lakehouse", "automate Fabric operations", "use DuckDB with Fabric", "manage OneLake files".
 ---
 

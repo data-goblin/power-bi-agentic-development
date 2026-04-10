@@ -1,6 +1,6 @@
 ---
 name: pbir-cli
-version: 0.22.2
+version: 0.22.3
 description: Advanced Power BI report manipulation and execution using pbir CLI and object model; executable scripts for complex workflows, domain-specific references, and reusable templates. Automatically invoke when the user works with .pbir/.pbip report files, or asks to "add a visual", "format a chart", "bind fields", "set a theme", "add conditional formatting", "create a page", "add a thin-report measure", "validate a report", "audit report formatting", "bulk format visuals", "publish to Fabric", "explore a report", or mentions pbir, pbir-cli, report visuals, visual formatting, field bindings, report extensions, or Fabric workspace integration for reports.
 ---
 

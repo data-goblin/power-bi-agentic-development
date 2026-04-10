@@ -1,6 +1,6 @@
 ---
 name: pbip
-version: 0.22.2
+version: 0.22.3
 description: Expert guidance for the Power BI Project (PBIP) file format; project structure, cross-cutting operations (renames, forking), and PBIX extraction/conversion. Automatically invoke when the user mentions PBIP, PBIX, .pbip/.pbism/.platform files, or asks about "PBIP project structure", "PBIP vs PBIX", "thin report vs thick report", "rename a table", "cascade rename", "fork a PBIP project", "convert pbix to pbip", "extract pbix", "what files are in a PBIP", "PBIP encoding", "definition.pbir", or discusses project-level file structure and post-rename verification.
 ---
 

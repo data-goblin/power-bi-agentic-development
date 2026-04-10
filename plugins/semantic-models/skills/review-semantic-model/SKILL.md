@@ -1,6 +1,6 @@
 ---
 name: review-semantic-model
-version: 0.22.2
+version: 0.22.3
 description: Review, audit, and validate Power BI semantic models against quality, performance, and best practice standards. Automatically invoke when the user asks to "review a semantic model", "audit a semantic model", "check model quality", "optimize my model", "validate model design", "check AI readiness", "prepare model for Copilot", or mentions model validation or quality assessment.
 ---
 

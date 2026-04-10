@@ -1,6 +1,6 @@
 ---
 name: bpa-rules
-version: 0.22.2
+version: 0.22.3
 description: Interactive BPA rule generation for Power BI semantic models; guided discovery, model investigation, and expert rule authoring. Automatically invoke when the user mentions "BPA rule", "Best Practice Analyzer", or asks to "create a BPA rule", "audit BPA rules", "recommend BPA rules", "set up BPA for my team", "check model for best practices", "validate BPA rules", "improve a BPA expression".
 ---
 

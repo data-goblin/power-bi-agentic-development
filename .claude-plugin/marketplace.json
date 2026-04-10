@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "A marketplace for skills and tools for agentic Power BI development.",
-    "version": "0.22.2"
+    "version": "0.22.3"
   },
   "plugins": [
     {

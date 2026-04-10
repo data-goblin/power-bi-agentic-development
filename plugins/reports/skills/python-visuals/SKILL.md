@@ -1,6 +1,6 @@
 ---
 name: python-visuals
-version: 0.22.2
+version: 0.22.3
 description: Python visual creation and matplotlib/seaborn patterns for PBIR reports. Automatically invoke when the user mentions "Python visual", "matplotlib in Power BI", "seaborn in Power BI", "pythonVisual", or asks to "create a Python visual", "add a matplotlib chart", "write a Python visual script".
 ---
 

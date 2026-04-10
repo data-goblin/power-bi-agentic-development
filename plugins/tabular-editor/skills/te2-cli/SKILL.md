@@ -1,6 +1,6 @@
 ---
 name: te2-cli
-version: 0.22.2
+version: 0.22.3
 description: CLI syntax reference for Tabular Editor 2 (TabularEditor.exe); deployment, scripting, BPA analysis, and CI/CD integration. Automatically invoke when the user mentions "TabularEditor.exe", TE2 CLI flags (-D, -S, -A, -B, -TMDL, -O, -C), or asks to "deploy a model via CLI", "set up CI/CD for Power BI", "automate model deployment", "run BPA from command line", "save model as TMDL".
 ---
 
