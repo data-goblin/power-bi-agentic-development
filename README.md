@@ -17,20 +17,20 @@
   <img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="License">
 </p>
 
-> [!NOTE]
-> These plugins are under active development with a daily release cadence and regular renaming or restructuring.
+> [!WARNING]
+> Under active development with a daily release cadence; regular renaming or restructuring.
 
 ---
 
 ### What is agentic development?
 
-- *Agentic development* is when you use agents to help you build, manage, and optimize artifacts and software, like semantic models, reports, and the things around them, like workspaces, deployment pipelines, and also processes.
-- A *marketplace* hosts *plugins* that you can install. Plugins are a collection of resources that help coding agents perform better. They are typically special instruction files and scripts.
-- This marketplace is focused on everything to help your agent work well with Power BI and Fabric!
+- *Agentic development* is when you use agents to help you build, manage, and optimize artifacts and software. This includes semantic models, reports, and the things around them, like workspaces, deployment pipelines, and also processes.
+- A *marketplace* hosts *plugins* that you can install. Plugins are a collection of resources that help coding agents perform better. They are typically special instruction files and scripts. Plugins can contain skills, subagents, hooks, and MCP servers focused on special topics or tasks.
+- This marketplace is focused on everything to help your agent work well with Power BI and Fabric! Read further for more information.
 
 ## Installation
 
-These plugins are intended for use in Claude Code, Desktop, or Cowork. However, you can use them in other tools like GitHub Copilot, Codex, Gemini CLI.
+Here's how you get started in Claude Code; run this in the terminal to get the marketplace: 
 
 ```bash
 claude plugin marketplace add data-goblin/power-bi-agentic-development
