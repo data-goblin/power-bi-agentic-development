@@ -591,7 +591,7 @@ For full setup, timing interpretation, sampling patterns, and PBIR-to-DAX transl
 
 **CLI tools in `bin/`:**
 
-- **`daxlib`** -- CLI for browsing, downloading, and installing DAX library packages from daxlib.org. Pre-built binaries at `bin/darwin-arm64/daxlib` and `bin/windows-x86_64/daxlib.exe`. Model operations (add/update/remove) call `scripts/daxlib-tom/` via `dotnet run` (requires .NET 8 SDK). On macOS, model operations route through Parallels automatically. See [daxlib.md](./references/daxlib.md) for full command reference.
+- **`daxlib`** -- CLI for browsing, downloading, and installing DAX library packages from daxlib.org. Prefer the script at `daxlib.sh` (requires bash + jq); pre-built binaries also available at `bin/darwin-arm64/daxlib` and `bin/windows-x86_64/daxlib.exe`. Model operations (add/update/remove) call `scripts/daxlib-tom/` via `dotnet run` (requires .NET 8 SDK). On macOS, model operations route through Parallels automatically. See [daxlib.md](./references/daxlib.md) for full command reference.
 
 **Agents:**
 
