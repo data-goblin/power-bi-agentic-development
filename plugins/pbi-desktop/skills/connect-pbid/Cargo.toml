@@ -1,0 +1,13 @@
+[package]
+name = "daxlib"
+version = "0.1.0"
+edition = "2024"
+description = "CLI for browsing, downloading, and installing DAX library packages from daxlib.org"
+
+[dependencies]
+serde_json = "1"
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true

@@ -1,0 +1,12 @@
+[package]
+name = "pbi-hooks"
+version = "0.1.0"
+edition = "2024"
+description = "Validation hooks for Power BI Desktop TOM/ADOMD workflows"
+
+[dependencies]
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true
