@@ -38,6 +38,13 @@ detect_suffix() {
 SUFFIX="$(detect_suffix)"
 BINARY=""
 
+# 0. Prefer script (no unsigned binary needed; requires jq)
+SCRIPT="$HOOK_DIR/pbi-hooks.sh"
+if [[ -x "$SCRIPT" ]] && command -v jq &>/dev/null; then
+    export CLAUDE_PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(dirname "$HOOK_DIR")}"
+    exec bash "$SCRIPT" "$SUBCOMMAND"
+fi
+
 # 1. Bundled binary in hooks/bin/
 if [[ -n "$SUFFIX" ]]; then
     for EXT in "" ".exe"; do
