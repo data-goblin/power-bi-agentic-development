@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="media/bg42-11-3.png" alt="" width="800">
+</p>
+
 <h1 align="center">power-bi-agentic-development</h1>
 
 <p align="center">
@@ -14,17 +18,19 @@
 </p>
 
 > [!NOTE]
-> These skills are under active development with a daily release cadence and regular renaming or restructuring.
+> These plugins are under active development with a daily release cadence and regular renaming or restructuring.
 
 ---
 
-<p align="center">
-  <img src="media/bg42-11-3.png" alt="" width="800">
-</p>
+### What is agentic development?
+
+- *Agentic development* is when you use agents to help you build, manage, and optimize artifacts and software, like semantic models, reports, and the things around them, like workspaces, deployment pipelines, and also processes.
+- A *marketplace* hosts *plugins* that you can install. Plugins are a collection of resources that help coding agents perform better. They are typically special instruction files and scripts.
+- This marketplace is focused on everything to help your agent work well with Power BI and Fabric!
 
 ## Installation
 
-These skills are intended for use in Claude Code, Desktop, or Cowork. However, you can use them in other tools like GitHub Copilot, Codex, Gemini CLI.
+These plugins are intended for use in Claude Code, Desktop, or Cowork. However, you can use them in other tools like GitHub Copilot, Codex, Gemini CLI.
 
 ```bash
 claude plugin marketplace add data-goblin/power-bi-agentic-development
@@ -190,7 +196,7 @@ General-purpose agent resources that don't fit into a plugin: defensive hooks, p
 
 ## Use or re-use of these skills
 
-These skills are intended for free community use.
+These plugins are intended for free community use.
 
 You do not have the license to copy and incorporate them into your own products, trainings, courses, or tools. If you copy these skills - manually or by using an agent to rewrite them - you must include attribution and a link to this original project. That includes you, Microsoft.
 
