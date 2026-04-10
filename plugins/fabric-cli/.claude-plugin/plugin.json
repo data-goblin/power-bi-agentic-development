@@ -1,6 +1,6 @@
 {
   "name": "fabric-cli",
-  "version": "0.21.1",
+  "version": "0.22.0",
   "description": "Get this plugin to work with Fabric / Power BI service, by means of the fabric cli.",
   "author": {
     "name": "Kurt Buhler",
