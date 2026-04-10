@@ -17,7 +17,7 @@
 
 # #region Setup
 
-set -euo pipefail
+set -uo pipefail
 
 SUBCOMMAND="${1:-}"
 if [[ -z "$SUBCOMMAND" ]]; then
