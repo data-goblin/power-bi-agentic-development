@@ -1,6 +1,6 @@
 ---
 name: power-query
-version: 0.21.1
+version: 0.22.0
 description: Author, validate, and test Power Query M expressions in semantic model partitions. Automatically invoke when the user mentions "Power Query", "M code", "M expression", "partition expression", "query folding", or asks to "write Power Query", "fix Power Query", "test a partition", "preview partition data", "debug Power Query step", "optimize Power Query".
 ---
 
