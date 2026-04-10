@@ -63,7 +63,7 @@ Evaluate findings across categories, ordered by severity:
 - Pre-summarization opportunities (detail grain not needed for reporting)
 - Columns better handled upstream (i.e. calculations not done in calc columns or PQ)
 
-**DAX Anti-Patterns**
+**DAX Anti-Patterns** (for systematic DAX query optimization, use the [`dax` skill](../dax/))
 - Filtering tables instead of columns in CALCULATE (causes both correctness and performance issues)
 - Unhandled division by zero (use DIVIDE() or explicit zero-check; note: plain `/` is fine when the denominator is guaranteed non-zero and can be faster)
 - Iterators with callbacks or nested iterators over large tables (use aggregators like SUM/AVERAGE when possible; iterators over large tables are fine if the expression is Storage Engine-pushable)
@@ -118,6 +118,7 @@ Dispatch the `semantic-model-auditor` agent to perform the structural audit. The
 
 - The structural audit analyzes model metadata -- it does not execute DAX queries or check data quality
 - For DAX query performance testing, see `references/performance.md`
+- For DAX optimization, use the [`dax` skill](../dax/)
 - For companion report review, use the `review-report` skill in the reports plugin
 
 ## References
@@ -128,6 +129,7 @@ Dispatch the `semantic-model-auditor` agent to perform the structural audit. The
 
 ## Related Skills
 
+- **[`dax`](../dax/)** -- DAX performance optimization
 - **`review-report`** (reports plugin) -- Companion skill for report-level review
 - **`standardize-naming-conventions`** -- Naming audit and remediation
 - **`lineage-analysis`** -- Downstream report discovery

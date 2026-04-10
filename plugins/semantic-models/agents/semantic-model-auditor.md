@@ -207,6 +207,12 @@ Perform the following checks, categorized by severity:
 - Columns: Should match source or use consistent pattern
 - Tables: Should be singular or plural consistently
 
+## Related Skills
+
+- **[`dax`](../skills/dax/)** — DAX performance optimization
+- **[`review-semantic-model`](../skills/review-semantic-model/)** — Full model quality review
+- **[`standardize-naming-conventions`](../skills/standardize-naming-conventions/)** — Naming remediation
+
 ## Model Design Issues
 
 ### 20. Star Schema Violations

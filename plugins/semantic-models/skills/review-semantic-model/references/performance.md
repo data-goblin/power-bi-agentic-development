@@ -89,6 +89,8 @@ For systematic benchmarking across multiple queries and cache states, consider t
 
 For AI-assisted query optimization, consider the [DAXPerformanceTunerMCPServer](https://github.com/microsoft/fabric-toolbox/tree/main/tools/DAXPerformanceTunerMCPServer) which identifies anti-patterns and suggests optimizations with semantic equivalence checking.
 
+For DAX optimization, use the [`dax` skill](../../dax/).
+
 ## Performance Targets
 
 There are no universal performance targets -- always consider targets from the consumer's perspective. Generally aim for sub-second queries for visuals.

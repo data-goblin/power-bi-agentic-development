@@ -167,6 +167,7 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 | Skill | [`refreshing-semantic-model`](plugins/semantic-models/skills/refreshing-semantic-model/) | Trigger or troubleshoot refreshes |
 | Skill | [`lineage-analysis`](plugins/semantic-models/skills/lineage-analysis/) | Trace downstream reports from a semantic model across workspaces |
 | Skill | [`power-query`](plugins/semantic-models/skills/power-query/) | Write M expressions, debug query folding, execute M locally or via Fabric API |
+| Skill | [`dax`](plugins/semantic-models/skills/dax/) | Write, debug, and optimize DAX in semantic models |
 | Agent | [`semantic-model-auditor`](plugins/semantic-models/agents/semantic-model-auditor.md) | Audit semantic models for quality, memory, DAX, and design issues |
 
 </details>
