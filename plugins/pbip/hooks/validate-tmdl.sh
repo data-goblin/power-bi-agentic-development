@@ -8,8 +8,11 @@
 # NOTE: This is a lightweight structural linter, not a full TMDL parser.
 # It will be superseded by `te validate` when the Tabular Editor CLI ships.
 #
-# Requires: tmdl-validate binary in $CLAUDE_PROJECT_DIR/tools/tmdl-validate/target/release/
-# or on PATH. Silently skips if binary not found.
+# Requires: tmdl-validate binary. Lookup order:
+#   1. $HOOK_DIR/bin/tmdl-validate-<platform>[.exe]  (bundled with the plugin)
+#   2. $CLAUDE_PROJECT_DIR/tools/tmdl-validate/target/release/tmdl-validate[.exe]  (dev build)
+#   3. tmdl-validate on PATH
+# Silently skips if none are found.
 #
 # Checks can be toggled via config.yaml in the same directory as this script.
 #
@@ -42,8 +45,37 @@ TMDL_TIP="Tip: use the tmdl skill if you are modifying TMDL files directly."
 
 # ── Find the tmdl-validate binary ───────────────────────────────────────────
 
+# Detect OS/arch to pick the right bundled binary.
+UNAME_S=$(uname -s 2>/dev/null || echo "")
+UNAME_M=$(uname -m 2>/dev/null || echo "")
+PLATFORM=""
+BIN_EXT=""
+case "$UNAME_S" in
+    Darwin)
+        case "$UNAME_M" in
+            arm64|aarch64) PLATFORM="darwin-arm64" ;;
+            x86_64)        PLATFORM="darwin-x64" ;;
+        esac
+        ;;
+    Linux)
+        case "$UNAME_M" in
+            x86_64) PLATFORM="linux-x64" ;;
+        esac
+        ;;
+    MINGW*|MSYS*|CYGWIN*|Windows_NT)
+        PLATFORM="windows-x64"
+        BIN_EXT=".exe"
+        ;;
+esac
+
 VALIDATOR=""
-if [[ -n "${CLAUDE_PROJECT_DIR:-}" ]]; then
+# 1. Bundled binary in $HOOK_DIR/bin/
+if [[ -n "$PLATFORM" ]]; then
+    CANDIDATE="$HOOK_DIR/bin/tmdl-validate-${PLATFORM}${BIN_EXT}"
+    [[ -x "$CANDIDATE" ]] && VALIDATOR="$CANDIDATE"
+fi
+# 2. Local dev build under $CLAUDE_PROJECT_DIR/tools/
+if [[ -z "$VALIDATOR" && -n "${CLAUDE_PROJECT_DIR:-}" ]]; then
     for EXT in "" ".exe"; do
         CANDIDATE="${CLAUDE_PROJECT_DIR//\\//}/tools/tmdl-validate/target/release/tmdl-validate${EXT}"
         if [[ -x "$CANDIDATE" ]]; then
@@ -52,6 +84,7 @@ if [[ -n "${CLAUDE_PROJECT_DIR:-}" ]]; then
         fi
     done
 fi
+# 3. PATH
 if [[ -z "$VALIDATOR" ]] && command -v tmdl-validate &>/dev/null; then
     VALIDATOR="tmdl-validate"
 fi

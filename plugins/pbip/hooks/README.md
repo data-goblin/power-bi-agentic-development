@@ -43,6 +43,31 @@ Derived from Microsoft's published JSON schemas at [github.com/microsoft/json-sc
 - If `tmdl-validate` binary is not found, TMDL hooks skip silently
 - If `config.yaml` is missing, all checks default to enabled
 
+## tmdl-validate binary
+
+`validate-tmdl.sh` depends on the `tmdl-validate` binary, which ships prebuilt in `bin/`:
+
+| File | Platform |
+|---|---|
+| `tmdl-validate-darwin-arm64` | macOS Apple Silicon |
+| `tmdl-validate-darwin-x64` | macOS Intel |
+| `tmdl-validate-linux-x64` | Linux x86_64 (glibc) |
+| `tmdl-validate-windows-x64.exe` | Windows x86_64 |
+
+The hook picks the right binary for the current OS and architecture; if none is found it falls back to `tmdl-validate` on `PATH`, then skips silently.
+
+### Antivirus false positives
+
+These are **unsigned binaries**, so Windows Defender, SmartScreen, and some corporate AV products may flag them as suspicious. They are not. The binary is a small Rust TMDL structural linter with no network access and no filesystem writes, loaded only by a hook you can read in `validate-tmdl.sh`.
+
+This is a known issue that already affected the earlier `pbi-hooks` and `connect-pbid` binaries (see #14), which were eventually replaced with pure-bash and PowerShell scripts for that reason. `tmdl-validate` cannot take the same path; it contains a hand-written TMDL parser that will stay closed-source, so a script port is not on the table.
+
+If your AV quarantines the binary, either whitelist the file, disable the hook by setting `tmdl_syntax: false` in `config.yaml`, or delete the binary and the hook will skip silently.
+
+### Stopgap
+
+This whole binary is a stopgap. It gets replaced by the Tabular Editor 3 CLI (`te validate`) once the TE3 CLI ships in a few weeks, at which point `validate-tmdl.sh` will call `te` instead and the bundled binaries will be removed from the plugin.
+
 ## Updating required fields when schemas change
 
 1. Fetch the latest schema:
