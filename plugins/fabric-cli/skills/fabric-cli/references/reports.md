@@ -130,6 +130,8 @@ fab set "ws.Workspace/Report.Report" -q semanticModelId -i "<new-model-id>"
 fab rm "ws.Workspace/Report.Report" -f
 ```
 
+Recovery depends on the tenant Item Recovery setting; see [reference.md > Recovering deleted items](reference.md#recovering-deleted-items).
+
 ## List Pages
 
 ```bash

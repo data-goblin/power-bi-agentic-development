@@ -1,7 +1,7 @@
 ---
-name: refreshing-semantic-model
-version: 0.24.6
-description: Semantic model refresh operations; triggering, monitoring, cancelling, and validating refreshes via API. Automatically invoke when the user mentions "refresh", "dataset refresh", "incremental refresh", "enhanced refresh", or asks to "refresh a semantic model", "check refresh status", "monitor refresh history", "cancel a refresh", "refresh partitions", "validate refresh results".
+name: refresh-semantic-model
+version: 0.25.0
+description: Automatically invoke this skill whenever the user asks to refresh a semantic model or a dataset. Can also be used to manage, optimize, troubleshoot, or configure a refresh or a refresh schedule.
 ---
 
 # Refreshing Semantic Models

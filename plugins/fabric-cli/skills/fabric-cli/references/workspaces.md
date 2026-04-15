@@ -6,6 +6,42 @@ Comprehensive guide for managing Fabric workspaces using the Fabric CLI.
 
 Workspaces are containers for Fabric items and provide collaboration and security boundaries. This guide covers workspace management, configuration, and operations.
 
+## Planning decisions
+
+Before you create or restructure a workspace, decide at which tier you're working. Microsoft's implementation planning guidance splits workspace decisions into three articles; treat them as the source of truth for strategy and scope, and use this reference for the `fab` commands that act on those decisions.
+
+- [Workspaces overview](https://learn.microsoft.com/en-us/power-bi/guidance/powerbi-implementation-planning-workspaces-overview); three-tier structure (tenant, workspace, item) and article map.
+- [Tenant-level planning](https://learn.microsoft.com/en-us/power-bi/guidance/powerbi-implementation-planning-workspaces-tenant-level-planning); strategic decisions that affect every workspace.
+- [Workspace-level planning](https://learn.microsoft.com/en-us/power-bi/guidance/powerbi-implementation-planning-workspaces-workspace-level-planning); tactical decisions per workspace.
+
+### Tenant tier (strategic)
+
+Decisions to settle once, then audit periodically:
+
+| Decision | Settled via | Fabric CLI touchpoint |
+|---|---|---|
+| Who can create workspaces | `Create workspaces` tenant setting + security group | Use the `audit-tenant-settings` skill; see [admin.md](./admin.md) |
+| Workspace naming conventions | Documented standard (prefix, stage suffix, short form) | `fab mkdir`, `fab set -q displayName` |
+| Domains for logical grouping | Domain admins + domain assignment | `fab assign .domains/<d>.Domain -W <ws>.Workspace` |
+| Workspace request process | Intake form, SLA, validation rules | Script creation via `fab mkdir` + `fab acl set` |
+| Governance level per workspace | Classification (governed vs ungoverned) stored on the workspace | `fab set <ws>.Workspace -q description -i ...` |
+
+### Workspace tier (tactical)
+
+Decisions made per workspace, usually at creation:
+
+| Decision | Why | Fabric CLI touchpoint |
+|---|---|---|
+| Purpose (collaboration vs viewing) | Drives roles and app use | `fab acl set`, Power BI app APIs |
+| Subject and scope | Subject area vs department vs single report | Workspace creation + naming |
+| Item types | Data workspace vs reporting workspace (or mixed) | [folders.md](./folders.md), [semantic-models.md](./semantic-models.md) |
+| Development stage | Dev/test/prod (and sandbox/private/preprod) | [deployment-pipelines.md](./deployment-pipelines.md), Git integration |
+| Workspace type / license | Pro, PPU, Fabric capacity, Trial | `fab mkdir -P capacityname=...`, `fab assign .capacities/...` |
+| Access roles | Admin, Member, Contributor, Viewer; prefer groups | `fab acl set/ls/rm` |
+| Settings (description, image, contacts, Spark, OneLake defaults, Log Analytics, Git) | Governance, onboarding, usability | `fab set <ws>.Workspace -q <path> -i <value>` |
+
+Common patterns for assigning governance requirements show up repeatedly in the MS Learn articles: use security groups (not individuals) for roles, separate data workspaces from reporting workspaces when ownership differs, use at least two development stages, and record contact/description metadata on every governed workspace.
+
 ## Listing Workspaces
 
 ### List All Workspaces
@@ -51,6 +87,61 @@ fab ls -q "length(@)"
 fab api workspaces -q "value | length"
 ```
 
+## Cross-Workspace Search (DataHub V2)
+
+`scripts/search_across_workspaces.py` wraps the undocumented DataHub V2 API and exposes metadata that neither `fab api` nor the admin APIs return. Use it for any cross-workspace discovery that needs ownership, storage mode, last-visited timestamps, or capacity SKU; no admin role required.
+
+### Usage
+
+```bash
+# Find all semantic models (use "Model" not "SemanticModel")
+python3 scripts/search_across_workspaces.py --type Model
+
+# Find models by name
+python3 scripts/search_across_workspaces.py --type Model --filter "Sales"
+
+# Find stale items (not visited in 6+ months)
+python3 scripts/search_across_workspaces.py --type Model --not-visited-since 2024-06-01
+
+# Find items by owner
+python3 scripts/search_across_workspaces.py --type PowerBIReport --owner "kurt"
+
+# Find Direct Lake models only
+python3 scripts/search_across_workspaces.py --type Model --storage-mode directlake
+
+# Find items in workspace
+python3 scripts/search_across_workspaces.py --type Lakehouse --workspace "fit-data"
+
+# Get JSON output
+python3 scripts/search_across_workspaces.py --type Model --output json
+
+# Sort by last visited (oldest first)
+python3 scripts/search_across_workspaces.py --type Model --sort last-visited --sort-order asc
+
+# List all available types
+python3 scripts/search_across_workspaces.py --list-types
+```
+
+### Unique DataHub fields
+
+Not available via `fab api` or admin APIs:
+
+- `lastVisitedTimeUTC` ; when an item was last opened/used
+- `storageMode` ; Import, DirectQuery, or DirectLake
+- `ownerUser` ; full owner details (name, email)
+- `capacitySku` ; F2, F64, PP, etc.
+- `isDiscoverable` ; whether the item appears in service search
+
+### Type mappings
+
+The DataHub type names don't match the `fab` item type extensions; memorize these:
+
+- Semantic models ; `--type Model` (not `SemanticModel`)
+- Dataflows ; `--type DataFlow` (capital F)
+- Notebooks ; `--type SynapseNotebook`
+
+Run `--list-types` to see the full set of supported item types.
+
 ## Getting Workspace Information
 
 ### Basic Workspace Info
@@ -87,6 +178,38 @@ fab get "Production.Workspace" -q "sparkSettings.environment.runtimeVersion"
 fab get "Production.Workspace" -q "sparkSettings.pool.defaultPool"
 ```
 
+### Workspace Property Surface
+
+`fab get <ws>.Workspace` returns a flat list of queryable paths; `fab get <ws>.Workspace -q "."` dumps the full JSON. The table below summarises the paths exposed by the Fabric API; only a subset is writable via `fab set -q <path> -i <value>`.
+
+| Path | Read | Write | Notes |
+|---|---|---|---|
+| `id` | yes | no | GUID, stable across renames |
+| `displayName` | yes | yes | `fab set ws.Workspace -q displayName -i <new>` renames in place |
+| `description` | yes | yes | Up to 4,000 characters; use for governance metadata |
+| `type` | yes | no | Always `Workspace` for a workspace |
+| `capacityId` | yes | indirect | Set via `fab assign` (F SKU) or Power BI API (Trial/PPU); see Capacity Management |
+| `capacityRegion` | yes | no | Derived from the assigned capacity |
+| `capacityAssignmentProgress` | yes | no | `Completed`, `InProgress`, or `Failed` |
+| `oneLakeEndpoints.blobEndpoint` | yes | no | Regional blob endpoint |
+| `oneLakeEndpoints.dfsEndpoint` | yes | no | Regional dfs endpoint |
+| `roleAssignments[]` | yes | indirect | Manage through `fab acl set/ls/rm` rather than `fab set` |
+| `sparkSettings.environment.runtimeVersion` | yes | yes | Example: `1.2` |
+| `sparkSettings.pool.defaultPool` | yes | yes | Inline JSON with `name`, `type`, optional `id` |
+
+For fields outside the Fabric API surface (for example, default semantic model storage format, Azure Data Lake Storage Gen2 connections, Log Analytics workspace binding, Git integration), fall back to the Power BI REST API via `fab api -A powerbi` or the Fabric REST API via `fab api`. Examples appear throughout this document.
+
+```bash
+# Discover the full property list for a workspace
+fab get "Production.Workspace"
+
+# Dump everything as JSON
+fab get "Production.Workspace" -q "."
+
+# Show only the writable Spark surface
+fab get "Production.Workspace" -q "sparkSettings"
+```
+
 ## Creating Workspaces
 
 ### Create with Default Capacity
@@ -115,6 +238,31 @@ fab ls -la | grep Capacity
 # Create in shared capacity (not recommended for production)
 fab mkdir "Dev Workspace.Workspace" -P capacityname=none
 ```
+
+### Create with Large Semantic Model Storage Format
+
+Large storage format is a workspace-level default that removes the per-model 10 GB cap for import models (PPU or Fabric capacity only). It's not exposed as a `fab mkdir` parameter; set it immediately after creation via the Power BI REST API so every model published afterwards inherits the setting.
+
+```bash
+# 1. Create the workspace on a capacity that supports Large (PPU or Fabric)
+fab mkdir "Quarterly Financials.Workspace" -P capacityname=ProductionCapacity
+
+# 2. Resolve the workspace ID
+WS_ID=$(fab get "Quarterly Financials.Workspace" -q "id" | tr -d '"')
+
+# 3. Set the default storage format to Large
+fab api -A powerbi -X patch "groups/$WS_ID" -i '{"defaultDatasetStorageFormat":"Large"}'
+```
+
+Existing semantic models already in the workspace are not converted retroactively; republish or run a Large-format update per model to upgrade them. Switching back to `Small` is possible but only affects models published afterwards.
+
+### Optional Parameters for `fab mkdir .Workspace`
+
+`fab mkdir <name>.Workspace -P` lists the supported creation parameters. At time of writing, the Fabric CLI exposes only:
+
+- `capacityName`; optional, assigns the workspace to a named Fabric capacity at creation. Omit or set to `none` for shared capacity.
+
+All other tactical settings (description, domain, Spark, OneLake, Git, Log Analytics, image, contacts, default storage format) are configured after creation via `fab set`, `fab assign`, or the underlying REST APIs shown later in this document.
 
 ## Listing Workspace Contents
 
@@ -381,9 +529,11 @@ fab rm "OldWorkspace.Workspace"
 
 ```bash
 # Delete workspace and all contents without confirmation
-# ⚠️ DANGEROUS - Cannot be undone
+# Cannot be undone
 fab rm "TestWorkspace.Workspace" -f
 ```
+
+Workspace deletion is not governed by the tenant Item Recovery setting; treat as permanent. For item-level recovery inside a workspace, see [reference.md > Recovering deleted items](reference.md#recovering-deleted-items).
 
 ## Navigation
 

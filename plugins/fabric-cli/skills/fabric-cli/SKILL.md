@@ -1,43 +1,41 @@
 ---
 name: fabric-cli
-version: 0.24.5
-description: Expert guidance for the fab CLI, nb CLI, and DuckDB; covering workspace navigation, notebook management, data querying, deployment, jobs, APIs, and automation. Automatically invoke when the user mentions "fab", "nb", "Fabric CLI", "OneLake", "Livy", or asks to "deploy Fabric items", "manage Fabric workspaces", "run a Fabric notebook", "refresh a semantic model via CLI", "query a lakehouse", "automate Fabric operations", "use DuckDB with Fabric", "manage OneLake files".
+version: 0.25.0
+description: Expert guidance for using the Fabric CLI (`fab`) to fully interact with Fabric workspaces, items, and configuration. Automatically invoke this skill whenever the user mentions "Fabric" or "Power BI Service" or a "Fabric/Power BI workspace".
 ---
 
-# Microsoft Fabric CLI Operations
+# Fabric CLI
 
-> **Note:** If you have access to a Bash tool (e.g., Claude Code), execute `fab` commands directly via Bash rather than using an MCP server.
+Guidance for using `fab` to programmatically manage Fabric & Power BI service
 
-Expert guidance for using the `fab` CLI to programmatically manage Fabric
+- Install via `uv tool install ms-fabric-cli` (get `uv` via `winget install uv` or `brew install uv`)
+- Fabric CLI is for working with the Cloud environment and not local files; it works with Power BI Pro, PPU, or Fabric; you DO NOT need a Fabric SKU to use the Fabric CLI
 
-## When to Use This Skill
+> [!IMPORTANT] 
+> Any time you encounter errors, user preferences or learnings when using the Fabric cli, ALWAYS note these down in the user memory rules, i.e. `.claude/rules/fabric-cli.md` for future improvement. 
+> This is ONLY for generic learnings and not for item- or task-specific learnings.
 
-Activate automatically when tasks involve:
+## When to use this skill
 
-- Mention of the Fabric CLI, Fabric items, Power BI, `fab`, or `fab` commands
-- Managing workspaces, items, or resources
-- Querying lakehouse/warehouse data, checking data freshness, or validating data quality
-- Exploring lakehouse schemas and source data for semantic model design
-- Deploying or migrating semantic models, reports, notebooks, pipelines
-- Running or scheduling jobs (notebooks, pipelines, Spark)
-- Working with lakehouse/warehouse tables and files
-- Using the Fabric, Power BI, or OneLake APIs
-- Automating Fabric operations in scripts
+- Use whenever the user mentions "Fabric" or "Power BI"
+- Use when user asks about Power BI workspaces, deployment, tenants, publishing, download, permissions, or data
 
-## Critical
 
-- Before first use, ask the user if they have Fabric admin access, any API restrictions, or preferences for Fabric/Power BI API usage
-- Remind the user to add their Fabric access level and preferences to their agent memory files (e.g., CLAUDE.md) for future sessions
+## Critical general rules
+
+- The first time you use `fab` run check that it is up to date to the latest version and run `fab auth status`; If user isn't authenticated, ask them to run `fab auth login`
+- Always use `fab --help` and `fab <command> --help` the first time you use a command to understand its syntax
+- You must search the skill /references/ for relevant reference files that explain certain commands, examples, scripts, or workflows before you start using `fab`
+- Before first use, ask the user if they have Fabric admin access, sensitivity labels or DLP policies, any API restrictions, or preferences for Fabric/Power BI API usage; remind user to add this to memory files
 - If workspace or item name is unclear, ask the user first, then verify with `fab ls` or `fab exists` before proceeding
-- The first time you use `fab` run `fab auth status` to make sure the user is authenticated. If not, ask the user to run `fab auth login` to login
-- Always use `fab --help` and `fab <command> --help` the first time you use a command to understand its syntax, first
-- Always try the simple `fab` command alone, first before piping it
 - Ensure that you avoid removing or moving items, workspaces, or definitions, or changing properties without explicit user direction
 - If a command is blocked in your permissions and you try to use it, stop and ask the user for clarification; never try to circumvent it
+- Create output directories before export: `fab export` does not create intermediate directories; `mkdir -p` the output path first or the command fails with `[InvalidPath]`
 
-### Always use `-f` (force) on every command that supports it
 
-The `fab` CLI prompts for confirmation on many operations. When stdin is not a terminal (agents, scripts, piped commands), the prompt library crashes with `[UnexpectedError] 22` because it cannot read interactive input. **Always append `-f`** to prevent this. Commands that require it:
+### Use `-f` (force) for non-interactive use
+
+The `fab` CLI prompts for confirmation, so you **you must always append `-f`** to prevent this UNLESS sensitivity labels are enabled, in which case you must ask the user. Do this for the commands:
 
 - `fab get -q "definition"` ; sensitivity label confirmation
 - `fab export` ; sensitivity label confirmation
@@ -47,139 +45,85 @@ The `fab` CLI prompts for confirmation on many operations. When stdin is not a t
 - `fab assign` / `fab unassign` ; capacity/domain assignment confirmation
 - `fab mv` ; rename/move confirmation
 
-If you see `Warning: Input is not a terminal (fd=0)` or `[UnexpectedError] 22`, the missing `-f` flag is almost certainly the cause.
 
-## First Run
+## Quickstart guide
 
-```bash
-fab auth login          # Authenticate (opens browser)
-fab auth status         # Verify authentication
-fab config set mode command_line  # Non-interactive mode (required for agents)
-fab ls                  # List your workspaces
-fab ls "Name.Workspace" # List items in a workspace
-```
+Here's a common list of operations with simple examples
 
-**Auth methods** (for automation):
+0. Check the commands, syntax, and auth status: `fab --help` and `fab auth status`
+1. Check if the item exists if the user gave the workspace and item name: `fab exists "spaceparts-dev.Workspace/spaceparts-otc-full.SemanticModel"`
+2. Find the workspace: `fab ls`
+3. Find the item: `fab ls "Workspace Name.Workspace"`
+4. Check the commands for that item: 
+   - `fab desc` to get itemTypes
+   - `fab desc .<ItemType>` for commands i.e. `fab desc .SemanticModel`
+5. Get or search its definition:
+   - Full TMDL definition: `fab get "spaceparts-dev.Workspace/spaceparts-otc-full.SemanticModel" -q "definition" -f`
+   - Search a specific measure / table / column: `fab get "ws.Workspace/Model.SemanticModel" -q "definition" -f | rga -i "Sales Amount"`
+6. Get files, tables, or table schemas:
+   - List lakehouse files: `fab ls "ws.Workspace/LH.Lakehouse/Files"`
+   - List lakehouse tables: `fab ls "ws.Workspace/LH.Lakehouse/Tables"`
+   - Table schema: `fab table schema "ws.Workspace/LH.Lakehouse/Tables/gold/orders"`
+7. Query data (always prefer the wrapper scripts over raw `fab api` / `duckdb` / `sqlcmd`; they resolve IDs, hosts, and auth for you):
+   - Semantic model (DAX): `python3 scripts/execute_dax.py "ws.Workspace/Model.SemanticModel" -q "EVALUATE TOPN(10, 'Orders')"`
+   - Lakehouse or warehouse (DuckDB + Delta against OneLake): `python3 scripts/query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" -q "SELECT * FROM tbl LIMIT 10" -t gold.orders`
+   - Lakehouse SQL endpoint, warehouse, or SQL database (T-SQL via `sqlcmd` + `az` session): `python3 scripts/query_sql_endpoint.py "ws.Workspace/LH.Lakehouse" -q "SELECT TOP 10 * FROM dbo.orders"`
+8. Set properties for an item or workspace: `fab set "ws.Workspace/Item.Notebook" -q displayName -i "New Name"` or `fab set "ws.Workspace" -q description -i "Production environment"`
+9. Review or manage permissions:
+   - Item ACL: `fab acl ls "ws.Workspace/Model.SemanticModel"` then `fab acl set "ws.Workspace/Model.SemanticModel" -I user@contoso.com -R Read`
+   - Workspace roles: `fab acl ls "ws.Workspace"` then `fab acl set "ws.Workspace" -I user@contoso.com -R Member`
+10. Deploy items to Fabric: `fab import "ws.Workspace/New.Notebook" -i ./local-path/Nb.Notebook -f`
+11. Download items from Fabric: `fab export "ws.Workspace/Nb.Notebook" -o ./backup -f` (always `mkdir -p ./backup` first)
+12. Copy or move items between workspaces: `fab cp "dev.Workspace/Item.Notebook" "prod.Workspace" -f` or `fab mv "ws.Workspace/Old.Notebook" "ws.Workspace/New.Notebook" -f`
+13. Open item in Fabric via browser: `fab open "spaceparts-dev.SpaceParts/Amazing Report.Report"`
+14. Using Fabric or Power BI APIs: `fab api -A powerbi "groups/<ws-id>/datasets/<model-id>/refreshes" -X post -i '{"type":"Full"}'` or `fab api "workspaces/<ws-id>/items"`
+15. Using [Azure CLI](./references/fab-vs-az-cli.md) (advanced) when Fabric CLI doesn't suffice:
+    - T-SQL over any SQL-capable item ; use [`scripts/query_sql_endpoint.py`](./scripts/query_sql_endpoint.py) (reuses `az login` via `ActiveDirectoryAzCli`; full walkthrough in [querying-data.md](./references/querying-data.md#sqlcmd-over-lakehouse-warehouse-and-sql-database))
+    - Pass a Key Vault secret to a consumer without ever reading, echoing, or persisting it: `az login --service-principal -u <appId> -t <tenantId> --password "$(az keyvault secret show --vault-name <vault> --name <secret> --query value -o tsv)"` ; command substitution pipes the secret directly into the child process arg list, never stdout, a file, or a named shell variable
+    - Full fab-vs-az decision matrix: [fab-vs-az-cli.md](./references/fab-vs-az-cli.md)
 
-```bash
-fab auth login -u <client-id> -p <client-secret> --tenant <tenant-id>   # Service principal
-fab auth login -u <client-id> --certificate /path/to/cert.pem --tenant <tenant-id>  # Certificate
-fab auth login --federated-token <token> -u <client-id> --tenant <tenant-id>  # OIDC
-fab auth login --identity                                                # System-assigned managed identity
-fab auth login --identity -u <client-id>                                 # User-assigned managed identity
-```
 
-## Variable Extraction Pattern
+## Essential Concepts
 
-Most workflows need IDs. Extract them like this:
+For information about any concepts related to Power BI or Fabric you must search or fetch via the Fabric MCP server and ask the user questions with the `AskUserQuestion` tool; NEVER guess or make assumptions.
 
-```bash
-WS_ID=$(fab get "ws.Workspace" -q "id" | tr -d '"')
-MODEL_ID=$(fab get "ws.Workspace/Model.SemanticModel" -q "id" | tr -d '"')
+### Workspaces
 
-# Then use in API calls
-fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/refreshes" -X post -i '{"type":"Full"}'
-```
+- **Workspaces** are containers for **items** like Notebooks (and other ETL items), Lakehouses (and other data items), SemanticModels, Reports (and other consumption items), and OrgApps.
+- Workspaces can be assigned to different things:
+  - Deployment Pipelines for lifecycle management (Dev, Test, Prod, etc.)
+  - Domains for governance and tenant structuring
+  - Capacities for licensing and resources (Fabric or Premium capacities only; PPU and Pro work differently)
+  - Git repositories for Source Control via Git integration
 
-## Querying Lakehouse Data with DuckDB
 
-DuckDB can query Delta Lake tables and raw files (CSV, JSON, Parquet) directly from OneLake. This is the primary approach for data exploration, freshness checks, quality validation, and schema discovery when planning semantic model design.
+## Key Patterns
 
-**Prerequisites**: DuckDB installed; Azure CLI authenticated (`az login`)
+Pay special attention to each of the following areas when using the Fabric CLI
 
-```bash
-# Get IDs
-WS_ID=$(fab get "ws.Workspace" -q "id" | tr -d '"')
-LH_ID=$(fab get "ws.Workspace/LH.Lakehouse" -q "id" | tr -d '"')
-
-# Query a Delta table
-duckdb -c "
-LOAD delta; LOAD azure;
-CREATE SECRET (TYPE azure, PROVIDER credential_chain, CHAIN 'cli');
-SELECT * FROM delta_scan('abfss://${WS_ID}@onelake.dfs.fabric.microsoft.com/${LH_ID}/Tables/schema/table') LIMIT 10;
-"
-
-# Query raw files (CSV, JSON, Parquet); supports glob patterns
-duckdb -c "
-LOAD azure;
-CREATE SECRET (TYPE azure, PROVIDER credential_chain, CHAIN 'cli');
-SELECT * FROM read_csv('abfss://${WS_ID}@onelake.dfs.fabric.microsoft.com/${LH_ID}/Files/data.csv') LIMIT 10;
-"
-```
-
-Use this approach whenever investigating data issues (freshness, quality, missing records), exploring source data before building a semantic model, or validating lakehouse contents after ETL runs. The same path format works for warehouses.
-
-**Do not assume anything about the data.** Before writing a final query, spot-check first: sample rows to understand units and granularity, check for fan-outs/duplicates, verify row counts match the expected grain, and use `AskUserQuestion` to clarify ambiguities with the user.
-
-For full examples and common patterns, see **`references/querying-data.md`**.
-
-## Command Reference
-
-| Command | Purpose | Example |
-|---------|---------|---------|
-| **Finding Items** |||
-| `fab ls` | List items | `fab ls "Sales.Workspace"` |
-| `fab ls -l` | List with details | `fab ls "Sales.Workspace" -l` |
-| `fab ls -q` | Filter with JMESPath | `fab ls "Sales.Workspace" -q "[?contains(name, 'Report')]"` |
-| `fab exists` | Check if exists | `fab exists "Sales.Workspace/Model.SemanticModel"` |
-| `fab get` | Get item details | `fab get "Sales.Workspace/Model.SemanticModel"` |
-| `fab get -q` | Query specific field | `fab get "Sales.Workspace" -q "id"` |
-| `fab desc` | Check supported commands | `fab desc .SemanticModel` |
-| **Definitions** |||
-| `fab get -q "definition"` | Get full definition | `fab get "ws.Workspace/Model.SemanticModel" -q "definition" -f` |
-| `fab export` | Export to local | `fab export "ws.Workspace/Nb.Notebook" -o ./backup -f` |
-| `fab import` | Import from local | `fab import "ws.Workspace/Nb.Notebook" -i ./backup/Nb.Notebook -f` |
-| **Running Jobs** |||
-| `fab job run` | Run synchronously | `fab job run "ws.Workspace/ETL.Notebook"` |
-| `fab job start` | Run asynchronously | `fab job start "ws.Workspace/ETL.Notebook"` |
-| `fab job run -P` | Run with params | `fab job run "ws.Workspace/Nb.Notebook" -P date:string=2025-01-01` |
-| `fab job run-list` | List executions | `fab job run-list "ws.Workspace/Nb.Notebook"` |
-| `fab job run-status` | Check status | `fab job run-status "ws.Workspace/Nb.Notebook" --id <job-id>` |
-| **Refreshing Models** |||
-| `fab api -A powerbi` | Trigger refresh | `fab api -A powerbi "groups/<ws-id>/datasets/<model-id>/refreshes" -X post -i '{"type":"Full"}'` |
-| `fab api -A powerbi` | Check refresh status | `fab api -A powerbi "groups/<ws-id>/datasets/<model-id>/refreshes?\$top=1"` |
-| **DAX Queries** |||
-| `fab get -q "definition"` | Get model schema first | `fab get "ws.Workspace/Model.SemanticModel" -q "definition" -f` |
-| `fab api -A powerbi` | Execute DAX | `fab api -A powerbi "groups/<ws-id>/datasets/<model-id>/executeQueries" -X post -i '{"queries":[{"query":"EVALUATE..."}]}'` |
-| **Lakehouse / DuckDB** |||
-| `fab ls` | Browse files/tables | `fab ls "ws.Workspace/LH.Lakehouse/Files"` |
-| `fab table schema` | Get table schema | `fab table schema "ws.Workspace/LH.Lakehouse/Tables/sales"` |
-| `fab cp` | Upload/download | `fab cp ./local.csv "ws.Workspace/LH.Lakehouse/Files/"` |
-| `duckdb` + `delta_scan` | Query Delta tables | `duckdb -c "... delta_scan('abfss://<ws-id>@onelake.../<lh-id>/Tables/schema/table')"` |
-| `duckdb` + `read_csv/json` | Query raw files | `duckdb -c "... read_csv('abfss://<ws-id>@onelake.../<lh-id>/Files/data.csv')"` |
-| **Access Control** |||
-| `fab acl ls` | List permissions | `fab acl ls "ws.Workspace"` |
-| `fab acl set` | Set permissions | `fab acl set "ws.Workspace" -I <objectId> -R Member` |
-| `fab acl rm` | Remove permissions | `fab acl rm "ws.Workspace" -I <upn>` |
-| `fab label set` | Set sensitivity label | `fab label set "ws.Workspace/Nb.Notebook" --name Confidential` |
-| **Management** |||
-| `fab cp` | Copy items | `fab cp "dev.Workspace/Item.Type" "prod.Workspace" -f` |
-| `fab cp -r` | Copy recursively | `fab cp "dev.Workspace" "prod.Workspace" -r -f` |
-| `fab mv` | Move/rename items | `fab mv "ws.Workspace/Old.Notebook" "ws.Workspace/New.Notebook" -f` |
-| `fab set` | Update properties | `fab set "ws.Workspace/Item.Type" -q displayName -i "New Name"` |
-| `fab rm` | Delete item | `fab rm "ws.Workspace/Item.Type" -f` |
-| `fab assign` | Assign capacity/domain | `fab assign .capacities/cap.Capacity -W ws.Workspace -f` |
-| `fab start/stop` | Start/stop resource | `fab start .capacities/cap.Capacity` |
-
-## Core Concepts
 
 ### Path Format
 
 Fabric uses filesystem-like paths with type extensions:
 
-`/WorkspaceName.Workspace/ItemName.ItemType`
+`"WorkspaceName.Workspace/ItemName.ItemType"`
+
+You must quote paths with spaces and punctuation:
+
+`"Workspace Name.Workspace/Semantic Model Name.SemanticModel"`
 
 For lakehouses this is extended into files and tables:
 
-`/WorkspaceName.Workspace/LakehouseName.Lakehouse/Files/FileName.extension` or `/WorkspaceName.Workspace/LakehouseName.Lakehouse/Tables/TableName`
+`WorkspaceName.Workspace/LakehouseName.Lakehouse/Files/FileName.extension` or `/WorkspaceName.Workspace/LakehouseName.Lakehouse/Tables/TableName`
 
 For Fabric capacities you have to use `fab ls .capacities`
 
 Examples:
 
-- `"/Production.Workspace/Sales Model.SemanticModel"`
-- `/Data.Workspace/MainLH.Lakehouse/Files/data.csv`
-- `/Data.Workspace/MainLH.Lakehouse/Tables/dbo/customers`
+- `"Production Workspace.Workspace/Sales Report.Report"`
+- `Data.Workspace/MainLH.Lakehouse/Files/data.csv`
+- `Data.Workspace/MainLH.Lakehouse/Tables/dbo/customers`
+
 
 ### Common Item Types
 
@@ -188,92 +132,15 @@ Examples:
 - `.Report` - Power BI reports
 - `.Notebook` - Fabric notebooks
 - `.DataPipeline` - Data pipelines
-- `.Lakehouse` / `.Warehouse` - Data stores
+- `.Lakehouse` / `.Warehouse`/ `.SQLDatabase` - Data artifacts
 - `.SparkJobDefinition` - Spark jobs
-- `.AISkill` - AI skills
-- `.Eventhouse` / `.Eventstream` - Real-time analytics
+- `.AISkill` - Fabric Data Agents
 - `.MirroredDatabase` / `.MirroredWarehouse` - Mirrored databases
 - `.Environment` - Spark environments
-- `.SQLDatabase` - SQL databases
 - `.UserDataFunction` - User data functions
 
-Full list: 49+ types. Use `fab desc .<ItemType>` to check supported commands for a specific type, or `fab desc` (no argument) to see all available element types.
+Full list: You must use `fab desc` or `fab desc .<ItemType>` to check syntax and types if the user asks about an item type not listed above.
 
-## Essential Commands
-
-For detailed command examples (navigation, resource management, access control, copy/move/export/import, API operations, jobs, tables), see **`references/essential-commands.md`**.
-
-For item-type-specific workflows, see the topic references listed under [References](#references).
-
-## Cross-Workspace Search
-
-### DataHub V2 API (Recommended)
-
-Use `scripts/search_across_workspaces.py` for cross-workspace search with rich metadata not available elsewhere:
-
-```bash
-# Find all semantic models (use "Model" not "SemanticModel")
-python3 scripts/search_across_workspaces.py --type Model
-
-# Find models by name
-python3 scripts/search_across_workspaces.py --type Model --filter "Sales"
-
-# Find stale items (not visited in 6+ months)
-python3 scripts/search_across_workspaces.py --type Model --not-visited-since 2024-06-01
-
-# Find items by owner
-python3 scripts/search_across_workspaces.py --type PowerBIReport --owner "kurt"
-
-# Find Direct Lake models only
-python3 scripts/search_across_workspaces.py --type Model --storage-mode directlake
-
-# Find items in workspace
-python3 scripts/search_across_workspaces.py --type Lakehouse --workspace "fit-data"
-
-# Get JSON output
-python3 scripts/search_across_workspaces.py --type Model --output json
-
-# Sort by last visited (oldest first)
-python3 scripts/search_across_workspaces.py --type Model --sort last-visited --sort-order asc
-
-# List all available types
-python3 scripts/search_across_workspaces.py --list-types
-```
-
-**Unique DataHub fields** (not available via fab api or admin APIs):
-
-- `lastVisitedTimeUTC` - When item was last opened/used
-- `storageMode` - Import, DirectQuery, or DirectLake
-- `ownerUser` - Full owner details (name, email)
-- `capacitySku` - F2, F64, PP, etc.
-- `isDiscoverable` - Whether item appears in search
-
-**Important type mappings:**
-
-- Semantic models: use `--type Model` (not SemanticModel)
-- Dataflows: use `--type DataFlow` (capital F)
-- Notebooks: use `--type SynapseNotebook`
-
-### Admin APIs (Requires Admin Role)
-
-If you have Fabric/Power BI admin access:
-
-```bash
-# Find semantic models by name (cross-workspace)
-fab api "admin/items" -P "type=SemanticModel" -q "itemEntities[?contains(name, 'Sales')]"
-
-# Find all notebooks
-fab api "admin/items" -P "type=Notebook" -q "itemEntities[].{name:name,workspace:workspaceId}"
-
-# Find all lakehouses
-fab api "admin/items" -P "type=Lakehouse"
-
-# Common types: SemanticModel, Report, Notebook, Lakehouse, Warehouse, DataPipeline, Ontology
-```
-
-For full admin API reference: [admin.md](./references/admin.md)
-
-## Key Patterns
 
 ### JMESPath Queries
 
@@ -297,6 +164,44 @@ Filter and transform JSON responses with `-q`:
 -q "definition.parts[?path=='model.tmdl'] | [0]"
 ```
 
+### Using `fab api`
+
+`fab` has an api escape hatch that lets you use any API even if it doesn't have primary commands.
+
+
+#### Variable Extraction Pattern
+
+To use `fab api` you need item IDs. Extract them like this:
+
+```bash
+WS_ID=$(fab get "ws.Workspace" -q "id" | tr -d '"')
+MODEL_ID=$(fab get "ws.Workspace/Model.SemanticModel" -q "id" | tr -d '"')
+
+# Then use in API calls
+fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/refreshes" -X post -i '{"type":"Full"}'
+```
+
+
+#### Admin APIs (Requires Admin Role)
+
+Don't use admin commands or APIs if the user doesn't have Admin access. Here's some examples:
+
+```bash
+# Find semantic models by name (cross-workspace)
+fab api "admin/items" -P "type=SemanticModel" -q "itemEntities[?contains(name, 'Sales')]"
+
+# Find all notebooks
+fab api "admin/items" -P "type=Notebook" -q "itemEntities[].{name:name,workspace:workspaceId}"
+
+# Find all lakehouses
+fab api "admin/items" -P "type=Lakehouse"
+
+# Common types: SemanticModel, Report, Notebook, Lakehouse, Warehouse, DataPipeline, Ontology
+```
+
+For full admin API reference (cross-workspace discovery, tenant settings read/update, capacity/domain/workspace overrides, activity events): [admin.md](./references/admin.md)
+
+
 ### Error Handling & Debugging
 
 ```bash
@@ -310,66 +215,310 @@ fab get "Production.Workspace/Item" -v
 fab api workspaces -o /tmp/workspaces.json
 ```
 
-### Performance Optimization
 
-1. **Use `ls` for fast listing** - Much faster than `get`
-2. **Use `exists` before operations** - Check before get/modify
-3. **Filter with `-q`** - Get only what you need
-4. **Use GUIDs in automation** - More stable than names
+## Common workflows
 
-## Common Flags
+These are the most common workflows you'll encounter in Fabric
 
-- `-f, --force` - Skip confirmation prompts (also skips sensitivity label on export/get/cp)
-- `-v, --verbose` - Verbose output
-- `-l` - Long format listing
-- `-a` - Show hidden items
-- `-r, --recursive` - Recursive copy/move (workspaces and folders)
-- `-o, --output` - Output file path
-- `-i, --input` - Input file or JSON string
-- `-q, --query` - JMESPath query (works on `ls`, `get`, `api`, `acl ls`, `acl get`)
-- `-P, --params` - Parameters (key=value)
-- `-W, --workspace` - Target workspace (for assign/unassign)
-- `-I, --identity` - Entra identity (for acl set/rm)
-- `-R, --role` - Role to assign (for acl set)
-- `-X, --method` - HTTP method (get/post/put/delete/patch)
-- `-A, --audience` - API audience (fabric/powerbi/storage/azure)
-- `-bpc` - Block on path collision (cp only)
-- `--format` - Definition format (export/import)
-- `--show_headers` - Show response headers
-- `--timeout` - Timeout in seconds
-- `--polling_interval` - Job polling interval in seconds
-- `-w, --wait` - Wait for completion (job run-cancel)
+### Finding or exploring workspaces, items, or metadata
 
-## Important Notes
+| Command | Purpose | Example |
+|---|---|---|
+| `fab ls` | List workspaces / items | `fab ls "Sales.Workspace" -l` |
+| `fab exists` | Check if a path exists | `fab exists "Sales.Workspace/Model.SemanticModel"` |
+| `fab get` | Get item details | `fab get "Sales.Workspace" -q "id"` |
+| `fab desc` | Supported commands per type | `fab desc .SemanticModel` |
 
-- **All examples assume `fab` is installed and authenticated**
-- **Paths require proper extensions** (`.Workspace`, `.SemanticModel`, etc.)
-- **Quote paths with spaces**: `"My Workspace.Workspace"`
-- **Create output directories before export**: `fab export` does not create intermediate directories; `mkdir -p` the output path first or the command fails with `[InvalidPath]`
-- **Always use `-f`** on commands that support it; see the [Critical](#always-use--f-force-on-every-command-that-supports-it) section for the full list and why
-- **Semantic model updates**: Use Power BI API (`-A powerbi`) for DAX queries and dataset operations
+Flags:
+- `-l` (long listing)
+- `-a` (show hidden items)
+- `-q` (JMESPath filter)
+- `-v` (verbose output)
+- `-o` (save response to file)
 
-## Need More Details?
+Fabric discovery follows a drill-down pattern:
 
-For specific item type help:
+- Browsing:
+  - List workspaces: `fab ls`
+  - List items in a workspace: `fab ls "ws.Workspace" -l`
+  - Confirm a path exists: `fab exists "ws.Workspace/Item"`
+  - Check what commands an item type supports: `fab desc .<ItemType>`
+- Inspection:
+  - Get item details: `fab get "ws.Workspace/Item"`
+  - Pull a single field: `fab get "ws.Workspace" -q "id"`
+- Cross-workspace search:
+  - Rich metadata, no admin required: [`scripts/search_across_workspaces.py`](./scripts/search_across_workspaces.py)
+  - Downstream reports for a given model: [`scripts/get-downstream-reports.py`](./scripts/get-downstream-reports.py)
+  - Tenant-wide admin APIs: [admin.md](./references/admin.md)
 
-```bash
-fab desc .<ItemType>
-```
+Check references before exploring:
 
-For command help:
+- [workspaces.md](./references/workspaces.md)
+- [folders.md](./references/folders.md)
+- [admin.md](./references/admin.md)
+- [reference.md](./references/reference.md)
 
-```bash
-fab --help
-fab <command> --help
-```
+
+### Querying data
+
+| Command | Purpose | Example |
+|---|---|---|
+| `fab get -q "definition"` | Get model schema | `fab get "ws.Workspace/Model.SemanticModel" -q "definition" -f` |
+| `fab api -A powerbi` | Execute DAX | `fab api -A powerbi "groups/<ws-id>/datasets/<model-id>/executeQueries" -X post -i '{"queries":[{"query":"EVALUATE..."}]}'` |
+| `fab ls` | Browse files / tables | `fab ls "ws.Workspace/LH.Lakehouse/Files"` |
+| `fab table schema` | Lakehouse table schema | `fab table schema "ws.Workspace/LH.Lakehouse/Tables/sales"` |
+| `fab cp` | Upload / download OneLake file | `fab cp ./local.csv "ws.Workspace/LH.Lakehouse/Files/"` |
+| `duckdb` + `delta_scan` | Query Delta tables (requires DuckDB) | `duckdb -c "... delta_scan('abfss://<ws-id>@onelake.../<lh-id>/Tables/schema/table')"` |
+| `duckdb` + `read_csv/json` | Query raw files (requires DuckDB) | `duckdb -c "... read_csv('abfss://.../Files/data.csv')"` |
+
+Flags: 
+- `-A fabric|powerbi|storage|azure` (API audience)
+- `-X get|post|put|delete|patch` (HTTP method)
+- `-i` (JSON body or file)
+- `-f` (skip sensitivity prompt on definition pulls).
+
+Fabric exposes three query paths depending on the source; always prefer the wrapper scripts — they resolve IDs, hosts, and auth for you:
+
+- Semantic models (DAX):
+  - Find model fields first: `fab get "ws.Workspace/Model.SemanticModel" -q "definition"`
+  - Query: [`scripts/execute_dax.py`](./scripts/execute_dax.py)
+- Lakehouses / Warehouses via Delta over OneLake (DuckDB):
+  - Query a single table: [`scripts/query_lakehouse_duckdb.py`](./scripts/query_lakehouse_duckdb.py) (use `tbl` as a placeholder and pass `-t schema.table`)
+  - Multi-table joins or raw files in `Files/`: pass `--sql` with your own `delta_scan()` / `read_csv` / `read_json_auto` calls
+  - Optionally scaffold a Direct Lake model instead: [`scripts/create_direct_lake_model.py`](./scripts/create_direct_lake_model.py)
+- Lakehouse SQL endpoint, Warehouse, or SQL Database (T-SQL via `sqlcmd`):
+  - Query any SQL-capable item: [`scripts/query_sql_endpoint.py`](./scripts/query_sql_endpoint.py) (auto-detects host per item type, reuses `az login` via `ActiveDirectoryAzCli`)
+  - Prefer this over DuckDB when you need `INFORMATION_SCHEMA`, `sys.*` metadata, CTEs, or window functions
+
+Check references before writing queries:
+
+- [querying-data.md](./references/querying-data.md)
+- [semantic-models.md](./references/semantic-models.md)
+- [lakehouses.md](./references/lakehouses.md)
+- [warehouses.md](./references/warehouses.md)
+- [sql-databases.md](./references/sql-databases.md)
+
+
+### Changing metadata or access (descriptions, tags, endorsement, properties, bindings, permissions)
+
+| Command | Purpose | Example |
+|---|---|---|
+| `fab set` | Update property | `fab set "ws.Workspace/Item" -q displayName -i "New Name"` |
+| `fab mv` | Rename / move item | `fab mv "ws/Old.Notebook" "ws/New.Notebook" -f` |
+| `fab acl ls` | List permissions | `fab acl ls "ws.Workspace"` |
+| `fab acl set` | Grant permission | `fab acl set "ws.Workspace" -I <objectId> -R Member` |
+| `fab acl rm` | Revoke permission | `fab acl rm "ws.Workspace" -I <upn>` |
+| `fab label set` | Set sensitivity label | `fab label set "ws/Nb.Notebook" --name Confidential` |
+
+Flags:
+- `-q <field>` + `-i <value>` (set a single property)
+- `-I` (object ID or UPN for `fab acl`)
+- `-R Admin|Member|Contributor|Viewer` (role for `fab acl set`)
+- `-f` (skip confirmation; ask user first if sensitivity labels are in play)
+
+Metadata and access changes fall into a few groups:
+
+- Properties (displayName, description, sensitivity config):
+  - Native update: `fab set "<path>" -q <field> -i "<value>"`
+  - Capture current state first so you can revert: `fab get -v -o /tmp/before.json`
+- Endorsement, certification, and tags (no first-class `fab` commands):
+  - Patch via `fab api` with item-specific endpoints
+  - Tag workflow: [tags.md](./references/tags.md)
+  - Endorsement patterns: [reference.md](./references/reference.md)
+- Folder placement:
+  - Move items between workspace subfolders: [folders.md](./references/folders.md)
+- Access control and sensitivity labels:
+  - Grant / revoke: `fab acl set`, `fab acl rm`
+  - Set sensitivity label: `fab label set`
+  - Verify the principal first: `az ad user show`
+  - Never change permissions or labels without explicit user confirmation
+- Bindings:
+  - Rebind a thin `.Report` to a different `.SemanticModel`: [reports.md](./references/reports.md)
+  - Semantic model source rebinds (e.g. swap a lakehouse): [semantic-models.md](./references/semantic-models.md)
+
+Check references before changing metadata:
+
+- [reference.md](./references/reference.md)
+- [tags.md](./references/tags.md)
+- [folders.md](./references/folders.md)
+- [reports.md](./references/reports.md)
+- [semantic-models.md](./references/semantic-models.md)
+
+### Working with workspaces
+
+| Command | Purpose | Example |
+|---|---|---|
+| `fab mkdir` | Create workspace / item | `fab mkdir "New.Workspace" -P capacityname=MyCapacity` |
+| `fab assign` | Attach capacity / domain | `fab assign .capacities/cap.Capacity -W ws.Workspace -f` |
+| `fab unassign` | Detach capacity / domain | `fab unassign .capacities/cap.Capacity -W ws.Workspace` |
+| `fab start` / `fab stop` | Resume / pause capacity | `fab start .capacities/cap.Capacity` |
+| `fab cp -r` | Fork workspace | `fab cp "dev.Workspace" "prod.Workspace" -r -f` |
+| `fab rm` | Soft-delete (see [recovery](./references/reference.md#recovering-deleted-items)) | `fab rm "ws/Item.Type" -f` |
+
+Flags:
+- `-P key=value` (creation params for `fab mkdir`)
+- `-W` (target workspace for `fab assign` / `fab unassign`)
+- `-r` (recursive copy/move)
+- `-bpc` (block on path collision for `fab cp`)
+- `-f` (skip confirmation)
+
+Workspace-scope operations fall into a few groups:
+
+- Create and provision:
+  - Create workspace: `fab mkdir "<Name>.Workspace" -P capacityname=<cap>`
+  - Attach capacity or domain: `fab assign .capacities/<cap>.Capacity -W <ws>.Workspace`
+  - Planning context, create/get/set surface, large storage format, Spark pools, OneLake defaults, Git: [workspaces.md](./references/workspaces.md)
+- Copy, fork, download:
+  - Duplicate a workspace in-tenant: `fab cp -r "dev.Workspace" "prod.Workspace"`
+  - Dry-run the source tree first: `fab ls "dev.Workspace"`
+  - Full local snapshot (items + lakehouse files): [`scripts/download_workspace.py`](./scripts/download_workspace.py)
+- Permissions:
+  - Inspect / grant / revoke: `fab acl ls | set | rm`
+  - Tenant-wide governance audit: use the [`audit-tenant-settings`](../audit-tenant-settings/SKILL.md) skill
+- Connections and gateways (bound to, but outside, the workspace):
+  - Credential types (WorkspaceIdentity, SPN, Basic), OAuth2 limits: [connections.md](./references/connections.md)
+  - Datasource binding, credential rotation: [gateways.md](./references/gateways.md)
+- Folders inside a workspace:
+  - Layout, nesting, conventions: [folders.md](./references/folders.md)
+
+Check references before modifying workspaces:
+
+- [workspaces.md](./references/workspaces.md)
+- [folders.md](./references/folders.md)
+- [connections.md](./references/connections.md)
+- [gateways.md](./references/gateways.md)
+
+
+### Executing or scheduling jobs (notebooks, notebook cells, pipelines, semantic model refresh)
+
+| Command | Purpose | Example |
+|---|---|---|
+| `fab job run` | Run synchronously | `fab job run "ws/ETL.Notebook" -P date:string=2025-01-01` |
+| `fab job start` | Run asynchronously | `fab job start "ws/ETL.Notebook"` |
+| `fab job run-list` | List executions | `fab job run-list "ws/Nb.Notebook"` |
+| `fab job run-status` | Check status | `fab job run-status "ws/Nb.Notebook" --id <job-id>` |
+| `fab job run-cancel` | Cancel a job | `fab job run-cancel "ws/Nb.Notebook" --id <job-id> -w` |
+| `fab api -A powerbi .../refreshes` | Trigger semantic model refresh | `fab api -A powerbi "groups/<ws-id>/datasets/<model-id>/refreshes" -X post -i '{"type":"Full"}'` |
+
+Flags:
+- `-P key:type=value` (parameters, type is `string|int|bool`)
+- `--id` (job run ID)
+- `-w` (wait on cancel)
+- `--timeout` (overall timeout for synchronous runs)
+- `--polling_interval` (status poll cadence)
+
+Jobs map to different endpoints depending on item type:
+
+- Notebooks and pipelines:
+  - Run synchronously: `fab job run "ws/ETL.Notebook" -P date:string=2025-01-01`
+  - Run asynchronously: `fab job start "ws/ETL.Notebook"`
+  - Check status: `fab job run-status "ws/Nb.Notebook" --id <job-id>`
+  - List history: `fab job run-list "ws/Nb.Notebook"`
+  - Python / PySpark kernels, Livy sessions, cell-level CRUD: [notebooks.md](./references/notebooks.md)
+- Semantic model refresh (not exposed as `fab job`):
+  - Trigger: `fab api -A powerbi "groups/<ws-id>/datasets/<model-id>/refreshes" -X post -i '{"type":"Full"}'`
+  - Check current run before starting a new one (409 if already running): `fab api -A powerbi "groups/<ws-id>/datasets/<model-id>/refreshes?\$top=1"`
+  - Enhanced refresh, incremental policies, partition targeting: [semantic-models.md](./references/semantic-models.md)
+- Dataflow refresh:
+  - Gen1 and Gen2 have different endpoints: [dataflows.md](./references/dataflows.md)
+- Scheduling:
+  - Per-item schedules via the scheduler API: [notebooks.md](./references/notebooks.md), [reference.md](./references/reference.md)
+
+Check references before running jobs:
+
+- [notebooks.md](./references/notebooks.md)
+- [semantic-models.md](./references/semantic-models.md)
+- [dataflows.md](./references/dataflows.md)
+- [reference.md](./references/reference.md)
+
+
+### Fabric admin operations (auditing, management)
+
+| Command | Purpose | Example |
+|---|---|---|
+| `fab api "admin/items"` | Cross-workspace item search | `fab api "admin/items" -P "type=SemanticModel" -q "itemEntities[?contains(name,'Sales')]"` |
+| `fab api "admin/workspaces"` | Workspace inventory | `fab api "admin/workspaces"` |
+| `fab api "admin/tenantsettings"` | Tenant settings | `fab api "admin/tenantsettings"` |
+| `fab api "admin/capacities"` | Capacity inventory | `fab api "admin/capacities"` |
+| `fab api -X post .../update` | Update tenant setting | `fab api -X post "admin/tenantsettings/<name>/update" -i body.json` |
+
+Flags:
+- `-P key=value` (query params, e.g. `type=SemanticModel`)
+- `-q` (JMESPath filter)
+- `-X post` + `-i` (write ops)
+- `--show_headers` (inspect `Retry-After` on 429)
+
+Admin-scope work is gated behind the Fabric / Power BI admin role. Confirm access first with `fab api "admin/capacities" 2>&1 | head -5`; if it errors, stop rather than retry.
+
+Two entry points cover most admin tasks:
+
+- Governance audits (tenant settings, delegated overrides, Entra SG scoping):
+  - Use the [`audit-tenant-settings`](../audit-tenant-settings/SKILL.md) skill. It owns the curated metadata baseline, the audit + change-detection script, delegated-override enumeration, and the Entra SG investigation workflow.
+  - Invoke it whenever the question combines tenant posture with group membership, override scope, or drift against the baseline.
+- Raw admin APIs (cross-workspace search, activity events, artifact access, item search):
+  - Patterns in [admin.md](./references/admin.md)
+  - Rate limit: 25 write requests / minute; honor `Retry-After` on 429
+  - Print the exact command and wait for user confirmation before any destructive admin operation
+
+Check references before admin work:
+
+- [admin.md](./references/admin.md)
+- [permissions.md](./references/permissions.md) for workspace / item ACL exposure audits
+
+
+### Definitions and deployment (item definitions, deployment pipelines, git integration, cicd)
+
+| Command | Purpose | Example |
+|---|---|---|
+| `fab get -q "definition"` | Read raw definition | `fab get "ws/Model.SemanticModel" -q "definition" -f` |
+| `fab export` | Export item to local | `fab export "ws/Nb.Notebook" -o ./backup -f` |
+| `fab import` | Import item from local | `fab import "ws/Nb.Notebook" -i ./backup/Nb.Notebook -f` |
+| `fab cp` | Copy between workspaces | `fab cp "dev/Item" "prod.Workspace" -f` |
+| `fab api "deploymentPipelines"` | Deployment pipelines API | `fab api "deploymentPipelines" -q "value[]"` |
+
+Flags:
+- `-o` (output path for `fab export`)
+- `-i` (input path or JSON body for `fab import`)
+- `--format` (definition format for export / import)
+- `-f` (skip overwrite and sensitivity prompts)
+
+Every Fabric item has a serializable definition. Move definitions between environments depending on scope:
+
+- Single item:
+  - Round-trip locally: `fab export` then `fab import` (always `mkdir -p` the output directory first; `fab export` does not create intermediate directories and fails with `[InvalidPath]`)
+  - Same-tenant shortcut, no local hop: `fab cp "dev/Item" "prod.Workspace"`
+- Semantic model as PBIP (TMDL + blank report):
+  - Power BI Desktop and git-ready format: [`scripts/export_semantic_model_as_pbip.py`](./scripts/export_semantic_model_as_pbip.py)
+- Full workspace snapshot (items + lakehouse files):
+  - Backups, offline analysis, cross-tenant forks: [`scripts/download_workspace.py`](./scripts/download_workspace.py)
+- Promotion between Dev, Test, Prod:
+  - Fabric deployment pipelines API (covers all item types)
+  - Power BI pipelines API (Power BI items only, but finer-grained deploy flags like `allowPurgeData`, `allowTakeOver`)
+  - When to use each, selective deploy, LRO polling: [deployment-pipelines.md](./references/deployment-pipelines.md)
+- Git integration (connect workspace to repo, branch, commit, update from git):
+  - Workspace git section in [workspaces.md](./references/workspaces.md)
+
+Check references before deploying:
+
+- [import-download-deploy.md](./references/import-download-deploy.md) ; export / import / copy / move, PBIP round-trips, migration patterns, rebinding gotchas
+- [deployment-pipelines.md](./references/deployment-pipelines.md)
+- [semantic-models.md](./references/semantic-models.md)
+- [reports.md](./references/reports.md)
+- [paginated-reports.md](./references/paginated-reports.md)
+- [notebooks.md](./references/notebooks.md)
+- [workspaces.md](./references/workspaces.md)
+
+
+## Related skills
+
+- [`audit-tenant-settings`](../audit-tenant-settings/SKILL.md) ; Fabric governance workflow covering tenant settings, delegated overrides (capacity / domain / workspace), and the Entra security groups those settings reference. Read-only; holds the curated metadata baseline and the audit + change-detection script.
+
 
 ## References
 
 **Skill references:**
 
-- [Quick Start Guide](./references/quickstart.md) - Copy-paste examples for getting started
-- [Essential Commands](./references/essential-commands.md) - Detailed command examples and common workflows
+- [Import, Download, and Deploy](./references/import-download-deploy.md) - Export / import / copy / move items, PBIP round-trips, dev-to-prod migration patterns
 - [Querying Data](./references/querying-data.md) - Query semantic models in DAX and lakehouses or warehouses in SQL with DuckDB
 - [Lakehouses](./references/lakehouses.md) - Endpoints, file/table operations, OneLake paths
 - [Warehouses](./references/warehouses.md) - Create, browse, query via DuckDB, load data
@@ -379,6 +528,7 @@ fab <command> --help
 - [Paginated Reports](./references/paginated-reports.md) - RDL upload, export-to-file, datasources, parameters
 - [Notebooks](./references/notebooks.md) - Python/PySpark kernels, metadata, cell CRUD, Livy execution, scheduling
 - [Workspaces](./references/workspaces.md) - Create, manage, permissions
+- [Permissions](./references/permissions.md) - Sharing and distribution, workspace roles, item permissions, apps, embed, B2B, deployment pipeline permissions, licensing and capacity SKUs
 - [Deployment Pipelines](./references/deployment-pipelines.md) - CI/CD, deploy stages, selective deploy, LRO polling
 - [Dataflows](./references/dataflows.md) - Gen1 and Gen2, refresh, publish, admin
 - [Dashboards](./references/dashboards.md) - Tiles, clone (dashboards are not reports)
@@ -386,11 +536,25 @@ fab <command> --help
 - [Scorecards](./references/scorecards.md) - Goals, check-ins, status rules (Preview API)
 - [Gateways](./references/gateways.md) - Datasources, credentials, dataset binding
 - [Folders](./references/folders.md) - Organize items into folders via API; includes best practices for structuring workspaces
+- [Tags](./references/tags.md) - Create, apply, and audit tenant/domain tags on items and workspaces via `fab api` (no native `fab tag` command)
 - [fab vs az CLI](./references/fab-vs-az-cli.md) - When to use which; capacity, networking, Key Vault, monitoring, CMK, CI/CD
 - [Admin APIs](./references/admin.md) - Cross-workspace search, tenant operations, governance
 - [API Reference](./references/fab-api.md) - Capacities, domains, misc API patterns
 - [Connections](./references/connections.md) - Create, update, list connections programmatically; credential types (WorkspaceIdentity, SPN, Basic); OAuth2 limitations
 - [Full Command Reference](./references/reference.md) - All commands detailed
+
+**Scripts** (scripts that you can execute):
+
+- [search_across_workspaces.py](./scripts/search_across_workspaces.py) ; cross-workspace item search via DataHub V2 API; filters by type, owner, storage mode, last visited, capacity SKU
+- [get-downstream-reports.py](./scripts/get-downstream-reports.py) ; find all reports connected to a given semantic model across accessible workspaces (no admin required)
+- [execute_dax.py](./scripts/execute_dax.py) ; execute DAX queries against semantic models; output as table, csv, or json
+- [query_lakehouse_duckdb.py](./scripts/query_lakehouse_duckdb.py) ; query lakehouse or warehouse Delta tables via DuckDB against OneLake (reuses `az login`); output as table, csv, or json
+- [query_sql_endpoint.py](./scripts/query_sql_endpoint.py) ; query lakehouse SQL endpoint, warehouse, or SQL database via `sqlcmd` (reuses `az login` through `ActiveDirectoryAzCli`); output as table, csv, or json
+- [create_direct_lake_model.py](./scripts/create_direct_lake_model.py) ; create a Direct Lake semantic model from lakehouse tables
+- [export_semantic_model_as_pbip.py](./scripts/export_semantic_model_as_pbip.py) ; export a semantic model as a PBIP project (TMDL definition + blank report)
+- [download_workspace.py](./scripts/download_workspace.py) ; download a full workspace with all item definitions and lakehouse files
+
+See [scripts/README.md](./scripts/README.md) for detailed usage, arguments, and examples. Always search the `scripts/` folder before writing a new helper; a script may already exist for the task.
 
 **External references** (request markdown when possible):
 

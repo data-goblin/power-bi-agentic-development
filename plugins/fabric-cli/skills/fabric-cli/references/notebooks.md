@@ -472,17 +472,78 @@ Python notebooks default to 2 vCores / 16GB. Scale up with `%%configure` in the 
 
 Supported vCores: 4, 8, 16, 32, 64 (8GB RAM per vCore).
 
-## Scheduling, Monitoring, and Management
+## Scheduling
+
+`fab job run-sch` creates per-item schedules. Schedules survive workspace git sync and deployment-pipeline promotion as long as the item keeps its ID.
 
 ```bash
-# Schedule (cron, daily, weekly)
-fab job run-sch "ws.Workspace/ETL.Notebook" --type daily --interval 02:00 --enable
+# Daily at 02:00 (single time)
+fab job run-sch "ws.Workspace/ETL.Notebook" \
+  --type daily \
+  --interval 02:00 \
+  --enable
 
-# List execution history
+# Daily at two times (comma-separated) starting from an explicit datetime
+fab job run-sch "ws.Workspace/Pipeline.DataPipeline" \
+  --type daily \
+  --interval 10:00,16:00 \
+  --start 2024-11-15T09:00:00 \
+  --enable
+
+# Weekly on specific days
+fab job run-sch "ws.Workspace/Pipeline.DataPipeline" \
+  --type weekly \
+  --interval 10:00 \
+  --days Monday,Friday \
+  --enable
+
+# Cron-style: every 5 minutes
+fab job run-sch "ws.Workspace/Nb.Notebook" \
+  --type cron \
+  --interval 5 \
+  --enable
+```
+
+### Update or disable an existing schedule
+
+Each schedule has its own ID; list with `fab job run-list --schedule` or read from `fab api "workspaces/<ws-id>/items/<item-id>/jobs/.../schedules"`.
+
+```bash
+# Disable without deleting (pauses runs; preserves the schedule record)
+fab job run-update "ws.Workspace/Pipeline.DataPipeline" \
+  --id <schedule-id> \
+  --disable
+
+# Switch a daily schedule to cron-every-5-minutes in place
+fab job run-update "ws.Workspace/Pipeline.DataPipeline" \
+  --id <schedule-id> \
+  --type cron \
+  --interval 5 \
+  --enable
+
+# Remove a schedule entirely
+fab job run-rm "ws.Workspace/Pipeline.DataPipeline" \
+  --id <schedule-id> -f
+```
+
+### List execution history
+
+```bash
+# All runs (manual + scheduled)
 fab job run-list "ws.Workspace/ETL.Notebook"
 
+# Scheduled runs only
+fab job run-list "ws.Workspace/ETL.Notebook" --schedule
+```
+
+## Monitoring and Management
+
+```bash
 # Cancel running job
 fab job run-cancel "ws.Workspace/ETL.Notebook" --id <job-id>
+
+# Cancel and wait for the cancellation to complete
+fab job run-cancel "ws.Workspace/ETL.Notebook" --id <job-id> --wait
 
 # Export / import
 fab export "ws.Workspace/ETL.Notebook" -o /tmp/notebooks -f
@@ -491,7 +552,7 @@ fab import "ws.Workspace/ETL.Notebook" -i /tmp/notebooks/ETL.Notebook -f
 # Copy between workspaces
 fab cp "Dev.Workspace/ETL.Notebook" "Prod.Workspace" -f
 
-# Delete
+# Delete (recovery depends on tenant Item Recovery setting; see reference.md)
 fab rm "ws.Workspace/Old.Notebook" -f
 
 # Open in browser

@@ -47,6 +47,67 @@ Options:
 - `--format` - Output format: table (default), csv, json
 - `--include-nulls` - Include null values
 
+### query_lakehouse_duckdb.py
+
+Query Delta tables in a Fabric Lakehouse or Warehouse via DuckDB against OneLake. Resolves workspace and item IDs via `fab`, builds the `abfss://` path, and shells out to `duckdb` with the `delta` and `azure` extensions preloaded. Reuses the current `az login` session through the `credential_chain` provider ; no password, SPN secret, or token file is needed.
+
+```bash
+# Single-table query: `tbl` is substituted with delta_scan() of the given table
+python3 query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \
+    -q "SELECT * FROM tbl LIMIT 10" -t gold.orders
+
+# Raw SQL with your own delta_scan() calls (multi-table joins, Files/* reads)
+python3 query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \
+    --sql "SELECT count(*) FROM delta_scan('abfss://.../Tables/silver/events')"
+
+# CSV output, save to file
+python3 query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \
+    -q "SELECT * FROM tbl" -t regions --format csv -o regions.csv
+```
+
+Options:
+
+- `-q, --query` - SQL query with `tbl` placeholder (requires `-t`)
+- `--sql` - Raw SQL script with your own `delta_scan()` / `read_csv` / `read_json_auto` calls
+- `-t, --table` - Table name as `schema.table` or just `table` for default schema
+- `-o, --output` - Output file
+- `--format` - Output format: table (default), csv, json
+- `--print-path` - Print the resolved `abfss://` path and exit (useful for debugging)
+
+Requires `duckdb` CLI (`brew install duckdb`) and `az login`.
+
+### query_sql_endpoint.py
+
+Query a Fabric Lakehouse SQL endpoint, Warehouse, or SQL Database via `sqlcmd`. Detects the item type from the path, resolves the SQL host via the correct property (`properties.sqlEndpointProperties.connectionString` for lakehouses, `properties.connectionString` for warehouses, `properties.serverFqdn` for SQL databases), and invokes `sqlcmd` with `--authentication-method ActiveDirectoryAzCli` so the current `az login` session is reused.
+
+```bash
+# Inline query against a lakehouse SQL endpoint
+python3 query_sql_endpoint.py "ws.Workspace/LH.Lakehouse" \
+    -q "SELECT TOP 10 * FROM dbo.orders"
+
+# Warehouse, csv output, save to file
+python3 query_sql_endpoint.py "ws.Workspace/WH.Warehouse" \
+    -q "SELECT name FROM sys.tables" --format csv -o tables.csv
+
+# SQL Database, multi-statement .sql file
+python3 query_sql_endpoint.py "ws.Workspace/MyDB.SQLDatabase" --file ./migration.sql
+
+# JSON output for piping
+python3 query_sql_endpoint.py "ws.Workspace/LH.Lakehouse" \
+    -q "SELECT TOP 3 Territory, Region FROM dbo.regions" --format json
+```
+
+Options:
+
+- `-q, --query` - Inline T-SQL query
+- `--file` - Path to a `.sql` file (supports multi-statement with `GO` separators)
+- `-d, --database` - Override database name (defaults to item display name)
+- `-o, --output` - Output file
+- `--format` - Output format: table (default), csv, json (json is emitted via CSV + parser)
+- `--print-host` - Print the resolved SQL host and exit
+
+Requires `sqlcmd` (go-sqlcmd >= 1.9; `brew install sqlcmd` or `winget install --id Microsoft.Sqlcmd`) and `az login`.
+
 ### export_semantic_model_as_pbip.py
 
 Export semantic model as PBIP (Power BI Project) format.

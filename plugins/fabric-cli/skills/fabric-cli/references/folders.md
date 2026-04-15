@@ -86,7 +86,7 @@ fab api -X get "workspaces/$WS_ID/items?type=Notebook" | jq '.text.value[] | {di
 
 ## Delete Folder
 
-To delete items before removing a folder, use `fab rm "Workspace/Item.Notebook"` rather than the API.
+To delete items before removing a folder, use `fab rm "Workspace/Item.Notebook"` rather than the API. Recovery of removed items depends on the tenant Item Recovery setting; see [reference.md > Recovering deleted items](reference.md#recovering-deleted-items).
 
 ```bash
 WS_ID=$(fab get "MyWorkspace.Workspace" -q "id")

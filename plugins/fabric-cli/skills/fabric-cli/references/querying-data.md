@@ -1,10 +1,20 @@
 # Querying Data
 
-How to query semantic models in DAX and lakehouses or data warehouses in SQL.
+How to query semantic models in DAX and lakehouses, warehouses, or SQL databases in SQL.
+
+## Wrapper scripts (recommended)
+
+Three Python scripts in `scripts/` wrap the raw `fab api` / `duckdb` / `sqlcmd` invocations and handle path resolution, ID lookup, host discovery, auth, and output formatting for you. Prefer them over hand-rolled commands unless you need a feature they don't expose.
+
+- **DAX against a semantic model** ; [`scripts/execute_dax.py`](../scripts/execute_dax.py): resolves workspace and model IDs, posts to `executeQueries`, and formats results as table/csv/json.
+- **Delta over OneLake (lakehouse / warehouse)** ; [`scripts/query_lakehouse_duckdb.py`](../scripts/query_lakehouse_duckdb.py): resolves workspace and lakehouse IDs, builds the `abfss://` path, shells out to `duckdb` with the `delta` and `azure` extensions preloaded, and strips the `CREATE SECRET` preamble noise from the output.
+- **T-SQL over any SQL-capable item** ; [`scripts/query_sql_endpoint.py`](../scripts/query_sql_endpoint.py): detects item type (Lakehouse, Warehouse, SQLDatabase), resolves the SQL host via the right property path, and invokes `sqlcmd --authentication-method ActiveDirectoryAzCli`. See [scripts/README.md](../scripts/README.md) for full argument reference.
+
+The sections below explain the raw commands these scripts wrap ; use them when you need to extend, debug, or understand what the scripts do.
 
 ## Query Lakehouse or Warehouse Data with DuckDB
 
-DuckDB can query Delta Lake tables and raw files directly from OneLake using the `delta` and `azure` core extensions. This is the fastest way to explore, validate, and analyze lakehouse data without creating a semantic model.
+DuckDB can query Delta Lake tables and raw files directly from OneLake using the `delta` and `azure` core extensions. This is the fastest way to explore, validate, and analyze lakehouse data without creating a semantic model. For routine single-table queries, prefer [`scripts/query_lakehouse_duckdb.py`](../scripts/query_lakehouse_duckdb.py); the raw form is documented below for reference and for multi-table joins or `Files/` raw-file reads.
 
 ### Prerequisites
 
@@ -166,6 +176,123 @@ ORDER BY tbl;
 - **Read-only**: DuckDB reads Delta tables but cannot write back (append-only writes exist but are not recommended for lakehouse tables)
 - **Auth**: Requires Azure CLI login or service principal; does not work with Fabric-only tokens
 - **Path format matters**: Use friendly names (not GUIDs) for tables in non-default schemas; see [OneLake Path Format](#onelake-path-format)
+
+## sqlcmd Over Lakehouse, Warehouse, and SQL Database
+
+Every Fabric Lakehouse exposes a read-only T-SQL endpoint, every Warehouse and SQL Database is fully T-SQL native, and all three accept the same `sqlcmd` invocation. When the table you need is already surfaced through the SQL endpoint, `sqlcmd` is often simpler than DuckDB (no `abfss://` path construction, no Azure extension setup, full T-SQL including `INFORMATION_SCHEMA`, `sys.*`, CTEs, window functions) and simpler than PySpark (no session warmup, no notebook plumbing).
+
+For routine queries, prefer [`scripts/query_sql_endpoint.py`](../scripts/query_sql_endpoint.py); it auto-detects item type, resolves the SQL host, and handles all of the flag plumbing below. The raw-`sqlcmd` walkthrough that follows explains what the script does under the hood and is worth reading before you extend it.
+
+The pattern below reuses your existing `az login` session via the `ActiveDirectoryAzCli` authentication method. No password, no service principal, no token file ; `sqlcmd` reads the token straight from the `az` cache.
+
+### Prerequisites
+
+- `sqlcmd` (go-sqlcmd, v1.9.0 or later): `brew install sqlcmd` or `winget install --id Microsoft.Sqlcmd`
+- `az login` with an identity that has at least `Viewer` on the workspace and `Read` on the SQL-side object
+- `fab auth login` for endpoint discovery
+
+### Discover the SQL endpoint
+
+Fabric stores the SQL host under a different property depending on item type:
+
+```bash
+# Lakehouse SQL endpoint host (resolves to <id>.datawarehouse.pbidedicated.windows.net)
+fab get "ws.Workspace/LH.Lakehouse" -q "properties.sqlEndpointProperties.connectionString"
+
+# Warehouse host (resolves to <id>.datawarehouse.fabric.microsoft.com)
+fab get "ws.Workspace/WH.Warehouse" -q "properties.connectionString"
+
+# SQL Database host
+fab get "ws.Workspace/SQLDB.SQLDatabase" -q "properties.serverFqdn"
+```
+
+The database name to pass to `sqlcmd -d` is the item's display name without the type extension (e.g. `LH` for `LH.Lakehouse`).
+
+### Query a lakehouse table
+
+```bash
+SQL_HOST=$(fab get "ws.Workspace/LH.Lakehouse" -q "properties.sqlEndpointProperties.connectionString" | tr -d '"')
+
+sqlcmd -S "$SQL_HOST" -d LH \
+  --authentication-method ActiveDirectoryAzCli \
+  -W -s "|" \
+  -Q "SELECT TOP 10 * FROM dbo.orders"
+```
+
+Output:
+
+```
+OrderID|CustomerID|OrderDate|Amount
+-------|----------|---------|------
+1001|42|2024-03-15|199.50
+1002|17|2024-03-15|83.20
+...
+
+Statement ID: {...} | Query hash: 0x... | Distributed request ID: {...}
+(10 rows affected)
+```
+
+Fabric appends a `Statement ID | Query hash | Distributed request ID` footer to every successful query; use those values when opening a Fabric support ticket or correlating with `queryinsights.exec_requests_history`.
+
+### Query a warehouse
+
+Identical pattern, different property name for the host:
+
+```bash
+SQL_HOST=$(fab get "ws.Workspace/WH.Warehouse" -q "properties.connectionString" | tr -d '"')
+
+sqlcmd -S "$SQL_HOST" -d WH \
+  --authentication-method ActiveDirectoryAzCli \
+  -W -s "|" \
+  -Q "SELECT schema_name(schema_id) AS schema_name, name FROM sys.tables"
+```
+
+### Query a SQL Database
+
+```bash
+SQL_HOST=$(fab get "ws.Workspace/SQLDB.SQLDatabase" -q "properties.serverFqdn" | tr -d '"')
+
+sqlcmd -S "$SQL_HOST" -d SQLDB \
+  --authentication-method ActiveDirectoryAzCli \
+  -W -s "|" \
+  -Q "SELECT name FROM sys.objects WHERE type = 'U'"
+```
+
+### Useful sqlcmd flags
+
+- `-W` ; strip trailing whitespace. Without this every column is padded to its max declared length and wraps off-screen; it is the single most important flag.
+- `-s "|"` ; column separator. Pipe or tab works better than spaces for downstream parsing.
+- `-h -1` ; suppress repeating column headers between result blocks.
+- `-y 0 -Y 0` ; disable column truncation for `varchar(max)` / `nvarchar(max)`.
+- `-o out.tsv` ; write to a file instead of stdout.
+- `-Q "..."` ; run one query and exit (vs `-q` which keeps the session open).
+- `-i query.sql` ; read SQL from a file; useful for multi-statement scripts with `GO` separators.
+- `-b` ; return a non-zero exit code if any statement fails; essential inside CI/CD.
+- `-m 11` ; only print error messages with severity >= 11 (suppresses DBCC / informational noise).
+
+### Query a schema at once
+
+The Fabric SQL endpoint supports `INFORMATION_SCHEMA` and `sys.*` metadata views, which DuckDB does not. Use them to explore a lakehouse without guessing table names:
+
+```bash
+sqlcmd -S "$SQL_HOST" -d LH \
+  --authentication-method ActiveDirectoryAzCli \
+  -W -s "|" \
+  -Q "SELECT TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA NOT IN ('sys','INFORMATION_SCHEMA') ORDER BY TABLE_SCHEMA, TABLE_NAME"
+```
+
+### Lakehouse SQL endpoint quirks
+
+- **Read-only**: the Lakehouse SQL endpoint does not support `INSERT`, `UPDATE`, `DELETE`, or `CREATE TABLE`. Use DuckDB, PySpark, or Warehouse T-SQL for writes.
+- **Lag behind OneLake**: the SQL endpoint has its own metadata sync. A table created via Spark may take 10-60 seconds to appear in `INFORMATION_SCHEMA.TABLES`; if you just wrote and a query fails with `Invalid object name`, retry after a short sleep rather than debugging auth.
+- **Schemas are case-sensitive**: `dbo.Orders` and `dbo.orders` are different objects if the underlying Delta path uses mixed case. Always confirm with `INFORMATION_SCHEMA.TABLES`.
+- **Three-part names work within the same endpoint** (`<database>.<schema>.<table>`); four-part cross-endpoint queries do not.
+
+### When to use sqlcmd vs DuckDB vs PySpark
+
+- **sqlcmd**: you already know the table names, the query is standard T-SQL, and the host is reachable. First choice for ad-hoc exploration, schema discovery, data validation, smoke tests, and anything you'd paste into SSMS.
+- **DuckDB**: you need to read Delta files directly (bypass the SQL endpoint sync lag), join across lakehouses in different workspaces, or use DuckDB-specific functions (`PIVOT`, `UNPIVOT`, `read_json_auto`). See [Query Lakehouse or Warehouse Data with DuckDB](#query-lakehouse-or-warehouse-data-with-duckdb).
+- **PySpark**: you need to write back to Delta, run distributed transforms on large tables, use Delta-specific features (time travel, OPTIMIZE, VACUUM), or call the Fabric runtime's pre-installed libraries. See [Execute PySpark/Python Directly Against a Lakehouse](#execute-pysparkpython-directly-against-a-lakehouse-no-notebook).
 
 ## Execute PySpark/Python Directly Against a Lakehouse (No Notebook)
 
@@ -430,7 +557,7 @@ python3 scripts/create_direct_lake_model.py \
 # 2. Query via DAX
 python3 scripts/execute_dax.py "dest.Workspace/Model.SemanticModel" -q "EVALUATE TOPN(10, 'table')"
 
-# 3. (Optional) Delete temporary model
+# 3. (Optional) Delete temporary model (recovery depends on tenant Item Recovery setting)
 fab rm "dest.Workspace/Model.SemanticModel" -f
 ```
 
