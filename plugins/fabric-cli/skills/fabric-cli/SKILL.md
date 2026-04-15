@@ -1,6 +1,6 @@
 ---
 name: fabric-cli
-version: 0.25.0
+version: 0.25.1
 description: Expert guidance for using the Fabric CLI (`fab`) to fully interact with Fabric workspaces, items, and configuration. Automatically invoke this skill whenever the user mentions "Fabric" or "Power BI Service" or a "Fabric/Power BI workspace".
 ---
 

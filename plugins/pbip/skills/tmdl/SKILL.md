@@ -1,6 +1,6 @@
 ---
 name: tmdl
-version: 0.25.0
+version: 0.25.1
 description: Direct TMDL file authoring and BIM-to-TMDL conversion for semantic models in PBIP projects. Automatically invoke when the user asks to "edit TMDL", "add a measure in TMDL", "TMDL syntax", "fix formatString", "fix summarizeBy", "TMDL indentation", "convert BIM to TMDL", "add a column description", "create a calculated column in TMDL", or mentions .tmdl file editing or BIM-to-TMDL migration.
 ---
 

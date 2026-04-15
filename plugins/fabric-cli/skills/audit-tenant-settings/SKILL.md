@@ -1,6 +1,6 @@
 ---
 name: audit-tenant-settings
-version: 0.25.0
+version: 0.25.1
 description: Automatically invoke this skill whenever the user asks about Fabric tenant settings or Power BI tenant settings or auditing tenant settings. You can use this skill if the user mentions "Fabric administration".
 ---
 
@@ -68,6 +68,14 @@ Common variants:
 - `--no-snapshot` skips change detection (first runs, or when a clean slate is wanted).
 
 The script merges live state with the curated metadata and computes drift, preview features, SG scoping, and changes since the last snapshot in one pass. Admin write endpoints are rate-limited to 25 requests / minute; honor `Retry-After` on 429.
+
+For a shareable one-to-two-page briefing, run the PDF generator against the same snapshot:
+
+```bash
+uv run plugins/fabric-cli/skills/audit-tenant-settings/scripts/generate_audit_pdf.py -o /tmp/tenant-audit.pdf
+```
+
+The PDF focuses on headline counts, changes since the last snapshot, the drift table, and a delegated-overrides summary. It reuses the same audit logic as the markdown script (via import) and reads the same snapshot path, so change detection stays in lockstep. Use `--no-overrides` to skip override enumeration when not running as admin, or `--tenant-label "Contoso"` to add a tenant name to the masthead. Pair the PDF with the markdown audit; the PDF is for stakeholders, the markdown is for the working walk-through.
 
 ### 3. Review the script output
 
@@ -137,6 +145,7 @@ Co-develop a plan rather than handing one down. Candidates include:
 - **Controlled tenant-setting changes**: pilot a subset of users via SG scoping first, then broaden. Always via the portal or the explicit `fab api -X post` command; never auto-applied from this skill.
 - **Capacity / domain / workspace override audit**: walk the overrides list with the user and decide which are intentional and which should be removed.
 - **Adoption-planning, implementation-planning, and security-and-compliance-planning** touchpoints from the Power BI implementation planning series. Point to the relevant articles rather than reproducing the content.
+- **Scheduled snapshots and alerting**: when the user wants ongoing oversight rather than ad-hoc reviews, offer to set up a recurring run of the audit script (for example via `cron`, a scheduled GitHub Action, a Fabric notebook on a schedule, or an Azure DevOps pipeline) that refreshes the snapshot and ships the resulting diff somewhere visible. From there, change-detection output can feed an alerting surface; Fabric Activator is one option, but Teams or email via Power Automate, a pager via webhook, or a simple inbox rule all work. Use this to catch new settings Microsoft adds, posture drift, and SG membership changes without having to rerun the audit manually. Scope and wire-up are the user's call; the skill can help design the flow but should not stand anything up without explicit approval.
 
 Close every plan with the disclaimer: "These recommendations are based on the curated baseline and the live API state at the time of this audit. The agent may not present fully accurate or scenario-appropriate information; the user is responsible for due diligence, piloting changes, and confirming with their own security, compliance, and Fabric administration teams before applying anything in production."
 
@@ -166,6 +175,7 @@ Close every plan with the disclaimer: "These recommendations are based on the cu
 - `references/delegated-overrides.md` ; enumerate, classify, and (for capacity only) change delegated overrides.
 - `references/security-groups.md` ; resolve graphIds, classify members, detect red flags, cross-check admin role assignments.
 - `scripts/audit-tenant-settings.py` ; audit + change-detection script. Consumes the metadata yaml via its sibling `references/` path.
+- `scripts/generate_audit_pdf.py` ; renders a clean one-to-two-page PDF briefing of the same audit. Reuses the audit logic by importing the sibling script, optionally enumerates delegated overrides, and emits a compact editorial-style summary with headline counts, changes since last audit, a drift table, and a delegated-overrides section. Run with `uv run scripts/generate_audit_pdf.py -o /tmp/tenant-audit.pdf` after (or instead of) the markdown audit; share the PDF with stakeholders, keep the markdown for the working walk-through.
 
 ### Related reading in the main fabric-cli skill
 
