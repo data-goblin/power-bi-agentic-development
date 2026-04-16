@@ -20,7 +20,7 @@ Decisions to settle once, then audit periodically:
 
 | Decision | Settled via | Fabric CLI touchpoint |
 |---|---|---|
-| Who can create workspaces | `Create workspaces` tenant setting + security group | Use the `audit-tenant-settings` skill; see [admin.md](./admin.md) |
+| Who can create workspaces | `Create workspaces` tenant setting + security group | Use the `audit-tenant-settings` skill (in the `fabric-admin` plugin); see [admin.md](./admin.md) |
 | Workspace naming conventions | Documented standard (prefix, stage suffix, short form) | `fab mkdir`, `fab set -q displayName` |
 | Domains for logical grouping | Domain admins + domain assignment | `fab assign .domains/<d>.Domain -W <ws>.Workspace` |
 | Workspace request process | Intake form, SLA, validation rules | Script creation via `fab mkdir` + `fab acl set` |

@@ -6,7 +6,45 @@ description: Automatically invoke this skill whenever the user asks about Fabric
 
 # Audit Tenant Settings
 
-Audit Fabric / Power BI tenant settings against a curated baseline, surface drift, enumerate delegated overrides at capacity / domain / workspace scope, investigate the Entra security groups those settings reference, and turn findings into a grounded discussion about what to do next. Invoke the `fabric-cli` skill, as well.
+Audit Fabric / Power BI tenant settings against a curated baseline, surface drift, enumerate delegated overrides at capacity / domain / workspace scope, investigate the Entra security groups those settings reference, and turn findings into a grounded discussion about what to do next. Always invoke the `fabric-cli` skill alongside this skill; it provides the `fab` CLI guidance, admin API references, and the `microsoft-learn` MCP server that this skill depends on.
+
+## Prerequisites
+
+This plugin is an add-on to the `fabric-cli` plugin. It requires:
+
+- **fabric-cli plugin** installed and enabled; provides `fab` CLI guidance, the `microsoft-learn` MCP server, and admin API reference docs.
+- **fab CLI** (`ms-fabric-cli`) authenticated with a Fabric / Power BI admin account.
+- **az CLI** authenticated with Graph permissions (`Group.Read.All`, `User.Read.All`, `Directory.Read.All`, `RoleManagement.Read.Directory`) when investigating security groups.
+
+## Settings
+
+Per-project configuration via `.claude/fabric-admin.local.md`:
+
+```markdown
+---
+enabled: true
+tenant_label: "Contoso"
+snapshot_path: "~/.cache/fabric-admin-audit/last-snapshot.json"
+drift_threshold_high: 5
+drift_threshold_medium: 15
+notification_level: "info"
+schedule: "weekly"
+---
+
+# Fabric Admin Configuration
+
+Additional context or tenant-specific notes.
+```
+
+| Field | Type | Default | Purpose |
+|---|---|---|---|
+| `enabled` | bool | `true` | Toggle the plugin on/off |
+| `tenant_label` | string | none | Label for PDF masthead and audit reports |
+| `snapshot_path` | string | `~/.cache/fabric-admin-audit/last-snapshot.json` | Where to store/read the last-run snapshot JSON |
+| `drift_threshold_high` | int | `5` | Alert when high-risk drift count exceeds this |
+| `drift_threshold_medium` | int | `15` | Alert when total drift count exceeds this |
+| `notification_level` | string | `info` | Verbosity: `quiet`, `info`, `verbose` |
+| `schedule` | string | `weekly` | Preferred audit cadence: `daily`, `weekly`, `monthly`, `ad-hoc` |
 
 
 ## When to use this skill
@@ -42,7 +80,7 @@ Invoke for any tenant-, delegation-, or SG-scoped governance question that needs
    - Tenant-wide state: `fab api "admin/tenantsettings"`
    - Delegated overrides: `fab api "admin/capacities/delegatedTenantSettingOverrides"`, `admin/domains/...`, `admin/workspaces/...`
    - Entra groups and role assignments: `az ad group`, `az rest --method get --uri https://graph.microsoft.com/v1.0/...`
-3. **Microsoft Learn** via the `microsoft-learn` MCP server (`microsoft_docs_search`, `microsoft_docs_fetch`, `microsoft_code_sample_search`). Use when metadata is stale, the setting is brand new, or the user asks a feature question the baseline cannot answer.
+3. **Microsoft Learn** via the `microsoft-learn` MCP server (`microsoft_docs_search`, `microsoft_docs_fetch`, `microsoft_code_sample_search`) or the `pbi-search` CLI as an alternative. Use when metadata is stale, the setting is brand new, or the user asks a feature question the baseline cannot answer.
 
 ## Workflow
 
@@ -58,7 +96,7 @@ Follow these steps in order. Skip a step only with a clear reason; never silentl
 ### 2. Run the audit script
 
 ```bash
-uv run plugins/fabric-cli/skills/audit-tenant-settings/scripts/audit-tenant-settings.py -o /tmp/tenant-audit.md
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/audit-tenant-settings/scripts/audit-tenant-settings.py -o /tmp/tenant-audit.md
 ```
 
 Common variants:
@@ -72,7 +110,7 @@ The script merges live state with the curated metadata and computes drift, previ
 For a shareable one-to-two-page briefing, run the PDF generator against the same snapshot:
 
 ```bash
-uv run plugins/fabric-cli/skills/audit-tenant-settings/scripts/generate_audit_pdf.py -o /tmp/tenant-audit.pdf
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/audit-tenant-settings/scripts/generate_audit_pdf.py -o /tmp/tenant-audit.pdf
 ```
 
 The PDF focuses on headline counts, changes since the last snapshot, the drift table, and a delegated-overrides summary. It reuses the same audit logic as the markdown script (via import) and reads the same snapshot path, so change detection stays in lockstep. Use `--no-overrides` to skip override enumeration when not running as admin, or `--tenant-label "Contoso"` to add a tenant name to the masthead. Pair the PDF with the markdown audit; the PDF is for stakeholders, the markdown is for the working walk-through.
@@ -111,7 +149,7 @@ For each setting where drift matters, ground the discussion in authoritative sou
 
 1. Search the curated metadata by keyword:
    ```bash
-   grep -i -A6 '<keyword>' plugins/fabric-cli/skills/audit-tenant-settings/references/tenant-settings-metadata.yaml
+   grep -i -A6 '<keyword>' ${CLAUDE_PLUGIN_ROOT}/skills/audit-tenant-settings/references/tenant-settings-metadata.yaml
    ```
 2. Confirm the live state:
    ```bash

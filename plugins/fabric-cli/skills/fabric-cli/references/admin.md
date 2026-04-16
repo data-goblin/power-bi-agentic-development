@@ -26,7 +26,7 @@ Rate limit: admin write endpoints are capped at 25 requests/minute; watch for `4
 
 ## Tenant Settings, Security Groups, Workspace Permissions
 
-> **Use the [`audit-tenant-settings`](../../audit-tenant-settings/SKILL.md) skill for any audit, drift, change-detection, or governance question** touching tenant settings, delegated overrides, or the Entra ID security groups that scope them. That skill owns the curated baseline, the audit script, and the SG investigation workflow. The patterns below cover the raw API mechanics the skill relies on.
+> **Use the `audit-tenant-settings` skill (in the `fabric-admin` plugin) for any audit, drift, change-detection, or governance question** touching tenant settings, delegated overrides, or the Entra ID security groups that scope them. That skill owns the curated baseline, the audit script, and the SG investigation workflow. The patterns below cover the raw API mechanics the skill relies on.
 
 ### List tenant settings
 

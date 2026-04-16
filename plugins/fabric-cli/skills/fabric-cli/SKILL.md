@@ -85,7 +85,7 @@ You must read and understand the common list of operations with simple examples
 
 ## Essential Concepts
 
-For information about any concepts related to Power BI or Fabric you must search or fetch via the Fabric MCP server and ask the user questions with the `AskUserQuestion` tool; NEVER guess or make assumptions.
+For information about any concepts related to Power BI or Fabric you must search or fetch via the `microsoft-learn` MCP server (or the `pbi-search` CLI as an alternative) and ask the user questions with the `AskUserQuestion` tool; NEVER guess or make assumptions.
 
 ### Workspaces
 
@@ -374,7 +374,7 @@ Workspace-scope operations fall into a few groups:
   - Full local snapshot (items + lakehouse files): [`scripts/download_workspace.py`](./scripts/download_workspace.py)
 - Permissions:
   - Inspect / grant / revoke: `fab acl ls | set | rm`
-  - Tenant-wide governance audit: use the [`audit-tenant-settings`](../audit-tenant-settings/SKILL.md) skill
+  - Tenant-wide governance audit: use the `audit-tenant-settings` skill from the `fabric-admin` plugin
 - Connections and gateways (bound to, but outside, the workspace):
   - Credential types (WorkspaceIdentity, SPN, Basic), OAuth2 limits: [connections.md](./references/connections.md)
   - Datasource binding, credential rotation: [gateways.md](./references/gateways.md)
@@ -453,7 +453,7 @@ Admin-scope work is gated behind the Fabric / Power BI admin role. Confirm acces
 Two entry points cover most admin tasks:
 
 - Governance audits (tenant settings, delegated overrides, Entra SG scoping):
-  - Use the [`audit-tenant-settings`](../audit-tenant-settings/SKILL.md) skill. It owns the curated metadata baseline, the audit + change-detection script, delegated-override enumeration, and the Entra SG investigation workflow.
+  - Use the `audit-tenant-settings` skill from the `fabric-admin` plugin. It owns the curated metadata baseline, the audit + change-detection script, delegated-override enumeration, and the Entra SG investigation workflow.
   - Invoke it whenever the question combines tenant posture with group membership, override scope, or drift against the baseline.
 - Raw admin APIs (cross-workspace search, activity events, artifact access, item search):
   - Patterns in [admin.md](./references/admin.md)
@@ -511,7 +511,7 @@ Check references before deploying:
 
 ## Related skills
 
-- [`audit-tenant-settings`](../audit-tenant-settings/SKILL.md) ; Fabric governance workflow covering tenant settings, delegated overrides (capacity / domain / workspace), and the Entra security groups those settings reference. Read-only; holds the curated metadata baseline and the audit + change-detection script.
+- `audit-tenant-settings` (in the `fabric-admin` plugin) ; Fabric governance workflow covering tenant settings, delegated overrides (capacity / domain / workspace), and the Entra security groups those settings reference. Read-only; holds the curated metadata baseline and the audit + change-detection script.
 
 ## Gotchas
 

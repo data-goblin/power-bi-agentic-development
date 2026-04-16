@@ -36,7 +36,7 @@ import yaml
 SCRIPT_DIR = Path(__file__).resolve().parent
 METADATA_PATH = SCRIPT_DIR.parent / "references" / "tenant-settings-metadata.yaml"
 INDEX_URL = "https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index"
-DEFAULT_SNAPSHOT = Path.home() / ".cache" / "fabric-cli-audit" / "last-snapshot.json"
+DEFAULT_SNAPSHOT = Path.home() / ".cache" / "fabric-admin-audit" / "last-snapshot.json"
 # endregion
 
 

@@ -332,4 +332,4 @@ Follow these regardless of distribution method:
 - [Deployment Pipelines](./deployment-pipelines.md) ; pipeline CLI and API usage
 - [Admin APIs](./admin.md) ; cross-tenant audit of shares, roles, and activity
 - [Gateways](./gateways.md) ; gateway and data source connection roles
-- [Tenant Settings Audit skill](../../audit-tenant-settings/SKILL.md) ; curated baseline yaml and audit workflow for export / sharing / access tenant settings
+- Tenant Settings Audit skill (in the `fabric-admin` plugin) ; curated baseline yaml and audit workflow for export / sharing / access tenant settings

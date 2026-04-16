@@ -1,0 +1,21 @@
+{
+  "name": "fabric-admin",
+  "version": "0.25.3",
+  "description": "Fabric and Power BI administration; tenant settings audits, governance, delegated overrides, and Entra security group investigation. Requires the fabric-cli plugin.",
+  "author": {
+    "name": "Kurt Buhler",
+    "url": "https://data-goblins.com"
+  },
+  "homepage": "https://data-goblins.com",
+  "repository": "https://github.com/data-goblin/power-bi-agentic-development",
+  "license": "GPL-3.0",
+  "keywords": [
+    "power-bi",
+    "fabric",
+    "administration",
+    "tenant-settings",
+    "governance",
+    "security-groups",
+    "delegated-overrides"
+  ]
+}

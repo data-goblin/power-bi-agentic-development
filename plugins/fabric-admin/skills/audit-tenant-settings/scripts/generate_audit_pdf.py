@@ -15,7 +15,7 @@ compact, editorial-style A4 PDF focused on deviations from the baseline and
 changes since the last snapshot.
 
 Usage:
-    uv run plugins/fabric-cli/skills/audit-tenant-settings/scripts/generate_audit_pdf.py \
+    uv run ${CLAUDE_PLUGIN_ROOT}/skills/audit-tenant-settings/scripts/generate_audit_pdf.py \
       -o /tmp/tenant-audit.pdf
 
 Reads the same snapshot path as audit-tenant-settings.py so change detection
