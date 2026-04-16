@@ -51,7 +51,7 @@ pbir visuals labels "Visual.Visual" --show
 ```bash
 # Single color via theme (preferred; no CLI override needed)
 # Per-series color if needed:
-pbir visuals format-field "Visual.Visual" dataPoint fill -f "Sales.Revenue" -v "#5B8DBE"
+pbir set "Visual.Visual.dataPoint.field(Sales.Revenue).fill" --value "#5B8DBE"
 ```
 
 5. **Conditional formatting on bar fill for variance.** When bars represent a comparison (e.g. variance to prior year), color only the actionable categories to reduce cognitive load. Highlight negative variance or categories outside a threshold; leave the rest in a neutral/muted tone so the reader's attention goes to what needs action, not to every bar

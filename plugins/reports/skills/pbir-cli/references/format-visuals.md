@@ -226,34 +226,51 @@ pbir visuals cf "Visual.Visual" --measure "dataPoint.fill _Fmt.RevenueColor"
 
 ### Managing Conditional Formatting
 
+Use `pbir get` / `pbir set` with a `.cf` dot-path tail. The old
+`pbir visuals cf --info`/`--list`/`--has`/`--set-color`/`--remove`/`--remove-all`
+flags are deprecated and redirect to these commands — see
+[conditional-formatting.md](conditional-formatting.md) for the full rewrite
+table.
+
 ```bash
-# List all CF on a visual (discovers containers dynamically)
-pbir visuals cf "Visual.Visual"
+# Read CF (ASCII summary, or scalar leaf, or JSON)
+pbir get "Visual.Visual.dataPoint.fill.cf"
+pbir get "Visual.Visual.dataPoint.fill.cf.gradient.min.color"
+pbir get "Visual.Visual.dataPoint.fill.cf" --json
 
-# Inspect specific CF entry
-pbir visuals cf "Visual.Visual" --info dataPoint.fill
+# Bulk read across a report (replaces `--list`)
+pbir get "Report.Report/**/*.Visual.**.cf"
 
-# Remove CF from specific container.prop
-pbir visuals cf "Visual.Visual" --remove dataPoint.fill
+# Remove CF (aliases: --remove / --clear)
+pbir set "Visual.Visual.dataPoint.fill.cf" --remove
+pbir set "Visual.Visual.dataPoint.fill.cf" --clear
 
-# Remove all CF from visual
-pbir visuals cf "Visual.Visual" --remove-all
+# Bulk wipe every CF on a visual
+pbir set "Visual.Visual.**.cf" --remove -f
 ```
 
 ### Updating CF Colors
 
-Change colors in existing CF without rebuilding:
+Scalar leaf edits on existing CF entries go through `pbir set`:
 
 ```bash
-# Update gradient colors (theme tokens or hex)
-pbir visuals cf "Visual.Visual" --set-color "dataPoint.fill min=bad max=good"
+# Update gradient stop colors
+pbir set "Visual.Visual.dataPoint.fill.cf.gradient.min.color" --value "bad"
+pbir set "Visual.Visual.dataPoint.fill.cf.gradient.max.color" --value "good"
 
-# Update 3-color gradient
-pbir visuals cf "Visual.Visual" --set-color "dataPoint.fill min=bad mid=neutral max=good"
+# Update 3-color gradient mid stop
+pbir set "Visual.Visual.dataPoint.fill.cf.gradient.mid.color" --value "neutral"
 
-# Update rules CF by positional (first case=min, last=max)
-pbir visuals cf "Visual.Visual" --set-color "values.backColor min=#E66C37 max=#118DFF"
+# Update a specific rules case color (positional index)
+pbir set "Visual.Visual.values.backColor.cf.rules.case[0].color" --value "#E66C37"
+pbir set "Visual.Visual.values.backColor.cf.rules.case[1].color" --value "#118DFF"
+
+# Rebind the input measure of a gradient or measure-driven CF
+pbir set "Visual.Visual.dataPoint.fill.cf.measure" --value "_Fmt.NewColor"
 ```
+
+Kind mismatch hard-errors with a pointer at `pbir set ...cf --remove` +
+`pbir visuals cf --<kind>` — no automatic morphing.
 
 ### Converting Hex Colors to Theme Tokens
 
@@ -316,12 +333,56 @@ visual.cf.remove("dataPoint")
 visual.cf.remove_all()
 ```
 
-### Per-Field and Interaction State
+### Per-Field / Per-Series / Interaction State -- Selector Mini-Language
+
+`pbir get` and `pbir set` accept selector tokens embedded in the dot path so
+you can target a single series, a single category value, a specific reference
+line, or an interaction state. Globs, `--where`, `--dry-run`, `--remove`, and
+`--no-validate` all work unchanged.
 
 ```bash
-pbir visuals format-field "Visual.Visual" --field "Sales.Revenue" --color "#118DFF"
-pbir visuals format-state "Visual.Visual" --state hover --color "#E3F2FD"
+# Per-field -- writes selector.metadata, scoped to one series/column
+pbir set "Visual.Visual.dataPoint.field(Sales.Revenue).fill" --value "#118DFF"
+
+# Per-category-value -- writes selector.scopeId, scoped to one value
+pbir set "Visual.Visual.dataPoint.series(Cities.City=Antwerp Relay).fill" --value "#E66C37"
+
+# Reference line by id -- writes selector.id, scoped to one line
+pbir set "Visual.Visual.y1AxisReferenceLine.id(2).lineColor" --value "#FF0000"
+
+# Interaction state -- writes selector.id = interaction:hover / press / selected
+pbir set "Visual.Visual.background.hover.color"    --value "#F5F5F5"
+pbir set "Visual.Visual.background.press.color"    --value "#E0E0E0"
+pbir set "Visual.Visual.background.selected.color" --value "#00B294"
+
+# Read the current override back
+pbir get "Visual.Visual.dataPoint.field(Sales.Revenue).fill"
+
+# Drop the override (falls back to visual/theme default)
+pbir set "Visual.Visual.dataPoint.field(Sales.Revenue).fill" --remove
+
+# Bulk + conditional -- disable labels on the Cost series across every chart
+pbir set "Report.Report/**/*.Visual.labels.field(Sales.Cost).show" \
+  --value false --where "visual_type__in=lineChart|clusteredBarChart" -f
 ```
+
+Notes:
+
+- Hex strings (`#RRGGBB`) on color-named properties (`fill`, `color`,
+  `fontColor`, `lineColor`, anything ending in `Color`) are wrapped in
+  `solid.color` automatically. No `--json` gymnastics needed.
+- `field(X)` references are validated against the connected model and
+  against the visual's bound fields (same guarantees as `pbir visuals bind`).
+  Model-unreachable degrades to a warning; typos hard-fail with suggestions.
+  Bypass with `--no-validate`.
+- Setting a plain `dataPoint.fill` after a `dataPoint.field(X).fill` does
+  not clobber the scoped override -- the wildcard and scoped entries stack.
+- Combined selector + interaction state in one path (e.g.
+  `field(X).hover.prop`) is not yet supported and raises an explicit error.
+  Apply them in two separate calls.
+- `pbir visuals format-field` and `pbir visuals format-state` are deprecated
+  aliases that print the equivalent `pbir set` command and exit non-zero.
+  Both are removed in 1.0.0.
 
 ## Clearing Visual-Level Overrides (Reset to Theme)
 

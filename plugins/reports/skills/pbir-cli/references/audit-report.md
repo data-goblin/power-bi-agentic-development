@@ -219,6 +219,6 @@ pbir theme colors "Report.Report"                # Check sentiment colors
 Overly formatted visuals with too many conditional elements or customization can be suboptimal.
 
 ```bash
-pbir visuals cf "Report.Report/Page.Page/Visual.Visual"  # Check conditional formatting rules
+pbir get "Report.Report/Page.Page/Visual.Visual.**.cf"       # Check conditional formatting
 pbir visuals format "Report.Report/Page.Page/Visual.Visual"  # Full formatting breakdown
 ```

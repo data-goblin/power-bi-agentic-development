@@ -264,29 +264,49 @@ pbir visuals bind "Visual.Visual" -c "Values"    # Clear entire role
 
 ### Conditional Formatting
 
+Two surfaces share one model:
+
+- **`pbir set` / `pbir get`** — dot-path reads and scalar edits on existing CF entries.
+- **`pbir visuals cf`** — structural authoring (create, copy, convert).
+
 ```bash
-# Apply measure-based formatting to component property
+# Create measure-based CF (structural — stays on `visuals cf`)
 pbir visuals cf "Visual.Visual" --measure "labels.color _Fmt.StatusColor"
 pbir visuals cf "Visual.Visual" --measure "dataPoint.fill _Fmt.BarColor"
 
-# Inspect/remove
-pbir visuals cf "Visual.Visual" --info labels.color
-pbir visuals cf "Visual.Visual" --remove labels.color
+# Read CF via pbir get (.cf tail)
+pbir get "Visual.Visual.dataPoint.fill.cf"                              # ASCII summary
+pbir get "Visual.Visual.dataPoint.fill.cf.gradient.min.color"           # scalar leaf
+pbir get "Visual.Visual.dataPoint.fill.cf" --json                       # raw JSON
+pbir get "Report.Report/**/*.Visual.**.cf"                              # bulk read
 
-# Per-field formatting (positional: VISUAL_PATH COMPONENT PROPERTY)
-pbir visuals format-field "Visual.Visual" values fontColor -f "Sales.Revenue" -v "#118DFF"
+# Edit CF leaves via pbir set
+pbir set "Visual.Visual.dataPoint.fill.cf.gradient.min.color" --value "bad"
+pbir set "Visual.Visual.dataPoint.fill.cf.gradient.max.value" --value 250
+pbir set "Visual.Visual.labels.color.cf.rules.case[0].color" --value "alertRed"
+pbir set "Visual.Visual.labels.color.cf.rules.else.color"   --value "foreground"
+pbir set "Visual.Visual.dataPoint.fill.cf.measure"          --value "_Fmt.NewColor"
 
-# Interaction state formatting (positional: VISUAL_PATH COMPONENT PROPERTY)
-pbir visuals format-state "Visual.Visual" labels fontColor -s hover -v "#E3F2FD"
+# Remove CF (aliases: --remove / --clear)
+pbir set "Visual.Visual.dataPoint.fill.cf" --remove
+pbir set "Visual.Visual.**.cf" --remove -f                              # bulk wipe
 
-# Manage all conditional formatting
-pbir visuals cf "Visual.Visual"                  # List all CF on visual
-pbir visuals cf "Visual.Visual" --info dataPoint.fill          # CF type and field details
-pbir visuals cf "Visual.Visual" --has-cf dataPoint             # Check if container has CF
-pbir visuals cf "Visual.Visual" --remove dataPoint             # Remove CF from container
-pbir visuals cf "Visual.Visual" --set-color "dataPoint.fill min=bad max=good"  # Update colors
-pbir visuals cf "Visual.Visual" --theme-colors "dataPoint.fill"               # Hex -> theme tokens
-pbir visuals cf "Visual.Visual" --to-measure dataPoint.fill    # Convert to extension measure
+# Per-field / per-series / interaction-state selectors compose with .cf
+pbir set "Visual.Visual.values.field(Sales.Revenue).fontColor" --value "#118DFF"
+pbir set "Visual.Visual.dataPoint.series(Cities.City=Antwerp).fill" --value "#E66C37"
+pbir set "Visual.Visual.y1AxisReferenceLine.id(2).lineColor" --value "#FF0000"
+pbir set "Visual.Visual.labels.hover.fontColor" --value "#E3F2FD"
+
+# Convert / copy / theme-tokenize (structural — retained on `visuals cf`)
+pbir visuals cf "Visual.Visual" --theme-colors "dataPoint.fill"             # Hex -> theme tokens
+pbir visuals cf "Visual.Visual" --to-measure dataPoint.fill                 # Convert to extension measure
+pbir visuals cf "Target.Visual" --copy-from "Source.Visual"                 # Copy CF between visuals
+
+# Note: `pbir visuals cf --info`/`--list`/`--has`/`--set-color`/`--remove`/
+# `--remove-all` are deprecated and redirect to the `pbir set`/`pbir get`
+# forms above. `pbir visuals format-field` and `pbir visuals format-state`
+# are also deprecated redirects. Running any of them prints the equivalent
+# command and exits non-zero.
 ```
 
 ### Custom Visuals

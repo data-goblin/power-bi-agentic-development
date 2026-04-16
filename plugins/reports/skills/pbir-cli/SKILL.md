@@ -1,6 +1,6 @@
 ---
 name: pbir-cli
-version: 0.24.6
+version: 0.25.3
 description: Advanced Power BI report manipulation and execution using pbir CLI and object model; executable scripts for complex workflows, domain-specific references, and reusable templates. Automatically invoke when the user works with .pbir/.pbip report files, or asks to "add a visual", "format a chart", "bind fields", "set a theme", "add conditional formatting", "create a page", "add a thin-report measure", "validate a report", "audit report formatting", "bulk format visuals", "publish to Fabric", "explore a report", or mentions pbir, pbir-cli, report visuals, visual formatting, field bindings, report extensions, or Fabric workspace integration for reports.
 ---
 
@@ -224,14 +224,16 @@ Multiple predicates are comma-separated and ANDed: `--where "visual_type=card,wi
 ### Conditional Formatting
 
 ```bash
-# Measure-driven CF
+# Create CF (structural — pbir visuals cf)
 pbir visuals cf "Visual" --measure "labels.color _Fmt.StatusColor"
-
-# Gradient CF
 pbir visuals cf "Visual" --gradient --field "Table.Field" --min-color bad --max-color good
-
-# Data bars CF
 pbir visuals cf "Visual" --data-bars --field "Table.Field"
+
+# Read / edit / remove CF (dot-path — pbir set / pbir get)
+pbir get "Visual.dataPoint.fill.cf"                             # summary
+pbir set "Visual.dataPoint.fill.cf.gradient.min.color" --value "bad"
+pbir set "Visual.dataPoint.fill.cf" --remove                    # or --clear
+pbir get "Report.Report/**/*.Visual.**.cf"                       # bulk read
 ```
 
 For gradient/rules/icons/data bars options, copy/remove/convert, and best practices, consult **`references/conditional-formatting.md`**.
@@ -468,40 +470,92 @@ pbir visuals properties "path":
 See **`references/conditional-formatting.md`** for CF types, measure-based CF, and best practices.
 
 ```yaml
-pbir visuals cf "path":
-  use: list all CF rules on a visual
+# Read / edit / remove CF via dot-path on pbir set / pbir get
+pbir get "...Visual.<container>.<prop>.cf":
+  use: read CF summary (kind, measure, stops/cases, source)
+  example: pbir get "V.Visual.dataPoint.fill.cf"
 
+pbir get "...Visual.<container>.<prop>.cf.<kind>.<leaf>":
+  use: read a scalar CF leaf
+  example: pbir get "V.Visual.dataPoint.fill.cf.gradient.min.color"
+
+pbir get "...Visual.**.cf":
+  use: bulk CF read across a glob (replaces `visuals cf --list`)
+  example: pbir get "Report.Report/**/*.Visual.**.cf"
+
+pbir set "...Visual.<container>.<prop>.cf.<kind>.<leaf>":
+  use: scalar leaf edit on an existing CF entry
+  example: pbir set "V.Visual.dataPoint.fill.cf.gradient.min.color" --value "bad"
+  note: kind mismatch hard-errors; no automatic morphing
+
+pbir set "...Visual.<container>.<prop>.cf":
+  use: wipe a CF entry (aliases: --remove / --clear)
+  example: pbir set "V.Visual.dataPoint.fill.cf" --remove
+
+# Structural authoring — create, copy, convert — stays on `pbir visuals cf`
 pbir visuals cf "path" --measure:
-  use: apply measure-based CF
+  use: create measure-based CF
   args: "component.property Table.Measure"
 
-pbir visuals cf "path" --info:
-  use: inspect a CF rule
-  args: component.property
+pbir visuals cf "path" --gradient --field "Table.Field":
+  use: create gradient CF
+  flags: --min-color, --max-color, --mid-color, --on container.prop
 
-pbir visuals cf "path" --remove:
-  use: remove a CF rule
-  args: component or component.property
+pbir visuals cf "path" --rules --field "Table.Field":
+  use: create rules CF
+  flags: --rule "op value color" (repeatable)
 
-pbir visuals cf "path" --set-color:
-  use: update gradient colors
-  args: "component.property min=bad max=good"
+pbir visuals cf "path" --data-bars --field "Table.Field":
+  use: create data bars CF
+  flags: --positive-color, --negative-color
+
+pbir visuals cf "path" --icons --field "Table.Field":
+  use: create icons CF
+  flags: --rule "op value icon" (repeatable)
 
 pbir visuals cf "path" --theme-colors:
   use: convert hex to theme tokens
   args: component.property
 
 pbir visuals cf "path" --to-measure:
-  use: convert gradient to extension measure
+  use: convert gradient/rules to extension measure
   args: component.property
 
-pbir visuals format-field:
-  use: per-field formatting (positional args)
-  args: VISUAL COMPONENT PROPERTY -f "Table.Field" -v value
+pbir visuals cf "Target.Visual" --copy-from "Source.Visual":
+  use: copy all CF entries between visuals
 
-pbir visuals format-state:
-  use: interaction state formatting
-  args: VISUAL COMPONENT PROPERTY -s hover/selected -v value
+# Deprecated: --info, --list, --has, --set-color, --remove, --remove-all
+# These redirect to the pbir set / pbir get dot-path forms above and exit
+# non-zero. See references/conditional-formatting.md for the rewrite table.
+
+pbir set "...Visual.<container>.field(Table.Column).<prop>":
+  use: per-field formatting via selector mini-language on pbir set
+  example: pbir set "V.Visual.dataPoint.field(Sales.Revenue).fill" --value "#118DFF"
+  flags: --value, --json, --remove, --no-validate, -f (globs), --where, --dry-run
+  note: Hex on color-named props is auto-wrapped in solid.color
+
+pbir set "...Visual.<container>.series(Table.Column=Value).<prop>":
+  use: per-category-value formatting via scopeId selector
+  example: pbir set "V.Visual.dataPoint.series(Cities.City=Antwerp).fill" --value "#E66C37"
+
+pbir set "...Visual.<container>.id(N).<prop>":
+  use: id-keyed entries (reference lines, error bars)
+  example: pbir set "V.Visual.y1AxisReferenceLine.id(2).lineColor" --value "#FF0000"
+
+pbir set "...Visual.<container>.hover|press|selected.<prop>":
+  use: interaction-state formatting
+  example: pbir set "V.Visual.background.hover.color" --value "#F5F5F5"
+
+pbir get "...Visual.<container>.field(X).<prop>":
+  use: read the current override for a given selector
+
+pbir set "...Visual.<container>.field(X).<prop>" --remove:
+  use: drop the override (falls back to visual/theme default)
+
+# Deprecated redirects (removed in 1.0.0) -- they print the equivalent
+# `pbir set` command and exit non-zero:
+pbir visuals format-field  -> pbir set "...field(X).<prop>"
+pbir visuals format-state  -> pbir set "....hover|press|selected.<prop>"
 ```
 
 ### Theme Operations
@@ -693,6 +747,8 @@ references/add-new-visual.md: adding visuals, layout patterns, bulk creation
 references/fields-and-bindings.md: field binding, Column vs Measure types, swapping fields, rebinding
 references/format-visuals.md: formatting workflow, property discovery, glob patterns
 references/conditional-formatting.md: CF types, measure-based CF, copy/remove/update/convert
+references/reference-lines.md: reference-line entries on chart axes; pbir visuals reference-line and styling via pbir set
+references/error-bars.md: error bars and bullet markers on chart visuals; pbir visuals error-bars and styling via pbir set
 references/modifying-theme.md: theme inspection, colors, text classes, fonts
 references/apply-theme.md: applying/copying/saving theme templates
 references/converting-reports.md: format conversion, thick/thin split, merge, rebind

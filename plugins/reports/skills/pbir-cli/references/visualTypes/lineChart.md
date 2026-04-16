@@ -49,8 +49,8 @@ pbir set "Visual.Visual.lineStyles.strokeTransparency" --value 88
 pbir set "Visual.Visual.lineStyles.strokeWidth" --value 3
 
 # Secondary series styling (per-field formatting)
-pbir visuals format-field "Visual.Visual" lineStyles lineStyle -f "Sales.Target" -v "dashed"
-pbir visuals format-field "Visual.Visual" lineStyles strokeWidth -f "Sales.Target" -v 1
+pbir set "Visual.Visual.lineStyles.field(Sales.Target).lineStyle" --value "dashed"
+pbir set "Visual.Visual.lineStyles.field(Sales.Target).strokeWidth" --value 1
 ```
 
 4. **Disable markers for continuous data; enable for categorical.** If the x-axis has many data points (e.g. daily over a year), markers clutter. If few data points (e.g. 4 quarters), markers help distinguish individual values
@@ -88,8 +88,8 @@ pbir dax measures add "Report.Report" -t _Fmt -n "Revenue Latest" \
 pbir visuals bind "Visual.Visual" -a "Y:_Fmt.Revenue Latest" -t Measure
 
 # Enable marker and label only for latest-point series
-pbir visuals format-field "Visual.Visual" lineStyles showMarker -f "_Fmt.Revenue Latest" -v true
-pbir visuals format-field "Visual.Visual" labels show -f "_Fmt.Revenue Latest" -v true
+pbir set "Visual.Visual.lineStyles.field(_Fmt.Revenue Latest).showMarker" --value true
+pbir set "Visual.Visual.labels.field(_Fmt.Revenue Latest).show" --value true
 
 # Disable legend (series labels or leader lines identify the lines)
 pbir visuals legend "Visual.Visual" --no-show
