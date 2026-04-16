@@ -189,6 +189,15 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 
 </details>
 
+<details>
+<summary><img src="media/icons/fabric-cli.svg" alt="" height="20"> <strong>fabric-admin</strong> &ensp; Tenant settings audits, governance, delegated overrides; requires fabric-cli</summary>
+
+| Type | Name | Description |
+|------|------|-------------|
+| Skill | [`audit-tenant-settings`](plugins/fabric-admin/skills/audit-tenant-settings/) | Audit Fabric and Power BI tenant settings, delegated overrides, and Entra security group membership |
+
+</details>
+
 
 ## Useful stuff
 
