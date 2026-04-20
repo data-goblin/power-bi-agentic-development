@@ -1,6 +1,6 @@
 ---
 name: audit-tenant-settings
-version: 0.26.0
+version: 0.26.1
 description: Automatically invoke this skill whenever the user asks about Fabric tenant settings or Power BI tenant settings or auditing tenant settings. You can use this skill if the user mentions "Fabric administration".
 ---
 
