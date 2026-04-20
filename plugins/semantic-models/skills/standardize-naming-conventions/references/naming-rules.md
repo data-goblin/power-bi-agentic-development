@@ -1,6 +1,6 @@
 # Naming Convention Rules Reference
 
-Comprehensive rules for standardizing naming conventions in Power BI semantic models (TMDL format). These rules are derived from common best practices and should be adapted to each organization's business terminology.
+Rules for standardizing naming conventions in Power BI semantic models (TMDL format). These rules are derived from common best practices and should be adapted to each organization's business terminology.
 
 ## Core Principle
 

@@ -1,13 +1,13 @@
 ---
 name: python-visuals
-version: 0.8.5
-description: "This skill should be used when the user asks to 'create a Python visual', 'add a matplotlib chart', 'inject a Python script into Power BI', 'use seaborn in Power BI', 'add a Python chart to a report', 'write a Python visual script', 'pythonVisual', or needs guidance on Python visual creation, matplotlib/seaborn patterns, or Python visual best practices in PBIR reports."
+version: 0.26.0
+description: Python visual creation and matplotlib/seaborn patterns for PBIR reports. Automatically invoke when the user mentions "Python visual", "matplotlib in Power BI", "seaborn in Power BI", "pythonVisual", or asks to "create a Python visual", "add a matplotlib chart", "write a Python visual script".
 ---
 
 # Python Visuals in Power BI (PBIR)
 
 > **Report modification requires tooling.** Two paths exist:
-> 1. **`pbir` CLI (preferred)** -- use the `pbir` command and the `pbir-cli` skill. Check availability with `pbir --version`.
+> 1. **`pbir` CLI (preferred)** -- use the `pbir` command and the `pbir-cli` skill. Install with `uv tool install pbir-cli` or `pip install pbir-cli`. Check availability with `pbir --version`.
 > 2. **Direct JSON modification** -- if `pbir` is not available, use the `pbir-format` skill (pbip plugin) for PBIR JSON structure and patterns. Validate every change with `jq empty <file.json>`.
 >
 > If neither the `pbir-cli` skill nor the `pbir-format` skill is loaded, ask the user to install the appropriate plugin before proceeding with report modifications.

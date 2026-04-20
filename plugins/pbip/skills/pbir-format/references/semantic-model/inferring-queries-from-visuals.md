@@ -1,6 +1,6 @@
 # Inferring DAX queries from visual metadata
 
-Visual queries are `SUMMARIZECOLUMNS` queries. You can infer the query by looking at the visual's metadata.
+Most visual queries use `SUMMARIZECOLUMNS`. Slicers are the primary exception; they use `CALCULATETABLE + SUMMARIZE + VALUES`. You can infer the query structure by looking at the visual's metadata.
 
 ## Basic structure
 

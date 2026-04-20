@@ -1,7 +1,7 @@
 ---
 name: review-report
-version: 0.10.0
-description: This skill should be used when the user asks to "review a report", "evaluate report quality", "audit a report", "check if a report is being used", "report usage analysis", "report health check", "assess report performance", "find unused reports", "report page views", or needs to provide actionable feedback on the quality, usage, and effectiveness of a Power BI report.
+version: 0.26.0
+description: Actionable feedback on the quality, usage, and effectiveness of Power BI reports. Automatically invoke when the user asks to "review a report", "audit a report", "report usage analysis", "report health check", "find unused reports", "check if a report is being used", "assess report performance", "evaluate report quality".
 ---
 
 # Reviewing Power BI Reports
@@ -81,7 +81,7 @@ Evaluate the visual design and information architecture. Consult the `pbi-report
 - [ ] Detail gradient followed (KPIs top-left, detail bottom-right)
 - [ ] Color usage intentional and accessible (no gratuitous color, no red/green for colorblind users)
 - [ ] Font family, size, and formatting consistent throughout
-- [ ] Visual count reasonable (avoid >8 visuals per page)
+- [ ] Visual count reasonable (loosely 12-15 max per page, depends on complexity)
 - [ ] No empty visuals (all visuals have field bindings)
 - [ ] Theme applied (not default Power BI theme)
 - [ ] Chart axes begin at zero (unless intentional)

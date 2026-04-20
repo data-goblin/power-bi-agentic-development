@@ -1,7 +1,7 @@
 ---
 name: c-sharp-scripting
-version: 0.8.5
-description: This skill should be used when the user asks to "write a C# script", "create a Tabular Editor script", "automate model changes", "bulk update measures", "create calculation groups", "format DAX expressions", "manage model metadata", "create a macro", "write a Tabular Editor macro", "save a script as macro", "edit MacroActions.json", or mentions TOM (Tabular Object Model), XMLA, C# scripting, or C# macros for Power BI semantic models. Provides comprehensive guidance for writing and executing C# scripts and macros against Power BI semantic models using Tabular Editor 2/3 CLI or the Tabular Editor IDE.
+version: 0.26.0
+description: Writing and executing C# scripts and macros against Power BI semantic models using Tabular Editor 2/3. Automatically invoke when the user mentions "C# script", "Tabular Editor script", "TOM scripting", "MacroActions.json", "XMLA", or asks to "automate model changes", "bulk update measures", "create calculation groups", "write a macro", "format DAX expressions", "manage model metadata".
 ---
 
 # C# Scripting for Tabular Editor

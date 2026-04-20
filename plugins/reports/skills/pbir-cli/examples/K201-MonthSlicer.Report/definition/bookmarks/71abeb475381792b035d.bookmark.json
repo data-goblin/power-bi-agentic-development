@@ -1,0 +1,921 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/bookmark/1.4.0/schema.json",
+  "displayName": "current page unselected",
+  "name": "71abeb475381792b035d",
+  "options": {
+    "targetVisualNames": [
+      "b53565edbb3536d72bfc"
+    ],
+    "suppressActiveSection": true
+  },
+  "explorationState": {
+    "version": "1.3",
+    "activeSection": "da2e63ebeb2179a994f1",
+    "filters": {
+      "byExpr": [
+        {
+          "name": "500061d160e87b50a006",
+          "type": "Categorical",
+          "expression": {
+            "Column": {
+              "Expression": {
+                "SourceRef": {
+                  "Entity": "Date"
+                }
+              },
+              "Property": "Calendar Month (ie Jan)"
+            }
+          },
+          "howCreated": 1
+        },
+        {
+          "name": "d3f20cea05c37b47123a",
+          "type": "Categorical",
+          "filter": {
+            "Version": 2,
+            "From": [
+              {
+                "Name": "e",
+                "Entity": "Exchange Rate",
+                "Type": 0
+              }
+            ],
+            "Where": [
+              {
+                "Condition": {
+                  "In": {
+                    "Expressions": [
+                      {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "e"
+                            }
+                          },
+                          "Property": "From Currency"
+                        }
+                      }
+                    ],
+                    "Values": [
+                      [
+                        {
+                          "Literal": {
+                            "Value": "'EUR'"
+                          }
+                        }
+                      ]
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expression": {
+            "Column": {
+              "Expression": {
+                "SourceRef": {
+                  "Entity": "Exchange Rate"
+                }
+              },
+              "Property": "From Currency"
+            }
+          },
+          "howCreated": 1
+        },
+        {
+          "name": "9a135e8e175961ab0070",
+          "type": "Categorical",
+          "filter": {
+            "Version": 2,
+            "From": [
+              {
+                "Name": "d",
+                "Entity": "Date",
+                "Type": 0
+              }
+            ],
+            "Where": [
+              {
+                "Condition": {
+                  "In": {
+                    "Expressions": [
+                      {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "d"
+                            }
+                          },
+                          "Property": "Calendar Year (ie 2021)"
+                        }
+                      }
+                    ],
+                    "Values": [
+                      [
+                        {
+                          "Literal": {
+                            "Value": "'2022'"
+                          }
+                        }
+                      ]
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expression": {
+            "Column": {
+              "Expression": {
+                "SourceRef": {
+                  "Entity": "Date"
+                }
+              },
+              "Property": "Calendar Year (ie 2021)"
+            }
+          },
+          "howCreated": 1
+        },
+        {
+          "name": "0a0567e84b620b8bde0d",
+          "type": "Categorical",
+          "filter": {
+            "Version": 2,
+            "From": [
+              {
+                "Name": "1",
+                "Entity": "1) Selected Metric",
+                "Type": 0
+              }
+            ],
+            "Where": [
+              {
+                "Condition": {
+                  "In": {
+                    "Expressions": [
+                      {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "1"
+                            }
+                          },
+                          "Property": "Select a Measure"
+                        }
+                      }
+                    ],
+                    "Values": [
+                      [
+                        {
+                          "Literal": {
+                            "Value": "'Gross Sales'"
+                          }
+                        }
+                      ]
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expression": {
+            "Column": {
+              "Expression": {
+                "SourceRef": {
+                  "Entity": "1) Selected Metric"
+                }
+              },
+              "Property": "Select a Measure"
+            }
+          },
+          "howCreated": 1
+        },
+        {
+          "name": "5d400a092d70d60100d1",
+          "type": "Categorical",
+          "filter": {
+            "Version": 2,
+            "From": [
+              {
+                "Name": "3",
+                "Entity": "3) Selected Target",
+                "Type": 0
+              }
+            ],
+            "Where": [
+              {
+                "Condition": {
+                  "In": {
+                    "Expressions": [
+                      {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "3"
+                            }
+                          },
+                          "Property": "Select a Target"
+                        }
+                      }
+                    ],
+                    "Values": [
+                      [
+                        {
+                          "Literal": {
+                            "Value": "'1 Year Prior'"
+                          }
+                        }
+                      ]
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expression": {
+            "Column": {
+              "Expression": {
+                "SourceRef": {
+                  "Entity": "3) Selected Target"
+                }
+              },
+              "Property": "Select a Target"
+            }
+          },
+          "howCreated": 1
+        },
+        {
+          "name": "3f0414e5b8619184a05e",
+          "type": "Categorical",
+          "filter": {
+            "Version": 2,
+            "From": [
+              {
+                "Name": "2",
+                "Entity": "2) Selected Unit",
+                "Type": 0
+              }
+            ],
+            "Where": [
+              {
+                "Condition": {
+                  "In": {
+                    "Expressions": [
+                      {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "2"
+                            }
+                          },
+                          "Property": "Select a Unit"
+                        }
+                      }
+                    ],
+                    "Values": [
+                      [
+                        {
+                          "Literal": {
+                            "Value": "'Value (Budget Rate)'"
+                          }
+                        }
+                      ]
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "expression": {
+            "Column": {
+              "Expression": {
+                "SourceRef": {
+                  "Entity": "2) Selected Unit"
+                }
+              },
+              "Property": "Select a Unit"
+            }
+          },
+          "howCreated": 1
+        },
+        {
+          "name": "61fce691ed537b989b43",
+          "type": "Categorical",
+          "filter": {
+            "Version": 2,
+            "From": [
+              {
+                "Name": "b",
+                "Entity": "Brands",
+                "Type": 0
+              }
+            ],
+            "Where": [
+              {
+                "Condition": {
+                  "Not": {
+                    "Expression": {
+                      "In": {
+                        "Expressions": [
+                          {
+                            "Column": {
+                              "Expression": {
+                                "SourceRef": {
+                                  "Source": "b"
+                                }
+                              },
+                              "Property": "Brand"
+                            }
+                          }
+                        ],
+                        "Values": [
+                          [
+                            {
+                              "Literal": {
+                                "Value": "'ASAN'"
+                              }
+                            }
+                          ],
+                          [
+                            {
+                              "Literal": {
+                                "Value": "'Galileo'"
+                              }
+                            }
+                          ],
+                          [
+                            {
+                              "Literal": {
+                                "Value": "'Miller'"
+                              }
+                            }
+                          ],
+                          [
+                            {
+                              "Literal": {
+                                "Value": "'Newton'"
+                              }
+                            }
+                          ],
+                          [
+                            {
+                              "Literal": {
+                                "Value": "'Plasma'"
+                              }
+                            }
+                          ],
+                          [
+                            {
+                              "Literal": {
+                                "Value": "'TH Morgan'"
+                              }
+                            }
+                          ],
+                          [
+                            {
+                              "Literal": {
+                                "Value": "'Volcanic'"
+                              }
+                            }
+                          ],
+                          [
+                            {
+                              "Literal": {
+                                "Value": "'Roemon'"
+                              }
+                            }
+                          ]
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expression": {
+            "Column": {
+              "Expression": {
+                "SourceRef": {
+                  "Entity": "Brands"
+                }
+              },
+              "Property": "Brand"
+            }
+          },
+          "howCreated": 1
+        }
+      ]
+    },
+    "sections": {
+      "da2e63ebeb2179a994f1": {
+        "visualContainers": {
+          "d1659b2e03dd55982c91": {
+            "filters": {
+              "byExpr": [
+                {
+                  "name": "06918ef52ebd447815b0",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Date"
+                        }
+                      },
+                      "Property": "Calendar Month (ie Jan)"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "advancedSlicerVisual",
+              "objects": {
+                "merge": {
+                  "general": [
+                    {
+                      "properties": {
+                        "filter": {
+                          "filter": {
+                            "Version": 2,
+                            "From": [
+                              {
+                                "Name": "d",
+                                "Entity": "Date",
+                                "Type": 0
+                              }
+                            ],
+                            "Where": [
+                              {
+                                "Condition": {
+                                  "In": {
+                                    "Expressions": [
+                                      {
+                                        "Column": {
+                                          "Expression": {
+                                            "SourceRef": {
+                                              "Source": "d"
+                                            }
+                                          },
+                                          "Property": "Calendar Month (ie Jan)"
+                                        }
+                                      }
+                                    ],
+                                    "Values": [
+                                      [
+                                        {
+                                          "Literal": {
+                                            "Value": "'Aug'"
+                                          }
+                                        }
+                                      ]
+                                    ]
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "34d999b937f71aa86cd1": {
+            "filters": {
+              "byExpr": [
+                {
+                  "name": "f33f83d82307c110d39c",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Schema": "extension",
+                          "Entity": "On-Time Delivery"
+                        }
+                      },
+                      "Property": "OTD % (Value; PY REPT)"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "661d32911b1839177b10",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "On-Time Delivery"
+                        }
+                      },
+                      "Property": "OTD % (Value)"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "13eb51ed54600c04dd61",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Date"
+                        }
+                      },
+                      "Property": "Calendar Year (ie 2021)"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "kpi",
+              "objects": {}
+            }
+          },
+          "34fbad854de667f3f03a": {
+            "filters": {
+              "byExpr": [
+                {
+                  "name": "50277817090880be5408",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Date"
+                        }
+                      },
+                      "Property": "Calendar Month (ie Jan)"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "21d5cba066d1dc303bb6",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "On-Time Delivery"
+                        }
+                      },
+                      "Property": "OTD % (Value)"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "2a3a49861c114d3b8647",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Schema": "extension",
+                          "Entity": "On-Time Delivery"
+                        }
+                      },
+                      "Property": "OTD % (Value; PY REPT)"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "lineChart",
+              "objects": {},
+              "activeProjections": {
+                "Category": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Date"
+                        }
+                      },
+                      "Property": "Calendar Month (ie Jan)"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "0beb3f5ca29d448bda58": {
+            "filters": {
+              "byExpr": [
+                {
+                  "name": "e1ffd483156021cad2e9",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Products"
+                        }
+                      },
+                      "Property": "Product Name"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "2006f8fddd5c4e097aa0",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Orders"
+                        }
+                      },
+                      "Property": "Total Net Order Value"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "1d0978722dc9d180951b",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Orders"
+                        }
+                      },
+                      "Property": "Total Net Order Quantity"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "58962313ab0e5ca03619",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "On-Time Delivery"
+                        }
+                      },
+                      "Property": "OTD % (Value)"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "9b39ee014573607eab3b",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Schema": "extension",
+                          "Entity": "On-Time Delivery"
+                        }
+                      },
+                      "Property": "OTD % (Value; PY REPT)"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "scatterChart",
+              "objects": {},
+              "activeProjections": {
+                "Category": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Products"
+                        }
+                      },
+                      "Property": "Product Name"
+                    }
+                  }
+                ],
+                "X": [
+                  {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "On-Time Delivery"
+                        }
+                      },
+                      "Property": "OTD % (Value)"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "e0287d9bf5434b6e4daa": {
+            "singleVisual": {
+              "visualType": "textbox",
+              "objects": {}
+            }
+          },
+          "b53565edbb3536d72bfc": {
+            "filters": {
+              "byExpr": [
+                {
+                  "name": "4179db559050127b2b84",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Customers"
+                        }
+                      },
+                      "Property": "Key Account Name"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "8772daf749251e00a412",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "On-Time Delivery"
+                        }
+                      },
+                      "Property": "OTD % (Value)"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "3acd0e6523d78693abc9",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "On-Time Delivery"
+                        }
+                      },
+                      "Property": "New SVG Bullet Chart (with Action Dots) 1"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "36f5e527ed60301cb376",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Schema": "extension",
+                          "Entity": "1) Selected Metric"
+                        }
+                      },
+                      "Property": "Late Orders"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "tableEx",
+              "objects": {},
+              "orderBy": [
+                {
+                  "Direction": 1,
+                  "Expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "On-Time Delivery"
+                        }
+                      },
+                      "Property": "OTD % (Value)"
+                    }
+                  }
+                }
+              ]
+            },
+            "highlight": {
+              "selection": [
+                {
+                  "dataMap": {
+                    "Customers.Key Account Name": [
+                      {
+                        "scopeId": {
+                          "Comparison": {
+                            "ComparisonKind": 0,
+                            "Left": {
+                              "Column": {
+                                "Expression": {
+                                  "SourceRef": {
+                                    "Entity": "Customers"
+                                  }
+                                },
+                                "Property": "Key Account Name"
+                              }
+                            },
+                            "Right": {
+                              "Literal": {
+                                "Value": "'Andromeda Shipyards'"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "metadata": [
+                    "On-Time Delivery.OTD % (Value)",
+                    "On-Time Delivery.New SVG Bullet Chart (with Action Dots) 1",
+                    "1) Selected Metric.Late Orders"
+                  ]
+                }
+              ],
+              "filterExpressionMetadata": {
+                "expressions": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Customers"
+                        }
+                      },
+                      "Property": "Key Account Name"
+                    }
+                  }
+                ],
+                "cachedValueItems": [
+                  {
+                    "identities": [
+                      {
+                        "scopeId": {
+                          "Comparison": {
+                            "ComparisonKind": 0,
+                            "Left": {
+                              "Column": {
+                                "Expression": {
+                                  "SourceRef": {
+                                    "Entity": "Customers"
+                                  }
+                                },
+                                "Property": "Key Account Name"
+                              }
+                            },
+                            "Right": {
+                              "Literal": {
+                                "Value": "'Andromeda Shipyards'"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ],
+                    "valueMap": {
+                      "0": "Andromeda Shipyards"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "objects": {
+      "merge": {
+        "outspacePane": [
+          {
+            "properties": {
+              "expanded": {
+                "expr": {
+                  "Literal": {
+                    "Value": "false"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

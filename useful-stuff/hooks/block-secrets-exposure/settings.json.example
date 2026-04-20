@@ -1,0 +1,76 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: .env files contain secrets. Use environment variables or ask the user to provide values.\"}}'",
+            "if": "Read(*.env)"
+          },
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: .env files contain secrets.\"}}'",
+            "if": "Read(*.env.*)"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: macOS Keychain access. Ask the user to provide the credential instead.\"}}'",
+            "if": "Bash(*security find-generic-password*)"
+          },
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: macOS Keychain access. Ask the user to provide the credential instead.\"}}'",
+            "if": "Bash(*security find-internet-password*)"
+          },
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: macOS Keychain dump. Ask the user to provide the credential instead.\"}}'",
+            "if": "Bash(*security dump-keychain*)"
+          },
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: Azure CLI token extraction. Use DefaultAzureCredential in code instead.\"}}'",
+            "if": "Bash(*az account get-access-token*)"
+          },
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: AWS STS token extraction. Use environment variables or IAM roles.\"}}'",
+            "if": "Bash(*aws sts get-session-token*)"
+          },
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: GCloud token extraction. Use application default credentials in code.\"}}'",
+            "if": "Bash(*gcloud auth print-access-token*)"
+          },
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: GCloud token extraction. Use application default credentials in code.\"}}'",
+            "if": "Bash(*gcloud auth print-identity-token*)"
+          },
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: printenv dumps all environment variables including secrets.\"}}'",
+            "if": "Bash(printenv*)"
+          },
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: Linux keyring access. Ask the user to provide the credential instead.\"}}'",
+            "if": "Bash(*keyring get*)"
+          },
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: Linux secret-tool access. Ask the user to provide the credential instead.\"}}'",
+            "if": "Bash(*secret-tool lookup*)"
+          }
+        ]
+      }
+    ]
+  }
+}

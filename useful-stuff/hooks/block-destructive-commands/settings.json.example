@@ -1,0 +1,46 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: rm -rf targeting home directory. Use a more specific path.\"}}'",
+            "if": "Bash(*rm *-rf ~*)"
+          },
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: rm -rf targeting home directory. Use a more specific path.\"}}'",
+            "if": "Bash(*rm *-rf $HOME*)"
+          },
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: rm -rf targeting root filesystem.\"}}'",
+            "if": "Bash(*rm *-rf /*)"
+          },
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: Force push to main/master. Use --force-with-lease or push to a feature branch.\"}}'",
+            "if": "Bash(*git push*--force*main*)"
+          },
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: Force push to main/master. Use --force-with-lease or push to a feature branch.\"}}'",
+            "if": "Bash(*git push*--force*master*)"
+          },
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: git reset --hard discards uncommitted work. Commit or stash first.\"}}'",
+            "if": "Bash(*git reset --hard*)"
+          },
+          {
+            "type": "command",
+            "command": "cat > /dev/null; jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: chmod 777 is a security risk. Use more restrictive permissions.\"}}'",
+            "if": "Bash(*chmod*777*)"
+          }
+        ]
+      }
+    ]
+  }
+}

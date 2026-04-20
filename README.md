@@ -1,49 +1,66 @@
+<p align="center">
+  <img src="media/bg42-11-3.png" alt="" width="800">
+</p>
+
 <h1 align="center">power-bi-agentic-development</h1>
 
 <p align="center">
-  A marketplace for agentic Power BI development - Teach your agent to do literally anything in Power BI
+  The best source for agentic development resources for Power BI in one marketplace <br/>
+  <i> Teach agents like Claude Code or GitHub Copilot to do literally anything in Power BI </i>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.11.0-blue" alt="Version">
-  <img src="https://img.shields.io/badge/tabular_editor-2%20%7C%203-orange" alt="Tabular Editor">
+  <img src="https://img.shields.io/badge/version-0.26.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/Power_BI-F2C811?logo=powerbi&logoColor=000" alt="Power BI">
+  <img src="https://img.shields.io/badge/Microsoft_Fabric-008272" alt="Microsoft Fabric">
+  <img src="https://img.shields.io/badge/Tabular_Editor-2E7D32" alt="Tabular Editor">
   <img src="https://img.shields.io/badge/license-GPL--3.0-green" alt="License">
 </p>
 
-> **These skills are under active development with a daily release cadence.** Breaking changes, new additions, and restructuring may occur frequently.
+> [!WARNING]
+> Under active development with a weekly release cadence; regular renaming or restructuring.
 
 ---
 
-<p align="center">
-  <img src="media/bg22-06-2.png" alt="" width="800">
-</p>
+### What is agentic development?
+
+- *Agentic development* is when you use agents to help you build, manage, and optimize artifacts and software. This includes semantic models, reports, and the things around them, like workspaces, deployment pipelines, and also processes.
+- A *marketplace* hosts *plugins* that you can install. Plugins are a collection of resources that help coding agents perform better. They are typically special instruction files and scripts. Plugins can contain skills, subagents, hooks, and MCP servers focused on special topics or tasks.
+- This marketplace is focused on everything to help your agent work well with Power BI and Fabric! Read further for more information.
 
 ## Installation
 
-These skills are intended for use in Claude Code, Desktop, or Cowork. However, you can use them in other tools like GitHub Copilot, Codex, Gemini CLI.
+Here's how you get started in Claude Code; run this in the terminal to get the marketplace: 
 
-### Claude Code
-
-Enter the following commands in the terminal:
-
-Add marketplace:
 ```bash
-# Add marketplace source (if not already added)
 claude plugin marketplace add data-goblin/power-bi-agentic-development
 ```
 
-Then in Claude Code you can install the plugins via `/plugin` and navigating to the installed marketplace.
+### Example: Using the pbir-cli with the skills
 
-![Marketplace UI](media/marketplace-ui.png)
+[Click here for a YouTube walkthrough](https://www.youtube.com/watch?v=acHDorTi62U)
 
-**TIP:** Make sure that you enable marketplace auto-update!
+[![pbir-cli demo](https://img.youtube.com/vi/acHDorTi62U/maxresdefault.jpg)](https://www.youtube.com/watch?v=acHDorTi62U)
 
-![Marketplace auto-update](media/marketplace-auto-update.png)
+<details>
+<summary><strong>Claude Code</strong></summary>
 
-Alternative - Add plugins via command line: 
+Add the marketplace, then install plugins via `/plugin` and navigating to the installed marketplace.
+
+<table>
+<tr>
+<td align="center"><img src="media/marketplace-ui.png" alt="Marketplace UI" width="400"></td>
+<td align="center"><img src="media/marketplace-auto-update.png" alt="Marketplace auto-update" width="400"></td>
+</tr>
+<tr>
+<td align="center"><em>Install plugins from the marketplace</em></td>
+<td align="center"><em>Enable marketplace auto-update</em></td>
+</tr>
+</table>
+
+Alternative; add plugins via command line:
 
 ```bash
-# Install plugins
 claude plugin install tabular-editor@power-bi-agentic-development
 claude plugin install pbi-desktop@power-bi-agentic-development
 claude plugin install semantic-models@power-bi-agentic-development
@@ -52,99 +69,152 @@ claude plugin install pbip@power-bi-agentic-development
 claude plugin install fabric-cli@power-bi-agentic-development
 ```
 
-### GitHub Copilot
+</details>
 
-The standalone [Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli) supports plugin installation from GitHub repos:
+<details>
+<summary><strong>GitHub Copilot</strong></summary>
+
+The standalone [Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli) supports plugin installation from GitHub repos. Consult the Copilot documentation for specifics, or open an issue in this repo.
 
 ```bash
 copilot plugin install data-goblin/power-bi-agentic-development
 ```
 
-In **VS Code**, you can use skills by placing them in `.github/skills/<skill-name>/SKILL.md` with YAML frontmatter:
+Some plugin features like agents and hooks may behave differently across tools. The core knowledge in the skill files is tool-agnostic.
 
-```yaml
----
-name: 'bpa-rules'
-description: 'Create and improve Best Practice Analyzer rules for Tabular Editor'
-user-invocable: true
----
-```
-
-Then paste the skill content below the frontmatter. Skills appear as slash commands in Copilot Chat.
-
-You can also drag any `.md` skill file into Copilot Chat or reference it with `#file` to use as one-off context.
-
-> **Note:** Some plugin features like agents and hooks may behave differently across tools. The core knowledge in the skill files is tool-agnostic.
+</details>
 
 
 ## Overview
 
-### Skills
+The repo contains skills, agents, and hooks.
 
-| Skill | Plugin | Description |
-|-------|--------|-------------|
-| [`bpa-rules`](plugins/tabular-editor/skills/bpa-rules/) | tabular-editor | Create and improve Best Practice Analyzer rules |
-| [`c-sharp-scripting`](plugins/tabular-editor/skills/c-sharp-scripting/) | tabular-editor | C# scripting and macros for Tabular Editor (CRUD of model objects and common patterns for streamlining model dev) |
-| [`te2-cli`](plugins/tabular-editor/skills/te2-cli/) | tabular-editor | Tabular Editor 2 CLI usage and automation |
-| [`te-docs`](plugins/tabular-editor/skills/te-docs/) | tabular-editor | Tabular Editor documentation search, TE3 config files (.tmuo, preferences) |
-| [`connect-pbid`](plugins/pbi-desktop/skills/connect-pbid/) | pbi-desktop | Explore, query, and modify a model in Power BI Desktop with only a skill |
-| [`tmdl`](plugins/pbip/skills/tmdl/) | pbip | Author and edit TMDL files directly |
-| [`pbip`](plugins/pbip/skills/pbip/) | pbip | Power BI Project (PBIP) format, structure, and file types |
-| [`pbir-format`](plugins/pbip/skills/pbir-format/) | pbip | Author and edit PBIR metadata files directly (visual.json, report.json, themes, filters, report extensions / thin measures, visual calculations) |
-| [`pbi-report-design`](plugins/reports/skills/pbi-report-design/) (Very WIP) | reports | Power BI report design and style |
-| [`modifying-theme-json`](plugins/reports/skills/modifying-theme-json/) (WIP) | reports | Design, enforce, audit, and validate Power BI report themes |
-| [`deneb-visuals`](plugins/reports/skills/deneb-visuals/) | reports | Deneb visuals with Vega and Vega-Lite specs |
-| [`r-visuals`](plugins/reports/skills/r-visuals/) | reports | R visuals (ggplot2) in Power BI reports |
-| [`python-visuals`](plugins/reports/skills/python-visuals/) | reports | Python visuals (matplotlib/seaborn) in Power BI reports |
-| [`svg-visuals`](plugins/reports/skills/svg-visuals/) | reports | SVG visuals via DAX measures in Power BI reports |
-| [`review-report`](plugins/reports/skills/review-report/) (WIP) | reports | Review report quality, usage, performance, distribution, and design |
-| [`standardize-naming-conventions`](plugins/semantic-models/skills/standardize-naming-conventions/) | semantic-models | Audit and standardize naming conventions in semantic models |
-| [`review-semantic-model`](plugins/semantic-models/skills/review-semantic-model/) (Very WIP) | semantic-models | Review semantic models for quality, performance, AI readiness, and best practices |
-| [`refreshing-semantic-model`](plugins/semantic-models/skills/refreshing-semantic-model/) | semantic-models | Trigger, monitor, and view history of semantic model refreshes |
-| [`lineage-analysis`](plugins/semantic-models/skills/lineage-analysis/) | semantic-models | Trace downstream reports from a semantic model across workspaces |
-| [`fabric-cli`](plugins/fabric-cli/skills/fabric-cli/) | fabric-cli | Fabric CLI (fab) for any remote operation in Power BI or Fabric (works on Pro, PPU) |
+- **Skills** teach agents domain knowledge and workflows. They activate automatically based on task context, or can be invoked manually with `/skill-name`. In Claude Code, skills and commands have coalesced; commands are simply more prescriptive skill workflows.
+- **Agents** are autonomous subprocesses that handle complex, multi-step tasks independently; typically used for review and validation.
+- **Hooks** run automatically after tool use to validate files and catch errors early. They are deterministic; they fire when a specific pattern is matched, not by LLM judgment.
 
-### Commands
+Hook checks can be individually toggled via config files. Set any check to `false` to disable it:
+- `plugins/pbip/hooks/config.yaml` -- PBIR, TMDL, and report binding validation
+- `plugins/pbi-desktop/hooks/config.yaml` -- DAX references, measure metadata, referential integrity, metadata cache
 
-> In Claude Code, slash commands and skills have coalesced. Commands are simply more prescriptive workflows, but they take the same structure as a skill. Skills are not workflows nor should they be prescriptive.
+### Available plugins for Power BI and Fabric
 
-| Command | Plugin | Description |
-|---------|--------|-------------|
-| [`/suggest-rule`](plugins/tabular-editor/commands/suggest-rule.md) | tabular-editor | Generate BPA rules from descriptions |
-| [`/audit-context`](plugins/fabric-cli/commands/audit-context.md) | fabric-cli | Review project context files (CLAUDE.md, agents.md, memory files) |
-| [`/migrating-fabric-trial-capacities`](plugins/fabric-cli/commands/migrating-fabric-trial-capacities.md) | fabric-cli | Migrate workspaces from trial to production capacity |
+<details>
+<summary><img src="media/icons/tabular-editor.svg" alt="" height="20"> <strong>tabular-editor</strong> &ensp; BPA rules, C# scripting, and CLI automation for Tabular Editor</summary>
 
-### Agents
+| Type | Name | Description |
+|------|------|-------------|
+| Skill | [`bpa-rules`](plugins/tabular-editor/skills/bpa-rules/) | Create and improve Best Practice Analyzer rules for models |
+| Skill | [`c-sharp-scripting`](plugins/tabular-editor/skills/c-sharp-scripting/) | C# scripting and macros for TE |
+| Skill | [`te2-cli`](plugins/tabular-editor/skills/te2-cli/) | Tabular Editor 2 CLI usage and automation (not TE3) |
+| Skill | [`te-docs`](plugins/tabular-editor/skills/te-docs/) | Tabular Editor documentation search, TE3 config files. Uses [`pbi-search`](https://github.com/data-goblin/pbi-search) CLI |
+| Command | [`/suggest-rule`](plugins/tabular-editor/commands/suggest-rule.md) | Generate BPA rules from descriptions |
+| Agent | [`bpa-expression-helper`](plugins/tabular-editor/agents/bpa-expression-helper.md) | Debug and improve BPA rule expressions |
 
-> Subagents have isolated context windows and are appropriate for tasks that benefit from this isolation. Agents are not for specialization or enhancing context; that is the purview of a skill usable by your main agent _or_ a subagent.
+</details>
 
-| Agent | Plugin | Description |
-|-------|--------|-------------|
-| [`bpa-expression-helper`](plugins/tabular-editor/agents/bpa-expression-helper.md) | tabular-editor | Debug and improve BPA rule expressions |
-| [`pbip-validator`](plugins/pbip/agents/pbip-validator.md) | pbip | Validate PBIP project structure, TMDL syntax, and PBIR schemas |
-| [`query-listener`](plugins/pbi-desktop/agents/query-listener.md) | pbi-desktop | Listen to query traces from Power BI Desktop visuals in real time |
-| [`semantic-model-auditor`](plugins/semantic-models/agents/semantic-model-auditor.md) | semantic-models | Audit semantic models for quality, memory, DAX, and design issues |
-| [`deneb-reviewer`](plugins/reports/agents/deneb-reviewer.md) | reports | Review Deneb visual specs for Vega/Vega-Lite syntax and conventions |
-| [`svg-reviewer`](plugins/reports/agents/svg-reviewer.md) | reports | Review SVG DAX measures for syntax and design quality |
-| [`r-reviewer`](plugins/reports/agents/r-reviewer.md) | reports | Review R visual scripts (ggplot2) for Power BI conventions |
-| [`python-reviewer`](plugins/reports/agents/python-reviewer.md) | reports | Review Python visual scripts (matplotlib/seaborn) for Power BI conventions |
+<details>
+<summary><img src="media/icons/pbi-desktop.svg" alt="" height="20"> <strong>pbi-desktop</strong> &ensp; Connect to, query, and modify models in Power BI Desktop</summary>
+
+| Type | Name | Description |
+|------|------|-------------|
+| Skill | [`connect-pbid`](plugins/pbi-desktop/skills/connect-pbid/) | Explore, query, and modify a model in Power BI Desktop |
+| Agent | [`query-listener`](plugins/pbi-desktop/agents/query-listener.md) | Capture DAX queries from Power BI Desktop visuals in real time |
+| Hook | DAX reference validation | Validates table, column, and measure references against the connected model; suggests corrections |
+| Hook | Measure metadata enforcement | Blocks adding measures without DisplayFolder, Description, and FormatString |
+| Hook | Referential integrity check | Reports unmatched many-side keys after relationship or column changes |
+| Hook | Metadata cache refresh | Auto-snapshots model metadata on TOM connect or model modification |
+| Hook | Compatibility level check | Reports features available by upgrading; optional auto-upgrade |
+
+</details>
+
+<details>
+<summary><img src="media/icons/pbip.svg" alt="" height="20"> <strong>pbip</strong> &ensp; Author and validate TMDL, PBIR, and PBIP project files</summary>
+
+| Type | Name | Description |
+|------|------|-------------|
+| Skill | [`pbip`](plugins/pbip/skills/pbip/) | Power BI Project (PBIP) format, structure, and file types |
+| Skill | [`tmdl`](plugins/pbip/skills/tmdl/) | Author and edit TMDL files directly |
+| Skill | [`pbir-format`](plugins/pbip/skills/pbir-format/) | Author and edit PBIR metadata files directly (visual.json, report.json, themes, filters, report extensions, visual calculations) |
+| Agent | [`pbip-validator`](plugins/pbip/agents/pbip-validator.md) | Validate PBIP project structure, TMDL syntax, and PBIR schemas |
+| Hook | PBIR validation | Validates PBIR structure, required fields, naming conventions, and schema URLs |
+| Hook | Report binding validation | Validates semantic model binding (byPath directory exists; byConnection model exists via `fab exists`) |
+| Hook | TMDL validation | Validates TMDL structural syntax |
+
+</details>
+
+<details>
+<summary><img src="media/icons/reports.svg" alt="" height="20"> <strong>reports</strong> &ensp; Deneb, R, Python, SVG visuals; themes; report design and review</summary>
+
+| Type | Name | Description |
+|------|------|-------------|
+| Skill | [`pbi-report-design`](plugins/reports/skills/pbi-report-design/) (Very WIP) | Power BI report best practices, design and style |
+| Skill | [`modifying-theme-json`](plugins/reports/skills/modifying-theme-json/) (WIP) | Working with theme files |
+| Skill | [`deneb-visuals`](plugins/reports/skills/deneb-visuals/) | Deneb visuals with Vega and Vega-Lite specs |
+| Skill | [`r-visuals`](plugins/reports/skills/r-visuals/) | Custom R visuals in Power BI reports |
+| Skill | [`python-visuals`](plugins/reports/skills/python-visuals/) | Custom Python visuals in Power BI reports |
+| Skill | [`svg-visuals`](plugins/reports/skills/svg-visuals/) | SVG visuals via DAX measures in Power BI reports |
+| Skill | [`review-report`](plugins/reports/skills/review-report/) (WIP) | Review Power BI reports for usage metrics and best practices |
+| Skill | [`pbir-cli`](plugins/reports/skills/pbir-cli/) | Programmatic report manipulation via the [`pbir` CLI](https://github.com/maxanatsko/pbir.tools) |
+| Agent | [`deneb-reviewer`](plugins/reports/agents/deneb-reviewer.md) | Review Deneb visual specs for Vega/Vega-Lite syntax and conventions |
+| Agent | [`svg-reviewer`](plugins/reports/agents/svg-reviewer.md) | Review SVG DAX measures for syntax and design quality |
+| Agent | [`r-reviewer`](plugins/reports/agents/r-reviewer.md) | Review R visual scripts (ggplot2) for Power BI conventions |
+| Agent | [`python-reviewer`](plugins/reports/agents/python-reviewer.md) | Review Python visual scripts (matplotlib/seaborn) for Power BI conventions |
+
+</details>
+
+<details>
+<summary><img src="media/icons/semantic-models.svg" alt="" height="20"> <strong>semantic-models</strong> &ensp; DAX, Power Query, naming, lineage, refresh, and model auditing</summary>
+
+| Type | Name | Description |
+|------|------|-------------|
+| Skill | [`standardize-naming-conventions`](plugins/semantic-models/skills/standardize-naming-conventions/) | Audit and standardize naming conventions in semantic models |
+| Skill | [`review-semantic-model`](plugins/semantic-models/skills/review-semantic-model/) (Very WIP) | Review semantic models for quality, performance, AI readiness, and best practices |
+| Skill | [`refreshing-semantic-model`](plugins/semantic-models/skills/refreshing-semantic-model/) | Trigger or troubleshoot refreshes |
+| Skill | [`lineage-analysis`](plugins/semantic-models/skills/lineage-analysis/) | Trace downstream reports from a semantic model across workspaces |
+| Skill | [`power-query`](plugins/semantic-models/skills/power-query/) | Write M expressions, debug query folding, execute M locally or via Fabric API |
+| Skill | [`dax`](plugins/semantic-models/skills/dax/) | Write, debug, and optimize DAX in semantic models. Contributed by [Justin Martin](https://daxnoob.blog) |
+| Agent | [`semantic-model-auditor`](plugins/semantic-models/agents/semantic-model-auditor.md) | Audit semantic models for quality, memory, DAX, and design issues |
+
+</details>
+
+<details>
+<summary><img src="media/icons/fabric-cli.svg" alt="" height="20"> <strong>fabric-cli</strong> &ensp; Remote operations via Fabric CLI; works on Pro, PPU, or Fabric</summary>
+
+| Type | Name | Description |
+|------|------|-------------|
+| Skill | [`fabric-cli`](plugins/fabric-cli/skills/fabric-cli/) | Fabric CLI (fab) for any remote operation in Power BI or Fabric (works fully on Pro, PPU; Fabric not required) |
+| Command | [`/audit-context`](plugins/fabric-cli/commands/audit-context.md) | Review project context files (CLAUDE.md, agents.md, memory files) |
+| Command | [`/migrating-fabric-trial-capacities`](plugins/fabric-cli/commands/migrating-fabric-trial-capacities.md) | Migrate workspaces from trial to production capacity |
+
+</details>
+
+<details>
+<summary><img src="media/icons/fabric-cli.svg" alt="" height="20"> <strong>fabric-admin</strong> &ensp; Tenant settings audits, governance, delegated overrides; requires fabric-cli</summary>
+
+| Type | Name | Description |
+|------|------|-------------|
+| Skill | [`audit-tenant-settings`](plugins/fabric-admin/skills/audit-tenant-settings/) | Audit Fabric and Power BI tenant settings, delegated overrides, and Entra security group membership |
+
+</details>
 
 
-## Related Projects
+## Useful stuff
 
-- [fabric-cli-plugin](https://github.com/data-goblin/fabric-cli-plugin) - Microsoft Fabric CLI skills and MCP servers
-- [TabularEditor/BestPracticeRules](https://github.com/TabularEditor/BestPracticeRules) - Standard BPA rule collections
-- **pbir-cli** (not yet released) - CLI tool for PBIR report operations (create, validate, modify). Some skills in the `reports` plugin reference `pbir` CLI commands that will become available when this tool is released. In the meantime, use direct JSON editing with the `pbir-format` skill from the `pbip` plugin.
-
+General-purpose agent resources that don't fit into a plugin: defensive hooks, patterns, and tools. See [`useful-stuff/`](useful-stuff/).
 
 ## Use or re-use of these skills
 
-These skills are intended for free community use.
+These plugins are intended for free community use.
 
-You do not have the license to copy and incorporate them into your own products, trainings, courses, or tools. If you copy these skills - manually or by using an agent to rewrite them - you must include attribution and a link to this original project.
+You do not have the license to copy and incorporate them into your own products, trainings, courses, or tools. If you copy these skills - manually or by using an agent to rewrite them - you must include attribution and a link to this original project. That includes you, Microsoft.
 
 
 <br>
+
+<p align="center">
+  <img src="media/bg22-06-2.png" alt="" width="800">
+</p>
 
 ---
 

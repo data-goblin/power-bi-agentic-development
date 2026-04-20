@@ -1,22 +1,40 @@
 ---
 name: te-docs
-version: 0.8.5
-description: "This skill should be used when the user asks about 'Tabular Editor documentation', 'TE docs', 'how to do X in Tabular Editor', 'Tabular Editor features', 'TE3 features', '.tmuo files', 'Tabular Editor user options', 'TE3 preferences', 'Preferences.json', 'UiPreferences.json', 'Layouts.json', 'workspace database settings', 'deployment preferences', 'data source overrides', 'keyboard shortcuts', 'DAX editor settings', 'TMDL options', 'per-model TE3 configuration', or needs to search Tabular Editor documentation. Provides Tabular Editor documentation search and configuration file guidance."
+version: 0.26.0
+description: Tabular Editor documentation search and configuration file guidance (.tmuo, Preferences.json, UiPreferences.json, Layouts.json). Automatically invoke when the user asks about "TE docs", "Tabular Editor features", "TE3 preferences", ".tmuo files", "workspace database settings", "DAX editor settings", "per-model TE3 configuration", or needs to search Tabular Editor documentation for how-to guidance.
 ---
 
 # Tabular Editor Documentation & Configuration
 
 Guidance for searching Tabular Editor documentation and understanding TE3 configuration files (.tmuo, Preferences.json, etc.).
 
+## Pre-flight
+
+Before using documentation search, verify `pbi-search` is installed:
+
+```bash
+pbi-search --version
+```
+
+If the command is not found, inform the user and offer two options:
+
+1. **Install `pbi-search`** (recommended): see `bin/README.md` for install instructions via `cargo install` or GitHub Releases at [data-goblin/pbi-search](https://github.com/data-goblin/pbi-search)
+2. **Search without the CLI**: use the `microsoft-learn` MCP tools (`microsoft_docs_search`, `microsoft_docs_fetch`) for Microsoft Learn content, or `WebFetch` to retrieve docs directly from these sources:
+   - Tabular Editor docs: `https://docs.tabulareditor.com/`
+   - DAX reference: `https://dax.guide/<function>/`
+   - SQLBI articles: `https://www.sqlbi.com/articles/`
+   - Data Goblins: `https://data-goblins.com/`
+
+The CLI is strongly preferred; it searches all sources simultaneously and returns clean markdown. The fallback requires manual URL construction and multiple fetches.
+
 ## Documentation Search
 
 Use the `pbi-search` CLI — the preferred way to search Tabular Editor docs and related Power BI/DAX resources. It searches Tabular Editor docs, DAX.guide, SQLBI, Microsoft Learn (Power BI + Fabric), the TE blog, and Data Goblins simultaneously, returning clean markdown.
 
-Install (once):
+After install, populate the local manifest cache (once):
 
 ```bash
-cargo install --git https://github.com/data-goblin/pbi-search
-pbi-search sync        # populate the local manifest cache (~13s)
+pbi-search sync        # ~13s
 ```
 
 ### Searching

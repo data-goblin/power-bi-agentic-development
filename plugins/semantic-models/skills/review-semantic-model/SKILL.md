@@ -1,7 +1,7 @@
 ---
 name: review-semantic-model
-version: 0.10.0
-description: This skill should be used when the user asks to "review a semantic model", "audit a semantic model", "check model quality", "optimize my model", "validate model design", "run a best practice check", "check AI readiness", "prepare model for Copilot", or mentions reviewing, auditing, or validating a Power BI semantic model against quality, performance, or best practice standards.
+version: 0.26.0
+description: Review, audit, and validate Power BI semantic models against quality, performance, and best practice standards. Automatically invoke when the user asks to "review a semantic model", "audit a semantic model", "check model quality", "optimize my model", "validate model design", "check AI readiness", "prepare model for Copilot", or mentions model validation or quality assessment.
 ---
 
 Warning: This skill is incomplete and still in progress, but may provide value already as-is -- Kurt
@@ -50,9 +50,8 @@ Evaluate findings across categories, ordered by severity:
 
 **Memory and Size**
 - High-cardinality columns with large dictionaries (GUIDs, transaction IDs, composite keys)
-- Not disabling IsAvailableInMdx if the model is not used by Analyze in Excel
+- IsAvailableInMdx enabled on hidden or high-cardinality columns (wastes memory on attribute hierarchies unused by DAX; disable for columns not consumed via Analyze in Excel / MDX)
 - Unsplit DateTime columns (near-unique precision creating massive dictionaries)
-- Attribute hierarchies (IsAvailableInMDX) enabled on hidden or high-cardinality columns
 - Auto Date/Time tables (hidden LocalDateTable_* bloating memory)
 - Inappropriate data types (Double for currency, String for numeric)
 - Calculated columns that could be measures
@@ -64,10 +63,11 @@ Evaluate findings across categories, ordered by severity:
 - Pre-summarization opportunities (detail grain not needed for reporting)
 - Columns better handled upstream (i.e. calculations not done in calc columns or PQ)
 
-**DAX Anti-Patterns**
-- Filtering tables instead of columns
-- Division without DIVIDE() or error handling
-- Inefficient iterators (SUMX/AVERAGEX over large tables without filters)
+**DAX Anti-Patterns** (for systematic DAX query optimization, use the [`dax` skill](../dax/))
+- Filtering tables instead of columns in CALCULATE (causes both correctness and performance issues)
+- Unhandled division by zero (use DIVIDE() or explicit zero-check; note: plain `/` is fine when the denominator is guaranteed non-zero and can be faster)
+- Iterators with callbacks or nested iterators over large tables (use aggregators like SUM/AVERAGE when possible; iterators over large tables are fine if the expression is Storage Engine-pushable)
+- Missing KEEPFILTERS around non-equality filter predicates in CALCULATE
 
 **Measure Hygiene**
 - Implicit measures used where explicit measures should exist
@@ -81,9 +81,11 @@ Evaluate findings across categories, ordered by severity:
 
 **Design**
 - Star schema violations (direct fact-to-fact relationships, snowflake patterns)
-- Missing or misconfigured date table (no `isDateTable` mark)
+- Missing or misconfigured date table: must be marked (`dataCategory: Time` in TMDL, with a key Date column), have continuous daily dates (no gaps), span the full range of fact data, and relate to fact tables via a single-column relationship. Missing any of these causes time intelligence functions (DATEADD, SAMEPERIODLASTYEAR, TOTALYTD) to return BLANK
 - Excessive columns per table (>30 suggests denormalization issues)
 - Many-to-many relationships without bridging tables
+- Multiple fact tables relating to the same dimension via different keys without a shared conformed dimension (causes slicers on one fact to not filter the other)
+- Inactive relationships without corresponding USERELATIONSHIP in measures (orphaned relationships that suggest incomplete modeling)
 
 **Direct Lake (if applicable)**
 - Delta table health (parquet file count, V-Order, row group sizes)
@@ -95,11 +97,11 @@ Evaluate findings across categories, ordered by severity:
 - Missing or inadequate descriptions for AI consumption
 - Complex patterns (disconnected tables, many-to-many, inactive relationships) are valid model design but AI may struggle with them
 
-### Step 4: Performance Analysis
+### Step 3: Performance Analysis
 
 For performance-specific analysis, see `references/performance.md`.
 
-### Step 5: Report Findings
+### Step 4: Report Findings
 
 Produce a structured markdown report with:
 
@@ -116,6 +118,7 @@ Dispatch the `semantic-model-auditor` agent to perform the structural audit. The
 
 - The structural audit analyzes model metadata -- it does not execute DAX queries or check data quality
 - For DAX query performance testing, see `references/performance.md`
+- For DAX optimization, use the [`dax` skill](../dax/)
 - For companion report review, use the `review-report` skill in the reports plugin
 
 ## References
@@ -126,6 +129,7 @@ Dispatch the `semantic-model-auditor` agent to perform the structural audit. The
 
 ## Related Skills
 
+- **[`dax`](../dax/)** -- DAX performance optimization
 - **`review-report`** (reports plugin) -- Companion skill for report-level review
 - **`standardize-naming-conventions`** -- Naming audit and remediation
 - **`lineage-analysis`** -- Downstream report discovery

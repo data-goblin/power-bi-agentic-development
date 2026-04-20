@@ -1,0 +1,37 @@
+[
+  {
+    "type": "command",
+    "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '(^|[;&|]\\s*)rm\\s+.*-rf\\s+~/'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: rm -rf targeting home directory. Use a more specific path.\"}}' && exit 0; fi; exit 0",
+    "if": "Bash(*rm *-rf*)"
+  },
+  {
+    "type": "command",
+    "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '(^|[;&|]\\s*)rm\\s+.*-rf\\s+\\$HOME'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: rm -rf targeting home directory. Use a more specific path.\"}}' && exit 0; fi; exit 0",
+    "if": "Bash(*rm *-rf*)"
+  },
+  {
+    "type": "command",
+    "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '(^|[;&|]\\s*)rm\\s+.*-rf\\s+/[^a-zA-Z]'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: rm -rf targeting root filesystem.\"}}' && exit 0; fi; exit 0",
+    "if": "Bash(*rm *-rf*)"
+  },
+  {
+    "type": "command",
+    "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '(^|[;&|]\\s*)git\\s+push\\s.*--force\\s.*main'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: Force push to main. Use --force-with-lease or push to a feature branch.\"}}' && exit 0; fi; exit 0",
+    "if": "Bash(*git push*--force*main*)"
+  },
+  {
+    "type": "command",
+    "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '(^|[;&|]\\s*)git\\s+push\\s.*--force\\s.*master'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: Force push to master. Use --force-with-lease or push to a feature branch.\"}}' && exit 0; fi; exit 0",
+    "if": "Bash(*git push*--force*master*)"
+  },
+  {
+    "type": "command",
+    "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '(^|[;&|]\\s*)git\\s+reset\\s+--hard'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: git reset --hard discards uncommitted work. Commit or stash first.\"}}' && exit 0; fi; exit 0",
+    "if": "Bash(*git reset --hard*)"
+  },
+  {
+    "type": "command",
+    "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '(^|[;&|]\\s*)chmod\\s+.*777'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: chmod 777 is a security risk. Use more restrictive permissions.\"}}' && exit 0; fi; exit 0",
+    "if": "Bash(*chmod*777*)"
+  }
+]

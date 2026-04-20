@@ -1,6 +1,6 @@
 # AI and Copilot Readiness
 
-Guidance for preparing a semantic model for conversational BI experiences (Copilot, data agents) and evaluating whether a model is ready for AI consumption.
+Preparing a semantic model for conversational BI experiences (Copilot, data agents) and evaluating whether a model is ready for AI consumption.
 
 ## Before Investing in AI Readiness
 

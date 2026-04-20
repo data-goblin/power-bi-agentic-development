@@ -750,15 +750,17 @@ $model.DataSources.Remove($model.DataSources["Legacy SQL"])
 ```
 
 
-## Annotations (Custom Metadata)
+## Annotations, Extended Properties, and Field Parameters
+
+Basic CRUD for annotations is shown here. For comprehensive coverage including standard PBI annotations, Tabular Editor table groups, auto date/time control, field parameter creation, query groups, and custom tooling annotations, see **`references/annotations.md`**.
 
 ### Create
 
 ```powershell
 $ann = New-Object Microsoft.AnalysisServices.Tabular.Annotation
-$ann.Name = "PBI_Description"
-$ann.Value = "This measure tracks quarterly revenue"
-$model.Tables["Sales"].Measures["Total Revenue"].Annotations.Add($ann)
+$ann.Name = "TabularEditor_TableGroup"
+$ann.Value = "02. Fact Tables"
+$model.Tables["Sales"].Annotations.Add($ann)
 ```
 
 ### Read
@@ -772,13 +774,13 @@ foreach ($ann in $model.Tables["Sales"].Annotations) {
 ### Update
 
 ```powershell
-$model.Tables["Sales"].Annotations["PBI_Description"].Value = "Updated description"
+$model.Tables["Sales"].Annotations["TabularEditor_TableGroup"].Value = "01. Dimension Tables"
 ```
 
 ### Delete
 
 ```powershell
-$ann = $model.Tables["Sales"].Annotations["PBI_Description"]
+$ann = $model.Tables["Sales"].Annotations["TabularEditor_TableGroup"]
 $model.Tables["Sales"].Annotations.Remove($ann)
 ```
 
@@ -915,6 +917,8 @@ Not worth implementing via TOM. KPI objects (`Measure.KPI`) attach goal/status/t
 ## Direct Lake Partitions
 
 Direct Lake is a Power BI / Fabric storage mode where the model reads directly from OneLake Delta tables without import. Direct Lake partitions use `EntityPartitionSource` instead of `MPartitionSource`.
+
+> **Note:** The TOM examples below apply when connected via the XMLA endpoint (e.g. Tabular Editor CLI or MCP server), not via PBI Desktop's local proxy. PBI Desktop's local Analysis Services instance does not expose Direct Lake databases to external connections; use the Tabular Editor CLI or a Power BI MCP server to work with Direct Lake models.
 
 ### Read Direct Lake partition details
 

@@ -4,7 +4,7 @@
 - This means that you need to first get an overview of the fields you can use before trying to modify the report metadata; to understand how fields are referenced in reports, see [field-references.md](field-references.md)
 - You might have to query a semantic model to get field values, too, for certain circumstances
 
-**Tool priority:** Use `pbir model` first (fastest when available), then `te query` as a fallback, then `fab` API if neither CLI is installed.
+**Tool priority:** Use `pbir model` first (fastest when available), then `fab` API as a fallback.
 
 **Search locations:**
 
@@ -20,15 +20,7 @@ pbir model "Report.Report" -d              # All tables, columns, measures
 pbir model "Report.Report" -d -t Sales     # Filter to specific table
 ```
 
-**Alternative -- `te`** (if Tabular Editor CLI available):
-
-```bash
-te query -q "SELECT [Name] FROM $SYSTEM.TMSCHEMA_TABLES WHERE NOT [IsHidden]" -s "Workspace" -d "Model"
-te query -q "SELECT [TableID], [ExplicitName] FROM $SYSTEM.TMSCHEMA_COLUMNS WHERE NOT [IsHidden]" -s "Workspace" -d "Model"
-te query -q "SELECT [TableID], [Name], [Expression] FROM $SYSTEM.TMSCHEMA_MEASURES" -s "Workspace" -d "Model"
-```
-
-**Fallback -- `fab`** (if only Fabric CLI available):
+**Fallback -- `fab`** (Fabric CLI):
 
 ```bash
 # Get workspace and model IDs
@@ -186,8 +178,11 @@ To get actual data values for filters/slicers, query the model:
 # Using pbir
 pbir model "Report.Report" -q "EVALUATE VALUES('Products'[Type])"
 
-# Using te
-te query -q "EVALUATE VALUES('Products'[Type])" -s "WorkspaceName" -d "ModelName"
+# Using fab api
+WS_ID=$(fab get "WorkspaceName.Workspace" -q "id" | tr -d '"')
+MODEL_ID=$(fab get "WorkspaceName.Workspace/ModelName.SemanticModel" -q "id" | tr -d '"')
+fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/executeQueries" \
+  -X post -i '{"queries":[{"query":"EVALUATE VALUES('\''Products'\''[Type])"}]}'
 ```
 
 See [filter-pane.md](../filter-pane.md) for more DAX patterns for value discovery.

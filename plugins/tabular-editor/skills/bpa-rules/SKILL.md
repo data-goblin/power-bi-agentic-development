@@ -1,7 +1,7 @@
 ---
 name: bpa-rules
-version: 0.8.5
-description: This skill should be used when the user asks to "create a BPA rule", "write a Best Practice Analyzer rule", "improve a BPA expression", "fix expression for BPA", "analyze BPA annotations", "check model for best practices", "audit BPA rules", "discover BPA rules", "list all BPA rules", "validate BPA rules", "recommend BPA rules for my model", "help me choose BPA rules", "what BPA rules should I use", "set up BPA for my team", "BPA rules for my organization", or mentions Tabular Editor BPA rules. Provides guided, interactive rule generation through Q&A discovery, model investigation (via Fabric CLI or local .bim/.tmdl files), and expert rule authoring for Power BI semantic models.
+version: 0.26.0
+description: Interactive BPA rule generation for Power BI semantic models; guided discovery, model investigation, and expert rule authoring. Automatically invoke when the user mentions "BPA rule", "Best Practice Analyzer", or asks to "create a BPA rule", "audit BPA rules", "recommend BPA rules", "set up BPA for my team", "check model for best practices", "validate BPA rules", "improve a BPA expression".
 ---
 
 # Best Practice Analyzer Rules

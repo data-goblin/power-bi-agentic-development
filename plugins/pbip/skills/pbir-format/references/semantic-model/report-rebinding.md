@@ -14,7 +14,14 @@ Converting between thick/thin reports and re-binding reports to different semant
 
 Separate the report from the semantic model to deploy them independently.
 
-### Steps
+### Using pbir CLI (Recommended)
+
+```bash
+# Split thick PBIP into thin report (publishes model, rebinds report)
+pbir report split-from-thick "ThickReport.Report" --target "Workspace.Workspace/Model.SemanticModel"
+```
+
+### Manual Steps
 
 1. **Get target model info** using Fabric CLI:
 

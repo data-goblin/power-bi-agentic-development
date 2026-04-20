@@ -352,6 +352,38 @@ fab rm "Dev.Workspace/OldLakehouse.Lakehouse" -f
 fab rm "OldWorkspace.Workspace" -f
 ```
 
+#### Recovering deleted items
+
+`fab rm` is permanent unless the tenant **Fabric item recovery** setting (`ConfigureArtifactRetentionPeriod`) is on; retention is 7 to 90 days. When on, deleted items go to the workspace Recycle bin for the retention window; when off, deletion is immediate. Workspace deletion is not governed by this setting. To check or toggle the setting via `fab api`, see [admin.md > Tenant Settings](admin.md#tenant-settings).
+
+Recovery is available via the Recycle bin in the Fabric portal or the `recoverableItems` API:
+
+```bash
+# List recoverable items in a workspace
+fab api "workspaces/{workspaceId}/recoverableItems"
+
+# Restore an item (Contributor/Member/Admin)
+fab api -X post "workspaces/{workspaceId}/recoverableItems/{itemId}/recover"
+
+# Permanently delete during retention (Workspace Admin)
+fab api -X delete "workspaces/{workspaceId}/recoverableItems/{itemId}"
+```
+
+Consequences of enabling item recovery:
+
+- Soft-deleted items incur **OneLake storage billing** at the same rate as active data for the full retention window.
+- Background workload maintenance on soft-deleted items may consume a small amount of **Capacity Units**.
+- `fab rm` followed by immediate re-create of the same display name fails with `ItemDisplayNameNotAvailableYet` for several minutes, even after purging the recycle bin.
+- **Workspace folders can't be deleted** while they contain soft-deleted items.
+- **Shared item permissions are not restored** on recovery; re-share manually.
+- **`Microsoft.Fabric.ItemDeleteSucceeded` events only fire on permanent delete**; soft-delete generates no event, breaking event-driven automation.
+- **Git sync / deployment pipelines can re-create a soft-deleted item** as a data-less definition-only copy, leaving a dangling shell.
+- **Warehouse snapshots are not recoverable** with a recovered warehouse.
+- **OneLake catalog admin insights** ignore soft-deleted items until permanently deleted.
+- Recovery fails if a new item with the same name exists; rename the new item and retry. Dependent items may need to be restored first. Permanent deletion cannot be undone.
+
+Docs: search for "Fabric item recovery" or "retention and recovery in Fabric" via the `mslearn` CLI (confirm the alias with `type mslearn` first) or the Microsoft Learn MCP server.
+
 ### export - Export Item Definitions
 
 #### Syntax

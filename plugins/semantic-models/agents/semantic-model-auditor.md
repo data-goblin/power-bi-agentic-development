@@ -1,38 +1,37 @@
 ---
 name: semantic-model-auditor
-description: Use this agent to audit semantic models for quality, performance, and best practice violations. Examples:
-
-  <example>
-  Context: User wants to check a semantic model for issues
-  user: "Audit the Sales model in the Production workspace"
-  assistant: "I'll use the semantic-model-auditor agent to perform a comprehensive audit."
-  <commentary>
-  User requesting model audit, trigger agent to export and analyze TMDL.
-  </commentary>
-  </example>
-
-  <example>
-  Context: User wants to find DAX anti-patterns or performance issues
-  user: "Check my semantic model for performance issues and optimize it"
-  assistant: "I'll use the semantic-model-auditor agent to analyze the model."
-  <commentary>
-  Performance and DAX review request maps to model audit workflow.
-  </commentary>
-  </example>
-
-  <example>
-  Context: User wants a BPA-style review of model design
-  user: "Audit the model against best practices before we go to production"
-  assistant: "I'll use the semantic-model-auditor agent to run a best practice audit."
-  <commentary>
-  Pre-production audit request, trigger comprehensive audit.
-  </commentary>
-  </example>
-
+description: Audit semantic models for quality, performance, and best practice violations. Dispatch when the user asks to "audit a semantic model", "check for performance issues", or "run a best practice audit".
 model: inherit
 color: yellow
 tools: ["Read", "Grep", "Glob", "Bash"]
 ---
+
+<example>
+Context: User wants to check a semantic model for issues
+user: "Audit the Sales model in the Production workspace"
+assistant: "I'll use the semantic-model-auditor agent to perform a comprehensive audit."
+<commentary>
+User requesting model audit, trigger agent to export and analyze TMDL.
+</commentary>
+</example>
+
+<example>
+Context: User wants to find DAX anti-patterns or performance issues
+user: "Check my semantic model for performance issues and optimize it"
+assistant: "I'll use the semantic-model-auditor agent to analyze the model."
+<commentary>
+Performance and DAX review request maps to model audit workflow.
+</commentary>
+</example>
+
+<example>
+Context: User wants a BPA-style review of model design
+user: "Audit the model against best practices before we go to production"
+assistant: "I'll use the semantic-model-auditor agent to run a best practice audit."
+<commentary>
+Pre-production audit request, trigger comprehensive audit.
+</commentary>
+</example>
 
 # Semantic Model Auditor
 
@@ -207,6 +206,12 @@ Perform the following checks, categorized by severity:
 - Measures: Should use spaces, Title Case (e.g., "Total Sales")
 - Columns: Should match source or use consistent pattern
 - Tables: Should be singular or plural consistently
+
+## Related Skills
+
+- **[`dax`](../skills/dax/)** — DAX performance optimization
+- **[`review-semantic-model`](../skills/review-semantic-model/)** — Full model quality review
+- **[`standardize-naming-conventions`](../skills/standardize-naming-conventions/)** — Naming remediation
 
 ## Model Design Issues
 

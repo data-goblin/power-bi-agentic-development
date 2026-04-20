@@ -585,6 +585,30 @@ To find all reports using a model, check each report's definition.pbir for match
 3. **Sensitive measures**: Review calculated columns/measures for sensitive logic
 4. **Export restrictions**: Ensure exported models don't contain sensitive data
 
+## Investigating Source Data
+
+When diagnosing data issues (freshness, quality, missing records) or planning semantic model design, query the underlying lakehouse or warehouse tables directly with DuckDB rather than through the semantic model. This avoids DAX complexity and lets you inspect the raw data:
+
+```bash
+WS_ID=$(fab get "ws.Workspace" -q "id" | tr -d '"')
+LH_ID=$(fab get "ws.Workspace/LH.Lakehouse" -q "id" | tr -d '"')
+
+duckdb -c "
+LOAD delta; LOAD azure;
+CREATE SECRET (TYPE azure, PROVIDER credential_chain, CHAIN 'cli');
+
+-- Check freshness of source data
+SELECT max(modified_date) as latest, count(*) as rows
+FROM delta_scan('abfss://${WS_ID}@onelake.dfs.fabric.microsoft.com/${LH_ID}/Tables/gold/orders');
+
+-- Profile columns before adding to a model
+SELECT column_name, column_type, approx_count_distinct, null_percentage
+FROM (SUMMARIZE delta_scan('abfss://${WS_ID}@onelake.dfs.fabric.microsoft.com/${LH_ID}/Tables/gold/customers'));
+"
+```
+
+For full DuckDB querying patterns, see [querying-data.md](./querying-data.md).
+
 ## Related Scripts
 
 - `scripts/create_direct_lake_model.py` - Create Direct Lake model from lakehouse table

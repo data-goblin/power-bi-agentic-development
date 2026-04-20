@@ -86,7 +86,7 @@ fab api -X get "workspaces/$WS_ID/items?type=Notebook" | jq '.text.value[] | {di
 
 ## Delete Folder
 
-To delete items before removing a folder, use `fab rm "Workspace/Item.Notebook"` rather than the API.
+To delete items before removing a folder, use `fab rm "Workspace/Item.Notebook"` rather than the API. Recovery of removed items depends on the tenant Item Recovery setting; see [reference.md > Recovering deleted items](reference.md#recovering-deleted-items).
 
 ```bash
 WS_ID=$(fab get "MyWorkspace.Workspace" -q "id")
@@ -155,6 +155,61 @@ while IFS='|' read -r NAME ID; do
   esac
 done <<< "$NOTEBOOKS"
 ```
+
+## Best Practices
+
+### When to use folders
+
+Folders help when a workspace has enough items that scrolling becomes painful; typically 15+ items. Small workspaces with a handful of reports and a model rarely benefit.
+
+### Recommended structures
+
+**By function** (most common; works well for analytics workspaces):
+
+```
+ETL/
+  Extract - CRM.Notebook
+  Transform - Sales.Notebook
+  Load - Warehouse.DataPipeline
+Semantic Models/
+  Sales.SemanticModel
+  Finance.SemanticModel
+Reports/
+  Sales Dashboard.Report
+  Finance Overview.Report
+Staging/
+  Raw Landing.Lakehouse
+```
+
+**By domain** (for large shared workspaces with multiple teams):
+
+```
+Sales/
+  Sales Model.SemanticModel
+  Sales Dashboard.Report
+  Sales ETL.Notebook
+Finance/
+  Finance Model.SemanticModel
+  Finance Overview.Report
+Shared/
+  Common Lakehouse.Lakehouse
+```
+
+### Guidelines
+
+- Keep depth shallow; one level is usually enough, two at most
+- Use consistent, readable folder names (plain English, not abbreviations)
+- Place shared or cross-cutting items at the workspace root
+- Remember that Git integration ignores folders; items appear flat after sync
+- `fab ls` does not show folder structure; verify organization via API or the Fabric UI
+- To rename a folder, use `fab set` or `PATCH` the folder; no need to delete and recreate
+
+### Organizing an existing workspace
+
+1. List current items: `fab api -X get "workspaces/$WS_ID/items" | jq '.text.value[] | {displayName, type, id}'`
+2. Create folders for each logical group
+3. Move items into folders using the move endpoint
+4. Verify with `fab api -X get "workspaces/$WS_ID/folders"` and check items via the Fabric UI
 
 ## API Reference
 

@@ -225,9 +225,11 @@ Examples:
     python3 execute_dax.py "ws.Workspace/Model.SemanticModel" -q "EVALUATE ROW(\\"Total\\", SUM('Sales'[Amount]))"
 
 DAX Requirements:
-    - EVALUATE is mandatory - all queries must start with EVALUATE
-    - Use single quotes for table names: 'Sales', 'Date'
-    - Qualify columns: 'Sales'[Amount], not just [Amount]
+    - EVALUATE is mandatory; all queries must start with EVALUATE
+    - ALWAYS qualify table names with single quotes: 'Sales', 'Date'
+    - ALWAYS qualify columns with table: 'Sales'[Amount], not just [Amount]
+    - Measure references use square brackets only: [Total Revenue]
+    - Escape double quotes in column aliases with backslash: \\"Alias\\"
         """
     )
 
@@ -259,6 +261,22 @@ DAX Requirements:
     # Execute query
     print(f"Executing DAX query...", file=sys.stderr)
     results = execute_dax_query(workspace_id, model_id, args.query, args.include_nulls)
+
+    # Check for API errors
+    data = results.get("text", results)
+    if "error" in data or results.get("status_code", 200) >= 400:
+        err = data.get("error", {})
+        pbi_err = err.get("pbi.error", err)
+        details = pbi_err.get("details", [])
+        msg = err.get("message", "Unknown error")
+        for d in details:
+            if d.get("code") == "DetailsMessage":
+                msg = d.get("detail", {}).get("value", msg)
+                break
+        print(f"\nDAX Error: {msg}", file=sys.stderr)
+        if args.format == "json":
+            print(json.dumps(results, indent=2))
+        sys.exit(1)
 
     # Format results
     if args.format == "json":

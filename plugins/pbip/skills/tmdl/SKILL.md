@@ -1,7 +1,7 @@
 ---
 name: tmdl
-version: 0.10.0
-description: This skill should be used as a last resort when the Tabular Editor CLI, Power BI MCP server, or connect-pbid skill are not available. Use when the user asks to "edit TMDL", "add a measure in TMDL", "add a column description", "fix summarizeBy", "TMDL syntax", "write a measure in TMDL", "create a calculated column in TMDL", "fix formatString", "TMDL indentation", "convert BIM to TMDL", "convert model.bim to TMDL", "BIM to TMDL", "TMDL to BIM", "migrate from BIM to TMDL", or mentions TMDL file editing, BIM-to-TMDL conversion, or direct semantic model file authoring in PBIP projects.
+version: 0.26.0
+description: Direct TMDL file authoring and BIM-to-TMDL conversion for semantic models in PBIP projects. Automatically invoke when the user asks to "edit TMDL", "add a measure in TMDL", "TMDL syntax", "fix formatString", "fix summarizeBy", "TMDL indentation", "convert BIM to TMDL", "add a column description", "create a calculated column in TMDL", or mentions .tmdl file editing or BIM-to-TMDL migration.
 ---
 
 # TMDL Authoring
@@ -109,7 +109,7 @@ table Product                              // depth 0: top-level declaration
 
 ### Descriptions (`///`)
 
-Triple-slash sets the `Description` property on the **next** declaration:
+Triple-slash sets the `Description` property on the **next** declaration. This is native TMDL syntax (not a Tabular Editor extension); the TMDL spec treats `///` as first-class description support.
 
 ```tmdl
 /// Count of distinct products in the current filter context.

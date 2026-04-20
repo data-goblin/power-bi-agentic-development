@@ -1,7 +1,7 @@
 ---
 name: pbi-report-design
-version: 0.10.0
-description: This skill should be used when the user asks about "report layout", "report design best practices", "visual hierarchy", "3-30-300 rule", "KPI card design", "table formatting", "matrix formatting", "page layout", "report colors", "accessibility in reports", "page titles", "visual spacing", "report canvas", "card design patterns", or needs guidance on Power BI report design principles, layout, and formatting best practices.
+version: 0.26.0
+description: Power BI report design principles, layout guidance, and formatting best practices. Automatically invoke when the user asks about "report layout", "design best practices", "visual hierarchy", "3-30-300 rule", "KPI card design", "page layout", "accessibility in reports", "visual spacing", "report canvas", "card design patterns", "table formatting", "matrix formatting", or mentions report design principles.
 ---
 
 Warning: This skill is incomplete and still in progress, but may provide value already as-is -- Kurt
@@ -9,7 +9,7 @@ Warning: This skill is incomplete and still in progress, but may provide value a
 # Power BI Report Design
 
 > **Report modification requires tooling.** Two paths exist:
-> 1. **`pbir` CLI (preferred)** -- use the `pbir` command and the `pbir-cli` skill. Check availability with `pbir --version`.
+> 1. **`pbir` CLI (preferred)** -- use the `pbir` command and the `pbir-cli` skill. Install with `uv tool install pbir-cli` or `pip install pbir-cli`. Check availability with `pbir --version`.
 > 2. **Direct JSON modification** -- if `pbir` is not available, use the `pbir-format` skill (pbip plugin) for PBIR JSON structure and patterns. Validate every change with `jq empty <file.json>`.
 >
 > If neither the `pbir-cli` skill nor the `pbir-format` skill is loaded, ask the user to install the appropriate plugin before proceeding with report modifications.

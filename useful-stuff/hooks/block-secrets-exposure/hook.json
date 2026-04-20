@@ -1,0 +1,63 @@
+{
+  "PreToolUse": {
+    "read-hooks": [
+      {
+        "type": "command",
+        "command": "input=$(cat); path=$(echo \"$input\" | jq -r '.tool_input.file_path // empty'); if echo \"$path\" | grep -qE '(^|/)\\.env$'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: .env files contain secrets. Use environment variables or ask the user to provide values.\"}}' && exit 0; fi; exit 0",
+        "if": "Read(*.env)"
+      },
+      {
+        "type": "command",
+        "command": "input=$(cat); path=$(echo \"$input\" | jq -r '.tool_input.file_path // empty'); if echo \"$path\" | grep -qE '(^|/)\\.env\\.'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: .env files contain secrets.\"}}' && exit 0; fi; exit 0",
+        "if": "Read(*.env.*)"
+      }
+    ],
+    "bash-hooks": [
+      {
+        "type": "command",
+        "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '(^|[;&|]\\s*)security\\s+find-generic-password'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: macOS Keychain access. Ask the user to provide the credential instead.\"}}' && exit 0; fi; exit 0",
+        "if": "Bash(*security find-generic-password*)"
+      },
+      {
+        "type": "command",
+        "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '(^|[;&|]\\s*)security\\s+find-internet-password'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: macOS Keychain access. Ask the user to provide the credential instead.\"}}' && exit 0; fi; exit 0",
+        "if": "Bash(*security find-internet-password*)"
+      },
+      {
+        "type": "command",
+        "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '(^|[;&|]\\s*)security\\s+dump-keychain'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: macOS Keychain dump. Ask the user to provide the credential instead.\"}}' && exit 0; fi; exit 0",
+        "if": "Bash(*security dump-keychain*)"
+      },
+      {
+        "type": "command",
+        "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '(^|[;&|]\\s*)az\\s+account\\s+get-access-token'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: Azure CLI token extraction. Use DefaultAzureCredential in code instead.\"}}' && exit 0; fi; exit 0",
+        "if": "Bash(*az account get-access-token*)"
+      },
+      {
+        "type": "command",
+        "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '(^|[;&|]\\s*)aws\\s+sts\\s+get-session-token'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: AWS STS token extraction. Use environment variables or IAM roles.\"}}' && exit 0; fi; exit 0",
+        "if": "Bash(*aws sts get-session-token*)"
+      },
+      {
+        "type": "command",
+        "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '(^|[;&|]\\s*)gcloud\\s+auth\\s+print-(access|identity)-token'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: GCloud token extraction. Use application default credentials in code.\"}}' && exit 0; fi; exit 0",
+        "if": "Bash(*gcloud auth print-*-token*)"
+      },
+      {
+        "type": "command",
+        "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '(^|[;&|]\\s*)printenv'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: printenv dumps all environment variables including secrets.\"}}' && exit 0; fi; exit 0",
+        "if": "Bash(*printenv*)"
+      },
+      {
+        "type": "command",
+        "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '(^|[;&|]\\s*)keyring\\s+get'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: Linux keyring access. Ask the user to provide the credential instead.\"}}' && exit 0; fi; exit 0",
+        "if": "Bash(*keyring get*)"
+      },
+      {
+        "type": "command",
+        "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '(^|[;&|]\\s*)secret-tool\\s+lookup'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: Linux secret-tool access. Ask the user to provide the credential instead.\"}}' && exit 0; fi; exit 0",
+        "if": "Bash(*secret-tool lookup*)"
+      }
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+# PBI Desktop Hook Configuration
+#
+# Toggle individual validation checks on or off.
+# All checks are enabled by default. Set to false to disable.
+# Changes take effect immediately (no restart needed).
+
+# DAX reference validation (tables, columns, measures checked against model metadata)
+dax_validation: true
+
+# Model metadata cache refresh (auto-refresh after TOM connect or model modification)
+metadata_refresh: true
+
+# Referential integrity check (unmatched keys after relationship or column changes)
+referential_integrity: true
+
+# Measure metadata enforcement (require DisplayFolder, Description, FormatString on new measures)
+measure_metadata: true
+
+# Compatibility level check (report available features if model is below engine max)
+compatibility_check: true
+
+# Auto-upgrade compatibility level to engine max (IRREVERSIBLE; disabled by default)
+compatibility_auto_upgrade: false

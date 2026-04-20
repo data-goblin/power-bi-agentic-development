@@ -1,12 +1,12 @@
 ---
 name: te2-cli
-version: 0.8.5
-description: This skill should be used when the user asks to "run TabularEditor.exe", "deploy a model via CLI", "use Tabular Editor 2 command line", "set up CI/CD for Power BI", "automate model deployment", "run BPA from command line", "save model as TMDL", "compare model schemas", or mentions TabularEditor.exe flags like -D, -S, -A, -B, -T, -O, -C. Provides CLI syntax reference for the Tabular Editor 2 CLI for deployment, scripting, BPA analysis, and CI/CD integration. Distinct from c-sharp-scripting skill which covers writing script content rather than CLI execution.
+version: 0.26.0
+description: CLI syntax reference for Tabular Editor 2 (TabularEditor.exe); deployment, scripting, BPA analysis, and CI/CD integration. Automatically invoke when the user mentions "TabularEditor.exe", TE2 CLI flags (-D, -S, -A, -B, -TMDL, -O, -C), or asks to "deploy a model via CLI", "set up CI/CD for Power BI", "automate model deployment", "run BPA from command line", "save model as TMDL".
 ---
 
-# Tabular Editor CLI
+# Tabular Editor 2 CLI
 
-Command-line interface for Tabular Editor 2 (TE2) and Tabular Editor 3 (TE3).
+Command-line interface for Tabular Editor 2 (TE2). This skill covers the `TabularEditor.exe` executable; TE3 has its own CLI and is a separate product.
 
 
 ## Installation
@@ -15,17 +15,9 @@ Command-line interface for Tabular Editor 2 (TE2) and Tabular Editor 3 (TE3).
 - Download: https://github.com/TabularEditor/TabularEditor/releases
 - Extract to preferred location or use Chocolatey: `choco install tabulareditor2`
 
-### Tabular Editor 3 (Licensed)
-- Download: https://tabulareditor.com/downloads
-- Or use MSI installer for enterprise deployment
+## Executable
 
-
-## Executables
-
-| Version | Executable | Notes |
-|---------|------------|-------|
-| TE2 | `TabularEditor.exe` or `start.cmd` | Free, Windows-only |
-| TE3 | `TabularEditor.exe` (TE3 folder) | Licensed, Windows/Mac/Linux |
+`TabularEditor.exe` -- free, Windows-only. For Mac/Linux, run via a Windows VM or container.
 
 
 ## Connection Sources
@@ -89,16 +81,21 @@ TabularEditor.exe Model.bim -D "server" "database" -O -C -P -R -M -E -V -W
 
 ### Deployment Options
 
-| Flag | Description |
-|------|-------------|
-| `-O` | Overwrite existing database |
-| `-C` | Create database if not exists |
-| `-P` | Partition/data sources only (no structure) |
-| `-R` | Replace roles only |
-| `-M` | Replace role members only |
-| `-E` | Deploy partitions using server names (incremental refresh) |
-| `-V` | Verbose mode |
-| `-W` | Warning mode (warnings as errors) |
+| Flag | Long Form | Description |
+|------|-----------|-------------|
+| `-O` | `-OVERWRITE` | Overwrite existing database |
+| `-C` | `-CONNECTIONS` | Deploy/overwrite data sources (supports connection string placeholder substitution) |
+| `-P` | `-PARTITIONS` | Deploy/overwrite existing table partitions |
+| `-R` | `-ROLES` | Deploy roles |
+| `-M` | `-MEMBERS` | Deploy role members |
+| `-S` | `-SHARED` | Deploy shared expressions (within `-D` context; note: `-S` also means script outside `-D`) |
+| `-E` | `-ERR` | Return non-zero exit code if AS returns error messages after deployment |
+| `-V` | `-VSTS` | Output Azure DevOps logging commands |
+| `-W` | `-WARN` | Output warnings for unprocessed objects |
+| `-F` | `-FULL` | Full deployment (equivalent to `-O -C -P -S -R -M`) |
+| `-X` | `-XMLA` | Generate XMLA/TMSL script instead of deploying |
+| `-L` | `-LOGIN` | Disable integrated security for deployment |
+| `-Y` | `-SKIPPOLICY` | Skip incremental refresh policy partitions |
 
 ### Save Output
 ```bash
@@ -106,10 +103,10 @@ TabularEditor.exe Model.bim -D "server" "database" -O -C -P -R -M -E -V -W
 TabularEditor.exe Model.bim -S script.csx -B Output.bim
 
 # Save to TMDL folder
-TabularEditor.exe Model.bim -S script.csx -T output/
+TabularEditor.exe Model.bim -S script.csx -TMDL output/
 
-# Save to PBIP format (TE3 only)
-TabularEditor.exe Model.bim -S script.csx -PBIP output.pbip
+# Save to legacy folder structure
+TabularEditor.exe Model.bim -S script.csx -F output/
 ```
 
 ### Best Practice Analyzer
@@ -117,17 +114,20 @@ TabularEditor.exe Model.bim -S script.csx -PBIP output.pbip
 # Run BPA rules
 TabularEditor.exe Model.bim -A rules.json
 
-# Run BPA with output file
-TabularEditor.exe Model.bim -A rules.json -G results.sarif
+# Run BPA with Azure DevOps logging output
+TabularEditor.exe Model.bim -A rules.json -V
 
-# Fail on specific severity
-TabularEditor.exe Model.bim -A rules.json -W  # Warnings as errors
+# Run BPA with GitHub Actions logging output
+TabularEditor.exe Model.bim -A rules.json -G
+
+# Analyze excluding rules embedded in model annotations
+TabularEditor.exe Model.bim -AX rules.json
 ```
 
-### Schema Comparison
+### Schema Check
 ```bash
-# Compare source to target
-TabularEditor.exe SourceModel.bim -DIFF "server" "database" -DIFFOUTPUT changes.json
+# Validate data source schemas against the model
+TabularEditor.exe Model.bim -SC
 ```
 
 
@@ -149,7 +149,7 @@ TabularEditor.exe Model.bim -S format-dax.csx -B Model.bim
 ```bash
 TabularEditor.exe Model.bim ^
     -A https://raw.githubusercontent.com/microsoft/Analysis-Services/master/BestPracticeRules/BPARules.json ^
-    -G bpa-results.sarif
+    -V
 ```
 
 ### 4. Refresh Model Data
@@ -162,7 +162,7 @@ TabularEditor.exe "server" "database" ^
 ### 5. Export Model from Service
 ```bash
 TabularEditor.exe "powerbi://api.powerbi.com/v1.0/myorg/Workspace" "Model" ^
-    -T output/definition
+    -TMDL output/definition
 ```
 
 
@@ -176,8 +176,7 @@ For authentication methods (Windows, Service Principal, Interactive) and CI/CD i
 | Code | Description |
 |------|-------------|
 | 0 | Success |
-| 1 | Script error or deployment failure |
-| 2 | BPA rule violations (when -W used) |
+| 1 | Any error-level output (script error, deployment failure, BPA violations at severity >= 3) |
 
 
 ## File Formats
@@ -192,8 +191,8 @@ For authentication methods (Windows, Service Principal, Interactive) and CI/CD i
 | Flag | Format | Description |
 |------|--------|-------------|
 | `-B` | `.bim` | Tabular JSON |
-| `-T` | folder | TMDL |
-| `-PBIP` | `.pbip` | Power BI Project (TE3) |
+| `-TMDL` | folder | TMDL |
+| `-F` | folder | Legacy folder structure |
 
 
 ## Troubleshooting
@@ -223,7 +222,7 @@ For common errors (database not found, authentication failed, script execution f
 +---------------------------------------------------------+
 | OUTPUT                                                  |
 |   -B output.bim       Save as JSON                      |
-|   -T folder/          Save as TMDL                      |
+|   -TMDL folder/       Save as TMDL                      |
 +---------------------------------------------------------+
 | BPA                                                     |
 |   -A rules.json       Run BPA analysis                  |
@@ -236,6 +235,5 @@ For common errors (database not found, authentication failed, script execution f
 
 To retrieve current XMLA and deployment docs, use `microsoft_docs_search` + `microsoft_docs_fetch` (MCP) if available, otherwise `mslearn search` + `mslearn fetch` (CLI). Search based on the user's request and run multiple searches as needed to ensure sufficient context before proceeding.
 
-- [TE2 CLI Documentation](https://docs.tabulareditor.com/te2/Command-line-Options.html)
-- [TE3 CLI Documentation](https://docs.tabulareditor.com/te3/other/command-line-options.html)
+- [TE2 CLI Documentation](https://docs.tabulareditor.com/features/Command-line-Options.html)
 - [XMLA Endpoints](https://learn.microsoft.com/en-us/power-bi/enterprise/service-premium-connect-tools)

@@ -92,19 +92,6 @@ pbir model "Report.Report" -q "EVALUATE DISTINCT('Date'[Calendar Year (ie 2021)]
 pbir model "Report.Report" -q "EVALUATE VALUES('Exchange Rate'[From Currency])" -F table
 ```
 
-### te query (Tabular Editor CLI)
-
-```bash
-# Query distinct values (explicit workspace/model)
-te query -q "EVALUATE VALUES('Date'[Calendar Year (ie 2021)])" -s "My Workspace" -d "My Model"
-
-# Query with CSV output for processing
-te query -q "EVALUATE VALUES('Exchange Rate'[From Currency])" --output csv
-
-# Query from file
-te query -f query.dax -s "My Workspace" -d "My Model"
-```
-
 ### fab api (Fabric CLI -- for remote models)
 
 ```bash

@@ -1,0 +1,39 @@
+name: Feature Request
+description: Suggest a new feature or improvement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: plugin
+    attributes:
+      label: Plugin
+      options:
+        - pbip
+        - reports
+        - semantic-models
+        - tabular-editor
+        - fabric-cli
+        - pbi-desktop
+        - New plugin
+        - Don't know / doesn't matter
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Skill
+        - Subagent
+        - Hook
+        - Don't know / doesn't matter
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What should it do?
+    validations:
+      required: true

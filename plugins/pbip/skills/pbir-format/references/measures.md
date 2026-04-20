@@ -113,7 +113,7 @@ If you move all extension measures to the semantic model (e.g., from `reportExte
 - `name` - **CRITICAL: Must be an EXISTING entity/table from the semantic model**
   - Cannot create new entities in reportExtensions.json
   - Must match exact table name from model (case-sensitive)
-  - Use `pbir model "Report.Report" -d` or `te` to discover available tables
+  - Use `pbir model "Report.Report" -d` or `fab` to discover available tables
 
 **Measure level:**
 - `name` - Measure name (must be unique across model and all extension measures)
@@ -139,16 +139,13 @@ If you move all extension measures to the semantic model (e.g., from `reportExte
 
 ### Discovering Entities
 
-Use `pbir model`, `te`, or `fab` to list available tables:
+Use `pbir model` or `fab` to list available tables:
 
 ```bash
 # Using pbir (preferred -- reads from connected model)
 pbir model "Report.Report" -d
 
-# Using te (explicit workspace/model)
-te query -q "SELECT [Name] FROM $SYSTEM.TMSCHEMA_TABLES" -s "Workspace" -d "Model"
-
-# Using fab
+# Using fab (explicit workspace/model)
 fab get "ws.Workspace/Model.SemanticModel" -q "definition" | grep "^table "
 ```
 

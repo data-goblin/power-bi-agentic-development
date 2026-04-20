@@ -1,0 +1,29 @@
+# PBIP Hook Configuration
+#
+# Toggle individual validation checks on or off.
+# All checks are enabled by default. Set to false to disable.
+# Changes take effect immediately (no restart needed).
+
+# JSON syntax validation (jq empty)
+json_syntax: true
+
+# Folder name spaces check (pages/visuals won't render with spaces)
+folder_spaces: true
+
+# Required fields per file type (from Microsoft JSON schemas)
+required_fields: true
+
+# $schema URL format validation
+schema_url: true
+
+# Visual/page name format (word chars and hyphens only)
+name_format: true
+
+# byPath target directory existence check
+bypath_exists: true
+
+# fab exists check for byConnection models (requires fab CLI + auth)
+fab_exists: true
+
+# TMDL structural syntax validation (requires tmdl-validate binary)
+tmdl_syntax: true

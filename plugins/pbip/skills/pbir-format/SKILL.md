@@ -1,23 +1,22 @@
 ---
 name: pbir-format
-version: 0.10.1
-description: "This skill should be used when the user asks about 'PBIR format', 'PBIR JSON structure', 'what does this visual.json property mean', 'how do PBIR expressions work', 'objects vs visualContainerObjects', 'theme inheritance', 'conditional formatting pattern', 'extension measures', 'visual container formatting', 'how to create a visual in PBIR', 'PBIR page structure', 'visual.json format', 'PBIR sorting', 'report wallpaper', 'filter formatting', 'PBIR bookmarks', 'definition.pbir', 'query roles', 'field references in PBIR', 'change the theme', 'modify theme', 'update theme colors', 'push formatting to theme', 'theme fonts', 'theme text classes', 'set theme formatting', 'theme wildcards', 'visual type overrides in theme', 'filter pane theme styling', or needs to understand Power BI Enhanced Report metadata format idiosyncrasies. This is a format reference for understanding and authoring PBIR JSON schemas and patterns."
+version: 0.26.0
+description: Format reference for Power BI Enhanced Report (PBIR) JSON schemas and patterns. Automatically invoke when the user asks about PBIR JSON structure, visual.json properties, PBIR expressions, objects vs visualContainerObjects, theme inheritance, conditional formatting patterns, extension measures, bookmarks, field references, filter formatting, query roles, PBIR page structure, report wallpaper, or any PBIR metadata format question.
 ---
 
 # PBIR Format Reference
 
 Skill that teaches Claude about the Power BI Enhanced Report (PBIR) JSON format to read and use it. Doesn't support legacy `report.json` or `layout` report metadata. To convert from legacy to PBIR format, users have to open and save their reports in Power BI Desktop.
 
-Follow within reason the [agent tone guidelines](./important/AGENT-TONE.md) when working with reports.
+Follow within reason the [mental model](./important/MENTAL-MODEL.md) when working with reports.
 
-**WARNING:** The PBIR format is brittle and easily corrupted. Direct JSON file modification can lead to corruption. Prefer using the `pbir` CLI tool if available, as it has built-in safeguards against breaking report files. Only fall back to direct JSON modification if the user explicitly requests it or if `pbir` is not available.
+**WARNING:** The PBIR format is brittle and easily corrupted. Direct JSON file modification can lead to corruption. Prefer using the `pbir` CLI tool if available (`uv tool install pbir-cli` or `pip install pbir-cli`), as it has built-in safeguards against breaking report files. Only fall back to direct JSON modification if the user explicitly requests it or if `pbir` is not available.
 
 ## General, critical guidance
 
 - **Check examples:** Check [examples](./examples/) for a valid report
 - **Take a backup:** Make a copy of the report before modifying it
 - **PBIX vs PBIP vs PBIR:** So long as report metadata is in PBIR format, any of these formats works. PBIX is just a zip file; unzip and rezip to work with it. Do not work with PBIT (Power BI Template) file types. Note that PBIP and PBIX contain PBIR, but a "thin" report can be PBIR only.
-- **Validate often:** Any time a JSON file changes, validate it *IMMEDIATELY* after the modification to avoid "breaking" changes with `jq empty <file.json>`. Use the **`pbip-validator`** agent for comprehensive schema validation and cross-reference consistency checks across the project.
 - **Valid JSON vs. Rendering JSON:** Valid JSON does not guarantee rendering. A visual might not render if the bound field is invalid (missing, wrong table, or misspelled) in the visual.json, if the visual elements are cropped by their container, if a model performance issue causes the dax query to time out, if a model data quality issue results in (Blank) or empty values, etc. Check whether a visual rendered using tools like the chrome or chrome devTools MCP server if the report was published to Power BI, but it's often faster to just ask the user to check in Power BI Desktop or the browser.
 - **Hierarchical formatting cascade:** In Power BI reports, formatting is determined by the following order of operations: defaults --> Theme wildcards (*) --> Theme visualTypes --> bespoke visual.json configuration. Theme overwrites defaults, visualType overrides wildcards in themes, and visual.json overrides all theme formatting. Prefer putting as much of the formatting in the theme as possible over bespoke visual.json formatting because then changes only need to happen in one place
 - **PBIR files are strict JSON:** No comments allowed
@@ -57,7 +56,7 @@ Report.Report/
 
 ## Rules
 
-Follow within reason the [agent tone guidelines](./important/AGENT-TONE.md) when reviewing or providing feedback on reports.
+Follow within reason the [mental model](./important/MENTAL-MODEL.md) when reviewing or providing feedback on reports.
 
 ### Modifying a report
 
@@ -66,15 +65,13 @@ Follow within reason the [agent tone guidelines](./important/AGENT-TONE.md) when
 3. Check the connected semantic model. For thin reports (`byConnection`), use `fab`, `pbir`, or `te` CLI tools to explore the model. For `byPath`, connect to the local model in Power BI Desktop. Understanding the model reveals available fields and calculation logic
 4. Identify the appropriate visuals and pages to modify. Ask the user for clarification if needed
 5. Plan modifications with the correct PBIR structure and property values
-6. Validate every changed JSON file IMMEDIATELY with `jq empty <file.json>`. Revise if invalid
 
 ### Creating a report
 
 1. Same workflow as modifying, except files are generated from scratch. Use `pbir new` if the `pbir` CLI is available; otherwise, check the example reports thoroughly
 2. Ensure `definition.pbir` is configured properly (byPath or byConnection)
 3. Use a theme.json file. Recommended: [the SQLBI/Data Goblins theme](./examples/K201-MonthSlicer.Report/StaticResources/RegisteredResources/SqlbiDataGoblinTheme.json)
-4. Validate each new JSON file immediately after creation
-5. Add appropriate filters to `report.json` or `page.json`; see [filter pane reference](references/filter-pane.md)
+4. Add appropriate filters to `report.json` or `page.json`; see [filter pane reference](references/filter-pane.md)
 
 ### Additional validation
 

@@ -1,6 +1,10 @@
 ---
 name: python-reviewer
-description: Use this agent to review a Python visual script before presenting it to the user. Validates matplotlib/seaborn code, Power BI conventions, and provides design feedback. Examples:
+description: Review a Python visual script before presenting it to the user. Validates matplotlib/seaborn code, Power BI conventions, and provides design feedback.
+model: sonnet
+color: cyan
+tools: ["Read", "Grep", "Glob"]
+---
 
 <example>
 Context: Agent has written a new Python visual script for a distribution chart
@@ -9,11 +13,6 @@ assistant: "Let me have the python-reviewer agent validate this script before we
 New Python script created, review before user feedback.
 </commentary>
 </example>
-
-model: haiku
-color: cyan
-tools: ["Read", "Grep", "Glob"]
----
 
 Review Python visual scripts for correctness and design quality.
 

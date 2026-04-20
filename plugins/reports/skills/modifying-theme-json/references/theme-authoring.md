@@ -2,19 +2,26 @@
 
 Design guidance for creating and evolving Power BI report themes. This covers decisions and structure — for JSON mechanics, jq patterns, and filter pane properties, see `pbir-format` skill → `references/theme.md`.
 
-## Reading Theme Files Efficiently
+## Reading and Editing Theme Files
 
-**CRITICAL:** Theme JSON files can be 75KB+ and 2000+ lines. Never read the full file — always use targeted `jq` queries. Start by checking keys, then drill into specific paths:
+**CRITICAL:** Theme JSON files can be 75KB+ and 2000+ lines. Never read the full file. Two approaches:
 
+**Preferred: Serialize/build workflow.** Split the theme into small, focused files, edit those, then rebuild:
 ```bash
-# Step 1: Check what top-level keys exist (never read the whole file)
-jq 'keys' "$THEME"
+# Serialize to a temporary folder (MUST be outside .Report/ to avoid validation hook errors)
+pbir theme serialize "Report.Report" -o /tmp/Work.Theme
 
-# Step 2: Query specific sections only
+# Edit the small files in /tmp/Work.Theme/ (_config.json, _wildcards.json, etc.)
+
+# Build and apply back
+pbir theme build /tmp/Work.Theme -o "Report.Report" -f --clean
+```
+
+**Fallback: Targeted `jq` queries.** When serialize/build is unavailable, use `jq` to extract only specific keys:
+```bash
+jq 'keys' "$THEME"
 jq '.textClasses | keys' "$THEME"
-jq '.visualStyles | keys' "$THEME"
 jq '.visualStyles["*"]["*"] | keys' "$THEME"
-jq '.visualStyles.textbox' "$THEME"
 jq '.dataColors' "$THEME"
 ```
 
@@ -265,5 +272,5 @@ Before considering a theme complete:
 - [ ] `dropShadow.show: false` in wildcard
 - [ ] At least `textbox` and `image` have type-specific overrides disabling container chrome
 - [ ] Filter pane (`outspacePane` and `filterCard`) styled in wildcard
-- [ ] JSON validates with `jq empty`
+- [ ] Theme validates with `pbir theme validate "Report.Report"` (or `jq empty` as fallback)
 - [ ] Deployed and visually verified on at least 3 visual types

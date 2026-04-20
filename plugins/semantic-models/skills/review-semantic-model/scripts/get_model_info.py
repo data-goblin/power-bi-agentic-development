@@ -146,18 +146,9 @@ def get_connected_reports(workspace_id: str, model_id: str) -> List[Dict]:
                     "same_workspace": True,
                 })
 
-    # Check other workspaces via admin API (if available)
-    admin_data = fab_api(f"admin/datasets/{model_id}/upstreamReports")
-    if admin_data and isinstance(admin_data, dict):
-        for r in admin_data.get("value", []):
-            rid = r.get("id", "")
-            if not any(rpt["id"] == rid for rpt in reports):
-                reports.append({
-                    "name": r.get("name", "?"),
-                    "id": rid,
-                    "workspace": r.get("workspaceId", "?"),
-                    "same_workspace": False,
-                })
+    # Note: For cross-workspace report discovery, use the
+    # lineage-analysis skill's get-downstream-reports.py script,
+    # which scans all accessible workspaces in parallel.
 
     return reports
 

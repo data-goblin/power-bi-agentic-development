@@ -53,8 +53,10 @@ fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/executeQueries" \
 fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/executeQueries" \
   -X post -i '{"queries":[{"query":"EVALUATE ROW(\"v\", '\''TableName'\''[MeasureName])"}]}'
 
-# Get measure DAX expression to understand its logic
-te get "TableName/MeasureName" -q expression -s "workspace" -d "model"
+# Get measure DAX expression -- inspect the model definition
+# Either use fab export and read the TMDL, or query via executeQueries:
+fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/executeQueries" \
+  -X post -i '{"queries":[{"query":"EVALUATE ROW(\"expr\", INFO.EXPRESSION(\"TableName\", \"MeasureName\"))"}]}'
 ```
 
 ## Repair Workflow
@@ -118,11 +120,13 @@ Slicer default selections (in `objects.general[0].properties.filter`) contain li
 
 For fields that no longer exist in the model:
 
-1. **Find a substitute**: Query the model for similar measures. Check `te get` for related DAX expressions.
-2. **Add the missing measure**: If the measure was simply deleted, recreate it using `te add`:
-   ```bash
-   te add "TableName/MeasureName" -i "[Related Measure Expression]" \
-     -s "workspace" -d "model" --save
+1. **Find a substitute**: Query the model for similar measures. Inspect the model definition (via `fab export` or TMDL files) for related DAX expressions.
+2. **Add the missing measure**: If the measure was simply deleted, recreate it via Tabular Editor or by adding it to the TMDL file:
+   ```
+   # In the relevant table's .tmdl file, add:
+   measure 'MeasureName' = [Related Measure Expression]
+   # Then deploy:
+   fab import "workspace.Workspace/model.SemanticModel" -i ./model.SemanticModel -f
    ```
 3. **Remove from visual**: If no substitute exists, remove the projection from the visual's `queryState`.
 

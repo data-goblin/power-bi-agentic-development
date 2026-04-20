@@ -1,7 +1,7 @@
 ---
 name: lineage-analysis
-version: 0.10.0
-description: "This skill should be used when the user asks to 'find downstream reports', 'what reports use this model', 'show report lineage', 'which reports are connected', 'find connected reports', 'get model dependencies', 'cross-workspace lineage', 'impact analysis', 'what depends on this dataset', or needs to trace the relationship between semantic models and their downstream reports across workspaces."
+version: 0.26.0
+description: Trace relationships between semantic models and downstream reports across Fabric workspaces. Automatically invoke when the user asks to "find downstream reports", "show report lineage", "impact analysis", "what depends on this dataset", "cross-workspace lineage", "which reports are connected", "get model dependencies", or mentions model-to-report dependency tracing.
 ---
 
 # Lineage Analysis
@@ -63,6 +63,6 @@ The script only discovers Power BI reports. For full dependency mapping includin
 
 ## Related Skills
 
-- **`auditing-semantic-models`** -- Audit model quality, memory, DAX, design
+- **`review-semantic-model`** -- Audit model quality, memory, DAX, design
 - **`refreshing-semantic-model`** -- Trigger and monitor model refreshes
 - **`fabric-cli`** (fabric-cli plugin) -- Workspace and item management via `fab` CLI

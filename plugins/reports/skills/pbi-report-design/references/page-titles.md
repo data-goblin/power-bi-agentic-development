@@ -89,7 +89,7 @@ Background: Theme color or gradient
 ```dax
 Title Text =
 "Sales by Region - " &
-SELECTEDVALUE(Date[Year], "All Years")
+SELECTEDVALUE('Date'[Year], "All Years")
 ```
 
 ### Include Last Refresh

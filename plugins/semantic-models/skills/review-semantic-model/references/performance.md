@@ -1,6 +1,6 @@
 # Semantic Model Performance
 
-Methodology and guidance for evaluating semantic model performance: memory analysis, query optimization, unused column detection, and benchmarking.
+Guidance for evaluating semantic model performance: memory analysis, query optimization, unused column detection, and benchmarking.
 
 ## Performance Analysis Tools
 
@@ -88,6 +88,8 @@ DAX query performance depends heavily on cache state. Always specify which state
 For systematic benchmarking across multiple queries and cache states, consider the [DAXPerformanceTesting](https://github.com/microsoft/fabric-toolbox/tree/main/tools/DAXPerformanceTesting) notebook from microsoft/fabric-toolbox. It automates cache clearing, capacity management, and trace capture for reliable comparisons.
 
 For AI-assisted query optimization, consider the [DAXPerformanceTunerMCPServer](https://github.com/microsoft/fabric-toolbox/tree/main/tools/DAXPerformanceTunerMCPServer) which identifies anti-patterns and suggests optimizations with semantic equivalence checking.
+
+For DAX optimization, use the [`dax` skill](../../dax/).
 
 ## Performance Targets
 

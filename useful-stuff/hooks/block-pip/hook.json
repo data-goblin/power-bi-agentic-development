@@ -1,0 +1,5 @@
+{
+  "type": "command",
+  "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE '(^|;|&&|\\|\\|)[[:space:]]*pip3?[[:space:]]'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"Use uv instead of pip.\"}}' && exit 0; fi; exit 0",
+  "if": "Bash(*pip*)"
+}

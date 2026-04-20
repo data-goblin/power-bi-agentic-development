@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "A marketplace for skills and tools for agentic Power BI development.",
-    "version": "0.11.0"
+    "version": "0.26.0"
   },
   "plugins": [
     {
@@ -37,6 +37,11 @@
       "name": "fabric-cli",
       "description": "Get this plugin to work with Fabric / Power BI service, by means of the fabric cli.",
       "source": "./plugins/fabric-cli"
+    },
+    {
+      "name": "fabric-admin",
+      "description": "Fabric and Power BI administration; tenant settings audits, governance, delegated overrides, and Entra security group investigation. Requires the fabric-cli plugin.",
+      "source": "./plugins/fabric-admin"
     }
   ]
 }

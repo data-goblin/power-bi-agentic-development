@@ -9,3 +9,10 @@ CLAUDE.md
 *.tmuo
 tools/
 tmp/
+.worktrees/
+node_modules/
+package-lock.json
+package.json
+plugins/etl/
+plugins/pbi-desktop/hooks/bin/
+plugins/pbi-desktop/skills/connect-pbid/bin/

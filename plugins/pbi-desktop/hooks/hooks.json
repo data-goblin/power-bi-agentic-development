@@ -1,0 +1,61 @@
+{
+  "description": "Validates DAX references, measure metadata, referential integrity, compatibility level, and model metadata cache for Power BI Desktop connections via TOM/ADOMD.NET. Toggle checks in config.yaml next to this file.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" validate-dax",
+            "timeout": 10,
+            "if": "Bash(*tom_nuget*)"
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" validate-dax",
+            "timeout": 10,
+            "if": "Bash(*-File*.ps1*)"
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" validate-measure",
+            "timeout": 10,
+            "if": "Bash(*Measures.Add*)"
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" validate-measure",
+            "timeout": 10,
+            "if": "Bash(*-File*.ps1*)"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" refresh-cache",
+            "timeout": 30,
+            "if": "Bash(*-File*.ps1*)"
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" check-compat",
+            "timeout": 10,
+            "if": "Bash(*-File*.ps1*)"
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" check-ri",
+            "timeout": 60,
+            "if": "Bash(*SaveChanges*)"
+          }
+        ]
+      }
+    ]
+  }
+}
