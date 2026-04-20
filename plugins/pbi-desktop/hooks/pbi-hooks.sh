@@ -17,21 +17,31 @@
 
 # #region Setup
 
-set -uo pipefail
+# Strict mode intentionally relaxed; favors continuing execution over spurious
+# exits on Windows Git Bash. Every failing path below exits 0 or 2 explicitly.
+# set -u is NOT used: unset env vars on Windows are a primary cause of
+# spurious non-zero exits that surface as "PreToolUse/PostToolUse hook error".
+set -o pipefail
 
 SUBCOMMAND="${1:-}"
 if [[ -z "$SUBCOMMAND" ]]; then
     exit 0
 fi
 
-HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd)" || exit 0
 CONFIG_PATH="$HOOK_DIR/config.yaml"
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 METADATA_PATH="$PROJECT_DIR/tmp/model-metadata.json"
 COMPAT_MARKER_PATH="$PROJECT_DIR/tmp/.compat-warned"
 
-# Read stdin once
-STDIN_BUF="$(cat)"
+# Master kill-switch; users on broken Windows Claude Code builds can disable
+# all hooks in this plugin by setting all_hooks_enabled: false in config.yaml.
+if [[ -f "$CONFIG_PATH" ]] && grep -qE "^all_hooks_enabled:[[:space:]]*false" "$CONFIG_PATH" 2>/dev/null; then
+    exit 0
+fi
+
+# Read stdin once; tolerate empty/unavailable stdin without erroring
+STDIN_BUF="$(cat 2>/dev/null || printf '%s' '{}')"
 
 # Require jq
 if ! command -v jq &>/dev/null; then

@@ -15,7 +15,7 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" validate-dax",
             "timeout": 10,
-            "if": "Bash(*-File*.ps1*)"
+            "if": "Bash(* -File *.ps1*)"
           },
           {
             "type": "command",
@@ -27,7 +27,7 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" validate-measure",
             "timeout": 10,
-            "if": "Bash(*-File*.ps1*)"
+            "if": "Bash(* -File *.ps1*)"
           }
         ]
       }
@@ -40,13 +40,13 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" refresh-cache",
             "timeout": 30,
-            "if": "Bash(*-File*.ps1*)"
+            "if": "Bash(* -File *.ps1*)"
           },
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" check-compat",
             "timeout": 10,
-            "if": "Bash(*-File*.ps1*)"
+            "if": "Bash(* -File *.ps1*)"
           },
           {
             "type": "command",

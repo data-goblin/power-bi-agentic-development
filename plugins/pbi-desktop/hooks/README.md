@@ -34,6 +34,26 @@ All checks are toggleable via `config.yaml`. Set any key to `false` to disable.
 - If `config.yaml` is missing, all checks default to enabled
 - Every error message includes the config.yaml path for transient disable
 
+## Known Windows issues
+
+Claude Code has several open bugs that affect Bash hooks on Windows. If you see spurious `PreToolUse:Bash hook error` or `PostToolUse:Bash hook error` notices on commands that clearly shouldn't match any `if` filter (e.g. `mkdir`, `ls`, `cat`), you are hitting one or more of:
+
+| Bug | Effect |
+|---|---|
+| [anthropics/claude-code#49229](https://github.com/anthropics/claude-code/issues/49229) | The `if` field is silently ignored; every Bash matcher entry spawns for every Bash call |
+| [#38800](https://github.com/anthropics/claude-code/issues/38800) | `${CLAUDE_PLUGIN_ROOT}` expansion breaks when the user path contains spaces |
+| [#47070](https://github.com/anthropics/claude-code/issues/47070) | `execvpe(/bin/bash)` fails on Windows with Docker Desktop but no full WSL distro |
+| [#50243](https://github.com/anthropics/claude-code/issues/50243) | Bash hooks silently not invoked on Windows with `settings.local.json`-only config |
+| [#34457](https://github.com/anthropics/claude-code/issues/34457) | Hooks with shell commands cause 5+ minute hangs/crashes on Windows |
+
+The hook scripts in this plugin defensively exit 0 on any environmental failure so the errors are cosmetic (commands still run). If the noise bothers you, flip the master kill-switch in `config.yaml`:
+
+```yaml
+all_hooks_enabled: false
+```
+
+That disables every hook in this plugin without touching individual check toggles. Flip it back to `true` once you upgrade to a Claude Code build that resolves the underlying bugs.
+
 ## Known limitations
 
 - `.ps1` file execution hides content from `if` filters; hooks only validate inline PowerShell commands

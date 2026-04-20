@@ -21,15 +21,17 @@
 #   2 - Blocking: TMDL validation error detected
 #
 
-set -uo pipefail
+# Strict mode intentionally relaxed; favors continuing execution over spurious
+# exits on Windows Git Bash. Every failing path below exits 0 or 2 explicitly.
+set -o pipefail
 
-INPUT=$(cat)
+INPUT=$(cat 2>/dev/null || printf '%s' '{}')
 
 # Skip if jq not available
 command -v jq &>/dev/null || exit 0
 
 # ── Config ──────────────────────────────────────────────────────────────────
-HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd)" || exit 0
 HOOK_CONFIG="$HOOK_DIR/config.yaml"
 
 check_enabled() {
@@ -38,6 +40,11 @@ check_enabled() {
     grep -qE "^${check_name}:\\s*false" "$HOOK_CONFIG" 2>/dev/null && return 1
     return 0
 }
+
+# Master kill-switch (Windows escape hatch)
+if [[ -f "$HOOK_CONFIG" ]] && grep -qE "^all_hooks_enabled:[[:space:]]*false" "$HOOK_CONFIG" 2>/dev/null; then
+    exit 0
+fi
 
 check_enabled tmdl_syntax || exit 0
 

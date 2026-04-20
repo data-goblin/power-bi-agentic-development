@@ -9,6 +9,7 @@ CLAUDE.md
 *.tmuo
 tools/
 tmp/
+tests/
 .worktrees/
 node_modules/
 package-lock.json

@@ -4,6 +4,12 @@
 # All checks are enabled by default. Set to false to disable.
 # Changes take effect immediately (no restart needed).
 
+# Master kill-switch for all hooks in this plugin.
+# Set to false if you see noisy "PostToolUse hook error" messages on Windows,
+# or while troubleshooting unrelated issues. Leaves individual checks below
+# intact; flip this back to true to re-enable everything.
+all_hooks_enabled: true
+
 # JSON syntax validation (jq empty)
 json_syntax: true
 
