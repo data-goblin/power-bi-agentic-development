@@ -4,6 +4,26 @@ DataHub V2 API Search Script
 datahub_search.py
 
 Cross-workspace search for Power BI and Fabric items using the internal DataHub V2 API.
+
+PREFER `fab find` FOR ROUTINE SEARCH. The official `fab find` command (Fabric CLI
+>= 1.6.1) covers name/description/workspace search across the tenant and is the
+right tool when you only need name + type + workspace + id. Reach for this script
+only when you need fields that `fab find` does not return: last visit, last
+refresh, last modified, owner, storage mode, capacity SKU, Copilot/NL support,
+cache config. These appear first in the table, detailed, and JSON output here
+so the script's value-add is visible.
+
+The DataHub V2 API is undocumented internal Microsoft surface area. Use this
+script for governance, cleanup, and audit work where the unique fields actually
+matter; do not depend on it for production automation.
+
+JSON output schema note: the --output json form orders keys with the
+unique-to-DataHub-V2 fields first (lastVisited, lastRefreshed, lastModified,
+owner, ownerName, storageMode, capacitySku, naturalLanguageSupported,
+cachedModelEnabled, isDiscoverable) and identifier fields last (name,
+workspace, workspaceId, id). naturalLanguageSupported and cachedModelEnabled
+were added to the JSON output alongside the reorder. Downstream consumers
+that pin field order should switch to key-based lookup.
 Returns rich metadata not available via standard APIs (storage mode, last visited, owner, SKU).
 
 AGENT USAGE GUIDE:
@@ -584,22 +604,31 @@ def format_output(items: List[Dict], output_format: str = "table", show_fields: 
         Formatted string for output
     """
     if output_format == "json":
-        # Clean JSON output - remove internal fields
+        # Clean JSON output. Unique-to-DataHub-V2 fields lead; identifier fields that
+        # also exist in `fab find` come at the end. The point of this script is the
+        # rich metadata that `fab find` does not return, so the unique fields are
+        # visually prominent in piped/grep'd output.
         cleaned = []
         for item in items:
+            artifact = item.get("artifact", {})
+            owner_user = item.get("ownerUser", {})
             cleaned.append({
+                # Unique to DataHub V2 (not in `fab find`)
+                "lastVisited": item.get("lastVisitedTimeUTC"),
+                "lastRefreshed": _get_refresh_time(item),
+                "lastModified": _get_modified_time(item),
+                "owner": owner_user.get("emailAddress"),
+                "ownerName": f"{owner_user.get('givenName', '')} {owner_user.get('familyName', '')}".strip(),
+                "storageMode": _get_storage_mode(item),
+                "capacitySku": artifact.get("sharedFromEnterpriseCapacitySku"),
+                "naturalLanguageSupported": artifact.get("naturalLanguageSupported"),
+                "cachedModelEnabled": artifact.get("cachedModelEnabled"),
+                "isDiscoverable": item.get("isDiscoverable"),
+                # Identifier fields (also returned by `fab find -l`)
                 "name": item.get("displayName", item.get("name")),
                 "workspace": item.get("workspaceName"),
                 "workspaceId": item.get("workspaceObjectId"),
                 "id": item.get("objectId"),
-                "lastVisited": item.get("lastVisitedTimeUTC"),
-                "lastRefreshed": _get_refresh_time(item),
-                "lastModified": _get_modified_time(item),
-                "owner": item.get("ownerUser", {}).get("emailAddress"),
-                "ownerName": f"{item.get('ownerUser', {}).get('givenName', '')} {item.get('ownerUser', {}).get('familyName', '')}".strip(),
-                "storageMode": _get_storage_mode(item),
-                "capacitySku": item.get("artifact", {}).get("sharedFromEnterpriseCapacitySku"),
-                "isDiscoverable": item.get("isDiscoverable"),
             })
         return json.dumps(cleaned, indent=2)
 
@@ -615,32 +644,43 @@ def format_output(items: List[Dict], output_format: str = "table", show_fields: 
         return "\n".join(lines)
 
     if output_format == "detailed":
+        # Unique-to-DataHub-V2 fields lead; identifier fields are at the bottom.
         lines = []
         for item in items:
-            lines.append(f"Name:        {item.get('displayName', item.get('name', 'Unknown'))}")
-            lines.append(f"Workspace:   {item.get('workspaceName', 'N/A')}")
-            lines.append(f"ID:          {item.get('objectId', 'N/A')}")
-            lines.append(f"Last Visit:  {item.get('lastVisitedTimeUTC', 'N/A')[:19] if item.get('lastVisitedTimeUTC') else 'N/A'}")
+            artifact = item.get("artifact", {})
             owner = item.get("ownerUser", {})
-            lines.append(f"Owner:       {owner.get('givenName', '')} {owner.get('familyName', '')} <{owner.get('emailAddress', 'N/A')}>")
-            lines.append(f"Storage:     {_get_storage_mode(item)}")
-            lines.append(f"Capacity:    {item.get('artifact', {}).get('sharedFromEnterpriseCapacitySku', 'N/A')}")
-            lines.append(f"Discoverable:{item.get('isDiscoverable', 'N/A')}")
+            lines.append(f"Last Visit:    {item.get('lastVisitedTimeUTC', 'N/A')[:19] if item.get('lastVisitedTimeUTC') else 'N/A'}")
+            lines.append(f"Last Refresh:  {_get_refresh_time(item) or 'N/A'}")
+            lines.append(f"Last Modified: {_get_modified_time(item) or 'N/A'}")
+            lines.append(f"Owner:         {owner.get('givenName', '')} {owner.get('familyName', '')} <{owner.get('emailAddress', 'N/A')}>")
+            lines.append(f"Storage:       {_get_storage_mode(item)}")
+            lines.append(f"Capacity SKU:  {artifact.get('sharedFromEnterpriseCapacitySku', 'N/A')}")
+            lines.append(f"NL Supported:  {artifact.get('naturalLanguageSupported', 'N/A')}")
+            lines.append(f"Cache Enabled: {artifact.get('cachedModelEnabled', 'N/A')}")
+            lines.append(f"Discoverable:  {item.get('isDiscoverable', 'N/A')}")
+            lines.append(f"Name:          {item.get('displayName', item.get('name', 'Unknown'))}")
+            lines.append(f"Workspace:     {item.get('workspaceName', 'N/A')}")
+            lines.append(f"ID:            {item.get('objectId', 'N/A')}")
             lines.append("-" * 60)
         return "\n".join(lines)
 
-    # Table format (default)
+    # Table format (default). Columns are ordered with the unique-to-DataHub-V2
+    # signals leading: last visit, last refresh, owner, storage. Name and
+    # workspace are still shown so rows remain identifiable.
     lines = []
-    lines.append(f"{'Name':<35} {'Workspace':<22} {'Last Visited':<12} {'Owner':<20}")
-    lines.append("-" * 92)
+    lines.append(f"{'Last Visit':<12} {'Last Refresh':<12} {'Storage':<14} {'Owner':<20} {'Name':<30} {'Workspace':<22}")
+    lines.append("-" * 112)
 
     for item in items:
-        name = item.get("displayName", item.get("name", "Unknown"))[:34]
-        workspace = item.get("workspaceName", "")[:21]
         last_visit = item.get("lastVisitedTimeUTC", "")[:10] if item.get("lastVisitedTimeUTC") else ""
+        refresh_iso = _get_refresh_time(item)
+        last_refresh = refresh_iso[:10] if refresh_iso else ""
+        storage = _get_storage_mode(item)
         owner = item.get("ownerUser", {})
         owner_name = f"{owner.get('givenName', '')} {owner.get('familyName', '')}"[:19]
-        lines.append(f"{name:<35} {workspace:<22} {last_visit:<12} {owner_name:<20}")
+        name = item.get("displayName", item.get("name", "Unknown"))[:29]
+        workspace = item.get("workspaceName", "")[:21]
+        lines.append(f"{last_visit:<12} {last_refresh:<12} {storage:<14} {owner_name:<20} {name:<30} {workspace:<22}")
 
     return "\n".join(lines)
 
