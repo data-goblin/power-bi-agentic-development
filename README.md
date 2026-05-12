@@ -92,7 +92,9 @@ git config --system core.longpaths true
 
 ### Install
 
-The marketplace bundles seven child plugins. Register the marketplace, then install each child plugin you want:
+This repository is an [Anthropic-format plugin marketplace](https://code.claude.com/docs/en/plugin-marketplaces) (a set of plugins), not a single distributable plugin, so the root `.claude-plugin/` contains only `marketplace.json`. Two documented install paths work:
+
+**1. Register the marketplace once, then install named child plugins:**
 
 ```bash
 copilot plugin marketplace add data-goblin/power-bi-agentic-development
@@ -106,7 +108,13 @@ copilot plugin install fabric-cli@power-bi-agentic-development
 copilot plugin install fabric-admin@power-bi-agentic-development   # install after fabric-cli
 ```
 
-The `PLUGIN-NAME@MARKETPLACE-NAME` syntax is the documented install form for Copilot CLI ([reference](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing)). Inside an interactive Copilot session, the equivalent is `/plugin install PLUGIN-NAME@MARKETPLACE-NAME`. Installing only the root repo (`copilot plugin install data-goblin/power-bi-agentic-development`) does not pull the child plugins; their skills, agents, hooks, and MCP servers live under `plugins/<name>/`.
+**2. Or install a single plugin directly from its subdirectory, no marketplace registration needed:**
+
+```bash
+copilot plugin install data-goblin/power-bi-agentic-development:plugins/pbip
+```
+
+Both forms are documented in the [Copilot CLI plugin reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference) and the [plugins how-to](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing). Inside an interactive Copilot session, `/plugin install PLUGIN-NAME@MARKETPLACE-NAME` is the equivalent of (1). The bare `copilot plugin install data-goblin/power-bi-agentic-development` (no qualifier) will not install anything useful, because the root is a marketplace catalog, not a plugin.
 
 ### Verify
 
@@ -125,7 +133,7 @@ Inside Copilot CLI:
 - **Skills** load identically; Copilot CLI reads `skills/<name>/SKILL.md`.
 - **Agents** use the `*.agent.md` extension required by Copilot CLI's documented convention. Claude Code matches any `*.md` file in `agents/`, so the dual extension works in both tools.
 - **MCP servers** load from `.mcp.json` (plugin root) or `.github/mcp.json`. The plugins in this repo do not currently ship MCP servers, so this is moot here.
-- **Hooks** are registered via `hooks.json` (plugin root or `hooks/`). Copilot CLI supports the same hooks model; behaviour parity has not been exhaustively tested.
+- **Hooks** are registered via `hooks.json` and reference scripts using `${CLAUDE_PLUGIN_ROOT}`. Copilot CLI **≥ 1.0.26** (2026-04-14) sets `CLAUDE_PLUGIN_ROOT` for plugin hooks ([changelog](https://github.com/github/copilot-cli/blob/main/changelog.md)); older builds do not, which causes hook commands to resolve to broken paths. Run `copilot update` if hooks fail to fire. Native Windows bash users may also hit a separate path-format bug tracked upstream at [claude-code#11984](https://github.com/anthropics/claude-code/issues/11984).
 
 </details>
 
