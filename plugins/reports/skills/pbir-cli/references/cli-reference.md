@@ -1,4 +1,4 @@
-# pbir CLI -- Complete Command Reference
+# pbir CLI; Complete Command Reference
 
 Complete command reference for the pbir CLI. All commands prefixed with `pbir`.
 

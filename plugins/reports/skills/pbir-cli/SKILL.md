@@ -44,11 +44,11 @@ Format: `ReportName.Report/PageName.Page/VisualName.Visual`
 - Type suffixes (`.Report`, `.Page`, `.Visual`) are required
 - Quote paths with spaces: `"My Report.Report/Dashboard.Page"`
 - Use glob patterns for bulk operations: `"Report.Report/**/*.Visual"` (requires `--force/-f` for `set` and `rm`)
-  - `*.Visual` -- all visuals on current page
-  - `Page.Page/*.Visual` -- all visuals on a specific page
-  - `**/*.Visual` -- all visuals across all pages
-  - `**/card*.Visual` -- visuals whose name starts with "card"
-  - `**/*.Report/**/*.Visual` -- all visuals across all reports
+  - `*.Visual`; all visuals on current page
+  - `Page.Page/*.Visual`; all visuals on a specific page
+  - `**/*.Visual`; all visuals across all pages
+  - `**/card*.Visual`; visuals whose name starts with "card"
+  - `**/*.Report/**/*.Visual`; all visuals across all reports
 - Properties via `get` or `set` and dot notation: `"Report.Report/Page.Page/Visual.Visual.title.fontSize"`
 - Filters/bookmarks: `"Report.Report/filter:Name"`, `"Report.Report/bookmark:Name"`
 - If multiple reports match, disambiguate with parent folder prefix
@@ -67,7 +67,7 @@ Follow all rules below.
 
 3. **Discover before setting.** Run `pbir schema containers <type>` then `pbir schema describe <type>.<container>` to find correct property names, types, ranges, and enums before formatting. Do not guess property names
 
-4. **Theme-first formatting.** Check `pbir visuals format` before applying bespoke formatting -- the theme may already set the property. Prefer `pbir theme set-formatting` for changes that apply to all visuals of a type. Reserve `pbir visuals title/background/border` for one-off overrides
+4. **Theme-first formatting.** Check `pbir visuals format` before applying bespoke formatting; the theme may already set the property. Prefer `pbir theme set-formatting` for changes that apply to all visuals of a type. Reserve `pbir visuals title/background/border` for one-off overrides
 
 5. **Validate after changes.** Run `pbir validate "Report.Report"` after changes. Use `--qa` for overlap/overflow checks, `--fields` for model field verification, `--all` for everything
 
@@ -132,10 +132,10 @@ For step-by-step creation guidance, use the **`create-pbi-report`** skill.
 # Add a visual with data binding (role names match the visual capability list)
 pbir add visual card "Report.Report/Page.Page" --title "Total Sales" -d "Values:Sales.Revenue"
 
-# ALWAYS check theme cascade first -- see what formatting already applies
+# ALWAYS check theme cascade first; see what formatting already applies
 pbir visuals format "Report.Report/Page.Page/Visual.Visual"
 
-# Set formatting in the THEME (preferred -- applies to all visuals of this type)
+# Set formatting in the THEME (preferred; applies to all visuals of this type)
 pbir theme set-formatting "Report.Report" "card.*.border.radius" --value 8
 
 # Only format bespoke if genuinely one-off
@@ -310,7 +310,7 @@ Notes on the less-obvious groups:
 
 ## Global Flags
 
-Top-level flags -- place before the subcommand: `pbir -q new report ...`, NOT `pbir new report -q ...`
+Top-level flags; place before the subcommand: `pbir -q new report ...`, NOT `pbir new report -q ...`
 
 ```yaml
 -q / --quiet: suppress animations, tips, spinners (agent-friendly)
@@ -338,9 +338,9 @@ Use `AskUserQuestion` to interview the user before executing. This is important 
 
 - **Visual design**: What story should the visual tell? What comparisons matter?
 - **Formatting intent**: One-off bespoke or theme-level change for all visuals of this type?
-- **Complex requirements**: Deneb vs core visual, CF logic, page layout -- discuss trade-offs first
+- **Complex requirements**: Deneb vs core visual, CF logic, page layout; discuss trade-offs first
 - **Ambiguous field mapping**: When the model has multiple plausible fields, discuss intent
-- **Clearing formatting**: ALWAYS confirm before `pbir visuals clear-formatting` -- it is irreversible
+- **Clearing formatting**: ALWAYS confirm before `pbir visuals clear-formatting`; it is irreversible
 
 
 ## Validation

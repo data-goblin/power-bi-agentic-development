@@ -29,10 +29,10 @@ pbir theme fonts "Report.Report"
 ```
 
 The `visuals format` output labels each value with its source:
-- **default** -- Power BI built-in default
-- **wildcard** -- Theme applies to all visual types
-- **visualType** -- Theme default for this specific visual type
-- **visual** -- Bespoke override on this specific visual
+- **default**; Power BI built-in default
+- **wildcard**; Theme applies to all visual types
+- **visualType**; Theme default for this specific visual type
+- **visual**; Bespoke override on this specific visual
 
 ### Step 2: Set Formatting in the Theme (Preferred)
 
@@ -58,7 +58,7 @@ pbir theme push-visual "Report.Report/Page.Page/Visual.Visual"
 
 ### Step 3: Bespoke Visual Formatting (Only When Necessary)
 
-Only apply formatting directly to a visual when it genuinely needs to differ from the theme. **Use `AskUserQuestion`** to discuss the user's formatting intent -- understanding whether a change is one-off or systematic determines the right approach and avoids rework.
+Only apply formatting directly to a visual when it genuinely needs to differ from the theme. **Use `AskUserQuestion`** to discuss the user's formatting intent; understanding whether a change is one-off or systematic determines the right approach and avoids rework.
 
 ## Discovering Properties
 
@@ -110,7 +110,7 @@ pbir set "Report.Report/Page.Page/Visual.Visual.grid.gridVertical" --value true
 ### Scope Patterns
 
 ```bash
-# ALL visuals in a report (every page, every visual) -- glob requires -f
+# ALL visuals in a report (every page, every visual); glob requires -f
 pbir set "Report.Report/**/*.Visual.border.show" --value true -f
 
 # All visuals on a SPECIFIC PAGE
@@ -205,7 +205,7 @@ pbir visuals hide "Visual.Visual" --off          # Show again
 
 ### Measure-Based (Preferred Pattern)
 
-Create an extension measure returning theme color tokens ("good", "bad", "neutral"), then apply to a visual component. Theme tokens resolve from the theme -- change the theme and all conditional formatting updates.
+Create an extension measure returning theme color tokens ("good", "bad", "neutral"), then apply to a visual component. Theme tokens resolve from the theme; change the theme and all conditional formatting updates.
 
 ```bash
 # Step 1: Create formatting measure
@@ -333,7 +333,7 @@ visual.cf.remove("dataPoint")
 visual.cf.remove_all()
 ```
 
-### Per-Field / Per-Series / Interaction State -- Selector Mini-Language
+### Per-Field / Per-Series / Interaction State; Selector Mini-Language
 
 `pbir get` and `pbir set` accept selector tokens embedded in the dot path so
 you can target a single series, a single category value, a specific reference
@@ -341,16 +341,16 @@ line, or an interaction state. Globs, `--where`, `--dry-run`, `--remove`, and
 `--no-validate` all work unchanged.
 
 ```bash
-# Per-field -- writes selector.metadata, scoped to one series/column
+# Per-field; writes selector.metadata, scoped to one series/column
 pbir set "Visual.Visual.dataPoint.field(Sales.Revenue).fill" --value "#118DFF"
 
-# Per-category-value -- writes selector.scopeId, scoped to one value
+# Per-category-value; writes selector.scopeId, scoped to one value
 pbir set "Visual.Visual.dataPoint.series(Cities.City=Antwerp Relay).fill" --value "#E66C37"
 
-# Reference line by id -- writes selector.id, scoped to one line
+# Reference line by id; writes selector.id, scoped to one line
 pbir set "Visual.Visual.y1AxisReferenceLine.id(2).lineColor" --value "#FF0000"
 
-# Interaction state -- writes selector.id = interaction:hover / press / selected
+# Interaction state; writes selector.id = interaction:hover / press / selected
 pbir set "Visual.Visual.background.hover.color"    --value "#F5F5F5"
 pbir set "Visual.Visual.background.press.color"    --value "#E0E0E0"
 pbir set "Visual.Visual.background.selected.color" --value "#00B294"
@@ -361,7 +361,7 @@ pbir get "Visual.Visual.dataPoint.field(Sales.Revenue).fill"
 # Drop the override (falls back to visual/theme default)
 pbir set "Visual.Visual.dataPoint.field(Sales.Revenue).fill" --remove
 
-# Bulk + conditional -- disable labels on the Cost series across every chart
+# Bulk + conditional; disable labels on the Cost series across every chart
 pbir set "Report.Report/**/*.Visual.labels.field(Sales.Cost).show" \
   --value false --where "visual_type__in=lineChart|clusteredBarChart" -f
 ```
@@ -376,7 +376,7 @@ Notes:
   Model-unreachable degrades to a warning; typos hard-fail with suggestions.
   Bypass with `--no-validate`.
 - Setting a plain `dataPoint.fill` after a `dataPoint.field(X).fill` does
-  not clobber the scoped override -- the wildcard and scoped entries stack.
+  not clobber the scoped override; the wildcard and scoped entries stack.
 - Combined selector + interaction state in one path (e.g.
   `field(X).hover.prop`) is not yet supported and raises an explicit error.
   Apply them in two separate calls.
