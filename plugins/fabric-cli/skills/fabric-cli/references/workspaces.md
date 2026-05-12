@@ -87,60 +87,107 @@ fab ls -q "length(@)"
 fab api workspaces -q "value | length"
 ```
 
-## Cross-Workspace Search (DataHub V2)
+## Cross-Workspace Search
 
-`scripts/search_across_workspaces.py` wraps the undocumented DataHub V2 API and exposes metadata that neither `fab api` nor the admin APIs return. Use it for any cross-workspace discovery that needs ownership, storage mode, last-visited timestamps, or capacity SKU; no admin role required.
+### `fab find` (primary)
 
-### Usage
+`fab find` (Fabric CLI >= 1.6.1) searches the OneLake catalog across every workspace the user can see. It is the official, supported path and the right tool for everyday "find this item" questions.
 
 ```bash
-# Find all semantic models (use "Model" not "SemanticModel")
+# Substring search across name, description, and workspace name
+fab find 'sales report'
+
+# Filter by type; use the same type names as `fab desc` (Lakehouse, Report, SemanticModel, Notebook, ...)
+fab find 'data' -P type=Lakehouse
+fab find 'dashboard' -P type=[Report,SemanticModel]
+fab find 'data' -P type!=Dashboard
+fab find 'data' -P type!=[Dashboard,Datamart]
+
+# Include id and workspace_id columns
+fab find 'sales' -l
+
+# Combine filters
+fab find 'finance' -P type=[Warehouse,Lakehouse] -l
+
+# Client-side JMESPath: filter or project
+fab find 'sales' -q "[?type=='Report']"
+fab find 'data' -q "[].{name: name, workspace: workspace}"
+
+# Machine-readable output
+fab find 'sales' -l --output_format json
+```
+
+Fields returned per item: `name`, `type`, `workspace`, `description`. With `-l`, also `id` and `workspace_id`.
+
+### Governance search via DataHub V2 (`scripts/search_across_workspaces.py`)
+
+`scripts/search_across_workspaces.py` wraps the undocumented DataHub V2 API. The API is internal Microsoft surface area and may break without notice; reach for this script only when you need fields that `fab find` does not return. The script's table, JSON, and detailed output put the DataHub-only fields first to make the value-add visible.
+
+| Field | `fab find` | `search_across_workspaces.py` |
+|---|---|---|
+| name, type, workspace, id, workspace_id, description | yes | yes |
+| `lastVisitedTimeUTC` (last opened) | no | yes |
+| `lastRefreshTime` (model data freshness) | no | yes |
+| `modifiedDate` (definition last changed) | no | yes |
+| `ownerUser` (name and email) | no | yes |
+| `storageMode` (Import / DirectQuery / DirectLake) | no | yes |
+| `sharedFromEnterpriseCapacitySku` (F2, F64, PP, ...) | no | yes |
+| `naturalLanguageSupported` (Copilot/Q&A readiness) | no | yes |
+| `cachedModelEnabled` (model cache config) | no | yes |
+| `isDiscoverable` | no | yes |
+
+When to use which:
+
+| Use case | Tool |
+|---|---|
+| Find an item by name to operate on it | `fab find` |
+| List all reports across workspaces | `fab find '' -P type=Report` |
+| Filter or project search results | `fab find ... -q '<jmespath>'` |
+| Stale-item cleanup (not visited / not refreshed in N days) | `search_across_workspaces.py --not-visited-since` / `--not-refreshed-since` |
+| Find DirectLake models in tenant | `search_across_workspaces.py --type Model --storage-mode directlake` |
+| Find items owned by a user | `search_across_workspaces.py --type PowerBIReport --owner "<name>"` |
+| Find items on a specific capacity SKU | `search_across_workspaces.py --type Model --capacity-sku F64` |
+
+### Script usage
+
+```bash
+# Find all semantic models (use --type Model, not SemanticModel)
 python3 scripts/search_across_workspaces.py --type Model
 
-# Find models by name
-python3 scripts/search_across_workspaces.py --type Model --filter "Sales"
-
-# Find stale items (not visited in 6+ months)
+# Stale items: not visited since a date
 python3 scripts/search_across_workspaces.py --type Model --not-visited-since 2024-06-01
 
-# Find items by owner
+# Stale data: not refreshed since a date
+python3 scripts/search_across_workspaces.py --type Model --not-refreshed-since 2024-11-01
+
+# Items owned by a user
 python3 scripts/search_across_workspaces.py --type PowerBIReport --owner "kurt"
 
-# Find Direct Lake models only
+# Direct Lake only
 python3 scripts/search_across_workspaces.py --type Model --storage-mode directlake
 
-# Find items in workspace
+# Within a workspace
 python3 scripts/search_across_workspaces.py --type Lakehouse --workspace "fit-data"
 
-# Get JSON output
+# JSON output (unique fields appear first in each object)
 python3 scripts/search_across_workspaces.py --type Model --output json
 
-# Sort by last visited (oldest first)
+# Sort by last visit, oldest first
 python3 scripts/search_across_workspaces.py --type Model --sort last-visited --sort-order asc
 
-# List all available types
+# List supported types
 python3 scripts/search_across_workspaces.py --list-types
 ```
 
-### Unique DataHub fields
+### DataHub type-name mapping
 
-Not available via `fab api` or admin APIs:
+The DataHub type names diverge from `fab desc`. Memorize:
 
-- `lastVisitedTimeUTC` ; when an item was last opened/used
-- `storageMode` ; Import, DirectQuery, or DirectLake
-- `ownerUser` ; full owner details (name, email)
-- `capacitySku` ; F2, F64, PP, etc.
-- `isDiscoverable` ; whether the item appears in service search
+- Semantic models: `--type Model` (NOT `SemanticModel`; `SemanticModel` returns 0)
+- Dataflows: `--type DataFlow` (capital F)
+- Notebooks: `--type SynapseNotebook`
 
-### Type mappings
-
-The DataHub type names don't match the `fab` item type extensions; memorize these:
-
-- Semantic models ; `--type Model` (not `SemanticModel`)
-- Dataflows ; `--type DataFlow` (capital F)
-- Notebooks ; `--type SynapseNotebook`
-
-Run `--list-types` to see the full set of supported item types.
+`--list-types` prints the full set.
 
 ## Getting Workspace Information
 
