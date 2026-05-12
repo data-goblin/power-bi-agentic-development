@@ -159,21 +159,23 @@ Once enabled, deletes land in `workspaces/{workspaceId}/recoverableItems`; see [
 
 ## Cross-Workspace Item Discovery
 
-The admin API is the fastest way to find items across ALL workspaces without iterating.
+For routine item discovery (find by name, filter by type), use `fab find` first; it works for any authenticated user without admin role. See [workspaces.md](./workspaces.md#cross-workspace-search) for usage and the delta against the DataHub V2 governance script.
 
-### Find Items by Type
+The admin API path below is for tenant-wide audits where admin role is already in scope (e.g. responding to a security review, populating a governance dashboard). It returns every item in every workspace regardless of the caller's permissions.
+
+### Find Items by Type (admin)
 
 ```bash
-# Find all semantic models across tenant
+# All semantic models across tenant
 fab api "admin/items" -P "type=SemanticModel"
 
-# Find all notebooks
+# All notebooks
 fab api "admin/items" -P "type=Notebook"
 
-# Find all lakehouses
+# All lakehouses
 fab api "admin/items" -P "type=Lakehouse"
 
-# Find specific item by name pattern
+# By name pattern
 fab api "admin/items" -P "type=SemanticModel" -q "itemEntities[?contains(name, 'Sales')]"
 ```
 
