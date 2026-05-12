@@ -74,13 +74,58 @@ claude plugin install fabric-cli@power-bi-agentic-development
 <details>
 <summary><strong>GitHub Copilot</strong></summary>
 
-The standalone [Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli) supports plugin installation from GitHub repos. Consult the Copilot documentation for specifics, or open an issue in this repo.
+The standalone [Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli) supports plugin installation from GitHub repos. Copilot CLI reads the same `.claude-plugin/marketplace.json` manifest this repo uses, so the marketplace and child-plugin layout works without modification.
 
-```bash
-copilot plugin install data-goblin/power-bi-agentic-development
+### Windows pre-flight (required)
+
+This repo ships TMDL files with repository-relative paths over 260 characters. Windows' legacy MAX_PATH blocks `git clone` from writing them unless long path support is enabled at both the OS and git level. Without this, `copilot plugin install` aborts with `Filename too long`.
+
+Run [`useful-stuff/enable-windows-longpaths.ps1`](useful-stuff/enable-windows-longpaths.ps1) from an elevated PowerShell to toggle both. A reboot is recommended after the registry change. This is a Windows OS limitation, documented at [Maximum Path Length Limitation](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation).
+
+If you prefer not to run the script, set both manually:
+
+```powershell
+# Admin PowerShell, one-time
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1
+git config --system core.longpaths true
 ```
 
-Some plugin features like agents and hooks may behave differently across tools. The core knowledge in the skill files is tool-agnostic.
+### Install
+
+The marketplace bundles seven child plugins. Register the marketplace, then install each child plugin you want:
+
+```bash
+copilot plugin marketplace add data-goblin/power-bi-agentic-development
+
+copilot plugin install tabular-editor@power-bi-agentic-development
+copilot plugin install pbi-desktop@power-bi-agentic-development
+copilot plugin install pbip@power-bi-agentic-development
+copilot plugin install semantic-models@power-bi-agentic-development
+copilot plugin install reports@power-bi-agentic-development
+copilot plugin install fabric-cli@power-bi-agentic-development
+copilot plugin install fabric-admin@power-bi-agentic-development   # install after fabric-cli
+```
+
+The `PLUGIN-NAME@MARKETPLACE-NAME` syntax is the documented install form for Copilot CLI ([reference](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing)). Inside an interactive Copilot session, the equivalent is `/plugin install PLUGIN-NAME@MARKETPLACE-NAME`. Installing only the root repo (`copilot plugin install data-goblin/power-bi-agentic-development`) does not pull the child plugins; their skills, agents, hooks, and MCP servers live under `plugins/<name>/`.
+
+### Verify
+
+Inside Copilot CLI:
+
+```
+/env                    # Loaded instructions, MCP servers, skills, agents, plugins, LSPs, extensions
+/plugin list            # Installed plugins
+/skills list            # Available skills
+/skills info pbip       # Details for a specific skill
+/agent                  # Browse installed agents
+```
+
+### Compatibility notes
+
+- **Skills** load identically; Copilot CLI reads `skills/<name>/SKILL.md`.
+- **MCP servers** load from `.mcp.json` (plugin root) or `.github/mcp.json`. The plugins in this repo do not currently ship MCP servers, so this is moot here.
+- **Hooks** are registered via `hooks.json` (plugin root or `hooks/`). Copilot CLI supports the same hooks model; behaviour parity has not been exhaustively tested.
+- **Agents** require the `*.agent.md` extension in Copilot CLI's documented convention. The agents in this repo currently use the `*.md` convention (matching Claude Code), so they may not be auto-discovered in Copilot CLI. The agent skill content is still reachable through the corresponding skill files. Tracking this in the open issues.
 
 </details>
 
