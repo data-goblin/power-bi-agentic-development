@@ -39,6 +39,9 @@ A comprehensive report review evaluates six dimensions. Not every review needs a
 ```bash
 # Workspace overview (views, rank, page views, load times)
 python3 scripts/get_report_usage.py -w <workspace-id>
+
+# Add Tier 3 cross-workspace last-visited timestamps via the undocumented DataHub V2 API
+# Useful for the "is this report being used at all" question without tenant admin role
 python3 scripts/get_report_usage.py -w <workspace-id> --include-datahub
 
 # Single report deep-dive (daily views, per-viewer breakdown, page views by day)
@@ -55,7 +58,7 @@ python3 scripts/get_report_distribution.py -w <workspace-id> -r <report-id>
 - **Audience reach** is the most important metric: what percentage of users with access have actually viewed the report in the last 7, 28, and 60 days? See `references/distribution.md` for how to calculate reach and what the numbers mean.
 - **View trends:** Is viewership stable, growing, or declining? Use the rolling 7D average (see `references/usage-metrics.md`).
 - **Page view distribution:** Are views concentrated on one page or spread across the report? Concentration may indicate low-value pages.
-- **Last visited:** When was the report last accessed by anyone? Cross-reference with DataHub `lastVisitedTimeUTC`.
+- **Last visited:** When was the report last accessed by anyone? Tier 1 (Admin Activity Events, 30-day rolling, admin role required) is the official path. The Tier 3 DataHub V2 `lastVisitedTimeUTC` field (`--include-datahub`) is the non-admin cross-workspace fallback; flag to the user it's undocumented and can break.
 - **Load times:** Are P50 and P90 load times acceptable for the audience? See `references/performance.md` for interpretation.
 
 Do not use arbitrary thresholds for what constitutes "healthy" or "concerning"; these depend entirely on the report's audience, purpose, and lifecycle stage. A report for 3 analysts has different expectations than one for 300 executives.
@@ -64,7 +67,7 @@ Do not use arbitrary thresholds for what constitutes "healthy" or "concerning"; 
 
 **Use rolling 7-day averages** for view trends. Raw daily counts are noisy. Compare the current 7D average to the prior 7D to identify trajectory. See `references/usage-metrics.md` for methodology.
 
-**Key insight:** Reports with 0 views are not necessarily bad -- they may be new, seasonal, consumed via subscriptions, or used via embedded scenarios not captured in telemetry. Cross-reference with the `last_visited` timestamp from DataHub.
+**Key insight:** Reports with 0 views are not necessarily bad. They may be new, seasonal, consumed via subscriptions, or used via embedded scenarios not captured in telemetry. Cross-reference with last-visited timestamps. Prefer the Tier 1 admin Activity Events feed where admin access is available; fall back to the Tier 3 DataHub V2 path when it is not, while flagging that it is undocumented.
 
 **Permissions:** Tier 1 (WABI) needs any workspace role. Tier 2 (model) needs workspace Contributor+. Distribution and subscription checks need Fabric Admin (tenant-level). See `references/usage-metrics.md` for the full permission matrix.
 

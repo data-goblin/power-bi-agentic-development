@@ -50,7 +50,7 @@ python3 scripts/get-downstream-reports.py "Workspace" "Model" --json
 
 The script only discovers Power BI reports. For full dependency mapping including these other item types, use the Fabric lineage APIs (`fab api "admin/groups/{id}/lineage"`) or the lineage view in the Power BI service UI.
 
-**Not appropriate for many models at once.** The script scans all accessible workspaces per invocation. Running it in a loop over dozens of semantic models will generate excessive API calls and risk throttling. For bulk lineage analysis across many models, use the admin scan APIs (`admin/workspaces/getInfo`) or the DataHub search script instead.
+**Not appropriate for many models at once.** The script scans all accessible workspaces per invocation. Running it in a loop over dozens of semantic models will generate excessive API calls and risk throttling. For bulk inventory across many models, use the admin scan API (`fab api "admin/workspaces/getInfo"`) when tenant-admin access is available, or the cross-workspace catalog via `fab find ... -P type=SemanticModel` for a quick non-admin list. Neither alternative resolves report-to-model dependency edges; `fab find` and the OneLake catalog do not expose lineage. For that you still need either a per-workspace scan (this script's approach) or the official Power BI lineage admin API at `fab api "admin/groups/{ws-id}/lineage"`.
 
 ## Interpreting Results
 
