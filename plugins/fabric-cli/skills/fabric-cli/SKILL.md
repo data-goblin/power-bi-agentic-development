@@ -10,7 +10,7 @@ Guidance for using `fab` to programmatically manage Fabric & Power BI service
 
 - Install via `uv tool install ms-fabric-cli` (get `uv` via `winget install uv` or `brew install uv`)
 - Fabric CLI is for working with the Cloud environment and not local files; it works with Power BI Pro, PPU, or Fabric; you DO NOT need a Fabric SKU to use the Fabric CLI
-- Target version: **>= 1.6.1**. Older versions lack `fab find`, the interactive REPL mode (`fab` with no args), `--format` on export, the `deploy` command, and several item types (Map, DigitalTwinBuilder, CosmosDBDatabase, UserDataFunction, GraphQuerySet, VariableLibrary). See [whats-new.md](./references/whats-new.md) for the per-version delta.
+- Keep `fab` current: `uv tool upgrade ms-fabric-cli`. Discover commands and flags with `fab --help` and `fab <command> --help` rather than hard-coding behavior; the CLI surface changes regularly
 
 > [!IMPORTANT] 
 > Any time you encounter errors, user preferences or learnings when using the Fabric cli, ALWAYS note these down in the user memory rules, i.e. `.claude/rules/fabric-cli.md` for future improvement. 
@@ -549,7 +549,6 @@ Check references before deploying:
 - [Admin APIs](./references/admin.md) - Cross-workspace search, tenant operations, governance
 - [API Reference](./references/fab-api.md) - Capacities, domains, misc API patterns
 - [Connections](./references/connections.md) - Create, update, list connections programmatically; credential types (WorkspaceIdentity, SPN, Basic); OAuth2 limitations
-- [What's new](./references/whats-new.md) - Per-version changes (1.4-1.6); minimum-version notes for features used in this skill
 - [Full Command Reference](./references/reference.md) - All commands detailed
 
 **Scripts** (scripts that you can execute):

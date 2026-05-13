@@ -549,6 +549,10 @@ fab job run-cancel "ws.Workspace/ETL.Notebook" --id <job-id> --wait
 fab export "ws.Workspace/ETL.Notebook" -o /tmp/notebooks -f
 fab import "ws.Workspace/ETL.Notebook" -i /tmp/notebooks/ETL.Notebook -f
 
+# Choose export format: .ipynb (default; preserves cell structure) or .py (flat source)
+fab export "ws.Workspace/ETL.Notebook" -o /tmp/notebooks --format ipynb -f
+fab export "ws.Workspace/ETL.Notebook" -o /tmp/notebooks --format py -f
+
 # Copy between workspaces
 fab cp "Dev.Workspace/ETL.Notebook" "Prod.Workspace" -f
 

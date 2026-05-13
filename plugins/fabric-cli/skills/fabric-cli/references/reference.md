@@ -2,6 +2,11 @@
 
 Comprehensive reference for Microsoft Fabric CLI commands, flags, and patterns.
 
+## Invocation modes
+
+- **One-shot**: `fab <command>` runs a single command and exits; this is the right mode for scripts, hooks, and agent invocations.
+- **Interactive REPL**: `fab` with no arguments enters a persistent session with command history, tab completion, and a current-directory model that lets `cd` / `ls` / `get` chain without re-typing paths. Toggle persistent-by-default with `fab config set mode interactive`. Avoid REPL mode in non-interactive automation; the prompts and pagination break scripted I/O.
+
 ## Table of Contents
 
 - [Item Types](#item-types)
@@ -338,6 +343,7 @@ fab rm <path> [-f]
 #### Flags
 
 - `-f, --force` - Skip confirmation
+- `--hard` - Permanent delete; bypasses the recycle bin even when **Fabric item recovery** is on. Irreversible.
 
 #### Examples
 
@@ -350,6 +356,9 @@ fab rm "Dev.Workspace/OldLakehouse.Lakehouse" -f
 
 # Delete workspace and all contents
 fab rm "OldWorkspace.Workspace" -f
+
+# Permanent delete (skip recycle bin); only use after explicit user confirmation
+fab rm "Dev.Workspace/OldLakehouse.Lakehouse" --hard -f
 ```
 
 #### Recovering deleted items

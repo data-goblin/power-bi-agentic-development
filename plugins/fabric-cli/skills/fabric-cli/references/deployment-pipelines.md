@@ -1,6 +1,6 @@
 # Deployment Pipelines
 
-`fab` has no first-class deployment pipeline commands; all operations go through `fab api`. Two API surfaces coexist:
+`fab deploy` is the first-class CI/CD command and wraps the [fabric-cicd](https://github.com/microsoft/fabric-cicd) Python library; use it for environment promotion (dev to test to prod) when fabric-cicd's defaults fit. Outside that path all operations go through `fab api`. Two API surfaces coexist:
 
 | Aspect | Fabric API (default) | Power BI API (`-A powerbi`) |
 |---|---|---|
@@ -13,7 +13,8 @@
 
 **When to use which:**
 
-- Default to the Fabric API; it covers Fabric items (Lakehouse, Notebook, Warehouse, etc.) and Power BI items alike.
+- Use `fab deploy` for routine environment promotion; it owns the fabric-cicd integration and replaces hand-rolled deploy scripts for most cases.
+- Default to the Fabric API for low-level pipeline control; it covers Fabric items (Lakehouse, Notebook, Warehouse, etc.) and Power BI items alike.
 - Fall back to the Power BI API only when you need per-item deploy options (`allowPurgeData`, `allowTakeOver`, `allowSkipTilesWithMissingPrerequisites`) or want to refresh the workspace app via `updateAppSettings`.
 
 ---

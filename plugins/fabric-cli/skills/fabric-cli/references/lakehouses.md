@@ -69,7 +69,15 @@ fab cp "ws.Workspace/LH.Lakehouse/Files/data.csv" ~/Downloads/
 fab api -A storage "ws.Workspace/LH.Lakehouse/Files" -P resource=filesystem,recursive=false
 ```
 
-Lakehouses do not support `fab export`; use `fab cp` for files.
+`fab export` and `fab import` work on the lakehouse item itself (schemas, shortcuts, properties); they do not move the underlying Files/ or Tables/ payload. Use `fab cp` for file content and `fab table load` for table data.
+
+```bash
+# Export the lakehouse definition (schemas, shortcuts, properties)
+fab export "ws.Workspace/LH.Lakehouse" -o /tmp/lh -f
+
+# Recreate the lakehouse in another workspace from the exported definition
+fab import "Prod.Workspace/LH.Lakehouse" -i /tmp/lh/LH.Lakehouse -f
+```
 
 ## Table Operations
 
