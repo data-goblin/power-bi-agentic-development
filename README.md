@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="media/bg42-11-3.png" alt="" width="800">
+  <img src="media/bg42-11-4.png" alt="" width="800">
 </p>
 
 <h1 align="center">power-bi-agentic-development</h1>
