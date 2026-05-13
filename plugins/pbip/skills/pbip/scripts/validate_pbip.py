@@ -459,6 +459,100 @@ def check_tmdl_presence(def_dir: Path, result: Result) -> None:
             result.add(INFO, f"tmdl_{key}_absent",
                        f"definition/{optional} absent (optional)", def_dir / optional)
 
+    check_m_table_name_collisions(def_dir, result)
+
+
+#region TMDL declaration parsing
+
+def _tmdl_decl_name(line: str, keyword: str) -> str | None:
+    """Parse `<keyword> <name> [...]` at the start of a TMDL line.
+
+    Returns the bare name (quotes stripped) or None if the line is not a
+    declaration. Handles single-quoted, double-quoted, escaped (`#"name"`),
+    and bare identifier forms. The TMDL grammar allows annotations or
+    sub-clauses after the name on the same line, separated by whitespace;
+    we only consume the first token after the keyword.
+    """
+    stripped = line.lstrip()
+    prefix = f"{keyword} "
+    if not stripped.startswith(prefix):
+        return None
+    rest = stripped[len(prefix):].strip()
+    if not rest:
+        return None
+
+    # Quoted form: capture up to the matching closing quote
+    quoted = re.match(r"""^#?(['"])(.+?)\1""", rest)
+    if quoted:
+        return quoted.group(2)
+
+    # Bare identifier: first whitespace-delimited token
+    return rest.split(None, 1)[0]
+
+
+def _collect_tmdl_declarations(file_path: Path, keyword: str) -> set[str]:
+    """Read a TMDL file and collect all top-level `<keyword> <name>` names.
+
+    Top-level means the declaration is at the start of a line (no leading
+    indentation), which is how TMDL distinguishes object declarations from
+    nested properties. Returns an empty set if the file does not exist.
+    """
+    if not file_path.is_file():
+        return set()
+    names: set[str] = set()
+    try:
+        text = file_path.read_text(encoding="utf-8-sig", errors="replace")
+    except OSError:
+        return names
+    for raw in text.splitlines():
+        # Top-level declarations live at column 0
+        if raw and raw[0].isspace():
+            continue
+        name = _tmdl_decl_name(raw, keyword)
+        if name:
+            names.add(name)
+    return names
+
+#endregion
+
+
+def check_m_table_name_collisions(def_dir: Path, result: Result) -> None:
+    """Detect M-expression names that collide with table names.
+
+    Power BI Desktop puts M shared expressions and tables in the same
+    member namespace. A duplicate name triggers a fatal load error:
+        'Microsoft.Data.Mashup.Preview; This document contains a
+        duplicate member <name>.'
+
+    Resolution: rename the M expression (common pattern: append " Query"
+    or " Source") and update any partition that references it via M
+    escaped-identifier syntax: Source = #"Renamed Expression".
+    """
+    expressions_file = def_dir / "expressions.tmdl"
+    tables_dir = def_dir / "tables"
+
+    expr_names = _collect_tmdl_declarations(expressions_file, "expression")
+    if not expr_names:
+        return
+
+    table_names: set[str] = set()
+    if tables_dir.is_dir():
+        for tmdl_file in sorted(tables_dir.glob("*.tmdl")):
+            table_names |= _collect_tmdl_declarations(tmdl_file, "table")
+
+    collisions = sorted(expr_names & table_names)
+    for name in collisions:
+        result.add(
+            ERROR,
+            "m_table_name_collision",
+            (f"M expression '{name}' collides with table '{name}'. "
+             f"PBI Desktop will fail to load the model with "
+             f"'duplicate member {name}'. Rename the M expression "
+             f"(e.g. '{name} Query') and update dependent partitions "
+             f"to reference it via #\"{name} Query\"."),
+            expressions_file,
+        )
+
 #endregion
 
 

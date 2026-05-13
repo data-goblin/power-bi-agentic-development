@@ -30,9 +30,10 @@ Activate only when the Tabular Editor CLI, Power BI MCP server, or `connect-pbid
 
 ## Critical
 
-- **`///` (triple-slash) sets the `Description` property** on the object that immediately follows it. A `///` line must be immediately followed by a declaration (`measure`, `column`, `table`, etc.) — never by a blank line or another `///`. Use `//` for regular comments.
+- **`///` (triple-slash) sets the `Description` property** on the object that immediately follows it. A `///` line must be immediately followed by a declaration (`measure`, `column`, `table`, etc.); never by a blank line or another `///`. Use `//` for regular comments.
 - **Indentation is semantic.** TMDL uses tabs for indentation, and depth equals nesting level. Properties of a table are indented one level; properties of a column (which belongs to a table) are indented two levels. Incorrect indentation will break the model.
 - **Name quoting rules:** Only quote names that contain spaces, special characters, or start with a digit. Simple names and underscore-prefixed names are unquoted. See the Name Quoting section for details.
+- **M expressions and tables share a namespace.** A name declared by `expression <name>` in `expressions.tmdl` and a name declared by `table <name>` in `tables/*.tmdl` collide; Power BI Desktop fails the load with `'duplicate member <name>'`. Pick distinct names; the conventional fix is to suffix the M expression with ` Query` or ` Source` and have partitions reference it via `source = #"<Name> Query"`. `validate_pbip.py` enforces this as an ERROR.
 
 ## TMDL File Types
 
