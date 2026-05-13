@@ -5,7 +5,7 @@
 <h1 align="center">power-bi-agentic-development</h1>
 
 <p align="center">
-  The best source for agentic development resources for Power BI in one marketplace <br/>
+  The best source for agentic development resources for Power BI in one marketplace <br></br>
   <i> Teach agents like Claude Code or GitHub Copilot to do literally anything in Power BI </i>
 </p>
 
@@ -42,8 +42,7 @@ claude plugin marketplace add data-goblin/power-bi-agentic-development
 
 [![pbir-cli demo](https://img.youtube.com/vi/acHDorTi62U/maxresdefault.jpg)](https://www.youtube.com/watch?v=acHDorTi62U)
 
-<details>
-<summary><strong>Claude Code</strong></summary>
+### Claude Code
 
 Add the marketplace, then install plugins via `/plugin` and navigating to the installed marketplace.
 
@@ -69,46 +68,38 @@ claude plugin install pbip@power-bi-agentic-development
 claude plugin install fabric-cli@power-bi-agentic-development
 ```
 
-</details>
-
-<details>
-<summary><strong>GitHub Copilot</strong></summary>
+### Copilot CLI
 
 The standalone [Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli) supports plugin installation from GitHub repos. Copilot CLI reads the same `.claude-plugin/marketplace.json` manifest this repo uses, so the marketplace and child-plugin layout works without modification.
 
-### Windows pre-flight (required)
+<details>
+<summary><strong>Windows long paths</strong></summary>
 
-This repo ships TMDL files with repository-relative paths over 260 characters. Windows' legacy MAX_PATH blocks `git clone` from writing them unless long path support is enabled at both the OS and git level. Without this, `copilot plugin install` aborts with `Filename too long`.
+TMDL files have a problem with repository-relative paths over 260 characters. Windows' legacy MAX_PATH blocks `git clone` from writing them unless long path support is enabled at both the OS and git level. Without this, `copilot plugin install` aborts with `Filename too long`.
 
-Run [`useful-stuff/enable-windows-longpaths.ps1`](useful-stuff/enable-windows-longpaths.ps1) from an elevated PowerShell to toggle both. A reboot is recommended after the registry change. This is a Windows OS limitation, documented at [Maximum Path Length Limitation](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation).
+Check [`useful-stuff/agent-scripts/enable-windows-longpaths.ps1`](useful-stuff/agent-scripts/enable-windows-longpaths.ps1) as an example of a script you can run from an elevated ps environment to enable long paths; there are other routes to do this that you can find online, too... just ask Copilot. A reboot is recommended after the registry change. This is a Windows OS limitation, documented at [Maximum Path Length Limitation](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation).
 
-If you prefer not to run the script, set both manually:
+See also the below `git config` command:
 
 ```powershell
-# Admin PowerShell, one-time
-Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1
 git config --system core.longpaths true
 ```
 
-### Install
+</details>
+
+<details>
+<summary><strong>Additional installation instructions</strong></summary>
 
 This repository is an [Anthropic-format plugin marketplace](https://code.claude.com/docs/en/plugin-marketplaces) (a set of plugins), not a single distributable plugin, so the root `.claude-plugin/` contains only `marketplace.json`. Two documented install paths work:
 
-**1. Register the marketplace once, then install named child plugins:**
+**1. Register the marketplace once, then install named child plugins. Example:**
 
 ```bash
 copilot plugin marketplace add data-goblin/power-bi-agentic-development
-
 copilot plugin install tabular-editor@power-bi-agentic-development
-copilot plugin install pbi-desktop@power-bi-agentic-development
-copilot plugin install pbip@power-bi-agentic-development
-copilot plugin install semantic-models@power-bi-agentic-development
-copilot plugin install reports@power-bi-agentic-development
-copilot plugin install fabric-cli@power-bi-agentic-development
-copilot plugin install fabric-admin@power-bi-agentic-development   # install after fabric-cli
 ```
 
-**2. Or install a single plugin directly from its subdirectory, no marketplace registration needed:**
+**2. Or install a single plugin directly from its subdirectory, no marketplace registration needed. Example:**
 
 ```bash
 copilot plugin install data-goblin/power-bi-agentic-development:plugins/pbip
@@ -116,7 +107,10 @@ copilot plugin install data-goblin/power-bi-agentic-development:plugins/pbip
 
 Both forms are documented in the [Copilot CLI plugin reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference) and the [plugins how-to](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing). Inside an interactive Copilot session, `/plugin install PLUGIN-NAME@MARKETPLACE-NAME` is the equivalent of (1). The bare `copilot plugin install data-goblin/power-bi-agentic-development` (no qualifier) will not install anything useful, because the root is a marketplace catalog, not a plugin.
 
-### Verify
+</details>
+
+<details>
+<summary><strong>Verify installation in Copilot CLI</strong></summary>
 
 Inside Copilot CLI:
 
@@ -128,11 +122,14 @@ Inside Copilot CLI:
 /agent                  # Browse installed agents
 ```
 
-### Compatibility notes
+</details>
+
+<details>
+<summary><strong>Compatibility notes</strong></summary>
 
 - **Skills** load identically; Copilot CLI reads `skills/<name>/SKILL.md`.
 - **Agents** use the `*.agent.md` extension required by Copilot CLI's documented convention. Claude Code matches any `*.md` file in `agents/`, so the dual extension works in both tools.
-- **MCP servers** load from `.mcp.json` (plugin root) or `.github/mcp.json`. The plugins in this repo do not currently ship MCP servers, so this is moot here.
+- **MCP servers** load from `.mcp.json` (plugin root) or `.github/mcp.json`. The plugins in this repo do not currently ship MCP servers.
 - **Hooks** are registered via `hooks.json` and reference scripts using `${CLAUDE_PLUGIN_ROOT}`. Copilot CLI **≥ 1.0.26** (2026-04-14) sets `CLAUDE_PLUGIN_ROOT` for plugin hooks ([changelog](https://github.com/github/copilot-cli/blob/main/changelog.md)); older builds do not, which causes hook commands to resolve to broken paths. Run `copilot update` if hooks fail to fire. Native Windows bash users may also hit a separate path-format bug tracked upstream at [claude-code#11984](https://github.com/anthropics/claude-code/issues/11984).
 
 </details>
