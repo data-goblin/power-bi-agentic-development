@@ -106,7 +106,7 @@ Flag reference:
 - Each `tables/*.tmdl`:
   - Table declaration matches filename (minus `.tmdl`). Spaces in names are allowed.
   - Partition name matches table name for M partitions.
-  - Indentation is tabs (TMDL is whitespace-sensitive).
+  - Indentation is tabs in PBIP files (Power BI Desktop and TOM emit tabs by default; TMDL is whitespace-sensitive and mixed indentation breaks loading).
   - `///` description annotations immediately precede their declaration.
   - `formatString` and `summarizeBy` values are valid.
   - DAX in measures/calculated columns has balanced quotes and parentheses.
