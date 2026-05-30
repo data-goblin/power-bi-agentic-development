@@ -133,9 +133,11 @@ CASE WHEN SaleDate >= DATEADD(year, -1, GETDATE()) THEN SalesKey ELSE 'Historica
 
 ### MDL010: Set IsAvailableInMDX on Disconnected Slicer Tables
 
-Disconnected slicer tables (e.g., a `'Reporting Scenario'[Scenario]` parameter table with no model relationship) are commonly used with `SELECTEDVALUE` inside `IF`/`SWITCH`. When the slicer has no active selection, `SELECTEDVALUE` returns BLANK. With `IsAvailableInMDX = false`, the engine cannot determine this statically — it queries the table and generates two evaluation branches even though only one will execute. With `IsAvailableInMDX = true`, the engine statically resolves the unfiltered state and eliminates the dead branch without an extra SE scan.
+A disconnected parameter table (no relationship, e.g. `'Disconnected Slicer'[Value]` driven by a slicer) is read via `SELECTEDVALUE` inside `SWITCH`/`IF`. `IsAvailableInMDX` exposes the column's distinct values as metadata:
+- **On** → an *unfiltered* `SELECTEDVALUE` resolves at plan time → conditional collapses to its live branch → single SE aggregation.
+- **Off** → the engine scans the parameter table and keeps both branches in the plan.
 
-> **Scope:** This optimization only applies when the slicer column is **unfiltered**. When a selection is active, the branch is always evaluated regardless of this property — the static resolution path is not available.
+Only applies while the column is unfiltered; once a selection narrows it, the branch evaluates normally.
 
 ---
 
@@ -162,3 +164,7 @@ Delta rowgroups map directly to VertiPaq segments — one segment per CPU core. 
 **Target: 1–16M rows per rowgroup.** Too few rowgroups → single-threaded scans; too many tiny rowgroups → merge overhead. For small tables (< 1M rows) this rarely matters. Run `OPTIMIZE` regularly to consolidate small files into properly sized rowgroups.
 
 Maximize available cores by choosing a capacity SKU that matches table size — a table with 2 segments on an F64 wastes most of its parallelism budget.
+
+---
+
+*Engine-behavior concepts in these notes were informed by community resources — see [ATTRIBUTIONS](../../../../../ATTRIBUTIONS.md).*

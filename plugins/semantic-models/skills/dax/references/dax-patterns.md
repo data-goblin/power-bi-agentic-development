@@ -331,29 +331,34 @@ CALCULATE( [Total Sales], ALLEXCEPT('Sales', 'Sales'[Region]) )
 
 ### DAX013: SWITCH/IF Branch Optimization in SUMMARIZECOLUMNS
 
-SWITCH/IF inside SUMMARIZECOLUMNS enables branch optimization — the engine evaluates only the matching branch. When this fails, it materializes a full cartesian product. Three things break it:
+Grouping a SWITCH/IF measure by SUMMARIZECOLUMNS stays efficient only if every branch reduces to a single SE aggregation. If one can't, the engine evaluates the full group-by crossjoin in the FE and discards empty combinations. Three things break a branch:
 
-1. **Multiple aggregations in one branch** — merge into single SUMX: `SUMX('Sales', 'Sales'[SalesAmount] - 'Sales'[TotalCost])`
-2. **Mismatched data types across branches** — an implicit cast breaks the optimization; use explicit conversion: `CONVERT(SUM('Sales'[OrderQuantity]), CURRENCY)`
-3. **Context transition inside a branch iterator** — a measure reference that requires a context transition (e.g., `SUMX(Sales, 'Sales'[Quantity] * [selection])`) forces a full crossjoin. If the measure is context-independent, cache it before the iterator: `VAR _UnitDiscount = [Unit Discount]`
+**1. Branch combines more than one aggregation** — fold into one iterator so the arithmetic runs per row in a single scan:
+```dax
+SUM('Sales'[Revenue]) - SUM('Sales'[Discount])       -- anti: two aggregations subtracted in FE
+SUMX('Sales', 'Sales'[Revenue] - 'Sales'[Discount])  -- preferred: one SE scan
+```
+
+**2. Branches return different data types** — a narrower type among the branches forces an implicit cast that breaks the optimization. Force the type so no cast is inserted:
+```dax
+SUM('Sales'[Units])           -- anti: INTEGER branch among CURRENCY branches
+CURRENCY(SUM('Sales'[Units])) -- preferred: explicit type, no implicit cast
+```
+
+**3. Branch iterator triggers context transition** — a measure inside the iterator transitions per row and collapses to the crossjoin. If it doesn't depend on the iterated row (reads a slicer or what-if selection), lift it into a variable first:
+```dax
+SUMX('Sales', 'Sales'[Amount] * [Bonus Rate])  -- anti: context transition per row
+VAR _BonusRate = [Bonus Rate]
+RETURN SUMX('Sales', 'Sales'[Amount] * _BonusRate)  -- preferred: evaluate once
+```
 
 ---
 
-### DAX014: Use COUNTROWS Instead of DISTINCTCOUNT on Key Columns
+### DAX014: Prefer COUNTROWS Over DISTINCTCOUNT on Key Columns
 
-Use when a column is a primary key (one-side of a relationship).
+On a recognized key (table key, or the one-side of a regular active relationship), `DISTINCTCOUNT('Customer'[CustomerKey])` and `COUNTROWS('Customer')` compile to the same plan. Write `COUNTROWS` explicitly — clearer, guaranteed, and it covers cases where auto-detect doesn't apply (inactive relationships / `USERELATIONSHIP`, or a key column not marked as one).
 
-**Anti-pattern:**
-```dax
-DISTINCTCOUNT ( 'Product'[ProductKey] )
-```
-
-**Preferred:**
-```dax
-COUNTROWS ( 'Product' )
-```
-
-For non-key columns where DISTINCTCOUNT is a bottleneck, see DAX011 for alternatives.
+Non-key, high-cardinality column where DISTINCTCOUNT is the bottleneck → see DAX011.
 
 ---
 
@@ -377,7 +382,7 @@ SUMX( VALUES('Customer'[DiscountRate]), CALCULATE(SUM('Sales'[Amount])) * 'Custo
 
 ### DAX016: Experiment with Relationship Overrides via TREATAS and CROSSFILTER
 
-Relationship direction and filter propagation directly affect SE query plans. Sometimes bidirectional is faster; sometimes explicit filter propagation wins. Use TREATAS and CROSSFILTER to experiment without model changes.
+Relationship direction and filter propagation shape SE query plans — bidirectional sometimes wins, explicit propagation other times; use TREATAS and CROSSFILTER to experiment without model changes.
 
 **Example — replace bidirectional bridge with explicit filter:**
 ```dax
@@ -408,7 +413,9 @@ SUMX( KEEPFILTERS(ALL('Date'[Date])),        CALCULATE(SUM('Sales'[Amount])) * (
 MAXX( ALL('Date'[Date]),                     CALCULATE(MAX('Sales'[DateKey])) * INT(NOT ISBLANK(CALCULATE(SUM('Sales'[Metric])))) )
 ```
 
-`KEEPFILTERS` preserves external context; when the column is in the groupby, detail cells iterate only 1 row. Works with all aggregation types.
+- `KEEPFILTERS` preserves external context; column in the groupby → detail cells iterate 1 row.
+- Best for additive (`SUM`-style) aggregations.
+- `MIN`/`MAX`/`AVERAGE` → the 0 injected for excluded rows can corrupt the result; validate first.
 
 **BLANK → 0 caveat:** the boolean pattern returns 0 instead of BLANK when no data exists. If `ISBLANK()` checks matter downstream, wrap: `VAR _r = SUMX(...) RETURN IF(_r = 0, BLANK(), _r)`.
 
@@ -454,7 +461,7 @@ MEASURE 'Sales'[Margin YTD] =
 
 ### DAX020: Unblock Horizontal Fusion by Lifting Filters
 
-Horizontal fusion merges SE queries that differ only by column-slice filter. It breaks when the filtered column is missing from groupby, or when table-valued / runtime-computed filters are applied per measure. Fix: keep only simple column-slice filters inside base measures; lift everything else (TI, dynamic variables) to an outer CALCULATE.
+Horizontal fusion can combine measures that scan the same fact column and differ only by simple column-filter values. It is skipped when the sliced column is not in the groupby, the filter is table- or range-valued (`DATESYTD`, `TREATAS`, ranges), or the filter value is runtime-computed. Keep base measures to literal column predicates; lift time-intelligence or dynamic filters to the combining measure.
 
 **Anti-pattern — TI inside each slice measure (no fusion):**
 ```dax
@@ -469,7 +476,7 @@ MEASURE 'Sales'[Accessories] = CALCULATE ( SUM('Sales'[Amount]), 'Product'[Categ
 MEASURE 'Sales'[Combined YTD] = CALCULATE ( [Bikes] + [Accessories], DATESYTD('Date'[Date]) )
 ```
 
-Same principle applies to runtime variable filters — move them to the consuming measure. See DAX017 when the filtered column is not in the groupby.
+This also covers variable-driven slicers: leave the base measures filter-free and let the outer measure carry the dynamic predicate. When the sliced column isn't in the groupby, see DAX017.
 
 ---
 
@@ -479,7 +486,7 @@ When a measure computes a qualifying key set from a filtered aggregation and the
 
 **SE signal:** `VertiPaqSEQueryEnd` with `DEFINE TABLE ... ININDEX` or `WHERE ... IN` containing hundreds of compound tuples. Single scan duration disproportionately high relative to others.
 
-**Fix:** Pre-compute both aggregations independently at the shared key grain, then join with NATURALINNERJOIN in the FE. The table expression used to build each side — `ADDCOLUMNS(VALUES(...), ...)`, `SUMMARIZECOLUMNS(...)`, etc. — does not matter; the key is that both sides share a common lineage column for the join.
+**Fix:** Pre-compute both aggregations independently at the shared key grain, then join with NATURALINNERJOIN in the FE. Both sides must share a common lineage column for the join — the table expression that builds each side (`ADDCOLUMNS(VALUES(...), ...)`, `SUMMARIZECOLUMNS(...)`, etc.) doesn't matter.
 
 **Anti-pattern — TREATAS pushes key set back to SE, compounded by outer groupby:**
 ```dax
@@ -510,7 +517,7 @@ VAR _Joined = NATURALINNERJOIN ( _Qualifying, _UnfilteredAgg )
 VAR _Result = SUMX ( _Joined, [@Agg2] )
 ```
 
-> **Why it works:** Each pre-computed table generates independent SE scans — clean, no tuple filters. NATURALINNERJOIN matches on the shared `'Fact'[Key]` lineage column in the FE, replacing the expensive compound-tuple SE round-trip with a fast in-memory join over small pre-materialized tables.
+> **Why it works:** Each side generates an independent, clean SE scan (no tuple filters); NATURALINNERJOIN matches on the shared `'Fact'[Key]` lineage in the FE — replacing the compound-tuple SE round-trip with a small in-memory join over pre-materialized tables.
 
 ---
 
@@ -529,11 +536,11 @@ VAR _Result = SUMX ( _Joined, [@Agg2] )
 
 ### QRY001: Remove Unneeded Filters
 
-Every filter adds a `WHERE` clause in xmSQL and may force an extra SE join. Users often apply global slicer or visual-level filters that don't actually affect the calculation being optimized.
+Every filter adds a `WHERE` clause in xmSQL and may force an extra SE join. Users often apply slicer or visual-level filters that don't affect the calculation being optimized.
 
 **Detection:** `WHERE` clauses on columns not used in the measure logic, or filter variables that restrict to a single value (e.g., `Currency[Code] = "USD"` in a USD-only model).
 
-**Fix:** Experiment — remove filters one at a time and re-run. If the result doesn't change, the filter might be unnecessary. Global filters that are needed across all visuals should be pushed to the data source (model-level change — see [Section 5](./model-optimization.md#section-5-tier-3-model-optimization-patterns)).
+**Fix:** Remove filters one at a time and re-run; if the result doesn't change, the filter is unneeded. Filters needed across all visuals → push to the data source (model-level — see [Section 5](./model-optimization.md#section-5-tier-3-model-optimization-patterns)).
 
 ```dax
 -- Before: filter on Currency adds an SE join for no benefit
@@ -629,3 +636,7 @@ MEASURE 'Sales'[Revenue] =
     VAR _ForceZero = NOT ISEMPTY ( 'Sales' )
     RETURN [Sales Amount] + IF ( _ForceZero, 0 )
 ```
+
+---
+
+*Engine-behavior concepts in these notes were informed by community resources — see [ATTRIBUTIONS](../../../../../ATTRIBUTIONS.md).*
