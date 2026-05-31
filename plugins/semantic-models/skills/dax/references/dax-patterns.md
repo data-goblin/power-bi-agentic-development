@@ -332,10 +332,10 @@ CALCULATE( [Total Sales], REMOVEFILTERS('Sales'), VALUES('Sales'[Region]) )
 **Signal:** `SWITCH`/`IF` measure shows high FE time, full crossjoin behavior, or unused branches in `SUMMARIZECOLUMNS`.
 
 **Fix checklist:**
-- Read the same selector column the slicer/query filters; avoid hidden sort-key indirection unless that key is filtered directly.
-- Keep selected branches SE-native: one simple aggregation, or one fact iterator with row-level arithmetic instead of multiple separate aggregations.
-- Use one compatible numeric type across branches; explicitly cast when mixed types insert casts.
-- Avoid context transition inside iterators; move row-independent measures into variables before the iterator.
+- Read the selector column directly filtered by the slicer/query; avoid hidden sort keys unless filtered directly.
+- Keep branches SE-native: one simple aggregation or one fact iterator with row-level arithmetic, not multiple separate aggregations.
+- Use one numeric type across branches; cast mixed branches explicitly.
+- Avoid iterator context transition; lift row-independent measures into variables.
 
 For disconnected parameter tables, prefer field parameters or aligning the selector/filter column before making model metadata changes.
 
@@ -448,7 +448,7 @@ MEASURE 'Sales'[Margin YTD] =
 
 ### DAX020: Unblock Horizontal Fusion by Lifting Filters
 
-Horizontal fusion can combine measures that scan the same fact column and differ only by simple column-filter values. It is skipped when the sliced column is not in the groupby, the filter is table- or range-valued (`DATESYTD`, `TREATAS`, ranges), or the filter value is runtime-computed. Keep base measures to literal column predicates; lift time-intelligence or dynamic filters to the combining measure.
+Horizontal fusion can combine measures that scan the same fact column and differ only by simple column-filter values. It is skipped when the sliced column is not in the groupby, the filter is table/range-valued (`DATESYTD`, `TREATAS`, ranges), or the value is runtime-computed. Keep base measures to literal column predicates; lift time-intelligence or dynamic filters to the combining measure.
 
 **Anti-pattern — TI inside each slice measure (no fusion):**
 ```dax
