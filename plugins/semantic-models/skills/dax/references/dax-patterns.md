@@ -46,7 +46,7 @@ CALCULATETABLE( 'Sales', 'Sales'[Region] = "West", 'Sales'[Amount] > 1000 )
 
 ### DAX002: Replace ADDCOLUMNS/SUMMARIZE with SUMMARIZECOLUMNS
 
-SUMMARIZECOLUMNS defines grouping + calculation in one step, enabling better SE fusion. Replace all ADDCOLUMNS/SUMMARIZE patterns.
+SUMMARIZECOLUMNS defines grouping + calculation in one step and can enable better SE fusion. Replace ADDCOLUMNS/SUMMARIZE grouping patterns only when row shape and filter semantics stay identical.
 
 **Anti-patterns:**
 ```dax
@@ -311,52 +311,39 @@ SUMX(VALUES('Sales'[CustomerKey]), 1)
 
 ---
 
-### DAX012: Use ALLEXCEPT Instead of ALL and VALUES Restoration
+### DAX012: Preserve Filters Deliberately
 
-When clearing filter context with ALL() and then restoring specific columns via VALUES(), ALLEXCEPT achieves the same in one operation.
+`ALLEXCEPT` and `ALL/REMOVEFILTERS + VALUES` are not interchangeable. Pick the form that matches the filter you need to preserve.
 
-**Anti-pattern:**
-```dax
-CALCULATE( [Total Sales], ALL('Sales'), VALUES('Sales'[Region]) )
-```
-
-**Preferred:**
+**Use `ALLEXCEPT` only when the preserved column is already directly filtered:**
 ```dax
 CALCULATE( [Total Sales], ALLEXCEPT('Sales', 'Sales'[Region]) )
 ```
 
-> **Note:** Only valid when `'Sales'[Region]` is actively filtered. Without it, `VALUES` returns all regions (no-op restore) while `ALLEXCEPT` still clears other filters — the two forms are not equivalent, and `ALL + VALUES` is required.
+**Keep `ALL/REMOVEFILTERS + VALUES` when the preserved value may be cross-filtered by another column:**
+```dax
+CALCULATE( [Total Sales], REMOVEFILTERS('Sales'), VALUES('Sales'[Region]) )
+```
 
 ---
 
-### DAX013: SWITCH/IF Branch Optimization in SUMMARIZECOLUMNS
+### DAX013: Keep SWITCH/IF Branches SE-Friendly
 
-Grouping a SWITCH/IF measure by SUMMARIZECOLUMNS stays efficient only if every branch reduces to a single SE aggregation. If one can't, the engine evaluates the full group-by crossjoin in the FE and discards empty combinations. Three things break a branch:
+**Signal:** `SWITCH`/`IF` measure shows high FE time, full crossjoin behavior, or unused branches in `SUMMARIZECOLUMNS`.
 
-**1. Branch combines more than one aggregation** — fold into one iterator so the arithmetic runs per row in a single scan:
-```dax
-SUM('Sales'[Revenue]) - SUM('Sales'[Discount])       -- anti: two aggregations subtracted in FE
-SUMX('Sales', 'Sales'[Revenue] - 'Sales'[Discount])  -- preferred: one SE scan
-```
+**Fix checklist:**
+- Read the same selector column the slicer/query filters; avoid hidden sort-key indirection unless that key is filtered directly.
+- Keep selected branches SE-native: one simple aggregation, or one fact iterator with row-level arithmetic instead of multiple separate aggregations.
+- Use one compatible numeric type across branches; explicitly cast when mixed types insert casts.
+- Avoid context transition inside iterators; move row-independent measures into variables before the iterator.
 
-**2. Branches return different data types** — a narrower type among the branches forces an implicit cast that breaks the optimization. Force the type so no cast is inserted:
-```dax
-SUM('Sales'[Units])           -- anti: INTEGER branch among CURRENCY branches
-CURRENCY(SUM('Sales'[Units])) -- preferred: explicit type, no implicit cast
-```
-
-**3. Branch iterator triggers context transition** — a measure inside the iterator transitions per row and collapses to the crossjoin. If it doesn't depend on the iterated row (reads a slicer or what-if selection), lift it into a variable first:
-```dax
-SUMX('Sales', 'Sales'[Amount] * [Bonus Rate])  -- anti: context transition per row
-VAR _BonusRate = [Bonus Rate]
-RETURN SUMX('Sales', 'Sales'[Amount] * _BonusRate)  -- preferred: evaluate once
-```
+For disconnected parameter tables, prefer field parameters or aligning the selector/filter column before making model metadata changes.
 
 ---
 
 ### DAX014: Prefer COUNTROWS Over DISTINCTCOUNT on Key Columns
 
-On a recognized key (table key, or the one-side of a regular active relationship), `DISTINCTCOUNT('Customer'[CustomerKey])` and `COUNTROWS('Customer')` compile to the same plan. Write `COUNTROWS` explicitly — clearer, guaranteed, and it covers cases where auto-detect doesn't apply (inactive relationships / `USERELATIONSHIP`, or a key column not marked as one).
+On a recognized key (table key, or the one-side of a regular active relationship), `DISTINCTCOUNT('Customer'[CustomerKey])` and `COUNTROWS('Customer')` often compile to the same plan. Write `COUNTROWS` when it expresses intent more clearly; test cases where key auto-detection may not apply (inactive relationships / `USERELATIONSHIP`, or a key column not marked as one).
 
 Non-key, high-cardinality column where DISTINCTCOUNT is the bottleneck → see DAX011.
 
@@ -423,7 +410,7 @@ MAXX( ALL('Date'[Date]),                     CALCULATE(MAX('Sales'[DateKey])) * 
 
 ### DAX018: Replace DIVIDE with Division Operator in Iterators
 
-DIVIDE() includes divide-by-zero protection that forces FE callbacks inside iterators. Use the native `/` operator to keep the expression SE-native. Only use `/` when the denominator is guaranteed non-zero. If zero is possible, pre-filter: `CALCULATETABLE('Items', 'Items'[LocationAdjustment] <> 0)`.
+DIVIDE() includes divide-by-zero protection that can force FE callbacks inside iterators. Use the native `/` operator to keep the expression SE-native only when the denominator is known non-zero. If zero is possible, pre-filter: `CALCULATETABLE('Items', 'Items'[LocationAdjustment] <> 0)`.
 
 **Anti-pattern:**
 ```dax
@@ -439,7 +426,7 @@ SUMX('Fact', 'Fact'[BaseAmount] * (RELATED('Items'[Discount]) / RELATED('Items'[
 
 ### DAX019: Lift Time Intelligence to Outer CALCULATE for Vertical Fusion
 
-TI functions (DATESYTD, DATEADD, etc.) break vertical fusion — each TI-modified measure gets its own SE query. Keep base measures TI-free and apply TI once in an outer wrapper.
+TI functions (DATESYTD, DATEADD, etc.) break vertical fusion — each TI-modified measure gets its own SE query. Keep base measures TI-free and apply TI once in an outer CALCULATE wrapper.
 
 > **Custom time intelligence (VAR-based predicates):** When measures use manual date anchoring via `CALCULATE(expr, Column = _var)` instead of built-in TI functions, DAX019 does not apply — see **DAX017** for the boolean multiplier workaround.
 
@@ -558,7 +545,7 @@ SUMMARIZECOLUMNS ( 'Product'[Category], "Revenue", [Total Revenue] )
 
 ### QRY002: Eliminate Report Measure Filters (__ValueFilterDM)
 
-When a visual filters on a measure value (e.g., "Revenue > 1M"), Power BI generates a `__ValueFilterDM` variable that evaluates the measure twice — once for the filter check, once for display. Roughly doubles execution time.
+When a visual filters on a measure value (e.g., "Revenue > 1M"), Power BI generates a `__ValueFilterDM` variable that can evaluate the measure twice — once for the filter check, once for display.
 
 **Detection:** `__ValueFilterDM` in the generated query.
 
@@ -636,7 +623,3 @@ MEASURE 'Sales'[Revenue] =
     VAR _ForceZero = NOT ISEMPTY ( 'Sales' )
     RETURN [Sales Amount] + IF ( _ForceZero, 0 )
 ```
-
----
-
-*Further reading on the Power BI engine internals referenced here: [SQLBI – DAX Internals](https://docs.sqlbi.com/dax-internals/), [DAX Guide](https://dax.guide/); Phil Seamark.*

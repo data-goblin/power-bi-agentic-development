@@ -51,7 +51,7 @@ FROM Sales
 
 ### Compression, Segments, and Parallelism
 
-**Compression** determines scan speed. VertiPaq uses run-length encoding (RLE) and dictionary encoding. **V-ordering** reorders rows within segments to maximize RLE compression. Import models are V-ordered automatically. Direct Lake models are **not** — enable V-ordering explicitly (see [DL001](./model-optimization.md#dl001-v-ordering-for-optimal-vertipaq-compression)).
+**Compression** determines scan speed. VertiPaq uses dictionary and run-length-style encodings to reduce scan work. For Direct Lake, source Delta/Parquet layout affects how quickly columns load into VertiPaq; V-Order improves RLE-friendly layout for read-heavy Power BI tables (see [DL001](./model-optimization.md#dl001-v-ordering-delta-tables-for-direct-lake)).
 
 **Segments** are fixed-size column chunks — the unit of both compression and parallel execution. The SE assigns one CPU thread per segment, so segment count determines how many cores a scan can utilize.
 
@@ -59,7 +59,7 @@ FROM Sales
 
 **Segment skew matters equally:** if one segment has 15M rows and the rest have 1M, the scan bottlenecks on the oversized segment. Segments must be evenly sized for parallelism to be effective.
 
-**Diagnosing low parallelism:** The **SE Parallelism Factor** (StorageEngineCpuTime ÷ StorageEngineDuration) shows thread utilization. Values near 1.0 mean single-threaded execution; values of 8–16 indicate strong multi-core use. When a trace shows few SE queries (1–4), high SE Duration, Parallelism Factor ≈ 1.0, and clean xmSQL — the bottleneck is too few segments or skewed segment sizes. This cannot be fixed with DAX; the fix is data layout (see [General Data Layout Best Practices](./model-optimization.md#section-5-tier-3-model-optimization-patterns) and [DL001–DL002](./model-optimization.md#section-6-tier-4-direct-lake-optimization-patterns)).
+**Diagnosing low parallelism:** The **SE Parallelism Factor** (StorageEngineCpuTime ÷ StorageEngineDuration) shows thread utilization. Values near 1.0 mean single-threaded execution; values of 8–16 indicate strong multi-core use. When a trace shows few SE queries (1–4), high SE Duration, Parallelism Factor ≈ 1.0, and clean xmSQL — the bottleneck is likely too few segments or skewed segment sizes. DAX changes are unlikely to help; use data layout instead (see [General Data Layout Best Practices](./model-optimization.md#section-5-tier-3-model-optimization-patterns) and [DL001–DL002](./model-optimization.md#section-6-tier-4-direct-lake-optimization-patterns)).
 
 ---
 
@@ -164,7 +164,3 @@ Fusion is blocked, callbacks are present, or filters resolve iteratively. Fix th
 **Few SE queries + low FE time + high SE duration + low parallelism → Data layout problem**
 
 The DAX is clean but SE scans are slow due to insufficient segments or poor compression. DAX changes will not help — see [Section 5](./model-optimization.md#section-5-tier-3-model-optimization-patterns) / [Section 6](./model-optimization.md#section-6-tier-4-direct-lake-optimization-patterns) (General Data Layout Best Practices, DL001–DL002).
-
----
-
-*Further reading on the Power BI engine internals referenced here: [SQLBI – DAX Internals](https://docs.sqlbi.com/dax-internals/), [DAX Guide](https://dax.guide/); Phil Seamark.*

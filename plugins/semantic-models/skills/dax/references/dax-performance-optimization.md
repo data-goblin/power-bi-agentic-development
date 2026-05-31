@@ -20,7 +20,7 @@ Always read these sections fully before starting any optimization session:
 Read these only when directed by the Decision Guide or after Tier 1 is exhausted:
 
 - **[Section 4: Tier 2 — Query Structure](./dax-patterns.md#section-4-tier-2-query-structure-patterns)** — QRY001–QRY004 — requires user approval before applying
-- **[Section 5: Tier 3 — Model Changes](./model-optimization.md#section-5-tier-3-model-optimization-patterns)** — MDL001–MDL010 — high caution, user approval, suggest model copy
+- **[Section 5: Tier 3 — Model Changes](./model-optimization.md#section-5-tier-3-model-optimization-patterns)** — MDL001–MDL009 — high caution, user approval, suggest model copy
 - **[Section 6: Tier 4 — Direct Lake](./model-optimization.md#section-6-tier-4-direct-lake-optimization-patterns)** — DL001–DL002 — high caution, user approval, requires ETL/pipeline changes
 
 ---
@@ -40,12 +40,12 @@ Use to prioritize *where to start* within sections, not to skip them. Section 3 
 | Same measure evaluated multiple times | [DAX003](./dax-patterns.md#dax003-cache-repeated-and-context-independent-expressions-in-variables) |
 | Duplicate or redundant `CALCULATE` filter predicates | [DAX004](./dax-patterns.md#dax004-remove-duplicate-and-redundant-filters) |
 | `FILTER(Table, ...)` as `CALCULATE` argument, or `&&` joining predicates in single filter | [DAX001](./dax-patterns.md#dax001-use-simple-column-filter-predicates-as-calculate-arguments) |
-| `ALL(table), VALUES(table[col])` in same `CALCULATE` | [DAX012](./dax-patterns.md#dax012-use-allexcept-instead-of-all-and-values-restoration) |
+| `ALLEXCEPT`, or `ALL/REMOVEFILTERS + VALUES`, used to preserve one column | [DAX012](./dax-patterns.md#dax012-preserve-filters-deliberately) |
 | Filter or `TREATAS` passed directly as `SUMMARIZECOLUMNS` argument (not wrapped in `CALCULATETABLE`) | [DAX009](./dax-patterns.md#dax009-wrap-summarizecolumns-filters-with-calculatetable) |
 | SE rows far exceed final result count | [DAX010](./dax-patterns.md#dax010-apply-filters-using-calculatetable-instead-of-filter) |
 | `DISTINCTCOUNT` in measure expression | [DAX011](./dax-patterns.md#dax011-distinct-count-alternatives), [DAX014](./dax-patterns.md#dax014-prefer-countrows-over-distinctcount-on-key-columns) |
 | Conditional logic (`IF`, `IIF`) or `DIVIDE()` inside row iterator | [DAX007](./dax-patterns.md#dax007-replace-if-with-int-for-boolean-conversion), [DAX018](./dax-patterns.md#dax018-replace-divide-with-division-operator-in-iterators) |
-| `SWITCH` or `IF` as primary expression body in measure | [DAX013](./dax-patterns.md#dax013-switchif-branch-optimization-in-summarizecolumns) |
+| `SWITCH` or `IF` as primary expression body in measure | [DAX013](./dax-patterns.md#dax013-keep-switchif-branches-se-friendly) |
 | Multiple SE queries hitting same fact table | [DAX019](./dax-patterns.md#dax019-lift-time-intelligence-to-outer-calculate-for-vertical-fusion) (vertical fusion), [DAX020](./dax-patterns.md#dax020-unblock-horizontal-fusion-by-lifting-filters) (horizontal), [DAX017](./dax-patterns.md#dax017-apply-boolean-multiplier-to-unblock-fusion) (boolean multiplier) |
 | Near-identical SE queries on same fact table differing only by a column filter value or by per-measure `VAND` tuple predicates | [DAX017](./dax-patterns.md#dax017-apply-boolean-multiplier-to-unblock-fusion) |
 | Bidirectional or M2M relationship causing unexpected SE join expansion, or existing `TREATAS`/`CROSSFILTER` in measure | [DAX016](./dax-patterns.md#dax016-experiment-with-relationship-overrides-via-treatas-and-crossfilter) |
@@ -65,7 +65,7 @@ Only consult these sections if the corresponding signal is present. All require 
 | Tier 1 patterns exhausted; output change acceptable | §4 → [QRY001](./dax-patterns.md#qry001-remove-unneeded-filters)–[QRY004](./dax-patterns.md#qry004-remove-blank-suppression-changes-result-shape) |
 | Few SE queries, low parallelism, clean xmSQL, high SE duration | §5/§6 → [data layout](./model-optimization.md#section-5-tier-3-model-optimization-patterns) |
 | Many-to-many or bidirectional relationship overhead | §5 → [MDL001](./model-optimization.md#mdl001-many-to-many-relationship-optimization) |
-| Direct Lake model + low parallelism or cold cache | §6 → [DL001](./model-optimization.md#dl001-v-ordering-for-optimal-vertipaq-compression)–[DL002](./model-optimization.md#dl002-segment-size-and-parallelism) |
+| Direct Lake model + low parallelism or cold cache | §6 → [DL001](./model-optimization.md#dl001-v-ordering-delta-tables-for-direct-lake)–[DL002](./model-optimization.md#dl002-segment-size-and-parallelism) |
 
 ---
 
@@ -205,7 +205,7 @@ Before applying any change:
 
 > **STOP — Do not modify the model without explicit user approval.**
 
-Consult **[Section 5: Tier 3 — Model Patterns](./model-optimization.md#section-5-tier-3-model-optimization-patterns)** (MDL001–MDL010) and **[Section 6: Tier 4 — Direct Lake](./model-optimization.md#section-6-tier-4-direct-lake-optimization-patterns)** (DL001–DL002).
+Consult **[Section 5: Tier 3 — Model Patterns](./model-optimization.md#section-5-tier-3-model-optimization-patterns)** (MDL001–MDL009) and **[Section 6: Tier 4 — Direct Lake](./model-optimization.md#section-6-tier-4-direct-lake-optimization-patterns)** (DL001–DL002).
 
 Before proceeding:
 
@@ -236,4 +236,4 @@ The detailed reference material is split into focused files for progressive disc
 
 - **[Engine Internals](./engine-internals.md)** — FE/SE architecture, xmSQL, compression/segments, SE fusion, trace diagnostics (Sections 1-2)
 - **[DAX and Query Structure Patterns](./dax-patterns.md)** — Tier 1 DAX patterns DAX001-DAX021, Tier 2 query structure QRY001-QRY004 (Sections 3-4)
-- **[Model and Direct Lake Optimization](./model-optimization.md)** — Tier 3 model patterns MDL001-MDL010, Tier 4 Direct Lake DL001-DL002 (Sections 5-6)
+- **[Model and Direct Lake Optimization](./model-optimization.md)** — Tier 3 model patterns MDL001-MDL009, Tier 4 Direct Lake DL001-DL002 (Sections 5-6)
