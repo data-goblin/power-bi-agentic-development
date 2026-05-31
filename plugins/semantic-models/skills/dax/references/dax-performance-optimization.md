@@ -20,7 +20,7 @@ Always read these sections fully before starting any optimization session:
 Read these only when directed by the Decision Guide or after Tier 1 is exhausted:
 
 - **[Section 4: Tier 2 — Query Structure](./dax-patterns.md#section-4-tier-2-query-structure-patterns)** — QRY001–QRY004 — requires user approval before applying
-- **[Section 5: Tier 3 — Model Changes](./model-optimization.md#section-5-tier-3-model-optimization-patterns)** — MDL001–MDL010 — high caution, user approval, suggest model copy
+- **[Section 5: Tier 3 — Model Changes](./model-optimization.md#section-5-tier-3-model-optimization-patterns)** — MDL001–MDL009 — high caution, user approval, suggest model copy
 - **[Section 6: Tier 4 — Direct Lake](./model-optimization.md#section-6-tier-4-direct-lake-optimization-patterns)** — DL001–DL002 — high caution, user approval, requires ETL/pipeline changes
 
 ---
@@ -40,12 +40,12 @@ Use to prioritize *where to start* within sections, not to skip them. Section 3 
 | Same measure evaluated multiple times | [DAX003](./dax-patterns.md#dax003-cache-repeated-and-context-independent-expressions-in-variables) |
 | Duplicate or redundant `CALCULATE` filter predicates | [DAX004](./dax-patterns.md#dax004-remove-duplicate-and-redundant-filters) |
 | `FILTER(Table, ...)` as `CALCULATE` argument, or `&&` joining predicates in single filter | [DAX001](./dax-patterns.md#dax001-use-simple-column-filter-predicates-as-calculate-arguments) |
-| `ALL(table), VALUES(table[col])` in same `CALCULATE` | [DAX012](./dax-patterns.md#dax012-use-allexcept-instead-of-all-and-values-restoration) |
+| `ALLEXCEPT`, or `ALL/REMOVEFILTERS + VALUES`, used to preserve one column | [DAX012](./dax-patterns.md#dax012-preserve-filters-deliberately) |
 | Filter or `TREATAS` passed directly as `SUMMARIZECOLUMNS` argument (not wrapped in `CALCULATETABLE`) | [DAX009](./dax-patterns.md#dax009-wrap-summarizecolumns-filters-with-calculatetable) |
 | SE rows far exceed final result count | [DAX010](./dax-patterns.md#dax010-apply-filters-using-calculatetable-instead-of-filter) |
-| `DISTINCTCOUNT` in measure expression | [DAX011](./dax-patterns.md#dax011-distinct-count-alternatives), [DAX014](./dax-patterns.md#dax014-use-countrows-instead-of-distinctcount-on-key-columns) |
+| `DISTINCTCOUNT` in measure expression | [DAX011](./dax-patterns.md#dax011-distinct-count-alternatives), [DAX014](./dax-patterns.md#dax014-prefer-countrows-over-distinctcount-on-key-columns) |
 | Conditional logic (`IF`, `IIF`) or `DIVIDE()` inside row iterator | [DAX007](./dax-patterns.md#dax007-replace-if-with-int-for-boolean-conversion), [DAX018](./dax-patterns.md#dax018-replace-divide-with-division-operator-in-iterators) |
-| `SWITCH` or `IF` as primary expression body in measure | [DAX013](./dax-patterns.md#dax013-switchif-branch-optimization-in-summarizecolumns) |
+| `SWITCH` or `IF` as primary expression body in measure | [DAX013](./dax-patterns.md#dax013-keep-switchif-branches-se-friendly) |
 | Multiple SE queries hitting same fact table | [DAX019](./dax-patterns.md#dax019-lift-time-intelligence-to-outer-calculate-for-vertical-fusion) (vertical fusion), [DAX020](./dax-patterns.md#dax020-unblock-horizontal-fusion-by-lifting-filters) (horizontal), [DAX017](./dax-patterns.md#dax017-apply-boolean-multiplier-to-unblock-fusion) (boolean multiplier) |
 | Near-identical SE queries on same fact table differing only by a column filter value or by per-measure `VAND` tuple predicates | [DAX017](./dax-patterns.md#dax017-apply-boolean-multiplier-to-unblock-fusion) |
 | Bidirectional or M2M relationship causing unexpected SE join expansion, or existing `TREATAS`/`CROSSFILTER` in measure | [DAX016](./dax-patterns.md#dax016-experiment-with-relationship-overrides-via-treatas-and-crossfilter) |
@@ -65,7 +65,7 @@ Only consult these sections if the corresponding signal is present. All require 
 | Tier 1 patterns exhausted; output change acceptable | §4 → [QRY001](./dax-patterns.md#qry001-remove-unneeded-filters)–[QRY004](./dax-patterns.md#qry004-remove-blank-suppression-changes-result-shape) |
 | Few SE queries, low parallelism, clean xmSQL, high SE duration | §5/§6 → [data layout](./model-optimization.md#section-5-tier-3-model-optimization-patterns) |
 | Many-to-many or bidirectional relationship overhead | §5 → [MDL001](./model-optimization.md#mdl001-many-to-many-relationship-optimization) |
-| Direct Lake model + low parallelism or cold cache | §6 → [DL001](./model-optimization.md#dl001-v-ordering-for-optimal-vertipaq-compression)–[DL002](./model-optimization.md#dl002-segment-size-and-parallelism) |
+| Direct Lake model + low parallelism or cold cache | §6 → [DL001](./model-optimization.md#dl001-v-ordering-delta-tables-for-direct-lake)–[DL002](./model-optimization.md#dl002-segment-size-and-parallelism) |
 
 ---
 
@@ -80,8 +80,8 @@ Only consult these sections if the corresponding signal is present. All require 
 | **Tier 3 — Model Changes** | Relationships, columns, agg tables, data types | High caution. Discuss trade-offs. Suggest model copy. Warn downstream risk. |
 | **Tier 4 — Direct Lake** | OneLake layout, V-ordering, rowgroup sizing | High caution. Requires ETL/pipeline changes outside the model. |
 
-**Success criteria — Tier 1:** ≥10% duration improvement AND semantic equivalence (same row count, column count, data values).
-**Success criteria — Tier 2/3/4:** ≥10% improvement AND explicit user approval of output or structural changes.
+**Success criteria — Tier 1:** Query duration improvement AND semantic equivalence (same row count, column count, data values).
+**Success criteria — Tier 2/3/4:** Query duration improvement AND explicit user approval of output or structural changes.
 
 ### Requirements
 
@@ -140,7 +140,9 @@ This context helps distinguish model design issues (missing star schema, bidirec
 
 For each run:
 
-1. **Clear cache** — clear the model's VertiPaq cache to ensure cold-cache timing.
+1. **Clear VertiPaq cache** — clears the SE query cache only; columns stay resident.
+   - Warm-up run: cold (on disk) → warm (resident).
+   - Measured runs: **warm + no-cache** — the ideal optimization-test state.
 2. **Execute with trace capture** — run the DAX query with server timing trace enabled.
 3. **Derive key metrics** — Total Duration, FE/SE split, SE query count, peak memory, and result row count. See [Understanding FE vs. SE Metrics](./engine-internals.md#understanding-formula-engine-fe-vs-storage-engine-se-metrics) for derivation from trace events.
 4. Record all metrics, save the full trace events, and save the baseline result data for semantic equivalence checks.
@@ -163,22 +165,12 @@ Using [Section 3 (Tier 1)](./dax-patterns.md#section-3-tier-1-dax-optimization-p
 
 **CRITICAL:** Modify only the **measure definitions in the DEFINE block**. Do NOT change the EVALUATE clause or SUMMARIZECOLUMNS grouping columns. Query structure must stay identical to preserve semantic equivalence.
 
-```dax
--- BASELINE measure
-DEFINE
-    MEASURE Products[HighValueCount] = SUMX('Products', IF([Sales Amount] > 10000000, 1, 0))
-
--- OPTIMIZED measure (DAX007: IF → INT)
-DEFINE
-    MEASURE Products[HighValueCount] = SUMX('Products', INT([Sales Amount] > 10000000))
-```
-
 ### Step 2: Execute and Compare
 
-1. Clear the model cache.
+1. Clear the VertiPaq cache (returns the model to the warm + no-cache state — same condition as the baseline measured runs).
 2. Execute the query with trace capture enabled.
 
-**During iteration:** 1 run is sufficient — columns are already resident from baseline. Reserve the full protocol (1 warm-up + 3 measured, take median) for the **final confirmation** against the original baseline.
+**During iteration:** 1 run is sufficient — columns are already resident from baseline, so no warm-up is needed; clearing only the SE cache keeps the warm + no-cache state. Reserve the full protocol (1 warm-up + 3 measured, take median) for the **final confirmation** against the original baseline.
 
 **Evaluate:**
 - **Improvement = (BaselineDuration − OptimizedDuration) / BaselineDuration × 100**
@@ -186,11 +178,11 @@ DEFINE
 
 ### Step 3: Iterate and Escalate
 
-- **≥10% improvement + semantically equivalent** → Success. Present optimized query and improvement to user. Offer to use it as new baseline for further rounds (compound improvements are common).
-- **Further rounds:** When the user opts to continue, re-run Phase 1 Steps 3–4 on the new baseline. The optimized query has different structure — re-analyze against the Decision Guide and full pattern catalog. Patterns that didn't apply before (e.g., fusion opportunities, materialization candidates) may now be relevant.
-- **<10% improvement** → Try another Section 3 pattern. Re-examine trace for additional bottlenecks.
+- **Meaningful improvement + semantically equivalent** → Success. "Meaningful" = exceeds the baseline's run-to-run noise band (e.g., baseline 1200/1280/1310 ms → 1200 ms is noise; 900 ms is real). Present to user; offer the optimized query as new baseline for further rounds (compound improvements are common).
+- **Further rounds:** Re-run Phase 1 Steps 3–4 on the new baseline; re-analyze the new structure against the Decision Guide, as it may expose patterns that didn't apply before (fusion, materialization, etc.).
+- **Within the noise band** → Try another Section 3 pattern, or combine patterns. Re-examine trace for other bottlenecks.
 - **Results differ** → Revert. The optimization changed calculation semantics. Try a different approach.
-- **Tier 1 exhausted** → Move to Phase 3 (Tier 2) with user approval.
+- **Tier 1 exhausted** → Move to Phase 3 (Tier 2) with user approval. "Exhausted" = every signal-matching pattern tried (individually + combined), measures isolated for multi-measure queries, last 1–2 attempts at noise floor.
 
 ---
 
@@ -213,7 +205,7 @@ Before applying any change:
 
 > **STOP — Do not modify the model without explicit user approval.**
 
-Consult **[Section 5: Tier 3 — Model Patterns](./model-optimization.md#section-5-tier-3-model-optimization-patterns)** (MDL001–MDL010) and **[Section 6: Tier 4 — Direct Lake](./model-optimization.md#section-6-tier-4-direct-lake-optimization-patterns)** (DL001–DL002).
+Consult **[Section 5: Tier 3 — Model Patterns](./model-optimization.md#section-5-tier-3-model-optimization-patterns)** (MDL001–MDL009) and **[Section 6: Tier 4 — Direct Lake](./model-optimization.md#section-6-tier-4-direct-lake-optimization-patterns)** (DL001–DL002).
 
 Before proceeding:
 
@@ -244,4 +236,4 @@ The detailed reference material is split into focused files for progressive disc
 
 - **[Engine Internals](./engine-internals.md)** — FE/SE architecture, xmSQL, compression/segments, SE fusion, trace diagnostics (Sections 1-2)
 - **[DAX and Query Structure Patterns](./dax-patterns.md)** — Tier 1 DAX patterns DAX001-DAX021, Tier 2 query structure QRY001-QRY004 (Sections 3-4)
-- **[Model and Direct Lake Optimization](./model-optimization.md)** — Tier 3 model patterns MDL001-MDL010, Tier 4 Direct Lake DL001-DL002 (Sections 5-6)
+- **[Model and Direct Lake Optimization](./model-optimization.md)** — Tier 3 model patterns MDL001-MDL009, Tier 4 Direct Lake DL001-DL002 (Sections 5-6)
