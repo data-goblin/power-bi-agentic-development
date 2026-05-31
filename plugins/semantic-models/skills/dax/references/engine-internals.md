@@ -167,4 +167,4 @@ The DAX is clean but SE scans are slow due to insufficient segments or poor comp
 
 ---
 
-*Engine-behavior concepts in these notes were informed by community resources — see [ATTRIBUTIONS](../../../../../ATTRIBUTIONS.md).*
+*Further reading on the Power BI engine internals referenced here: [SQLBI – DAX Internals](https://docs.sqlbi.com/dax-internals/), [DAX Guide](https://dax.guide/); Phil Seamark.*
