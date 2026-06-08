@@ -70,6 +70,25 @@ te refresh --type full -s ws -d model   # 11. refresh
 
 `te connect <ws> <model>` sets an active connection for interactive terminals, but it does not persist across separate Bash tool calls. In agentic or scripted use, pass `-m`/`-s`/`-d` explicitly every command (or set `TE_SESSION`).
 
+## Common operations
+
+The highest-frequency tasks in their most concise form. Full flags are in `references/command-reference.md`; flags are still moving in preview, so confirm with `te <command> --help`.
+
+1. **Summarize a model (most concise)**: `te load ./model` prints a model summary. For a structural inventory, `te ls` (tables), `te ls Measures` (every measure across the model). Relationships do not list via `te ls` (a known gap, see `references/gotchas.md`); enumerate them with `te query -q "EVALUATE INFO.VIEW.RELATIONSHIPS()"`. Add `--output-format json` for a machine-readable dump.
+2. **Search the model (fastest)**: `te find "<text>" --in names --paths-only -m ./model`. Scope `--in` to `names`, `expressions`, `descriptions`, `displayFolders`, ...; `--in expressions` walks every DAX and M expression. `--paths-only` is the fast, pipeable form. Structural lookups use wildcards (`te ls "Sales/*Amount"`). Relationships are not `te ls`-enumerable (known gap); list them with `te query -q "EVALUATE INFO.VIEW.RELATIONSHIPS()"`.
+3. **Query the model**:
+   - Inline DAX: `te query -q "EVALUATE TOPN(10, Sales)" -m ./model`
+   - From a `.dax` file: `te query -f query.dax -m ./model`
+   - Save results (format picked by extension): `--output-file out.csv` (csv/tsv/json/dax); machine-readable stdout: `--output-format json`.
+4. **Make a change** (stages in memory; `--save` persists): `te set Sales/Revenue -q expression -i "SUM(Sales[Amount])" --save`. Also `te add`, `te rm`, `te mv`. Read the current value first with `te get Sales/Revenue -q expression`.
+5. **Make bulk changes**:
+   - Text find/replace across the whole model: `te replace "Old" "New" --in expressions --save` (previews unless `--save`).
+   - Arbitrary bulk logic in one pass (the model loads once, avoiding ~1-2s per-call startup): `te script -S bulk.csx --save`, or inline `echo '<C# foreach over Model.AllMeasures>' | te script -e - --save`. Predefined macros: `te macro run "<name>" --on "Sales/A,Sales/B" --save`.
+6. **Validate and optimize**:
+   - Validate DAX, schema, and relationships: `te validate -m ./model --errors-only`.
+   - Best-practice gate: `te bpa run --fail-on warning -m ./model` (`--fix` auto-applies fixes); format DAX with `te format --save -m ./model`.
+   - Size and storage: `te vertipaq --columns --detail --top 20 -m ./model` surfaces the largest columns first; `references/semantic-modeling-practices.md` covers what to do about them.
+
 ## Global options
 
 Abbreviated; the full table (including `--recent`, server and database detail) is in `references/command-reference.md`.
@@ -96,7 +115,7 @@ Driving the CLI correctly is not the same as building a good model. After `te ad
 | `summarizeBy` = `none` on key/ID columns | stops Power BI silently summing keys into meaningless totals | `te set Sales/ProductKey -q summarizeBy -i none --save` |
 | Hide foreign-key and surrogate-key columns | keys serve relationships, not visuals; keeps the field list clean | `te set Sales/ProductKey -q isHidden -i true --save` |
 | Mark the date table | unlocks reliable time intelligence | `te set Date -q dataCategory -i Time --save` |
-| Single cross-filter direction by default | avoids ambiguous filter paths and double counting | find with `te ls Relationships`, read with `te get Relationships/<name>` (the `->` shorthand is for `te add` only); enable bidirectional only for a deliberate bridge |
+| Single cross-filter direction by default | avoids ambiguous filter paths and double counting | list with `te query -q "EVALUATE INFO.VIEW.RELATIONSHIPS()"` (`te ls` cannot enumerate relationships; see gotchas), read one with `te get Relationships/<name>` (the `->` shorthand is for `te add` only); enable bidirectional only for a deliberate bridge |
 | Format string on every measure | unformatted measures render raw floats | `te set "_Measures/Revenue" -q formatString -i "#,0.00" --save` |
 | Display folder + description on measures | a flat field pane is unusable past a few dozen measures; descriptions feed tooltips and Copilot | `te set "_Measures/Revenue" -q displayFolder -i "Revenue" --save` |
 | Minimal correct data types; integer surrogate keys | high-cardinality and oversized types bloat VertiPaq | `te set Sales/CustomerKey -q dataType -i int64 --save` |

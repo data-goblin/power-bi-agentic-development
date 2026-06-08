@@ -95,7 +95,8 @@ Backed by a formal grammar (`PathParser`); paths come in two flavors with subtly
 - `Measures/<name>/KPI`; KPI sub-object on a measure (resolves through the KPI wrapper)
 - `Roles/<role>/Members`, `Roles/<role>/TablePermissions`; role children
 - `Perspectives/<persp>/<table>`; perspective membership (use `te add Perspectives/Default/Sales` to add a table)
-- `Tables`, `Measures`, `Relationships`, `Roles`, `Perspectives`, `Cultures`, `Hierarchies`, `Annotations`; model-level containers (pivot via `te ls Measures` for cross-table view)
+- `Tables`, `Measures`, `Roles`, `Perspectives`, `Cultures`, `Hierarchies`, `Annotations`; model-level containers (pivot via `te ls Measures` for cross-table view)
+- `Relationships` is **not** enumerable via `te ls`, despite `relationship` appearing in `te ls --type`'s help. The keyword falls through to a literal path match and errors with `No objects match path 'Relationships'`, even when relationships exist (recognized-but-empty containers say `No objects match 'X'` without the word `path`). List relationships with DAX `EVALUATE INFO.VIEW.RELATIONSHIPS()` (or `INFO.RELATIONSHIPS()` on older compat), or `te save` to TMDL and read `relationships.tmdl`. A single relationship is still addressable once you know its name: `te get Relationships/<name>`.
 
 Container-keyword table names (a table called `Tables`, `Roles`, etc.) resolve correctly via the path parser; the parser disambiguates by position.
 
