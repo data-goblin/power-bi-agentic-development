@@ -1,6 +1,6 @@
 ---
 name: review-report
-version: 26.20
+version: 26.24
 description: Actionable feedback on the quality, usage, and effectiveness of Power BI reports. Automatically invoke when the user asks to "review a report", "audit a report", "report usage analysis", "report health check", "find unused reports", "check if a report is being used", "assess report performance", "evaluate report quality".
 ---
 
