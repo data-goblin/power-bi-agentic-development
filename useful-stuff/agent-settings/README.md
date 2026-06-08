@@ -43,7 +43,7 @@ Things in the original settings.json that were personal and have been stripped:
 
 - `model`: pinned default model. Set whatever you want
 - `EDITOR` / `VISUAL`: editor command
-- Sound hooks (SessionStart, Notification, PreCompact, PostToolUse-on-Bash-stderr): all point at local Peon WoW-voice scripts that aren't in this repo. Add your own if you want audio cues
+- Sound hooks (SessionStart, Notification, PreCompact, PostToolUse-on-Bash-stderr): all point at local audio scripts that aren't in this repo. Add your own if you want audio cues
 - `theme`, `editorMode`, `preferredNotifChannel`: personal UI choices
 - `enabledPlugins` and `extraKnownMarketplaces`: per-developer plugin selection
 - `spinnerVerbs`: cosmetic
