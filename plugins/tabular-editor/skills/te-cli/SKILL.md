@@ -1,168 +1,164 @@
 ---
 name: te-cli
 version: 26.24
-description: CLI syntax reference for the cross-platform Tabular Editor CLI (`te`, built on Tabular Editor 3, currently in preview); subcommands for load/save, navigation, object CRUD, validation, BPA, DAX query, deploy, refresh, and C# scripting. Automatically invoke when the user mentions the `te` CLI, "Tabular Editor CLI", "TE3 CLI", te subcommands (te load, te deploy, te bpa run, te validate, te query, te script), or asks to "deploy a model from macOS or Linux", "run Tabular Editor from the command line cross-platform", "migrate from TabularEditor.exe to te", "use the new Tabular Editor CLI".
+description: Expert guidance for the cross-platform Tabular Editor CLI (the `te` binary, currently in preview) that manages Power BI / Analysis Services semantic models from the terminal on macOS, Linux, and Windows. Use when the user mentions the `te` CLI or "Tabular Editor CLI" (not the "2"), or runs a `te <command>` to scaffold, inspect, edit, validate, run BPA on, query, deploy, refresh, test, or migrate a semantic model. Not for the legacy Windows-only `TabularEditor.exe` (TE2).
 ---
 
 # Tabular Editor CLI (`te`)
 
-Cross-platform command-line tool for Power BI and Analysis Services semantic models. The executable is `te`. It is built on .NET 8 and wraps TOMWrapper, the same abstraction layer that powers Tabular Editor 3, so model edits behave consistently with the desktop app.
+The `te` CLI is a single self-contained binary that loads, edits, validates, deploys, refreshes, and tests semantic models against TMDL/BIM files, Power BI Desktop, and cloud workspaces (Power BI, Fabric, Azure AS, SSAS). It is built on the same TOMWrapper that powers Tabular Editor 3, so model edits behave like the desktop app.
 
-This is a different product from `TabularEditor.exe` (the free, Windows-only TE2 CLI). For TE2 flag syntax see the sibling `te2-cli` skill.
+> [!IMPORTANT]
+> Limited public preview. Preview builds stop functioning after 2026-09-30. No license is required during preview. Issues and feedback: https://github.com/TabularEditor/CLI
 
-## Preview status
+> [!IMPORTANT]
+> This is a different product from the legacy Windows-only `TabularEditor.exe` (TE2). If the user invokes TE2 flag syntax (`-D`, `-S`, `-A`, `-B`, `-TMDL`, `-O`, `-C`, `-V`, `-G`), route it through the compat layer or invoke `TabularEditor.exe` directly. See `references/te2-migration.md`.
 
-`te` is in public preview until Q4 2026. It is the actively developed successor to the TE2 CLI; expect commands and flags to evolve before general availability. The TE2 CLI (`TabularEditor.exe`) remains supported and stable for existing pipelines.
+## When to use this skill
 
-Download per-platform preview binaries (macOS, Linux, Windows) from the downloads page: https://tabulareditor.com/download-tabular-editor-cli
+- The user mentions "te CLI", "the new Tabular Editor CLI", or runs a `te <command>` in a terminal
+- The user wants to scaffold, inspect, edit, validate, deploy, refresh, query, or test a semantic model from the terminal on any OS
+- The user wants to convert TMDL, BIM, or PBIP, run BPA, or format DAX from the command line
+- The user is migrating CI/CD pipelines from `TabularEditor.exe` (TE2) to `te`
 
-## Mental model
+## When NOT to use this skill
 
-Unlike the single-invocation TE2 CLI, `te` is a subcommand tool with optional persistent state:
+- The user explicitly wants to run `TabularEditor.exe` natively (TE2); use that product directly
+- The user asks about Tabular Editor 3 desktop UI features (Preferences.json, MacroActions.json, Layouts.json); consult https://docs.tabulareditor.com/
+- The user wants help authoring a C# script body or a BPA rule expression itself rather than running it; use the `c-sharp-scripting` and `bpa-rules` skills
 
-- Each operation is its own subcommand (`te deploy`, `te bpa run`, `te validate`), rather than one invocation carrying every flag
-- `te connect` persists an active connection across subsequent commands, so a server and database do not need repeating
-- Most commands accept a model as the first positional argument or via `--model`; live targets use `--server`/`--database`, `--recent`, or the active connection
-- Chain operations either with separate invocations (combine with `&&` for fail-fast) or inside a single `te script`
+## Critical general rules
 
-## Quick start
+- First use in a session: run `te --version` and `te auth status`. If not authenticated, ask the user to run `te auth login`.
+- Run `te --help` and `te <command> --help` the first time composing a command; flags are still evolving during preview.
+- `te connect` state is per-shell-session and does NOT survive across separate Bash tool calls (each call is a fresh shell). Pass `-m <model>` (and `-s`/`-d` for remote) on every command, or set `TE_SESSION=<name>` before the first call to share state.
+- MPartition path asymmetry: `te add` for an M partition uses `<Table>/<Partition>`, but every other command (`te rm`, `te get`, `te ls`, `te mv`, `te set`) uses `<Table>/Partitions/<Partition>`.
+- Mutations stage in memory by default. `te set`, `te add`, `te rm`, `te mv`, `te replace`, `te format`, `te script`, `te macro run`, `te incremental-refresh set/remove` need `--save` to persist (unless `interactiveEditMode` is set to `save`).
+- The BPA gate is ON by default for `te deploy` and `te save`. Bypass deliberately: `--skip-bpa`, `--fix-bpa`, or `bpa.onDeploy` / `bpa.onSave` config (keys are nested under `bpa.`, not flat).
+- In CI: pass `--non-interactive` and `--force`. `te deploy` prompts with `n` as the safe default and hangs pipelines without `--force`.
+- Never put secrets on the command line (visible in `ps` and shell history). Use `--auth env` with `AZURE_CLIENT_ID`/`AZURE_CLIENT_SECRET`/`AZURE_TENANT_ID`, stdin (`-`), or `--auth managed-identity`.
+- Avoid destructive operations without explicit direction: `te rm`, `te mv`, `te deploy --create-only`, `te save --force`, `te connect --clear`. If a command is blocked by permissions, stop and ask.
+
+## Staging model (`--save` / `--stage` / `--revert`)
+
+Every mutating command runs through a staging dispatcher: edits (`set`, `add`, `rm`, `mv`, `replace`), DAX/M (`format`), TOM (`script`, `macro run`), refresh policy, and BPA `--fix`.
+
+By default edits stage in memory and are discarded on exit. Pass `--save` to persist. The default is configurable with `te config set interactiveEditMode <mode>`:
+
+- `stage` (default): keep changes in memory; persist with explicit `--save`
+- `save`: auto-persist after each successful mutation
+- `revert`: auto-roll-back after each mutation (safe audit/dry-run style)
+
+Inside `te interactive`, `--save`, `--stage`, and `--revert` are available per command and mutually exclusive. `--save-to <path>` writes the mutation to a different location without overwriting the source. `--force` on `te script` / `te save` lets a mutation persist even when it introduces NEW DAX validation errors; the default save gate refuses to persist if the mutation introduces new errors (pre-existing errors do not block).
+
+## Quickstart
 
 ```bash
-# Authenticate once; credentials are cached
-te auth login
-
-# Load and inspect a model on disk
-te load ./model
-te ls ./model
-te get ./model Sales/Revenue
-
-# Validate expressions and run the Best Practice Analyzer
-te validate ./model
-te bpa run ./model -r rules.json
-
-# Add a measure with DAX, then persist
-te add Sales/TotalRevenue -t Measure ./model -i "SUM(Sales[Revenue])" --save
-
-# Deploy to Power BI
-te deploy powerbi://api.powerbi.com/v1.0/myorg/Workspace MyModel ./model
-
-# Format all DAX in a model
-te format ./model --save
-
-# Execute a C# script
-te script ./model -s fix-formatting.csx --save
+te --version && te auth status          # 0. check install + auth
+te auth login                           # 1. authenticate (browser); cached
+te init ./my-model                      # 2. scaffold (PowerBI mode, TMDL, compat 1702)
+te load ./model                         # 3. load + summary; then `te ls`, `te ls Sales`
+te find "Revenue" --in names -m ./model # 4. search (names | expressions | descriptions | all)
+te get Sales/Revenue -q expression -m ./model      # 5. read a measure's DAX
+te bpa run --fail-on error --ci github -m ./model   # 6. BPA gate
+te format --save -m ./model             # 7. format all DAX
+te query -q "EVALUATE TOPN(5, 'Sales')" -s ws -d model    # 8. query
+te save -o ./out --serialization tmdl -m ./model    # 9. save / convert (tmdl|bim|pbip|te-folder)
+te deploy ./model -s ws -d model --force --ci github      # 10. deploy
+te refresh --type full -s ws -d model   # 11. refresh
 ```
 
-## Commands
-
-### Model I/O
-
-| Command | Description |
-|---|---|
-| `te load <model>` | Load a model and display a summary |
-| `te save <model> <output>` | Save in a different format (BIM, TMDL, TE folder); can download from a live workspace via `-s`/`-d` |
-| `te open <model>` | Open the model in Tabular Editor 3 desktop |
-
-### Navigation and query
-
-| Command | Description |
-|---|---|
-| `te ls [model]` | List objects with filesystem-like navigation |
-| `te get <path> [model]` | Read properties of model objects |
-| `te find <text> [model]` | Search text across model objects |
-| `te replace <text> <replacement> [model]` | Find and replace text across objects |
-| `te connect <server>` | Connect to a live server and inspect databases; sets the active connection |
-| `te query <dax> [model]` | Execute DAX against deployed models |
-
-### Object manipulation
-
-| Command | Description |
-|---|---|
-| `te add <path> -t <type> [model]` | Add objects (measures, tables, relationships, roles, ...) |
-| `te rm <path> [model]` | Remove objects with dependency checking |
-| `te mv <source> <dest> [model]` | Move or rename objects |
-| `te set <path> [model]` | Set properties on objects |
-
-### Analysis and validation
-
-| Command | Description |
-|---|---|
-| `te validate [model]` | Validate DAX expressions and relationship integrity |
-| `te bpa run [model]` | Run Best Practice Analyzer rules |
-| `te bpa rules` | List and manage BPA rules from all sources |
-| `te vertipaq [model]` | Analyze VertiPaq storage statistics |
-| `te deps <path> [model]` | Show measure dependency trees |
-| `te diff <model-a> <model-b>` | Compare two models for structural differences |
-
-### Execution and deployment
-
-| Command | Description |
-|---|---|
-| `te deploy <server> <database> [model]` | Deploy to Analysis Services, Power BI, or Fabric |
-| `te refresh <server> <database>` | Trigger a data refresh on a deployed model |
-| `te script [model] -s <file>` | Execute C# scripts against a model |
-| `te incremental-refresh` | Configure incremental refresh policies |
-
-### Macros, config, and auth
-
-| Command | Description |
-|---|---|
-| `te macro list / run / add / set / rm / sort` | Manage and run macros from TE3's MacroActions.json |
-| `te config show / paths / init` | Inspect or create CLI configuration |
-| `te auth login / status / logout` | Authenticate, check state, or clear cached credentials |
-| `te migrate` | Reference guide for migrating from TE2 CLI flags |
+`te connect <ws> <model>` sets an active connection for interactive terminals, but it does not persist across separate Bash tool calls. In agentic or scripted use, pass `-m`/`-s`/`-d` explicitly every command (or set `TE_SESSION`).
 
 ## Global options
 
+Abbreviated; the full table (including `--recent`, server and database detail) is in `references/command-reference.md`.
+
 | Option | Description |
 |---|---|
-| `--model <path>` | Model path (TMDL folder, .bim, TE folder) |
-| `--output-format <fmt>` | Stdout format: `text` (default), `json`, `csv`, `tmsl` (alias `bim`), `tmdl`; not every command supports every format |
-| `--error-format <fmt>` | Stderr format for errors, warnings, and hints: `text` (default) or `json` |
-| `--server <endpoint>` | Server connection string |
-| `--database <name>` | Database name |
-| `--local` | Use a local SSAS instance (Windows only) |
-| `--auth <method>` | Auth method: `browser`, `spn`, `env`, `mi` |
+| `-m, --model <path>` | TMDL folder, `.bim`, or TE folder |
+| `-s, --server` / `-d, --database` | Workspace/endpoint and semantic model name |
+| `--local` | Running Power BI Desktop (Windows only) |
+| `--auth <method>` | `auto` \| `interactive` \| `spn` \| `env` \| `managed-identity` |
+| `--output-format <fmt>` | `auto` \| `text` \| `json` \| `csv` \| `tmsl` (alias `bim`) \| `tmdl`; how STDOUT renders |
+| `--non-interactive` | Disable prompts; fail if input missing (set in CI) |
+| `--debug` | Debug logs to stderr |
 
-## Configuration
+> [!NOTE]
+> `--output-format` (how stdout renders) and `--serialization` (how a model is written to disk on `init`/`save`) are different flags. Do not conflate them.
 
-The CLI reads optional config from `~/.config/te/config.json` (or the path in `$TE_CONFIG`). Key fields: `autoFormat`, `validateOnMutation`, `vertipaqOnRefresh`, a `bpa` block (`rules`, `onDeploy`, `onSave`, `onMutation`, `builtInRules`, `disabledBuiltInRuleIds`), and `formatOptions`. Run `te config init` to scaffold defaults and `te config paths` to see every resolved file location.
+## Semantic modeling checklist
 
-The CLI does not auto-detect a TE3 install. User file paths (macros, BPA rules) resolve in priority order: command-line flag, then environment variable (`TE_MACROS_PATH`, `TE_BPA_RULES`), then the config file.
+Driving the CLI correctly is not the same as building a good model. After `te add` creates an object, apply the modeling decision that makes it correct and usable. The highest-value practices, each with its `te` command:
 
-## Post-mutation behavior
-
-After any model edit (`te add`, `te set`, `te mv`, `te replace`, `te macro run`):
-
-- TOM errors are always surfaced
-- DAX validation runs by default (`validateOnMutation: true`); it is semantic analysis of expressions
-- Auto-format is off by default (`autoFormat: false`); when on it uses the in-house DAX formatter (the same one TE3 desktop uses), unless `formatOptions.useSqlBiDaxFormatter: true` routes through daxformatter.com
-- Save is blocked when a mutation introduces new DAX validation errors; pass `--force` to override. Pre-existing errors in the loaded model do not block; the gate only catches errors that this command introduces
-
-## BPA gate
-
-`te deploy` and `te save` run BPA checks before executing. The gate is controlled by config: `bpa.onDeploy`, `bpa.onSave`, and `bpa.onMutation` toggle when it runs; `bpa.rules` lists rule files or URLs; `bpa.builtInRules` includes the built-in set; `bpa.disabledBuiltInRuleIds` excludes specific rules (managed by `te bpa rules disable / enable`). Override per invocation with the `--skip-bpa` flag or a `.te-bpa.json` file in the model directory.
-
-## Cross-platform support
-
-| Capability | macOS / Linux | Windows |
+| Practice | Why | `te` command |
 |---|---|---|
-| BIM/TMDL load and save | Yes | Yes |
-| BPA analysis | Yes | Yes |
-| Deploy to Power BI / Azure AS | Yes | Yes |
-| C# scripting | Yes | Yes |
-| DAX queries (cloud) | Yes | Yes |
-| Auth (browser, SPN, env, MI) | Yes | Yes |
-| Local SSAS (TCP) | No | Yes |
-| Power BI Desktop connection | No | Yes |
+| `summarizeBy` = `none` on key/ID columns | stops Power BI silently summing keys into meaningless totals | `te set Sales/ProductKey -q summarizeBy -i none --save` |
+| Hide foreign-key and surrogate-key columns | keys serve relationships, not visuals; keeps the field list clean | `te set Sales/ProductKey -q isHidden -i true --save` |
+| Mark the date table | unlocks reliable time intelligence | `te set Date -q dataCategory -i Time --save` |
+| Single cross-filter direction by default | avoids ambiguous filter paths and double counting | find with `te ls Relationships`, read with `te get Relationships/<name>` (the `->` shorthand is for `te add` only); enable bidirectional only for a deliberate bridge |
+| Format string on every measure | unformatted measures render raw floats | `te set "_Measures/Revenue" -q formatString -i "#,0.00" --save` |
+| Display folder + description on measures | a flat field pane is unusable past a few dozen measures; descriptions feed tooltips and Copilot | `te set "_Measures/Revenue" -q displayFolder -i "Revenue" --save` |
+| Minimal correct data types; integer surrogate keys | high-cardinality and oversized types bloat VertiPaq | `te set Sales/CustomerKey -q dataType -i int64 --save` |
+| Prefer measures over calculated columns | calculated columns cost storage and break some DirectQuery/DirectLake paths | `te add "_Measures/Margin" -t Measure -i "[Revenue]-[COGS]" --save` |
+| Calculation groups over measure sprawl | turns N measures x K variants into N + K objects | see `references/semantic-modeling-practices.md` |
+| Gate every batch with validate + BPA | catches broken references and antipatterns while the change is fresh | `te validate -m ./model && te bpa run --fail-on warning -m ./model` |
 
-## Coming from the TE2 CLI
+Full rationale, citations, and worked workflows (RLS roles, calculation groups, date tables, VertiPaq tuning): `references/semantic-modeling-practices.md`.
 
-Existing `TabularEditor.exe` pipelines map onto `te` subcommands flag by flag. A single TE2 invocation that scripts, analyzes, and deploys becomes several `te` commands (or one `te script`). For the complete flag-by-flag mapping, behavioral differences (for example `-O` overwrite is the default in `te`), and CI annotation equivalents, consult `references/te2-to-te3-migration.md`. The built-in `te migrate` command also translates a TE2 command string into the equivalent `te` commands.
+## Command index
+
+Ten command families. Full flags and examples in `references/command-reference.md`.
+
+- Model I/O: `te load`, `te save`, `te open`, `te init`
+- Editing: `te set`, `te add`, `te rm`, `te mv`, `te replace`
+- Inspection: `te ls`, `te get`, `te find`, `te diff`, `te deps`
+- Analysis & quality: `te validate`, `te bpa run`, `te vertipaq`, `te format`
+- Execution: `te query`, `te script`, `te macro`
+- Deploy & refresh: `te deploy`, `te refresh`, `te incremental-refresh`
+- Testing: `te test`
+- Connection & auth: `te connect`, `te auth`, `te profile`, `te session`
+- Configuration: `te config`, `te migrate`, `te completion`
+- Shell: `te interactive` (model-aware REPL; subcommands work without the `te` prefix)
+
+## The authoring loop
+
+Run quality gates continuously, not only at deploy:
+
+```bash
+te validate -m ./model --errors-only           # after each batch of edits
+te bpa run --fail-on warning -m ./model         # antipattern gate during development
+te format --save -m ./model                     # consistent DAX layout before commit
+```
+
+For build scripts that issue many `te` calls, set `te config set bpa.onSave false` first (skip the per-save BPA pass), run BPA once at the end, and set `te config set spinner false` for cleaner logs. Each invocation has ~1-2s of startup; prefer one `te script` with a C# loop over N `te set` calls for bulk edits.
+
+## Using te with other Power BI CLIs
+
+`te` owns the semantic model. Two sibling CLIs own the layers around it, and the highest-value workflows cross the boundary:
+
+- `pbir` (the Power BI report layer): renaming or moving a model object leaves the report bound to the old `Table.Field`. Rename in the model (`te mv`, then `te replace --in expressions --save`), then repair the report bindings (`pbir fields replace`, `pbir validate --fields`). See `references/pbir-cli-tandem.md`.
+- `fab` (the Fabric / Power BI service): export a model from a workspace, edit and gate it locally with `te`, then deploy over XMLA (`te deploy`) or import it back (`fab import`). See `references/fabric-cli-tandem.md`.
+
+Gate any cross-tool refactor with `te validate` before touching the report or the service, and remember every `te` mutation stages in memory until `--save`.
 
 ## References
 
-- **`references/te2-to-te3-migration.md`** - full TE2 to TE3 flag-by-flag migration and compatibility reference
-- [Downloads (preview binaries)](https://tabulareditor.com/download-tabular-editor-cli)
+Bundled (load as needed):
 
-To retrieve current XMLA and deployment docs, use `microsoft_docs_search` + `microsoft_docs_fetch` (MCP) if available, otherwise `mslearn search` + `mslearn fetch` (CLI).
+- `references/command-reference.md` - object path grammar, global options, all 10 command families, authentication, connections/profiles/sessions
+- `references/semantic-modeling-practices.md` - modeling best practices tied to `te` commands, with sources
+- `references/workflows.md` - multi-step recipes (table + M partition, format conversions, deploy, refresh, perspectives, translations, incremental refresh, field parameters)
+- `references/gotchas.md` - path/property asymmetries, output shapes, behavior traps
+- `references/config-cicd-env.md` - config keys, speed knobs, CI/CD (GitHub Actions, Azure DevOps), output formats, exit codes, environment variables
+- `references/te2-migration.md` - TE2 compat activation and full flag mapping
+- `references/pbir-cli-tandem.md` - using `te` with the `pbir` CLI (rename and refactor propagation, thin reports, validation pairing)
+- `references/fabric-cli-tandem.md` - using `te` with the `fab` CLI (export/edit/deploy round-trip, discovery, refresh, promotion)
+
+Authoritative docs:
+
+- Command reference: https://docs.tabulareditor.com/en/features/te-cli/te-cli-commands.html
+- Overview: https://docs.tabulareditor.com/en/features/te-cli/te-cli.html
+- CI/CD: https://docs.tabulareditor.com/en/features/te-cli/te-cli-cicd.html
+- Known limitations: https://docs.tabulareditor.com/en/features/te-cli/te-cli-limitations.html
+- GitHub (issues, releases): https://github.com/TabularEditor/CLI
