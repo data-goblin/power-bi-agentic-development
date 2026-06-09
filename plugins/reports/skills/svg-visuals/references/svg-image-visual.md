@@ -204,3 +204,68 @@ Disable default image effects to prevent unwanted styling:
 ### No Query Block
 
 Image visuals bound to SVG measures do not need a `query` block. The measure is evaluated directly via `sourceField`. Adding a query block can cause duplicate evaluations.
+
+---
+
+## Dynamic and Responsive SVG
+
+### Responsive width (image and card only)
+
+Set the SVG root to `width='100%' height='100%'` and drive geometry off the `viewBox`; the host scales the rendered image to fill its container:
+
+```dax
+VAR _Prefix = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%' viewBox='0 0 300 60' preserveAspectRatio='xMidYMid meet'>"
+```
+
+This works in image visuals and card callouts. Table and matrix cells ignore percentage width; they use `grid.imageWidth` from the visual's `objects.grid`. Fix the `viewBox` geometry to the configured `imageWidth` when targeting table cells.
+
+SVG can scale to fill the host, but it cannot read the container width as a number, so true reflow (re-binning bars to available width) is not possible in a DAX SVG measure. Reach for Deneb when the layout must adapt to container width.
+
+### Conditional layout based on context
+
+Branch the entire element assembly on filter context so the measure emits a different shape depending on what is selected, keeping each branch under the 32K string ceiling:
+
+```dax
+Conditional SVG =
+VAR _Mode =
+    SWITCH(
+        TRUE(),
+        ISBLANK([Sales Amount]),       "empty",
+        HASONEVALUE('Date'[Month]),    "single",
+        "trend"
+    )
+
+-- Assemble the data-URI prefix once, outside the branch
+VAR _Prefix = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 60'>"
+VAR _Suffix = "</svg>"
+
+-- Build only the branch that will be returned
+VAR _EmptyMarkup  = "<text x='10' y='35' font-family='Segoe UI' font-size='11' fill='#999'>n/a</text>"
+VAR _BarMarkup    = -- single-bar assembly (HASONEVALUE context)
+    "<rect x='10' y='20' width='" & INT(DIVIDE([Sales Amount], [Sales Target]) * 200) & "' height='20' fill='#448FD6'/>"
+VAR _SparkMarkup  = -- sparkline assembly (multi-period context)
+    "<polyline fill='none' stroke='#448FD6' stroke-width='2' points='" &
+    CONCATENATEX(
+        ADDCOLUMNS(VALUES('Date'[Month]), "@V", [Sales Amount]),
+        INT(RANKX(VALUES('Date'[Month]), 'Date'[Month], , ASC) * 25) & "," &
+        INT(50 - DIVIDE([@V], MAXX(VALUES('Date'[Month]), [Sales Amount])) * 40),
+        " ", 'Date'[Month]
+    ) & "'/>"
+
+VAR _Body =
+    SWITCH(
+        _Mode,
+        "empty",  _EmptyMarkup,
+        "single", _BarMarkup,
+        _SparkMarkup
+    )
+
+RETURN _Prefix & _Body & _Suffix
+```
+
+Key rules for conditional layout measures:
+
+- Always include a blank/empty-state branch so filter contexts with no data emit a readable fallback rather than a degenerate zero-width SVG or BLANK
+- Assemble the data-URI prefix and `</svg>` suffix once outside the SWITCH so the empty branch cannot accidentally omit them
+- Switch on report/page-level state for the whole measure (e.g., `HASONEVALUE` over a slicer's dimension); switching per row on a different condition confuses readers who see different chart metaphors in adjacent cells
+- Subtotal and total rows should usually return the empty markup or `BLANK()` rather than a coarced single-value chart

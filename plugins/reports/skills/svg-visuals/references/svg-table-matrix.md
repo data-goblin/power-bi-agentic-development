@@ -500,3 +500,57 @@ Available UDF libraries:
 - `SVG.Chart.Waterfall` -- waterfall chart with connectors
 
 See the PowerBI MacGuyver Toolbox and DaxLib.SVG libraries for more UDFs.
+
+---
+
+## Performance in Table and Matrix Cells
+
+An SVG measure is a string-building DAX expression evaluated once per visible cell (per row in a table; per row x column intersection in a matrix), all in the single-threaded formula engine with no storage-engine acceleration for the string concatenation. Cost scales with iteration count, not byte size.
+
+### Pre-aggregate in model measures, not inside the SVG string
+
+A sparkline that runs `CONCATENATEX` over 24 monthly points for every row is ~720 point-iterations of string assembly per page refresh, re-evaluated on every cross-filter. Push the base aggregations into reusable model measures or a precomputed table so the storage-engine cache absorbs that work; the SVG measure should only map computed numbers to coordinates.
+
+### Prefer one `<polyline>` over N individual elements
+
+A single `CONCATENATEX` producing a `points='...'` string for `<polyline>` iterates once and produces one element. Replacing it with N `<circle>` or `<line>` elements runs N iterations and emits N elements for the parser. Use `<polyline>` for line/area sparklines; reserve individual shapes for endpoints or markers only.
+
+### Round coordinates to integers
+
+Shorter strings mean cheaper `FORMAT` calls and less markup:
+
+```dax
+-- Preferred: integer coordinates
+VAR _X = INT(DIVIDE(_Month - _XMin, _XMax - _XMin) * 100)
+-- Avoid: floating-point strings like "47.3829..."
+```
+
+### The 32K limit is per rendered cell, not per expression
+
+The ceiling applies to the string returned by the measure for each individual cell. Diagnose by running `LEN([Your SVG Measure])` via `pbir model -q` for a worst-case category member. Near the ceiling, the cell silently drops to blank text. Options when approaching the limit:
+
+- Reduce the time-series window (12 months instead of 24)
+- Split into two simpler measures rendered in adjacent columns
+- Move the visualization to Deneb, which has no comparable string ceiling
+
+### The `HASONEVALUE`/`ISINSCOPE` total guard matters for both correctness and cost
+
+A matrix evaluates SVG measures at subtotal and grand-total rows too. Without a guard, the measure runs at a coarser grain and may return a meaningless or oversized SVG. Gate explicitly:
+
+```dax
+IF(
+    HASONEVALUE('Product'[Category]),
+    -- SVG assembly
+    BLANK()
+)
+```
+
+For nested matrices, `ISINSCOPE('Product'[SubCategory])` targets a specific hierarchy level and avoids building SVGs at every subtotal band.
+
+### Caching and volatile inputs
+
+Identical SVG strings for identical filter contexts hit the formula engine result cache. Inputs that change every evaluation defeat caching: `NOW()`, `TODAY()`, and unseed random jitter. The jitter-plot example uses a hash-based pseudo-random from a key column; preserve that pattern rather than introducing `RAND()`.
+
+### `grid.imageHeight`/`grid.imageWidth` and column width
+
+Setting large image dimensions in the visual's `objects.grid` does not change the formula-engine cost of generating the SVG, but it adds rasterization and paint cost in the renderer. Keep dimensions proportional to the cell content; avoid inflating them for visual effect. Auto-size-width ON with a wide SVG column triggers horizontal scroll and re-layout churn; set an explicit `columnWidth` in the visual formatting.

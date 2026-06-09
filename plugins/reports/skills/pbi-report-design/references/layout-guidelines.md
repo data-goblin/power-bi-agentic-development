@@ -23,6 +23,22 @@ Height: 720px
 
 ## Margins and Spacing
 
+On a fixed PBIR canvas, white space is a finite budget spent explicitly through gaps between `position` rectangles. Two failure modes both come from treating gaps as residual: cramming (proximity collapses, groups stop reading) or scattering (page feels empty).
+
+Spend at three tiers, all multiples of the grid unit:
+
+```yaml
+intra-group:  ~8-16px   # within a group (a KPI row)
+inter-group:  ~24-32px  # between groups; this gap creates visual proximity grouping
+margin:       ~24-32px  # canvas edge to first/last visual, all four sides
+```
+
+The inter-group gap must be strictly larger than the intra-group gap; that inequality is what turns spacing into hierarchy.
+
+Reserve the margin first (usable area = `canvas - 2*margin`). Avoid double-spending a gap and a box border for the same separation; prefer the gap.
+
+Padding (inside a visual container) and gaps (between visual containers) are different budgets controlled in different places; tightening one does not buy the other.
+
 ### Page Margins
 
 ```
@@ -35,8 +51,8 @@ Right:  24-32px
 ### Visual Spacing
 
 ```
-Minimum gap between visuals: 16px
-Recommended gap: 24px
+Intra-group (within a visual group):   8-16px
+Inter-group (between logical groups): 24-32px
 ```
 
 ### Grid System
@@ -246,19 +262,18 @@ This applies to any multi-row layout where visuals share implicit column boundar
 
 ## Performance Considerations
 
-### Visual Count Limits
+Opening a page refreshes every visible visual; each emits at least one DAX query. Parallelism is capped (DirectQuery default 10 concurrent connections), so latency grows non-linearly past that cap. Visual COUNT is a proxy; query COST per visual is the actual driver. 12 cheap card visuals are fine; 8 matrices with totals and measure filters may not be.
 
-| Level | Visual Count | Notes |
-|-------|--------------|-------|
-| Optimal | 6-8 | Best performance |
-| Acceptable | 9-12 | Slight impact |
-| Warning | 13-15 | Noticeable delay |
-| Critical | 16+ | Performance issues |
+Visuals that emit more than one query per page load (multipliers):
+- Tables/matrices with totals or subtotals (one query per band; DistinctCount and Median are worst)
+- Measure filters (two queries)
+- Top N filters (two queries; can hit the 1M-row intermediate limit in DirectQuery)
+- Field parameters (an extra evaluated-parameters phase)
+- Custom/Deneb/Python/R visuals (render phase dominates)
 
 ### Exceptions
 
-Simple visuals with minimal impact:
-
+These do not emit queries and do not count toward visual density:
 - Textboxes
 - Images
 - Shapes

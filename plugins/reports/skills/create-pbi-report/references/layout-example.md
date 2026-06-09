@@ -70,12 +70,12 @@ If no clear target exists, ask the user via `AskUserQuestion`.
 
 When adding trend visuals, infer the appropriate time axis from active filters:
 
-| Active Filter | Trend Granularity | Date Column |
-|---|---|---|
-| Year (e.g., 2021) | Monthly | `Date.Calendar Month (ie Jan)` or `Date.Calendar Month Year (ie Jan 21)` |
-| Quarter | Monthly or Weekly | `Date.Calendar Month (ie Jan)` or `Date.Calendar Week EU (ie WK25)` |
-| Month | Daily or Weekly | `Date.Date` or `Date.Calendar Week EU (ie WK25)` |
-| No date filter | Monthly or Quarterly | `Date.Calendar Month Year (ie Jan 21)` or `Date.Calendar Quarter Year (ie Q1 2021)` |
+```yaml
+Year (e.g. 2021):   Monthly    # Date.Calendar Month (ie Jan) or Date.Calendar Month Year (ie Jan 21)
+Quarter:            Monthly or Weekly  # Date.Calendar Month or Date.Calendar Week EU (ie WK25)
+Month:              Daily or Weekly    # Date.Date or Date.Calendar Week EU (ie WK25)
+No date filter:     Monthly or Quarterly  # Date.Calendar Month Year or Date.Calendar Quarter Year
+```
 
 If unsure, default to monthly granularity -- it works well for most business reporting contexts.
 

@@ -90,15 +90,36 @@ For highlights and emphasis:
 - Reserve bright colors for important data
 - Don't use red/orange unless indicating problems
 
+## Choosing the CF Basis
+
+Pick the basis before touching `pbir visuals cf`; picking wrong produces valid JSON that misleads readers.
+
+Each basis encodes a claim about the data:
+
+- **Gradient:** the measure is continuous and comparable across rows ("more is darker"). Valid only for a magnitude on a single scale. A signed variance with no explicit center miscolors the midpoint and re-stretches on every refresh.
+- **Rules:** discrete business-defined bands (RAG, SLA met/missed) whose cut points come from policy, not the data's min/max. These survive refresh without shifting.
+- **Field value (measure-driven):** the color or icon is itself data that a measure computed. Most flexible; prefer it for anything non-trivial. Rule: if the logic has more than two thresholds or depends on another measure, make it measure-driven rather than an inline rules array.
+- **Icons:** a status faster to scan than a number. Use sparingly on a triage/status column; never on the primary value column.
+
+Apply CF to the secondary signal (variance, gap, status), not the headline value. Data bars on the one primary magnitude, color scale on the variance column; never both on the same column.
+
+Prefer theme tokens over hex in every basis (`pbir visuals cf ... --theme-colors` to convert existing hex assignments).
+
+### CF Pitfalls
+
+- A signed-measure gradient with no center colors zero as mid-gray noise; set the center explicitly to 0 or use rules
+- `IconOnly` hides the number; only use it where the number itself is irrelevant
+- Overlapping or gappy rule bounds silently leave rows uncolored; promote fiddly logic to a measure you can test with `pbir model -q`
+
 ## Conditional Formatting Colors
 
 ### Best Practices
 
-1. **Theme tokens over hex** -- CF should use theme sentiment tokens ("good", "bad", "neutral", "minColor", "maxColor") not hardcoded hex. Theme tokens mean changing the theme cascades to all CF across all reports. Use `--theme-colors` to convert existing hex CF to tokens.
-2. **Measure-driven preferred** -- Prefer extension measures returning theme tokens over built-in gradient/rules. Measure logic lives in one place; change the measure or theme and it propagates. Use `--to-measure` to convert built-in CF.
-3. **Sparingly applied** -- CF should highlight exceptions, not decorate everything. Formatting everything means formatting nothing. Apply to variance/gap columns, not raw values.
-4. **Accessible** -- Use blue/orange instead of red/green for colorblind safety. Always pair color with a secondary cue (icon, text, shape).
-5. **Theme-first hierarchy** -- Check theme sentiment colors exist before applying CF. Create them if missing by setting `good`, `bad`, and `neutral` sentiment colors in the theme.json file (e.g., good="#00B050", bad="#FF0000", neutral="#FFC000")
+1. **Theme tokens over hex** -- use `--theme-colors` to convert existing hex CF assignments to tokens; changing the theme then cascades everywhere
+2. **Measure-driven conversion** -- use `--to-measure` to promote built-in gradient/rules CF to a measure expression; logic becomes testable and versionable
+3. **Sparingly applied** -- CF should highlight exceptions; formatting every column means nothing stands out
+4. **Accessible** -- use blue/orange instead of red/green; always pair color with a secondary cue (icon, text, shape)
+5. **Theme-first** -- check that `good`, `bad`, and `neutral` sentiment colors exist in the theme before applying CF; add them if missing (e.g., `good="#00B050"`, `bad="#FF0000"`, `neutral="#FFC000"`)
 
 ### Positive/Negative Pattern
 

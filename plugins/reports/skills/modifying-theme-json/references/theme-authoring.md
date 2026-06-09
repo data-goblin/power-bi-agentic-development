@@ -42,22 +42,29 @@ Never author a theme from an empty object. Start from:
 Add a `$schema` property as the first key to enable IDE autocomplete and inline validation in VS Code. Two schema URLs are used in practice:
 
 ```json
-// Generic Power BI schema reference (used in exported themes)
+// Generic Power BI schema reference (used in exported themes — triggers no real validation)
 { "$schema": "https://powerbi.com/product/schema#reportTheme" }
 
 // Versioned GitHub schema (recommended for authoring — enables full validation)
-{ "$schema": "https://raw.githubusercontent.com/microsoft/powerbi-desktop-samples/main/Report%20Theme%20JSON%20Schema/reportThemeSchema-2.152.json" }
+{ "$schema": "https://raw.githubusercontent.com/microsoft/powerbi-desktop-samples/main/Report%20Theme%20JSON%20Schema/reportThemeSchema-2.154.json" }
 ```
 
-Use the versioned GitHub URL when authoring or editing themes. Use the generic `powerbi.com` URL only if it was already present in an exported theme and you're not changing it.
+Use the versioned GitHub URL when authoring or editing themes. The generic `powerbi.com` URL is a marker that exported themes carry; it triggers no schema validation. Do not use it for authoring.
 
-The schema is versioned monthly alongside Power BI Desktop releases (pattern: `reportThemeSchema-2.{version}.json`). The latest as of March 2026 is `2.152` (exploration version 5.71). Target the version matching the Desktop release the report consumers are using.
+The schema is versioned monthly alongside Power BI Desktop releases (pattern: `reportThemeSchema-2.{version}.json`). Resolve the newest version at author time rather than hardcoding a remembered number:
 
-- Schema index (check for newer versions — schemas are released monthly): https://github.com/microsoft/powerbi-desktop-samples/tree/main/Report%20Theme%20JSON%20Schema
-- The schema is Draft 7 compliant and is used verbatim by Desktop to validate themes on import. Invalid themes are rejected.
-- In VS Code, trigger autocomplete with Ctrl+Space to see valid property names and enum values from the Format pane.
+```bash
+gh api repos/microsoft/powerbi-desktop-samples/contents/"Report Theme JSON Schema" \
+  --jq '.[].name' | sort | tail -1
+```
 
-The `visualStyles` section of the schema documents every property available for each visual type — this is the most reliable reference for which properties exist and what their valid values are.
+Target the schema version matching the Desktop release the report consumers are using, not necessarily the absolute latest.
+
+Critical: Power BI validates an imported theme against the schema baked into the Desktop build, not the file's `$schema` URL. Validation is reject-unknown-fields: a single misspelled key refuses the whole theme and prompts for a corrected file. A theme that passes `jq` validation can fail Desktop import on one typo. This is stricter than `visual.json` (where unknown properties are usually dropped silently).
+
+- Schema index (check for newer versions; schemas are released monthly): https://github.com/microsoft/powerbi-desktop-samples/tree/main/Report%20Theme%20JSON%20Schema
+- The schema is Draft 7 compliant. The `visualStyles` section documents every property available for each visual type.
+- In VS Code, trigger autocomplete with Ctrl+Space to see valid property names and enum values.
 
 ---
 
@@ -81,7 +88,7 @@ Rules:
 
 ### 2. Semantic Colors
 
-Flat top-level hex string keys used by conditional formatting measures that return color name strings (`"good"`, `"bad"`, `"neutral"`). These are NOT nested under a `sentimentColors` object — they are individual keys at the root level of the theme JSON.
+Flat top-level hex string keys used by conditional formatting measures that return color name strings (`"good"`, `"bad"`, `"neutral"`). These are NOT nested under a `sentimentColors` object; they are individual keys at the root level of the theme JSON.
 
 ```json
 "good": "#2f9e44",
@@ -89,12 +96,45 @@ Flat top-level hex string keys used by conditional formatting measures that retu
 "neutral": "#868e96",
 "maximum": "#1971c2",
 "center": "#f8f9fa",
-"minimum": "#e03131"
+"minimum": "#e03131",
+"null": "#e9ecef"
 ```
 
 > Conditional formatting measures that return `"good"` will use whatever hex is set here. This centralizes CF color control in one place.
 
-### 3. Background/Foreground Variants
+The gradient dialog pulls four colors: `minimum`, `center`, `maximum`, and `null` (applied to blank values in data-bar and background CF). If `null` is unset, blanks render Power BI's default (an off-orange `#FF7F48`) which clashes with most themes. Reports with sparse measures show blanks constantly; set all four together. The key is the literal string `"null"` (not JSON `null`). `pbir theme set-colors` exposes `--minimum/--center/--maximum` but not `--null`; write it directly in `_config.json`.
+
+### 3. Structural Colors
+
+Six flat top-level hex keys that recolor non-data chrome across every visual (gridlines, axis labels, table grid, trend lines, slicer outlines, filter-card and tooltip backgrounds). These are the highest-leverage move when building a dark or branded theme.
+
+The canonical names as written by the Customize-theme dialog:
+
+```yaml
+firstLevelElements:  # values/totals font, trend lines, card data labels, KPI text, filter/tooltip text
+secondLevelElements: # axis labels, legend labels, table headers, slicer item font+outline, light secondary text classes
+thirdLevelElements:  # gridlines, shape fill, gauge arc background, applied filter-card background
+fourthLevelElements: # legend dimmed, card category labels, multi-row card bars
+background:          # in-data-point label background, slicer dropdown, donut/treemap stroke, button fill, available filter-card/tooltip background
+secondaryBackground: # grid outline, shape-map default, ribbon fill, tooltip separator
+tableAccent:         # table/matrix grid outline when present
+```
+
+Aliases used in the pbir CLI and older exports:
+
+```yaml
+firstLevelElements:  foreground
+secondLevelElements: foregroundNeutralSecondary
+thirdLevelElements:  backgroundLight
+fourthLevelElements: foregroundNeutralTertiary
+secondaryBackground: backgroundNeutral
+```
+
+`pbir theme set-colors` exposes only the alias subset; for `firstLevelElements` through `fourthLevelElements` and `secondaryBackground`, write keys directly in `_config.json` then rebuild. Pick the level-N names for new themes (Desktop's dialog round-trips them).
+
+Dark theme trap: flipping only `background` to a dark hex while leaving element levels black makes gridlines and axis labels invisible (they inherit `firstLevelElements` and `secondLevelElements`). Set `firstLevelElements`, `secondLevelElements`, and `background` together with mutual contrast. Light text-class variants pull their color from these structural keys and break silently if skipped.
+
+### 4. Background/Foreground Variants
 
 Extended palette for container surfaces, canvas backgrounds, and foreground text. These feed into `visualContainerObjects` backgrounds and the filter pane.
 
@@ -109,7 +149,7 @@ Extended palette for container surfaces, canvas backgrounds, and foreground text
 "backgroundDark": "#dee2e6"
 ```
 
-### 4. Additional Accent Colors
+### 5. Additional Accent Colors
 
 ```json
 "tableAccent": "#1971c2",
@@ -121,7 +161,7 @@ Extended palette for container surfaces, canvas backgrounds, and foreground text
 ### Color Principles
 
 - Refer to `pbi-report-design` skill → `references/visual-colors.md` for WCAG contrast requirements and accessibility guidance
-- Use `ThemeDataColor` references (ColorId + Percent) in theme JSON rather than hardcoded hex wherever possible — this keeps the theme internally consistent if the palette changes
+- Use `ThemeDataColor` references (ColorId + Percent) in theme JSON rather than hardcoded hex wherever possible; this keeps the theme internally consistent if the palette changes
 - Keep `dataColors[0]` as the "primary" color that appears most frequently across the report
 
 ---
@@ -130,18 +170,48 @@ Extended palette for container surfaces, canvas backgrounds, and foreground text
 
 Text classes define font properties by semantic role. Every defined class overrides Power BI's defaults for that role across all visuals.
 
-### Standard Roles
+Power BI has 12 text classes: 4 primary ones you set explicitly, and 8 secondary ones that derive automatically from a primary (lighter shade or size delta). Over-specifying all 12 is wasted effort and a drift trap; set the four primaries, then override a secondary only when you need to break an inheritance.
+
+### Primary Roles (set these)
+
+```yaml
+callout: "card data labels, KPI indicators"
+title:   "axis titles, multi-row card title, slicer header"
+header:  "key-influencers headers, tab headers"
+label:   "table/matrix headers, grid values, column headers"
+```
+
+### Secondary Roles (derive from primaries; override only when needed)
+
+```yaml
+largeTitle:       # derived from title, larger
+semiboldLabel:    # derived from label, semibold weight
+largeLabel:       # derived from label, larger
+smallLabel:       # derived from label, smaller
+lightLabel:       # derived from label, lighter color (from structural colors)
+boldLabel:        # derived from label, bold (used for table totals)
+largeLightLabel:  # derived from label, large + light
+smallLightLabel:  # derived from label, small + light
+```
+
+Common override: make table totals non-bold via `"boldLabel": {"bold": false}`. Without it, `boldLabel` inherits bold-weight from `label`.
+
+Caveat: `title` and slicer header partly derive their color from `dataColors[0]`, so changing the first data color shifts those text colors unexpectedly. Explicitly set `color` in `title` to override this.
+
+Use a plain hex string for `color` in `textClasses` (NOT the `{"solid":{"color":"..."}}` wrapper used in `visualStyles`).
+
+### Standard Roles Reference
 
 | Role | Typical Use | Recommended Size |
 |------|-------------|-----------------|
-| `title` | Visual titles, page titles | 14–16pt |
-| `header` | Section headers, column headers | 12–14pt |
-| `label` | Axis labels, data labels | 11–12pt |
-| `callout` | KPI values, prominent numbers | 28–36pt |
+| `title` | Visual titles, page titles | 14-16pt |
+| `header` | Section headers, column headers | 12-14pt |
+| `label` | Axis labels, data labels | 11-12pt |
+| `callout` | KPI values, prominent numbers | 28-36pt |
 | `dataTitle` | KPI subtitles / labels | 12pt |
-| `boldLabel` | Emphasized labels | 12pt |
-| `largeTitle` | Large section titles | 20–24pt |
-| `largeLabel` | Larger variant of label | 13–14pt |
+| `boldLabel` | Table totals, emphasized labels | 12pt |
+| `largeTitle` | Large section titles | 20-24pt |
+| `largeLabel` | Larger variant of label | 13-14pt |
 
 ### Font Choice
 
@@ -219,7 +289,20 @@ At a minimum, set:
 - **`divider`** — `show: false` unless design calls for it
 - **`visualHeader`** — `show: true` to keep the visual header (focus mode, filter icon, etc.)
 - **`outspacePane`** — filter pane styling (see `pbir-format` → `theme.md`)
-- **`filterCard`** — filter card styling for Available and Applied states
+- **`filterCard`** — filter card styling; use the `$id` discriminator to style Available and Applied states differently (see below)
+
+### Filter-Card States with `$id`
+
+A single `filterCard` container styled without a `$id` applies identically to both states; you cannot make applied filters visually distinct from available ones. Use the `$id` discriminator to target each state independently:
+
+```json
+"filterCard": [
+  { "$id": "Available", "border": true, "backgroundColor": { "solid": { "color": "#f8f9fa" } } },
+  { "$id": "Applied",   "foregroundColor": { "solid": { "color": "#252423" } }, "backgroundColor": { "solid": { "color": "#e9ecef" } } }
+]
+```
+
+`$id` values are fixed enumerations for this container (`Available` / `Applied`); values are case-sensitive. Mis-cased or invented values are silently ignored. This is one of the few containers in theme JSON that uses `$id`; get valid values from the schema or a Desktop-formatted export.
 
 ### Design Guidelines
 
@@ -265,12 +348,14 @@ For detailed guidance on promoting bespoke visual.json formatting back into the 
 
 Before considering a theme complete:
 
-- [ ] `dataColors` has 6–12 entries; first color is the "primary"
+- [ ] `dataColors` has 6-12 entries; first color is the "primary"
 - [ ] Semantic colors (`good`, `bad`, `neutral`) are set and distinct from series colors
-- [ ] `textClasses` covers at minimum: `title`, `header`, `label`, `callout`
+- [ ] Gradient colors (`minimum`, `center`, `maximum`, `null`) are all set; `null` prevents the default off-orange on blank values
+- [ ] Structural colors (`firstLevelElements`, `secondLevelElements`, `background`) set with mutual contrast (critical for dark themes)
+- [ ] `textClasses` covers at minimum the four primaries: `title`, `header`, `label`, `callout`; secondary classes overridden only where inheritance breaks
 - [ ] Wildcard sets container defaults: `title`, `background`, `border`, `dropShadow`, `padding`
 - [ ] `dropShadow.show: false` in wildcard
 - [ ] At least `textbox` and `image` have type-specific overrides disabling container chrome
-- [ ] Filter pane (`outspacePane` and `filterCard`) styled in wildcard
+- [ ] Filter pane (`outspacePane`) and filter cards (`filterCard` with `$id: Available/Applied`) styled in wildcard
 - [ ] Theme validates with `pbir theme validate "Report.Report"` (or `jq empty` as fallback)
 - [ ] Deployed and visually verified on at least 3 visual types

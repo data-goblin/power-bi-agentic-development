@@ -70,6 +70,8 @@ Key elements:
 3. Stringify the spec and wrap in single quotes for `jsonSpec` literal value (see escaping rules in SKILL.md Step 3)
 4. Extract `config` separately for `jsonConfig`
 
+For a full terminal workflow (CLI bind commands, `kind` validation, breaking changes, pitfalls) see `references/advanced-patterns.md`.
+
 **To create a new template from an existing spec:**
 
 1. Replace hardcoded field names with placeholder keys (`__0__`, `__1__`, etc.)

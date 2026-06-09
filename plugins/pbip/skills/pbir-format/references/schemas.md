@@ -89,6 +89,26 @@ Common `expr` wrapper types (not exhaustive — the full schema defines 48+ type
 
 Selectors can be combined: `metadata` + `data` + `id` + `order` on the same selector object.
 
+## Schema Coupling: Versions Move as a Set
+
+Top-level schemas embed references to sub-schemas at fixed versions, and those versions advance together. Copying a fragment from a newer report into an older one can pass a naive JSON check yet fail at load time or silently drop properties.
+
+Known couplings (current as of early 2026):
+- `report/3.2.0` embeds `filterConfiguration/1.3.0` + `formattingObjectDefinitions/1.5.0`
+- `report/2.1.0` embeds `filterConfiguration/1.2.0` + `formattingObjectDefinitions/1.4.0`
+- `page/2.1.0` embeds `filterConfiguration/1.3.0` + `formattingObjectDefinitions/1.5.0` + `semanticQuery/1.4.0`
+
+Treat a report's schema versions as one matched set. When copying a `visual.json` or filter fragment between reports, confirm compatible parent versions or regenerate in the target project. Check the CHANGELOG files for exact coupling:
+```bash
+gh api repos/microsoft/json-schemas/contents/fabric/item/report/definition/report --jq '.[].name'
+```
+
+Upgrade the whole matched set in one commit, then validate.
+
+Pitfalls:
+- `reportVersionAtImport` in theme metadata is engine-managed; it is not the report's schema version and must not be edited to "match"
+- Schemas advance roughly monthly; pin tooling to the project's own `$schema` URLs, not a remembered version number
+
 ## Schema Exploration
 
 ```bash
