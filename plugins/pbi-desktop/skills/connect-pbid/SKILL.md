@@ -1,7 +1,7 @@
 ---
 name: connect-pbid
 version: 26.24
-description: TOM and ADOMD.NET guidance via PowerShell for connecting to Power BI Desktop's local Analysis Services instance. Covers model enumeration, DAX queries, metadata modification, annotations, calendar definitions, field parameters, query tracing, DAX library package management (daxlib.org), and the Desktop Bridge CLI for reloading and screenshotting the report canvas. Automatically invoke when the user mentions "Power BI Desktop", "Analysis Services port", "TOM", "ADOMD", "daxlib", "DAX library", "DAX UDF package", or asks to "connect to PBI Desktop", "query PBI Desktop with DAX", "modify PBI Desktop model", "add a measure to PBI", "capture visual queries", "create a field parameter", "validate DAX", "intercept DAX queries", "install daxlib", "add DAX SVG", "add IBCS", "reload the report canvas", "screenshot a report page", "Desktop Bridge", or to work with the model and report in Power BI Desktop together.
+description: TOM and ADOMD.NET guidance via PowerShell for connecting to Power BI Desktop's local Analysis Services instance. Covers model enumeration, DAX queries, metadata modification, annotations, calendar definitions, field parameters, query tracing, DAX library package management (daxlib.org), and the Desktop Bridge for reloading and screenshotting the report canvas. Automatically invoke when the user mentions "Power BI Desktop", "Analysis Services port", "TOM", "ADOMD", "daxlib", "DAX library", "DAX UDF package", or asks to "connect to PBI Desktop", "query PBI Desktop with DAX", "modify PBI Desktop model", "add a measure to PBI", "capture visual queries", "create a field parameter", "validate DAX", "intercept DAX queries", "install daxlib", "add DAX SVG", "add IBCS", "reload the report canvas", "screenshot a report page", "Desktop Bridge", or to work with the model and report in Power BI Desktop together.
 ---
 
 # Connect to Power BI Desktop (Local Analysis Services)
@@ -24,7 +24,7 @@ Activate only when the Tabular Editor CLI or a Power BI MCP server is unavailabl
 Power BI Desktop exposes the model and the report as two separate local surfaces. This skill owns the model surface and report-canvas verification, and routes report authoring to the right skill:
 
 - **Model** (tables, columns, measures, relationships, roles, calculation groups, refresh): this skill, via TOM/ADOMD over the local Analysis Services instance. For model edits, prefer the `te` CLI or a model MCP when available; fall back to this skill's TOM when they are not (see "When to Use This Skill").
-- **Report-canvas verification** (reload after edits, screenshot pages): this skill, the Desktop Bridge CLI (section 13).
+- **Report-canvas verification** (reload after edits, screenshot pages): this skill, the raw Desktop Bridge named-pipe API (section 13).
 - **Report authoring** (visuals, pages, formatting, filters, bookmarks, themes): the `pbir-cli` skill in the reports plugin (it drives the `pbir` CLI). The Desktop Bridge here only reloads and screenshots; it never edits visuals. Route every visual or page change to `pbir-cli`.
 - **Report JSON edited directly** (only when `pbir` is unavailable): the `pbir-format` skill in the pbip plugin.
 
@@ -510,7 +510,7 @@ To apply external file edits:
 
 This is different from TOM modifications via `$model.SaveChanges()`, which apply immediately to the running instance without requiring a restart.
 
-For **report** (PBIR) files specifically, the Desktop Bridge CLI reloads on-disk edits into the open canvas without reopening (`powerbi-desktop reload --pid <pid>`); see section 13. Model (TMDL) on-disk edits still require close-and-reopen, or use live TOM `SaveChanges()` as above.
+For **report** (PBIR) files specifically, the Desktop Bridge reloads on-disk edits into the open canvas without reopening (the `file.reload/v1` pipe method, with the `powerbi-desktop` npm CLI as a fallback); see section 13. Model (TMDL) on-disk edits still require close-and-reopen, or use live TOM `SaveChanges()` as above.
 
 ### Microsoft Documentation
 
@@ -614,7 +614,7 @@ Alternative path (only if driving the raw pipe runs into trouble, framing, encod
 - [Refresh Model](./references/refresh-model.md) - All refresh methods (TMSL, TOM RequestRefresh, ADOMD.NET)
 - [macOS + Parallels Guide](./references/parallels-macos.md) - Connecting from macOS when PBI Desktop runs in a Parallels VM
 - [DAX Library Packages](./references/daxlib.md) - Installing reusable DAX UDF packages from daxlib.org; DaxLib.SVG, PowerofBI.IBCS, package structure, annotations
-- [Desktop Bridge (report canvas)](./references/desktop-bridge.md) - Reload + screenshot the open report canvas via the Desktop Bridge CLI; the named-pipe JSON-RPC local API; pairing model (TOM) edits with report verification
+- [Desktop Bridge (report canvas)](./references/desktop-bridge.md) - Reload + screenshot the open report canvas over the raw named-pipe JSON-RPC API (PowerShell; `powerbi-desktop` npm CLI as fallback); pairing model (TOM) edits with report verification
 
 **CLI tools in `bin/`:**
 
