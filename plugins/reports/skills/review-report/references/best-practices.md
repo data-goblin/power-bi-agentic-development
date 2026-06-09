@@ -148,7 +148,7 @@ Many report issues originate in the underlying semantic model. Ask the user:
 1. Do they have access to the underlying semantic model?
 2. Are they the developer of both the report and model, or only one of them?
 
-If the model is in scope, use the `review-semantic-model` skill in parallel. The following are model-related issues that surface as report symptoms:
+If the model is in scope, use the `semantic-model` skill in parallel. The following are model-related issues that surface as report symptoms:
 
 - (Blank) values from referential integrity violations (missing keys) or incorrect relationships
 - Repeating/inflated values from many-to-many or bidirectional relationships
@@ -158,7 +158,7 @@ If the model is in scope, use the `review-semantic-model` skill in parallel. The
 - Refresh frequency not matching business needs
 - Unused columns/tables inflating model size
 
-These are documented in detail in the `review-semantic-model` skill. For the report review, note these as symptoms and flag them for model-level investigation.
+These are documented in detail in the `semantic-model` skill. For the report review, note these as symptoms and flag them for model-level investigation.
 
 ## Design for Agents
 

@@ -20,7 +20,7 @@ Sources: SQLBI variables-in-dax / when-are-variables-evaluated / eager-vs-strict
 
 Decide by where the division sits, then validate the zero-path. Find bare-operator divisions with `te find "/" --in expressions --paths-only`, classify each (scalar vs inside `SUMX`/`AVERAGEX`), ensure scalar cases use `DIVIDE`, and for the iterator case prove the zero row is gone (`FILTER('Items', 'Items'[Rate] = 0)` returns empty). A BPA rule is the durable enforcement ; gate with `te bpa run --fail-on warning` so any future bare `/` in a non-iterator measure surfaces. Pitfalls: `DIVIDE(n, 0, alternate)` fires the alternate on blank denominators too, not just literal zero; `n / 0` returns Infinity/NaN in some surfaces rather than a hard error, poisoning downstream aggregations silently (worse than an error); the blank `DIVIDE` returns is indistinguishable from a no-data blank if a downstream `ISBLANK` drives logic, so supply an explicit alternate to disambiguate.
 
-Sources: dax.guide divide; repo dax-patterns (DAX018); repo review-semantic-model (divide-by-zero as critical)
+Sources: dax.guide divide; repo dax-patterns (DAX018)
 
 ## DAX: measure vs calculated column, the context-blindness decision rule
 

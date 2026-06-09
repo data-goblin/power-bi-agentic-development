@@ -186,7 +186,7 @@ Ask the user:
 - Do they have access to the underlying semantic model?
 - Are they the developer of both the report and model, or only one?
 
-If the semantic model is in scope, use the `review-semantic-model` skill in parallel. Many report issues (slow visuals, (Blank) values, missing fields) originate in the model. See `references/best-practices.md` for model symptoms that surface in reports.
+If the semantic model is in scope, use the `semantic-model` skill in parallel. Many report issues (slow visuals, (Blank) values, missing fields) originate in the model. See `references/best-practices.md` for model symptoms that surface in reports.
 
 ### Step 1b: Determine Report Lifecycle Stage
 
@@ -276,7 +276,7 @@ LOW
 
 ## Related Skills
 
-- **`review-semantic-model`** -- Companion skill for semantic model review (run in parallel when model is in scope)
+- **`semantic-model`** -- Companion skill for semantic model design and review (run in parallel when model is in scope)
 - **`pbi-report-design`** -- Detailed report design guidelines and layout rules
 - **`modifying-theme-json`** -- Theme authoring, compliance auditing, formatting promotion
 - **`deneb-visuals`**, **`python-visuals`**, **`r-visuals`**, **`svg-visuals`** -- Visual-specific review criteria

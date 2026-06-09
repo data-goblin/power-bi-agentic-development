@@ -27,6 +27,6 @@ Trace capture and performance profiling:
 
 ## Related Skills
 
-- [`review-semantic-model`](../review-semantic-model/) — Model auditing including DAX anti-patterns and best practices
+- [`semantic-model`](../semantic-model/) — Model design, build, and auditing including DAX anti-patterns and best practices
 - [`connect-pbid` (pbi-desktop plugin)](../../../pbi-desktop/skills/connect-pbid/) — Trace capture, performance profiling, EVALUATEANDLOG debugging
 - [`lineage-analysis`](../lineage-analysis/) — Impact analysis before model changes
