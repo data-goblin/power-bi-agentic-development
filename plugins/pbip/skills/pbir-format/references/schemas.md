@@ -23,9 +23,9 @@ https://developer.microsoft.com/json-schemas/fabric/item/report/{type}/{version}
 - PBIP project: `.../fabric/pbip/pbipProperties/1.0.0/schema.json`
 - Semantic model: `.../fabric/item/semanticModel/{type}/{version}/schema.json`
 
-## K201 Example Schema Versions (late 2025)
+## K201 Example Schema Versions
 
-Versions below match the K201 example project bundled with this skill. As of early 2026, newer versions exist (e.g., `visualContainer/2.7.0`, `report/3.2.0`, `page/2.1.0`, `bookmark/2.1.0`). Microsoft updates schemas roughly monthly — **always use the `$schema` URL from your existing project files** rather than assuming these versions.
+Versions below match the K201 example project bundled with this skill. Newer versions exist (e.g., `visualContainer/2.7.0`, `report/3.2.0`, `page/2.1.0`, `bookmark/2.1.0`). Microsoft updates schemas roughly monthly — **always use the `$schema` URL from your existing project files** rather than assuming these versions.
 
 | Schema Type | Version | File |
 |-------------|---------|------|
@@ -93,7 +93,7 @@ Selectors can be combined: `metadata` + `data` + `id` + `order` on the same sele
 
 Top-level schemas embed references to sub-schemas at fixed versions, and those versions advance together. Copying a fragment from a newer report into an older one can pass a naive JSON check yet fail at load time or silently drop properties.
 
-Known couplings (current as of early 2026):
+Example couplings (verify against the CHANGELOG; these advance over time):
 - `report/3.2.0` embeds `filterConfiguration/1.3.0` + `formattingObjectDefinitions/1.5.0`
 - `report/2.1.0` embeds `filterConfiguration/1.2.0` + `formattingObjectDefinitions/1.4.0`
 - `page/2.1.0` embeds `filterConfiguration/1.3.0` + `formattingObjectDefinitions/1.5.0` + `semanticQuery/1.4.0`

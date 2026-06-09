@@ -10,7 +10,7 @@ The three components set directly in PBIR:
 - **Filter-pane Apply button**: set via `pbir filters pane-set`; validate with `--qa` after.
 - **Slicer Apply button**: set per-slicer via `pbir visuals format`. The `slicer` and `advancedSlicerVisual` object models differ; confirm the container key with `pbir schema describe` first.
 
-Microsoft's worked example collapses 66 visual queries to 6 with these three changes, which is why the "fewer visuals / apply buttons" audit rules exist.
+Microsoft's optimization guidance shows these three changes cutting a page's visual queries by a large factor, which is why the "fewer visuals / apply buttons" audit rules exist.
 
 Pitfalls:
 - A hard-coded `Highlight` pair in `visualInteractions[]` survives the preset; audit per page after applying

@@ -241,7 +241,7 @@ After validation, deploy and visually verify:
 | Resource | URL |
 |----------|-----|
 | Official report theme JSON schema (versioned, Draft 7) | [microsoft/powerbi-desktop-samples — Report Theme JSON Schema](https://github.com/microsoft/powerbi-desktop-samples/tree/main/Report%20Theme%20JSON%20Schema) |
-| Latest schema (v2.154, April 2026) — resolve at author time | [reportThemeSchema-2.154.json](https://github.com/microsoft/powerbi-desktop-samples/blob/main/Report%20Theme%20JSON%20Schema/reportThemeSchema-2.154.json) |
+| Latest schema (resolve the newest version at author time, see below) | [Report Theme JSON Schema folder](https://github.com/microsoft/powerbi-desktop-samples/tree/main/Report%20Theme%20JSON%20Schema) |
 | Raw schema URL (for `$schema` IDE integration) — update version to match consumers' Desktop | `https://raw.githubusercontent.com/microsoft/powerbi-desktop-samples/main/Report%20Theme%20JSON%20Schema/reportThemeSchema-2.154.json` |
 | Microsoft Learn — Use report themes in Power BI Desktop | https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-report-themes |
 | Microsoft Learn — Report theme JSON file format | https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-report-themes#report-theme-json-file-format |

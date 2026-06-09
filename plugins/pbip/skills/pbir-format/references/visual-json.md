@@ -276,7 +276,7 @@ Only interactions that deviate from the default need to be listed. By default, a
 
 Two behaviors that are easy to conflate:
 
-- `drillFilterOtherVisuals: true` -- drilling a hierarchy level re-filters the rest of the page, behaving like a data-point click. Default is `false`, meaning drill-down does NOT change other visuals by default (counter-intuitive)
+- `drillFilterOtherVisuals: true` -- drilling a hierarchy level re-filters the rest of the page, behaving like a data-point click; `false` isolates the drill to that visual. Desktop writes this flag explicitly per visual, so read the value on the visual you are editing rather than assuming a global default
 - `visualInteractions` (page.json) -- controls on-click cross-filter mode (NoFilter/Filter/Highlight). Both settings must align; a `true` drill flag still respects any `NoFilter` interaction pairs for that visual
 
 Do not confuse `drillFilterOtherVisuals` (same-page hierarchy walk) with drillthrough (navigates to a separate page via `visualLink.type: "Drillthrough"`).

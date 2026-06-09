@@ -99,6 +99,6 @@ scripts/get_model_info.py:             model metadata overview (mode, size, repo
 ## What this skill deliberately leaves out
 
 - GUI-tool walkthroughs and the old review skill's "use whatever tool is available" framing: superseded by the te-cli-first cascade
-- Hand-authored Q&A phrasings: Q&A retires at the end of 2026 and Copilot does not read phrasings; invest in synonyms and descriptions
+- Hand-authored Q&A phrasings: Q&A is being retired and Copilot does not read phrasings; invest in synonyms and descriptions
 - Perspectives or display folders presented as security: both are queryable by anyone with model access; use RLS / OLS
 - The PBIT format: out of scope

@@ -69,7 +69,7 @@ Prefer binding a measure that returns the value at the last/relevant point and B
 
 Choose small multiples over a legend when the question is "does this pattern hold across a dimension" and there are more series than a legend reads cleanly (roughly more than 3-4). A legend overlays series in one frame for value comparison; small multiples separate them into a synchronized grid so you compare shapes across many categories.
 
-Supported only on bar, column, line, and area charts. The grid synchronizes axes, fills left-to-right then top-to-bottom in sort order, up to 6x6 with overflow scrolling.
+Supported only on bar, column, line, and area charts. The grid synchronizes axes and fills left-to-right then top-to-bottom in sort order, with overflow scrolling beyond the visible grid.
 
 ### The Series vs SmallMultiples role distinction
 

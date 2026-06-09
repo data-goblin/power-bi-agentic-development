@@ -4,7 +4,7 @@ Guidance for reading modern Usage Metrics data accurately and converting view co
 
 ## Modern Usage Metrics: What the Numbers Actually Mean
 
-The modern (2024+) Usage Metrics report has different metric definitions from the legacy report; treating them as equivalent produces wrong adoption verdicts.
+The modern Usage Metrics report has different metric definitions from the legacy report; treating them as equivalent produces wrong adoption verdicts.
 
 ### Report View vs Report Page View
 
