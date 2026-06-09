@@ -358,6 +358,48 @@ For page titles, typical positioning:
 }
 ```
 
+## Dynamic Text Runs (Measure-Bound Values)
+
+A text run can bind to a measure instead of a static literal, so prose like "Revenue is 12.3M, up 8% on plan" updates with filter context. This is the UI's `fx` (Values) button on a textbox.
+
+The existing `textRuns[].value` string is replaced with an expression binding. The `textbox` content object is NOT fully defined in the published `visualContainer` schema (no `textRun`/`paragraph` definition), so `pbir validate` passes a malformed dynamic run without complaint. Correctness is on you.
+
+**Critical workflow:** Because no Microsoft schema or official sample defines the exact JSON, author one dynamic value in Desktop, save, then read the resulting `visual.json` for the precise shape, and use that as your template. Do not invent the structure.
+
+A paragraph with a mixed static + dynamic run looks like:
+```json
+"paragraphs": [
+  {
+    "textRuns": [
+      {
+        "value": "Revenue is ",
+        "textStyle": {"fontFamily": "Segoe UI", "fontSize": "14pt"}
+      },
+      {
+        "textStyle": {"fontFamily": "Segoe UI", "fontSize": "14pt", "fontWeight": "bold"},
+        "valueExpr": {
+          "expr": {
+            "Measure": {
+              "Expression": {"SourceRef": {"Entity": "Sales"}},
+              "Property": "Revenue Formatted"
+            }
+          }
+        }
+      }
+    ]
+  }
+]
+```
+
+Note: the exact key name and shape for the bound run may differ from the static `"value"` key; capture from Desktop, do not guess.
+
+Pitfalls:
+- Each run is a separate entry in `textRuns`; mixing literal and bound runs in one paragraph is the expected pattern
+- A bound run respects page/visual filters; an "all-data" baseline must use `CALCULATE(..., ALL(...))` inside the measure
+- Format inheritance: the run inherits the measure's dynamic format string; push currency/unit/decimal formatting into the measure rather than the run's display properties
+- `pbir validate` does not catch a malformed dynamic run; round-trip through Desktop to confirm
+- For conditionally-styled clauses inside one sentence (e.g., a clause that turns red on a miss), an SVG narrative measure is the right tool; the Smart Narrative visual is non-deterministic and cannot be diffed
+
 ## Drill Filtering
 
 Textboxes should not filter other visuals:

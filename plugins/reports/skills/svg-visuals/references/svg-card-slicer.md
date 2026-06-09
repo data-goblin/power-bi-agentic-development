@@ -102,6 +102,56 @@ RETURN
 "<text x='" & (_W / 2) & "' y='" & (_H / 2 + 5) & "' font-size='11' text-anchor='middle' fill='white' font-weight='bold'>" & _Label & "</text></svg>"
 ```
 
+### Pattern: Narrative Sentence
+
+When the story needs inline formatting that reacts to data (a clause that changes color on a miss, a bold figure, a verdict word keyed off performance), compose the whole sentence as a DAX measure returning an SVG with `<text>` and `<tspan>` runs. This is the only path to "X out of Y targets hit (~Z%)" where the number, color, and verdict word all key off data in a single declarative, version-controlled measure.
+
+Decision guide for narrative elements:
+
+- Plain "label: value" -> dynamic-value textbox run (simpler, inherits measure format string)
+- Whole-string title with no per-clause styling -> expression-based DAX visual title
+- Conditionally-styled clauses or sentence with inline micro-chart -> SVG narrative measure (below)
+- Multi-paragraph AI summary -> Narrative visual (non-deterministic, license-gated, cannot be diffed; avoid for deterministic reporting)
+
+```dax
+Performance Narrative =
+VAR _Actual   = [Sales Amount]
+VAR _Target   = [Sales Target]
+VAR _Variance = DIVIDE(_Actual - _Target, _Target)
+VAR _Hit      = _Actual >= _Target
+VAR _VerdictText  = IF(_Hit, "on track", "behind")
+VAR _VerdictColor = IF(_Hit, "#2D6A2E", "#982F2F")
+VAR _ActualFmt    = FORMAT(_Actual,   "$#,0,, M")
+VAR _TargetFmt    = FORMAT(_Target,   "$#,0,, M")
+VAR _VarFmt       = FORMAT(ABS(_Variance), "+0.0%;0.0%")
+
+RETURN
+"data:image/svg+xml;utf8," &
+"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 30'>" &
+-- Plain prefix
+"<text x='4' y='20' font-family='Segoe UI' font-size='12' fill='#333'>" &
+"Sales " &
+-- Bold actual value, brand color
+"<tspan font-weight='700' fill='#1f4e79'>" & _ActualFmt & "</tspan>" &
+" vs target " &
+"<tspan fill='#555'>" & _TargetFmt & "</tspan>" &
+" -- " &
+-- Verdict: color changes with performance
+"<tspan fill='" & _VerdictColor & "' font-weight='700'>" & _VerdictText & " (" & _VarFmt & ")</tspan>" &
+"</text>" &
+"</svg>"
+```
+
+Key notes:
+
+- Each styled clause is a separate `<tspan>` carrying its own `fill` and `font-weight`; mix styled and unstyled runs in one `<text>` element
+- Colors come from `IF`/`SWITCH` over data; use hex codes aligned with the report's theme tokens
+- Format numbers inside the measure via `FORMAT()`; the SVG string ignores the measure's model format string
+- The 32K limit and no-interactivity constraints apply; keep sentences concise
+- The classic card (`card`) does not support `ImageUrl` callouts; use `cardVisual`, an `image` visual, or a table single-row image column
+
+For the binding, wire the measure to `callout.imageFX` in a `cardVisual` (see the binding block above), or to `sourceField` in an image visual. To embed a tiny inline sparkline mid-sentence, add a `<polyline>` element after the text run within the same SVG.
+
 ---
 
 ## Slicer Visual (advancedSlicerVisual)
