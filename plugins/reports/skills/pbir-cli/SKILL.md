@@ -1,6 +1,6 @@
 ---
 name: pbir-cli
-version: 26.24
+version: 26.24.2
 description: This skill should be used whenever the user mentions "pbir", "pbir-cli", "Power BI reports", or "PBI reports", works with .pbir, .pbip, or .pbix files, or wants to refresh, screenshot, or visually verify a report that is open in Power BI Desktop. Covers creating, exploring, formatting, validating, and publishing Power BI reports through the pbir CLI and object model, plus driving Power BI Desktop (canvas reload, page screenshots) and querying connected or local semantic models.
 ---
 
@@ -71,6 +71,8 @@ Follow all rules below.
 4. **Theme-first formatting.** Check `pbir visuals format` before applying bespoke formatting; the theme may already set the property. Prefer `pbir theme set-formatting` for changes that apply to all visuals of a type. Reserve `pbir visuals title/background/border` for one-off overrides
 
 5. **Validate after changes.** Run `pbir validate "Report.Report"` after changes. Use `--qa` for overlap/overflow checks, `--fields` for model field verification, `--all` for everything
+
+6. **Verify rendering through the Desktop bridge.** When the report is open in Power BI Desktop, run `pbir desktop refresh` after every change unless the user asks not to, then `pbir desktop screenshot` and inspect the PNG after every meaningful change. Validation cannot catch rendering problems (overlap, truncation, wrong field, illegible formatting); the screenshot is the only proof a change rendered as intended. When a request involves many changes, ask the user up front whether to refresh after each step (so they watch progress in the canvas) or once at the end
 
 
 ## Core Workflows
@@ -163,6 +165,10 @@ pbir visuals bind "Report.Report/Page.Page/Visual.Visual" -a "Category:Products.
 
 # Validate after changes
 pbir validate "Report.Report"
+
+# If the report is open in Desktop, confirm the rendering
+pbir desktop refresh "Report.Report"
+pbir desktop screenshot "Report.Report/Page.Page" -o verify.png   # then Read verify.png
 ```
 
 For bulk visual creation, see **`references/add-new-visual.md`**.
@@ -359,6 +365,7 @@ Use `AskUserQuestion` to interview the user before executing. This is important 
 - **Formatting intent**: One-off bespoke or theme-level change for all visuals of this type?
 - **Complex requirements**: Deneb vs core visual, CF logic, page layout; discuss trade-offs first
 - **Ambiguous field mapping**: When the model has multiple plausible fields, discuss intent
+- **Refresh cadence**: For multi-change requests with Desktop open, ask whether to `pbir desktop refresh` after each step (visible progress) or once at the end
 - **Clearing formatting**: ALWAYS confirm before `pbir visuals clear-formatting`; it is irreversible
 
 
@@ -377,6 +384,8 @@ Run `pbir validate "Report.Report"` after **every mutation**. This catches broke
 ```
 
 **Schema version errors**: Fix with `pbir schema fetch --yes` then `pbir schema upgrade "Report.Report"`.
+
+`pbir validate` checks structure, not rendering. When the report is open in Power BI Desktop, follow every validation with the bridge loop: `pbir desktop refresh`, `pbir desktop screenshot`, then read the PNG. Do not report a change as complete without having seen it render.
 
 
 ## Reference Files

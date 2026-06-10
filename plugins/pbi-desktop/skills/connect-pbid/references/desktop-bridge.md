@@ -2,8 +2,10 @@
 
 Power BI Desktop exposes a second local API beside the Analysis Services engine: a
 per-process JSON-RPC server on a Windows named pipe that controls the report canvas
-(reload + snapshot). This skill rawdogs it the same way it rawdogs TOM/ADOMD:
-PowerShell straight to the pipe, no wrapper CLI. (The `powerbi-desktop` npm CLI wraps
+(reload + snapshot). **When the `pbir` CLI is installed, use `pbir desktop list/refresh/screenshot`
+instead of anything below; never drive the pipe from PowerShell when `pbir` is available.**
+This raw-pipe path exists for machines without `pbir`: PowerShell straight to the pipe,
+the same way this skill rawdogs TOM/ADOMD. (The `powerbi-desktop` npm CLI wraps
 these same methods; the `pbir-format` and `pbir-cli` skills cover that wrapper path.)
 
 Use it together with the model API: change the model with TOM, then reload and
