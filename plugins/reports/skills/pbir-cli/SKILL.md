@@ -1,6 +1,6 @@
 ---
 name: pbir-cli
-version: 26.24.3
+version: 26.24.4
 description: This skill should be used whenever the user mentions "pbir", "pbir-cli", "Power BI reports", or "PBI reports", works with .pbir, .pbip, or .pbix files, or wants to refresh, screenshot, or visually verify a report that is open in Power BI Desktop. Covers creating, exploring, formatting, validating, and publishing Power BI reports through the pbir CLI and object model, plus driving Power BI Desktop (canvas reload, page screenshots) and querying connected or local semantic models.
 ---
 
@@ -26,7 +26,7 @@ Keep entries concise and generalizable. The memory file is not a change log. Pru
 
 ### General workflow
 
-1. Explore the report. The report must be in PBIR format: pbip, pbir-only, or pbix-with-PBIR-metadata. Prefer pbir or pbip.
+1. Explore the report. The report must be in PBIR format: pbip, pbir-only, or pbix-with-PBIR-metadata. Prefer pbir or pbip. Whenever the user mentions Power BI Desktop or says the report is open in Desktop, run `pbir desktop list` FIRST: it maps each running instance to the file it has open (locating the report on disk) and confirms the bridge works before any edits begin. `pbir desktop` is Windows-only; on macOS and Linux do not use it (every invocation fails), and verify through `pbir validate --all` and sandbox publishing instead.
 2. Identify the model. Reports generally should be thin reports connected to a remote model in Power BI or Fabric.
 3. Clarify intent. For vague or open-ended instructions, consult **`references/vague-prompts.md`** and use `AskUserQuestion` to understand expectations and report context before mutating anything.
 4. Plan changes. For new reports, pages, or visuals, draft a wireframe or mock-up for the user to approve before building.
@@ -82,6 +82,7 @@ Follow all rules below.
 Understand existing reports before modifying. **Always check page dimensions and existing visual positions before adding or resizing visuals** setting position/size without knowing the page dimensions causes errors.
 
 ```bash
+pbir desktop list                                # FIRST if Desktop is mentioned: instances (PID, open file)
 pbir ls                                          # Find all reports
 pbir ls "Report.Report"                          # List pages/filters/theme
 pbir tree "Report.Report" -v                     # Full structure with fields
@@ -123,7 +124,7 @@ The edit-verify loop: mutate with `pbir set`/`add`, then `pbir desktop refresh`,
 
 Screenshots need the Desktop window in the Report view. Refreshing an instance with unsaved changes makes Desktop save first, rewriting the whole definition on disk. PBIX files support screenshot but not refresh. For requirements, multi-instance behavior, and troubleshooting, consult **`references/desktop-integration.md`**.
 
-**When the bridge is unavailable.** `pbir desktop list` distinguishes the cases: the bridge is unreachable when the preview feature is off ("Enable external tool access to Power BI Desktop through secure local APIs" under File > Options and settings > Options > Preview features, then restart Desktop), and it reports when no running instance has the target report open. If the preview feature is off, relay the enable steps to the user once and ask whether they want to turn it on; do not keep retrying bridge commands meanwhile. Until the bridge works (or when not on Windows at all), verify with `pbir validate --all` and, with the user's permission, the publish-to-sandbox path from the general workflow.
+**When the bridge is unavailable.** `pbir desktop` commands are Windows-only: on macOS and Linux do not use them at all; every invocation fails before reaching Desktop. On Windows, `pbir desktop list` distinguishes the cases: the bridge is unreachable when the preview feature is off ("Enable external tool access to Power BI Desktop through secure local APIs" under File > Options and settings > Options > Preview features, then restart Desktop), and it reports when no running instance has the target report open. If the preview feature is off, relay the enable steps to the user once and ask whether they want to turn it on; do not keep retrying bridge commands meanwhile. Until the bridge works (or when not on Windows at all), verify with `pbir validate --all` and, with the user's permission, the publish-to-sandbox path from the general workflow.
 
 ### Creating Reports
 
