@@ -241,43 +241,72 @@ After validation, deploy and visually verify:
 | Resource | URL |
 |----------|-----|
 | Official report theme JSON schema (versioned, Draft 7) | [microsoft/powerbi-desktop-samples — Report Theme JSON Schema](https://github.com/microsoft/powerbi-desktop-samples/tree/main/Report%20Theme%20JSON%20Schema) |
-| Latest schema (v2.152, March 2026, exploration v5.71) — **check repo for newer** | [reportThemeSchema-2.152.json](https://github.com/microsoft/powerbi-desktop-samples/blob/main/Report%20Theme%20JSON%20Schema/reportThemeSchema-2.152.json) |
-| Raw schema URL (for `$schema` IDE integration) — **update version as needed** | `https://raw.githubusercontent.com/microsoft/powerbi-desktop-samples/main/Report%20Theme%20JSON%20Schema/reportThemeSchema-2.152.json` |
+| Latest schema (resolve the newest version at author time, see below) | [Report Theme JSON Schema folder](https://github.com/microsoft/powerbi-desktop-samples/tree/main/Report%20Theme%20JSON%20Schema) |
+| Raw schema URL (for `$schema` IDE integration) — update version to match consumers' Desktop | `https://raw.githubusercontent.com/microsoft/powerbi-desktop-samples/main/Report%20Theme%20JSON%20Schema/reportThemeSchema-2.154.json` |
 | Microsoft Learn — Use report themes in Power BI Desktop | https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-report-themes |
 | Microsoft Learn — Report theme JSON file format | https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-report-themes#report-theme-json-file-format |
 | Community theme templates | [deldersveld/PowerBI-ThemeTemplates](https://github.com/deldersveld/PowerBI-ThemeTemplates) |
 | PBIR item schemas | [microsoft/powerbi-desktop-samples — item-schemas](https://github.com/microsoft/powerbi-desktop-samples/tree/main/item-schemas) |
 
+Resolve the current schema version at author time rather than hardcoding a number:
+
+```bash
+gh api repos/microsoft/powerbi-desktop-samples/contents/"Report Theme JSON Schema" \
+  --jq '.[].name' | sort | tail -1
+```
+
 ### IDE Integration (`$schema`)
 
-Add a `$schema` property to the theme JSON to enable autocomplete and validation in VS Code (or any JSON Schema-aware editor):
+Add a `$schema` property to the theme JSON to enable autocomplete and validation in VS Code. Use the versioned raw GitHub URL, not the generic `powerbi.com` marker:
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/microsoft/powerbi-desktop-samples/main/Report%20Theme%20JSON%20Schema/reportThemeSchema-2.152.json",
+  "$schema": "https://raw.githubusercontent.com/microsoft/powerbi-desktop-samples/main/Report%20Theme%20JSON%20Schema/reportThemeSchema-2.154.json",
   "name": "MyTheme",
-  "dataColors": ["#1971c2", ...]
+  "dataColors": ["#1971c2", "..."]
 }
 ```
 
-The schema is used verbatim by Power BI Desktop to validate themes on import — if the JSON fails schema validation, Power BI Desktop will reject the theme. Always target the schema version that matches the Power BI Desktop version in use. Schemas follow the pattern `reportThemeSchema-2.{version}.json` where the version matches the monthly Desktop release.
+Power BI validates an imported theme against the schema baked into the Desktop build. Validation is reject-unknown-fields: one misspelled key refuses the entire theme. A theme passing `jq` validation can still fail Desktop import on a typo. See `references/theme-authoring.md` for the full schema version guidance.
 
 ## Theme Top-Level Keys
 
-| Key | Type | Purpose |
-|-----|------|---------|
-| `name` | string | Display name shown in Power BI UI |
-| `dataColors` | string[] | Ordered hex palette for data series |
-| `good` / `bad` / `neutral` | string | Flat hex keys for CF measure semantic colors |
-| `maximum` / `center` / `minimum` | string | Gradient color extremes (flat hex keys) |
-| `foreground` variants | string | `foreground`, `foregroundLight`, `foregroundDark`, `foregroundNeutralSecondary`, etc. |
-| `background` variants | string | `background`, `backgroundLight`, `backgroundNeutral`, `backgroundDark` |
-| `textClasses` | object | Typography per semantic role (`title`, `label`, `callout`, `header`, `boldLabel`, etc.) |
-| `visualStyles` | object | `[visualType][state]` formatting cascade |
+```yaml
+name:          string   # display name shown in Power BI UI
+dataColors:    string[] # ordered hex palette for data series
+
+# Semantic CF colors (flat hex keys; CF measures return these names as strings)
+good / bad / neutral: string
+
+# Gradient CF colors (flat hex keys; "null" is the key name, not JSON null)
+maximum / center / minimum / null: string
+
+# Structural colors (non-data chrome: gridlines, axis labels, filter-card bg, etc.)
+# Use level-N names for new themes; CLI alias equivalents shown in parentheses
+firstLevelElements:  string  # (foreground)
+secondLevelElements: string  # (foregroundNeutralSecondary)
+thirdLevelElements:  string  # (backgroundLight)
+fourthLevelElements: string  # (foregroundNeutralTertiary)
+background:          string
+secondaryBackground: string  # (backgroundNeutral)
+tableAccent:         string
+
+# Extended surface/foreground palette
+foregroundLight / foregroundDark: string
+backgroundLight / backgroundNeutral / backgroundDark: string
+
+textClasses:   object  # typography per semantic role (title, label, callout, header, boldLabel, etc.)
+visualStyles:  object  # [visualType][state] formatting cascade
+```
+
+For `textClasses`: 4 primary classes you set; 8 secondary classes that derive automatically. See `references/theme-authoring.md`.
+
+For `visualStyles`: named style presets are a second key alongside `"*"` inside a visual-type section; they surface in the Format pane Style dropdown. See `references/advanced-theme-features.md`.
 
 ## References
 
-- **`references/theme-authoring.md`** — Color system design, typography, wildcard minimum set, schema integration
+- **`references/theme-authoring.md`** — Color system design (data colors, semantic, structural, null gradient), text class inheritance, `$id` filter-card states, wildcard minimum set, schema version guidance
+- **`references/advanced-theme-features.md`** — Named style presets (Format-pane dropdown), base theme layering model, organizational theme distribution, mobile-only formatting overrides
 - **`references/serialize-build.md`** — Serialize/build workflow: splitting themes into editable files, editing, rebuilding, validation, temporary folder guidance
 - **`references/applying-themes.md`** — Applying templates, post-apply enforcement, clearing visual overrides, normalizing hardcoded colors
 - **`references/copying-themes.md`** — Copying themes between reports, extracting/downloading themes, comparing themes, consolidating across a portfolio

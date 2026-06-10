@@ -42,6 +42,11 @@
             "type": "command",
             "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE 'op[[:space:]]+read'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"op read is blocked to prevent credential exposure. Use op run to inject secrets instead.\"}}' && exit 0; fi; exit 0",
             "if": "Bash(*op://*)"
+          },
+          {
+            "type": "command",
+            "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if echo \"$cmd\" | grep -qE -- '--no-minimum-release-age|--minimum-release-age[= ]+0|--ignore-min-release-age'; then jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"BLOCKED: --no-minimum-release-age (or equivalent --minimum-release-age=0) bypasses bun/npm protection against freshly-published packages (supply-chain risk). Wait for the release age window, or download the tarball directly with curl from registry.npmjs.org and inspect it.\"}}' && exit 0; fi; exit 0",
+            "if": "Bash(*minimum-release-age*)"
           }
         ]
       }
@@ -50,7 +55,8 @@
   "statusLine": {
     "type": "command",
     "command": "bash ~/.claude/statusline.sh",
-    "refreshInterval": 60
+    "refreshInterval": 60,
+    "hideVimModeIndicator": true
   },
   "feedbackSurveyRate": 0,
   "spinnerTipsEnabled": false,
@@ -65,5 +71,10 @@
   "todoFeatureEnabled": false,
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,
-  "voiceEnabled": true
+  "voiceEnabled": true,
+  "skillListingMaxDescChars": 9001,
+  "skillListingBudgetFraction": 0.05,
+  "autoUpdatesChannel": "stable",
+  "tui": "fullscreen",
+  "skipWorkflowUsageWarning": true
 }

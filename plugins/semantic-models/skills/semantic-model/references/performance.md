@@ -2,6 +2,8 @@
 
 Guidance for evaluating semantic model performance: memory analysis, query optimization, unused column detection, and benchmarking.
 
+**Working with `te`:** time a query with `te query -q "..." --trace --cold --runs 10` and compare medians; find unused objects with `te deps --unused` (confirm with `te get` before removing, keys can read as unused); read the model-size split with `te vertipaq --columns --detail`. Formula-engine vs storage-engine timings need a trace (connect-pbid / DAX Studio).
+
 ## Performance Analysis Tools
 
 | Tool | What It Provides | When to Use |

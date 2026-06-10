@@ -55,13 +55,13 @@ python3 scripts/get_report_distribution.py -w <workspace-id> -r <report-id>
 
 **Evaluate usage signals:**
 
-- **Audience reach** is the most important metric: what percentage of users with access have actually viewed the report in the last 7, 28, and 60 days? See `references/distribution.md` for how to calculate reach and what the numbers mean.
-- **View trends:** Is viewership stable, growing, or declining? Use the rolling 7D average (see `references/usage-metrics.md`).
-- **Page view distribution:** Are views concentrated on one page or spread across the report? Concentration may indicate low-value pages.
-- **Last visited:** When was the report last accessed by anyone? Tier 1 (Admin Activity Events, 30-day rolling, admin role required) is the official path. The Tier 3 DataHub V2 `lastVisitedTimeUTC` field (`--include-datahub`) is the non-admin cross-workspace fallback; flag to the user it's undocumented and can break.
-- **Load times:** Are P50 and P90 load times acceptable for the audience? See `references/performance.md` for interpretation.
+- **Audience reach** is the most important metric: what percentage of users with access have actually viewed the report in the last 7, 28, and 60 days? See `references/distribution.md` for how to calculate reach and what the numbers mean
+- **View trends:** Is viewership stable, growing, or declining? Use the rolling 7D average (see `references/usage-metrics.md`)
+- **Page view distribution:** Are views concentrated on one page or spread across the report? Before calling a page unused, check whether it is a tooltip/drillthrough target (no direct views expected) and confirm reachability via `pbir pages list`
+- **Last visited:** When was the report last accessed by anyone? Tier 1 (Admin Activity Events, 30-day rolling, admin role required) is the official path. The Tier 3 DataHub V2 `lastVisitedTimeUTC` field (`--include-datahub`) is the non-admin cross-workspace fallback; flag to the user it's undocumented and can break
+- **Load times:** Are P50 and P90 load times acceptable for the audience? See `references/performance.md` for interpretation
 
-Do not use arbitrary thresholds for what constitutes "healthy" or "concerning"; these depend entirely on the report's audience, purpose, and lifecycle stage. A report for 3 analysts has different expectations than one for 300 executives.
+Do not use arbitrary thresholds for what constitutes "healthy" or "concerning"; these depend entirely on the report's audience, purpose, and lifecycle stage. A report for 3 analysts has different expectations than one for 300 executives. Match the review window to the report's cadence before drawing conclusions; see `references/usage-interpretation.md` for common misreads of the modern Usage Metrics report and the retire/keep/redesign decision framework.
 
 **Subscriptions are not views.** Email subscriptions deliver report snapshots without generating view events. Check `admin/reports/{id}/subscriptions` (requires Fabric Admin) for active subscribers. A report with 0 views but active subscriptions is being consumed passively.
 
@@ -119,7 +119,7 @@ python3 scripts/performance_audit.py -w <workspace-id> -r <report-id>
 
 See `references/performance.md` for percentile interpretation, DAX query inference from visual field bindings, and common anti-patterns.
 
-**Key indicators:** P50 and P90 load times, visual count per page (loosely 12-15 max, but depends on complexity), extension measure count. See the reference for interpretation; do not apply rigid thresholds.
+**Key indicators:** P50 and P90 load times, visual count per page, extension measure count. Visual count is a proxy; query cost per visual is the real driver. See `references/performance-audit.md` for the full cost model, how to interpret a Performance Analyzer export, DirectQuery report-layer tuning levers, and the interaction/navigation audit. Do not apply rigid visual-count thresholds without reading the cost model first.
 
 ### 5. Report Metadata and Governance
 
@@ -142,13 +142,17 @@ Evaluate whether the report meets accessibility, organizational standards, and d
 
 **Accessibility:**
 
-- [ ] Alt text present on data visuals
-- [ ] Color contrast meets WCAG 2.1 AA (4.5:1 for text, 3:1 for UI)
-- [ ] No reliance on color alone to convey meaning
-- [ ] Font sizes legible (min 9pt for data, 12pt for labels)
-- [ ] Tab order and visual layer order established
-- [ ] No unnecessary animations or shadows
-- [ ] Tested across different screens, browsers, and contexts
+Most accessibility checks can be run statically against PBIR files; only focus traversal and screen-reader readout need a live report. See `references/accessibility-audit.md` for the full procedure: geometry/alignment audit, tab-order reconciliation, static pass (alt text, decorative items, color-only encoding), SVG-measure checks, script visual checks, and mobile readiness.
+
+Summary checklist:
+- [ ] Alt text present on all data visuals (including SVG-measure hosts and script visuals)
+- [ ] Decorative items removed from tab sequence (`tabOrder = -1`)
+- [ ] Tab order matches geometric reading pattern (top-to-bottom, left-to-right)
+- [ ] No color-only encoding (paired with shape, glyph, or text)
+- [ ] Color contrast meets WCAG 2.1 AA (4.5:1 text, 3:1 UI elements)
+- [ ] Font sizes legible (min 9pt data, 12pt labels)
+- [ ] Mobile layout present on consumption-intended pages
+- [ ] Live keyboard Tab traversal verified (cannot be confirmed from files)
 
 **Standards:**
 
@@ -182,7 +186,7 @@ Ask the user:
 - Do they have access to the underlying semantic model?
 - Are they the developer of both the report and model, or only one?
 
-If the semantic model is in scope, use the `review-semantic-model` skill in parallel. Many report issues (slow visuals, (Blank) values, missing fields) originate in the model. See `references/best-practices.md` for model symptoms that surface in reports.
+If the semantic model is in scope, use the `semantic-model` skill in parallel. Many report issues (slow visuals, (Blank) values, missing fields) originate in the model. See `references/best-practices.md` for model symptoms that surface in reports.
 
 ### Step 1b: Determine Report Lifecycle Stage
 
@@ -256,12 +260,15 @@ LOW
 ## References
 
 - **`references/usage-metrics.md`** -- Full documentation of all usage data APIs (official and undocumented)
+- **`references/usage-interpretation.md`** -- Reading modern Usage Metrics correctly; retire/keep/redesign decision framework
 - **`references/distribution.md`** -- All report access paths and how to audit them
 - **`scripts/get_report_usage.py`** -- Workspace-level usage overview
 - **`scripts/get_report_detail.py`** -- Single report deep-dive (daily, per-viewer, per-page)
 - **`scripts/get_report_distribution.py`** -- Distribution audit (ACL, apps, publish-to-web)
 - **`scripts/performance_audit.py`** -- Load times + visual complexity analysis
 - **`references/performance.md`** -- Percentile interpretation, DAX query inference from visual metadata
+- **`references/performance-audit.md`** -- Query cost model, Performance Analyzer export, DirectQuery tuning, interaction/navigation audit
+- **`references/accessibility-audit.md`** -- Alignment/tab-order audit, static accessibility pass, SVG/script/mobile checks
 - **`references/report-metadata.md`** -- Thick/thin, endorsement, sensitivity, pipeline, model properties
 - **`references/export-to-excel.md`** -- Export activity analysis, data governance implications
 - **`references/best-practices.md`** -- Data visualization principles, chart selection, color, interaction design
@@ -269,7 +276,7 @@ LOW
 
 ## Related Skills
 
-- **`review-semantic-model`** -- Companion skill for semantic model review (run in parallel when model is in scope)
+- **`semantic-model`** -- Companion skill for semantic model design and review (run in parallel when model is in scope)
 - **`pbi-report-design`** -- Detailed report design guidelines and layout rules
 - **`modifying-theme-json`** -- Theme authoring, compliance auditing, formatting promotion
 - **`deneb-visuals`**, **`python-visuals`**, **`r-visuals`**, **`svg-visuals`** -- Visual-specific review criteria

@@ -1,1 +1,1 @@
-seg "  $(date +%H:%M)"
+seg "  $(date +%H:%M) "

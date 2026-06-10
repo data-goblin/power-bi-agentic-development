@@ -164,7 +164,7 @@ Enable interactivity via the `vega` objects in visual.json:
 
 ### Cross-Filtering
 
-When `enableSelection` is true, handle `__selected__` (`"on"`, `"off"`, `"neutral"`) in encode blocks. Selection modes: `simple` (auto-resolves) or `advanced` (requires event definitions, Vega only). See `references/vega-patterns.md` for the full pattern.
+When `enableSelection` is true, handle `__selected__` (`"on"`, `"off"`, `"neutral"`) in encode blocks. Selection modes: `simple` (auto-resolves, up to 250 data points) or `advanced` (Vega only; required for brush/lasso/region selection, supports up to 2500 via `options.limit`, exposes `pbiCrossFilterApply` and `pbiCrossFilterClear` signals). See `references/vega-patterns.md` for the simple pattern and `references/advanced-patterns.md` for the advanced signal API.
 
 ### Cross-Highlighting
 
@@ -186,7 +186,7 @@ Key fields: `__row__` (zero-based row index, replaces removed `__identity__`), `
 4. **Use theme colors** (`pbiColor`, `pbiColorNominal`) instead of hex values
 5. **Use `enter`/`update`/`hover`** encode blocks for clean state management (Vega only)
 6. **Enable tooltips** with `"tooltip": {"signal": "datum"}` on marks
-7. **Mind row limits** -- 10K default; set `dataLimit.override` and use `renderMode: canvas` for large datasets
+7. **Performance** -- aggregate in DAX first, prefer `renderMode: canvas` for many marks, and only then raise `dataLimit.override`. See `references/advanced-patterns.md` for the full lever order
 8. **Test field names** -- verify `nativeQueryRef` matches spec field references
 9. **Avoid external data** -- AppSource certification prevents loading external URLs
 10. **Escaping depends on context** -- double quotes in standalone specs, doubled single quotes in PBIR visual.json (see escaping rules above)
@@ -207,7 +207,8 @@ Deneb is the preferred choice for **advanced custom visuals** that need interact
 - **`references/vega-patterns.md`** -- Vega chart patterns (bar, line, scatter, donut, stacked, heatmap, area, lollipop, bullet, KPI card), standard config, transforms and scales reference
 - **`references/vega-lite-patterns.md`** -- Vega-Lite chart patterns (for editing existing Vega-Lite visuals only)
 - **`references/pbir-structure.md`** -- PBIR JSON structure (literal encoding, query state, interactivity example)
-- **`references/capabilities.md`** -- Full Deneb object properties reference and template format
+- **`references/capabilities.md`** -- Full Deneb object properties reference and template format (`usermeta` schema)
+- **`references/advanced-patterns.md`** -- Advanced cross-filtering signals (Vega `pbiCrossFilterApply`/`pbiCrossFilterClear`), performance engineering lever order, and community template round-trip from the terminal
 - **`examples/visual/bullet-chart.json`** -- PBIR visual.json: faceted bullet chart with conditional indicators and cross-filtering (Vega-Lite)
 - **`examples/visual/kpi-card.json`** -- PBIR visual.json: KPI card with layered text and conditional % change coloring (Vega-Lite)
 - **`examples/visual/trend-line.json`** -- PBIR visual.json: dual-series line chart with fold transform and color/legend mapping (Vega-Lite)

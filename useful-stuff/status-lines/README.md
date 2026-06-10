@@ -1,6 +1,6 @@
 # Statusline
 
-A Claude Code statusline script with five segments: host + cwd, git status, model + effort, time, and three usage meters. Each segment is a separate file under `statusline.d/` and is sourced in numeric order, so you can edit one without touching the rest.
+A Claude Code statusline script laid out over two lines (line 1: time, host + cwd, git; line 2: version, vim mode, model + effort, usage meters). Each segment is a separate file under `statusline.d/` and is sourced in numeric order, so you can edit one without touching the rest.
 
 ## Layout
 
@@ -8,11 +8,13 @@ A Claude Code statusline script with five segments: host + cwd, git status, mode
 status-lines/
 ├── statusline.sh        # entrypoint; reads JSON from Claude Code on stdin, sources segments
 ├── statusline.d/
-│   ├── 02-host-cwd.sh   # host-colored cwd
-│   ├── 03-git.sh        # branch, change count, current PR number
+│   ├── 01-version.sh    # Claude Code version (off by default)
+│   ├── 02-host-cwd.sh   # host-colored cwd with a per-language repo glyph
+│   ├── 03-git.sh        # branch, change count, PR number (GitHub + Azure DevOps), worktree
 │   ├── 04-model.sh      # model name, version, effort dots
+│   ├── 04a-vim.sh       # vim mode indicator (when editorMode is vim)
 │   ├── 05-time.sh       # HH:MM
-│   └── 06-meters.sh     # context %, 5-hour rate %, 7-day rate %
+│   └── 06-meters.sh     # context %, 5-hour and 7-day rate % with projection
 └── README.md
 ```
 
@@ -20,11 +22,13 @@ status-lines/
 
 | Segment | Output |
 |---|---|
-| host-cwd | hostname + current directory, colored per host. `$HOME` collapses to the hostname so paths read as `host/project/...` |
-| git | `<branch> <+adds> <-deletes>` plus the current PR number if `gh pr view` resolves one. Untracked files count as adds. `not tracking` when not in a repo |
+| version | Claude Code version. Off by default; enable with `ENABLE_VERSION=TRUE` |
+| host-cwd | hostname + current directory, colored per host, with a per-language glyph for git repos. `$HOME` collapses to the hostname so paths read as `host/project/...` |
+| git | `<branch> <+adds> <-deletes>` plus the current PR number, resolved from GitHub (Claude Code provides it) or Azure DevOps (via `az repos pr list`, cached on disk). Worktree-aware. Untracked files count as adds. `not tracking` when not in a repo |
+| vim | current vim mode (NORMAL / INSERT / VISUAL), colored lualine-style. Empty unless `editorMode` is `vim` |
 | model | NerdFonts robot icon plus family name (Opus / Sonnet / Haiku). Older releases keep their version suffix; the family-latest hides it. Effort dots are calibrated per family |
 | time | `HH:MM` |
-| meters | Context window %, 5-hour rate-limit %, 7-day rate-limit %. Each colored by threshold (dim / yellow / orange / red / maroon) |
+| meters | Context window %, 5-hour and 7-day rate-limit % with a linear projection to cycle end. Each colored by threshold (dim / yellow / orange / red / maroon) |
 
 ## Install
 
@@ -53,6 +57,8 @@ ENABLE_GIT=TRUE
 ENABLE_MODEL=TRUE
 ENABLE_TIME=TRUE
 ENABLE_METERS=TRUE
+ENABLE_VERSION=FALSE
+ENABLE_VIM=TRUE
 ```
 
 Set any to anything other than `TRUE` and the segment is skipped. Drop new segment files into `statusline.d/` named `<NN>-<name>.sh` and wire a `load_segment` call at the bottom of `statusline.sh` to add your own.
@@ -98,7 +104,7 @@ Effort calibration lives in the model case-statement. Opus 4.7 has 5 levels (low
 
 ## Requirements
 
-- `bash`, `jq`, `git`, `gh` (for PR detection; the segment degrades silently if missing)
+- `bash`, `jq`, `git`, `gh` (GitHub PR detection); optionally `az` for Azure DevOps PR detection. The git segment degrades silently if any are missing
 - A Nerd Font in your terminal for the robot icon and branch glyph (JetBrainsMono NF 3.4.0 was used during development)
 - `timeout` (Linux) or `gtimeout` (macOS via coreutils); falls back to no-timeout if neither is available
 - On Windows, `cygpath` is used to POSIX-ify the cwd if available

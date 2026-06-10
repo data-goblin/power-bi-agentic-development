@@ -39,14 +39,26 @@ If the user still deflects ("just make it look good"), proceed with sensible def
 
 When specifics are missing, fall back to these rather than guessing:
 
-| Decision | Default | Rationale |
-|----------|---------|-----------|
-| Theme | Check if a theme is applied; if not, apply the **sqlbi** theme | Professional colors and typography out of the box |
-| Layout | Executive dashboard pattern (KPI row, trend chart, breakdown, detail table) | Most broadly useful; follows 3-30-300 |
-| Page size | 1280x720 | Standard 16:9 |
-| KPI selection | Top measures by business importance from the model | Explore with `pbir model -d`; propose before building |
-| Time granularity | Monthly if yearly filter context; weekly/daily if monthly | Match the grain to the decision cadence |
-| Conditional formatting | Gap/variance columns only; theme sentiment colors ("good"/"bad") | Formatting everything means formatting nothing |
+```yaml
+Theme:
+  default: sqlbi (already applied to new reports)
+  reason: professional colors and typography out of the box
+Layout:
+  default: executive dashboard pattern (KPI row, trend chart, breakdown, detail table)
+  reason: most broadly useful; follows 3-30-300
+Page size:
+  default: 1280x720
+  reason: standard 16:9
+KPI selection:
+  default: top measures by business importance from the model
+  reason: explore with `pbir model -d`; propose before building
+Time granularity:
+  default: monthly if yearly filter context; weekly/daily if monthly
+  reason: match the grain to the decision cadence
+Conditional formatting:
+  default: gap/variance columns only; theme sentiment colors ("good"/"bad")
+  reason: formatting everything means formatting nothing
+```
 
 ### 4. Propose before building
 

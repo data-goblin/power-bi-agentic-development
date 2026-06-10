@@ -168,7 +168,7 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 
 | Type | Name | Description |
 |------|------|-------------|
-| Skill | [`connect-pbid`](plugins/pbi-desktop/skills/connect-pbid/) | Explore, query, and modify a model in Power BI Desktop |
+| Skill | [`connect-pbid`](plugins/pbi-desktop/skills/connect-pbid/) | Explore, query, and modify a model in Power BI Desktop, and reload/screenshot the report canvas via the Desktop Bridge |
 | Agent | [`query-listener`](plugins/pbi-desktop/agents/query-listener.agent.md) | Capture DAX queries from Power BI Desktop visuals in real time |
 | Hook | DAX reference validation | Validates table, column, and measure references against the connected model; suggests corrections |
 | Hook | Measure metadata enforcement | Blocks adding measures without DisplayFolder, Description, and FormatString |
@@ -218,9 +218,9 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 
 | Type | Name | Description |
 |------|------|-------------|
+| Skill | [`semantic-model`](plugins/semantic-models/skills/semantic-model/) | Design, build, refresh, and review semantic models through a `te`-first tool cascade |
 | Skill | [`standardize-naming-conventions`](plugins/semantic-models/skills/standardize-naming-conventions/) | Audit and standardize naming conventions in semantic models |
-| Skill | [`review-semantic-model`](plugins/semantic-models/skills/review-semantic-model/) (Very WIP) | Review semantic models for quality, performance, AI readiness, and best practices |
-| Skill | [`refreshing-semantic-model`](plugins/semantic-models/skills/refreshing-semantic-model/) | Trigger or troubleshoot refreshes |
+| Skill | [`refresh-semantic-model`](plugins/semantic-models/skills/refresh-semantic-model/) | Trigger or troubleshoot refreshes |
 | Skill | [`lineage-analysis`](plugins/semantic-models/skills/lineage-analysis/) | Trace downstream reports from a semantic model across workspaces |
 | Skill | [`power-query`](plugins/semantic-models/skills/power-query/) | Write M expressions, debug query folding, execute M locally or via Fabric API |
 | Skill | [`dax`](plugins/semantic-models/skills/dax/) | Write, debug, and optimize DAX in semantic models. Contributed by [Justin Martin](https://daxnoob.blog) |

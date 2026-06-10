@@ -19,8 +19,10 @@ A reference `~/.claude/settings.json` for projects or user settings.
 | `verbose: false`, `showTurnDuration: true` | Slim transcript with turn timings |
 | `agentPushNotifEnabled: true` | Push notifications when an agent finishes a background task |
 | `voiceEnabled: true` | Voice input on |
-| `statusLine` | Points at `~/.claude/statusline.sh`; pair this with `useful-stuff/status-lines/` |
-| `hooks.PreToolUse[Bash]` | Five Bash safety hooks; see below |
+| `skillListingMaxDescChars`, `skillListingBudgetFraction` | Tuning for how much of the skill-listing context budget descriptions may use |
+| `autoUpdatesChannel: "stable"`, `tui: "fullscreen"`, `skipWorkflowUsageWarning: true` | Stable update channel, fullscreen TUI, and skip the workflow-usage warning |
+| `statusLine` (with `hideVimModeIndicator: true`) | Points at `~/.claude/statusline.sh`; pair with `useful-stuff/status-lines/`. Hides Claude Code's built-in vim indicator since the statusline shows its own |
+| `hooks.PreToolUse[Bash]` | Six Bash safety hooks; see below |
 
 ## Example Bash safety hooks
 
@@ -33,6 +35,7 @@ These are some example hooks that I use for safety purposes. They aren't a guara
 | `pip` / `pip3` | Any command that invokes `pip` or `pip3` | Nudge toward `uv`; remove this if you use `pip` directly |
 | `ssh` / `scp` / `sftp` | Any of those three | If your agent should never reach out over the network with the user's keys, leave this on. Remove if you want agent-driven remote management |
 | `op read` | The `op read <vault-uri>` form (matches `op://` literals) | Forces secret access through `op run --env-file=... -- <cmd>` so the secret value never lands in a tool result or transcript. There are other better ways to do this using i.e. OneCLI to facilitate use of credentials only at runtime. |
+| release-age bypass | `--no-minimum-release-age`, `--minimum-release-age=0`, `--ignore-min-release-age` on bun/npm | Stops the agent disabling the freshly-published-package guard (supply-chain risk). See `hooks/block-release-age-bypass/` |
 
 ## What's deliberately not here
 
@@ -40,7 +43,7 @@ Things in the original settings.json that were personal and have been stripped:
 
 - `model`: pinned default model. Set whatever you want
 - `EDITOR` / `VISUAL`: editor command
-- Sound hooks (SessionStart, Notification, PreCompact, PostToolUse-on-Bash-stderr): all point at local Peon WoW-voice scripts that aren't in this repo. Add your own if you want audio cues
+- Sound hooks (SessionStart, Notification, PreCompact, PostToolUse-on-Bash-stderr): all point at local audio scripts that aren't in this repo. Add your own if you want audio cues
 - `theme`, `editorMode`, `preferredNotifChannel`: personal UI choices
 - `enabledPlugins` and `extraKnownMarketplaces`: per-developer plugin selection
 - `spinnerVerbs`: cosmetic

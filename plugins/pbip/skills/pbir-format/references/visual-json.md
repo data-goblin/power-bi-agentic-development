@@ -262,6 +262,27 @@ Types: `"NoFilter"` (disable cross-filter), `"Filter"` (cross-filter), `"Highlig
 
 Only interactions that deviate from the default need to be listed. By default, all visuals cross-filter each other.
 
+## Drill-Down Propagation
+
+`drillFilterOtherVisuals` is a boolean on the visual's `visual` object (sibling to `visualType`). It controls whether drilling into a hierarchy re-filters other visuals on the page.
+
+```json
+"visual": {
+  "visualType": "barChart",
+  "drillFilterOtherVisuals": true,
+  ...
+}
+```
+
+Two behaviors that are easy to conflate:
+
+- `drillFilterOtherVisuals: true` -- drilling a hierarchy level re-filters the rest of the page, behaving like a data-point click; `false` isolates the drill to that visual. Desktop writes this flag explicitly per visual, so read the value on the visual you are editing rather than assuming a global default
+- `visualInteractions` (page.json) -- controls on-click cross-filter mode (NoFilter/Filter/Highlight). Both settings must align; a `true` drill flag still respects any `NoFilter` interaction pairs for that visual
+
+Do not confuse `drillFilterOtherVisuals` (same-page hierarchy walk) with drillthrough (navigates to a separate page via `visualLink.type: "Drillthrough"`).
+
+Cross-filter also carries the source visual's `filterConfig` to target visuals for the duration of the selection. If an unwanted filter travels during cross-filter, the fix is either a `NoFilter` pair in `visualInteractions` or moving the filter to page level.
+
 ## Table/Matrix Column Widths
 
 Column widths in tables and matrices are set via the `columnWidth` object with a `metadata` selector targeting the specific column:
@@ -572,14 +593,14 @@ Can also include `dataBars` and `fontColor` per column. Each entry targets one c
 
 ## Small Multiples
 
-Many chart types support small multiples -- a grid of the same chart broken out by a dimension. Configured via the `Series` query role and `smallMultiplesLayout` in `objects`:
+Many chart types support small multiples -- a grid of the same chart broken out by a dimension. True small multiples use the dedicated `SmallMultiples` query role (not `Series`). `Series`/`Legend` overlays series in a single frame; `SmallMultiples` partitions into a grid. The `smallMultiplesLayout` object in `objects` only takes effect when the `SmallMultiples` role is populated.
 
 ```json
 "query": {
   "queryState": {
     "Category": {"projections": [...]},
     "Y": {"projections": [...]},
-    "Series": {"projections": [{"field": {"Column": {"Expression": {"SourceRef": {"Entity": "Products"}}, "Property": "Category"}}}]}
+    "SmallMultiples": {"projections": [{"field": {"Column": {"Expression": {"SourceRef": {"Entity": "Products"}}, "Property": "Category"}}}]}
   }
 }
 ```
@@ -594,6 +615,8 @@ Many chart types support small multiples -- a grid of the same chart broken out 
 ```
 
 Supported on: lineChart, areaChart, barChart, columnChart, comboChart, and their stacked/100% variants.
+
+Features that are inert once a visual is trellised (do not add analytics overlays expecting them to work): total labels for stacked charts, trend lines, forecasting, zoom sliders, line high-density sampling, concatenate axis labels, hierarchical axis, scroll-to-load-more.
 
 ## Related
 

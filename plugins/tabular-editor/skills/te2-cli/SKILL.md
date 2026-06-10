@@ -8,6 +8,9 @@ description: CLI syntax reference for Tabular Editor 2 (TabularEditor.exe); depl
 
 Command-line interface for Tabular Editor 2 (TE2). This skill covers the `TabularEditor.exe` executable; TE3 has its own CLI and is a separate product.
 
+> [!NOTE]
+> The TE2 CLI (`TabularEditor.exe`) is still supported and stable, and remains a solid choice for existing Windows CI/CD pipelines. It is now considered outdated against the newer cross-platform Tabular Editor CLI (`te`), which is built on TE3 and is in preview until Q4 2026. For the `te` command set and a flag-by-flag migration, see the `te-cli` skill. Download `te` preview binaries from the [Tabular Editor CLI downloads page](https://tabulareditor.com/download-tabular-editor-cli).
+
 
 ## Installation
 
