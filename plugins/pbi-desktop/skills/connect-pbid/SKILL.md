@@ -520,8 +520,8 @@ For syntax, structure, and editing patterns for these files, load the relevant s
 Power BI Desktop does **not** watch for external file changes; edits made on disk while a report is open are silently ignored or overwritten on the next Desktop save. To apply changes, in order of preference:
 
 1. **TOM modifications** (`$model.SaveChanges()`) apply to the running instance immediately. Prefer this for model metadata.
-2. **PBIR report-definition edits** hot-reload into the open canvas with `pbir desktop refresh "Report.Report"` (PBIP/PBIR only, not `.pbix`; requires the preview feature). If the instance has unsaved changes, Desktop saves first and may overwrite the on-disk edit.
-3. **Everything else** (TMDL edits on disk, `.pbix`): close Power BI Desktop, edit, reopen.
+2. **PBIR report-definition edits** (pages, visuals) hot-reload into the open canvas with `pbir desktop refresh "Report.Report"` (PBIP/PBIR only, not `.pbix`; requires the preview feature). Theme JSON edits under StaticResources do NOT hot-reload; close and reopen instead. If the instance has unsaved changes, Desktop saves first and may overwrite the on-disk edit.
+3. **Everything else** (TMDL edits on disk, theme files, `.pbix`): close Power BI Desktop, edit, reopen.
 
 ### Microsoft Documentation
 

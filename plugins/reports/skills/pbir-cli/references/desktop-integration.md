@@ -93,6 +93,7 @@ Each open report is a separate Desktop process with its own bridge endpoint and 
 
 ## Caveats and Troubleshooting
 
+- **Refresh reloads the definition, not themes.** `file.reload` re-reads pages and visuals from disk but not StaticResources: edits to theme JSON files (custom or base) only render after closing and reopening the file in Desktop. Desktop also resolves base themes by name from its internal store; the materialized `BaseThemes/*.json` is a snapshot it writes, not a file it reads (verified empirically; custom themes in `RegisteredResources` are read at open).
 - **Refresh on a dirty instance saves first.** If the report has unsaved changes in Desktop, `file.reload` makes Desktop save before reloading; the whole definition is rewritten (re-indented, schema versions bumped, active page recorded). Expect git churn; commit or stash before iterating on a report a user has open with edits.
 - **"Report view is not active"**: switch the Desktop window to the Report view and retry the screenshot.
 - **Transient errors right after a refresh** (HostNotReady): handled automatically; the CLI honors the bridge's retry protocol.
