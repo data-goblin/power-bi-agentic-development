@@ -24,7 +24,8 @@ Activate only when the Tabular Editor CLI or a Power BI MCP server is unavailabl
 
 - Power BI Desktop must be open with a model loaded before connecting; if there are errors it is likely due to a "thin report" connected to a remote model, or a Direct Lake model (which uses a remote proxy that blocks external connections)
 - The local Analysis Services instance only accepts connections from `localhost`
-- Multiple PBI Desktop files open means multiple `msmdsrv.exe` processes on different ports. Connect to each port, read `$server.Databases[0].Name`, and ask the user which model to work with if more than one is found
+- Multiple PBI Desktop files open means multiple `msmdsrv.exe` processes on different ports. Connect to each port, read `$server.Databases[0].Name`, and ask the user which model to work with if more than one is found. When the `pbir` CLI is installed, prefer `pbir desktop list` to map each Desktop PID to the exact file it has open (see Section 2a)
+- A workspace engine reporting `Databases: 0` belongs to a thin report (live connection to a remote model); there is no local model to connect to. Query thin reports through their remote model instead (`pbir model -q` routes there automatically)
 - Always use a timeout of 60000ms or higher for PowerShell commands via Bash
 - **Shell escaping**: Bash eats PowerShell `$` variables (`$env:TEMP`, `$server`, etc.) silently. Two options: (1) single-quote the `-Command` arg so Bash passes `$` literally to PowerShell; (2) write a `.ps1` file with a heredoc (single-quoted delimiter preserves `$`) and use `-File`. On macOS via Parallels, the `prlctl` -> `cmd.exe` -> `powershell.exe` chain adds extra escaping layers; `.ps1` files are more reliable for complex scripts but inline `-Command` with single quotes works for short commands.
 - **Always use `-ExecutionPolicy Bypass`** when running PowerShell commands or scripts. Windows blocks unsigned scripts by default.
@@ -99,6 +100,22 @@ $server.Disconnect()
 | Port file | Non-Store PBI Desktop | `Get-Content "$env:LOCALAPPDATA\Microsoft\Power BI Desktop\AnalysisServicesWorkspaces\*\Data\msmdsrv.port.txt"` |
 | Port file | Store PBI Desktop | `Get-Content "$env:LOCALAPPDATA\Packages\Microsoft.MicrosoftPowerBIDesktop_*\LocalState\AnalysisServicesWorkspaces\*\Data\msmdsrv.port.txt"` |
 | netstat | Any | `netstat -ano \| findstr LISTENING \| findstr <PID>` |
+
+
+## 2a. Correlating Ports to Reports (Multiple Instances)
+
+A port alone does not identify the report it serves; correlate before connecting to avoid modifying the wrong model. With the `pbir` CLI and Desktop's "external tool access" preview feature enabled, `pbir desktop list` shows each Desktop PID with the exact file it has open. Map ports to those PIDs through the process tree (each `msmdsrv.exe` is a child of its `PBIDesktop.exe`):
+
+```powershell
+$conns = Get-NetTCPConnection -State Listen
+foreach ($proc in Get-Process msmdsrv -ErrorAction SilentlyContinue) {
+    $port = ($conns | Where-Object OwningProcess -eq $proc.Id | Select-Object -First 1).LocalPort
+    $parent = (Get-WmiObject Win32_Process -Filter "ProcessId=$($proc.Id)").ParentProcessId
+    Write-Output "port $port -> msmdsrv $($proc.Id) -> PBIDesktop $parent"
+}
+```
+
+An engine reporting `Databases: 0` is a thin report's workspace; no local model exists. Query the remote model instead (`pbir model -q` routes there automatically).
 
 
 ## 3. Loading TOM, Connecting, and Saving Changes
@@ -426,9 +443,11 @@ foreach ($m in ($model.Tables | ForEach-Object { $_.Measures })) {
 
 ### Find the Open File Path
 
-TOM does not expose the `.pbix`/`.pbip` file path directly. The most reliable method across all PBI Desktop install types is reading the `FileHistory` from `User.zip` in the PBI Desktop app data folder.
+TOM does not expose the `.pbix`/`.pbip` file path directly.
 
-**Primary method — FileHistory in User.zip (works for Store and non-Store):**
+**Primary method — Desktop bridge:** `pbir desktop list` reports the exact file each running instance has open (requires the `pbir` CLI and the "external tool access" preview feature; see Section 2a). Use the methods below only when that is unavailable.
+
+**Fallback — FileHistory in User.zip (works for Store and non-Store):**
 
 ```powershell
 # Read the most recently opened file from PBI Desktop's settings
@@ -487,17 +506,13 @@ For syntax, structure, and editing patterns for these files, load the relevant s
 - **`pbir-format`** -- `report.json`, `visual.json`, themes, filters, PBIR JSON schemas
 - **`tmdl`** -- TMDL syntax, measures, columns, roles, relationships
 
-### No Hot-Reload — Close and Reopen Required
+### Reloading External File Edits
 
-**IMPORTANT:** Power BI Desktop does **not** watch for external file changes. If you edit metadata files on disk while the report is open, the changes will be silently ignored or overwritten when PBI Desktop next saves.
+Power BI Desktop does **not** watch for external file changes; edits made on disk while a report is open are silently ignored or overwritten on the next Desktop save. To apply changes, in order of preference:
 
-To apply external file edits:
-
-1. Close Power BI Desktop completely
-2. Make your changes to the files on disk
-3. Reopen the `.pbix` or `.pbip` file
-
-This is different from TOM modifications via `$model.SaveChanges()`, which apply immediately to the running instance without requiring a restart.
+1. **TOM modifications** (`$model.SaveChanges()`) apply to the running instance immediately. Prefer this for model metadata.
+2. **PBIR report-definition edits** hot-reload into the open canvas with `pbir desktop refresh "Report.Report"` (PBIP/PBIR only, not `.pbix`; requires the preview feature). If the instance has unsaved changes, Desktop saves first and may overwrite the on-disk edit.
+3. **Everything else** (TMDL edits on disk, `.pbix`): close Power BI Desktop, edit, reopen.
 
 ### Microsoft Documentation
 
@@ -569,6 +584,20 @@ Programmatic equivalent of DAX Studio's Server Timings. Subscribe to `QueryEnd`,
 **Visual query profiling:** Construct SUMMARIZECOLUMNS queries from PBIR `visual.json` definitions. Column projections become group-by columns; measure projections become measure references; `Aggregation.Function` maps to SUM (0), MIN (1), MAX (2), COUNT (3), AVERAGE (4).
 
 For full setup, timing interpretation, sampling patterns, and PBIR-to-DAX translation, see [performance-profiling.md](./references/performance-profiling.md).
+
+
+## 13. Closing the Loop: Verify Model Changes Visually
+
+After `SaveChanges()`, verify the report still renders; renamed or deleted measures break visuals silently. With the `pbir` CLI and the preview feature enabled:
+
+```powershell
+pbir model --% "Report.Report" -q "EVALUATE ROW(""Check"", [New Measure])"   # engine-level check
+pbir desktop screenshot "Report.Report/Page Name.Page" -o verify.png         # inspect rendering
+```
+
+The `--%` stop-parsing token prevents Windows PowerShell 5.1 from stripping the embedded quotes; omit it in bash or PowerShell 7+.
+
+TOM changes apply immediately, so no reload step is needed. Screenshots require the Desktop window in the Report view. For report-layer edits (visuals, pages), use the `pbir-cli` skill's refresh + screenshot loop instead.
 
 
 ## References
