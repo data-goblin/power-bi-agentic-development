@@ -6,11 +6,11 @@ PreToolUse and PostToolUse hooks that validate DAX references, enforce measure m
 
 | Hook | Event | Trigger (`if`) | Scope |
 |---|---|---|---|
-| `validate-dax` | PreToolUse | `Bash(*tom_nuget*)` | DAX table/column/measure references in inline PowerShell commands |
-| `validate-measure` | PreToolUse | `Bash(*Measures.Add*)` | Measure DisplayFolder, Description, FormatString when adding measures |
-| `refresh-cache` | PostToolUse | `Bash(*AnalysisServices*)` | Auto-refresh model metadata cache on TOM connect or modification |
-| `check-ri` | PostToolUse | `Bash(*model.SaveChanges*)` | Referential integrity; unmatched keys after relationship/column changes |
-| `check-compat` | PostToolUse | `Bash(*AnalysisServices*)` | Compatibility level; lists features available by upgrading |
+| `validate-dax` | PreToolUse | `Bash(*tom_nuget*)`, `Bash(* -File *.ps1*)` | DAX table/column/measure references in inline PowerShell commands and executed `.ps1` files |
+| `validate-measure` | PreToolUse | `Bash(*Measures.Add*)`, `Bash(* -File *.ps1*)` | Measure DisplayFolder, Description, FormatString when adding measures |
+| `refresh-cache` | PostToolUse | `Bash(* -File *.ps1*)` | Auto-refresh model metadata cache on TOM connect or modification |
+| `check-ri` | PostToolUse | `Bash(*SaveChanges*)` | Referential integrity; unmatched keys after relationship/column changes |
+| `check-compat` | PostToolUse | `Bash(* -File *.ps1*)` | Compatibility level; lists features available by upgrading |
 
 ## Checks
 
@@ -56,7 +56,7 @@ That disables every hook in this plugin without touching individual check toggle
 
 ## Known limitations
 
-- `.ps1` file execution hides content from `if` filters; hooks only validate inline PowerShell commands
+- `if` glob patterns match only the raw command line, not `.ps1` file contents; the scripts compensate by reading executed `.ps1` files internally (`resolve_command_text`), gated by the `Bash(* -File *.ps1*)` triggers
 - `if` glob patterns are case-sensitive
 - UNC path conversion assumes `/Users/<user>/` prefix (macOS Parallels)
 
@@ -65,5 +65,5 @@ That disables every hook in this plugin without touching individual check toggle
 ```bash
 echo '{"tool_name":"Bash","tool_input":{"command":"EVALUATE '"'"'FakeTable'"'"'[Col]"}}' | \
   CLAUDE_PROJECT_DIR="$(pwd)" CLAUDE_PLUGIN_ROOT="$(pwd)/plugins/pbi-desktop" \
-  bash plugins/pbi-desktop/hooks/run-pbi-hooks.sh validate-dax
+  bash plugins/pbi-desktop/hooks/pbi-hooks.sh validate-dax
 ```

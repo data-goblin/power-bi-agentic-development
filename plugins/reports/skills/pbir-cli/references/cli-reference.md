@@ -16,6 +16,7 @@ Complete command reference for the pbir CLI. All commands prefixed with `pbir`.
 - [Annotation Operations](#annotation-operations)
 - [Best Practice Analyzer (BPA)](#best-practice-analyzer-bpa)
 - [Connection and Fabric](#connection-and-fabric)
+- [Desktop Operations (Windows)](#desktop-operations-windows)
 - [Configuration and Setup](#configuration-and-setup)
 - [Visual Types Reference](#visual-types-reference)
 
@@ -505,6 +506,24 @@ pbir model "Report.Report" -d -v                 # Full TMDL
 pbir model "Report.Report" -q "EVALUATE VALUES('Sales'[Region])"
 pbir model "Report.Report" -q "EVALUATE 'Sales'" -F json  # JSON output
 ```
+
+Model query routing: thin reports (`byConnection`) query the Power BI / Fabric service (EVALUATE DAX only; DMVs rejected). Thick reports (`byPath`) open in Power BI Desktop query the local Analysis Services engine; requires the .NET Framework ADOMD client (auto-detected from DAX Studio or Desktop installs; override with `PBIR_ADOMD_DIR`).
+
+## Desktop Operations (Windows)
+
+Requires Power BI Desktop running with the report open and the preview feature "Enable external tool access to Power BI Desktop through secure local APIs" enabled.
+
+```bash
+pbir desktop list                                # Running Desktop bridge instances
+pbir desktop refresh "Report.Report"             # Reload on-disk definition into the canvas
+pbir desktop screenshot "Report.Report"          # PNG of the first page
+pbir desktop screenshot "Report.Report/Page.Page"          # PNG of a specific page
+pbir desktop screenshot "Report.Report/Page.Page" -o out.png  # Explicit output path
+pbir desktop screenshot "Report.Report" --scale 3          # Render scale (default 2)
+pbir desktop screenshot "Report.Report" --pid 1234         # Disambiguate instances
+```
+
+Notes: screenshots need the Desktop window in the Report view. Refresh on an instance with unsaved changes makes Desktop save first (rewrites the definition on disk). PBIX files support screenshot but not refresh. `PBIR_DESKTOP_AUTO_REFRESH=1` auto-reloads the canvas after every pbir mutation. See `desktop-integration.md` for the full workflow.
 
 ## Configuration and Setup
 

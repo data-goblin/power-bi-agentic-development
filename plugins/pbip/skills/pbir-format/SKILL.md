@@ -1,6 +1,6 @@
 ---
 name: pbir-format
-version: 26.20
+version: 26.24
 description: Format reference for Power BI Enhanced Report (PBIR) JSON schemas and patterns. Automatically invoke when the user asks about PBIR JSON structure, visual.json properties, PBIR expressions, objects vs visualContainerObjects, theme inheritance, conditional formatting patterns, extension measures, bookmarks, field references, filter formatting, query roles, PBIR page structure, report wallpaper, or any PBIR metadata format question.
 ---
 
@@ -29,7 +29,7 @@ Report.Report/
 +-- .pbi/localSettings.json                # Local-only, gitignored
 +-- .platform                              # Fabric Git integration
 +-- definition.pbir                        # Semantic model connection (byPath or byConnection) can open this file in Power BI Desktop to open the report
-+-- mobileState.json                       # Mobile layout (niche)
++-- mobileState.json                       # PBIR-Legacy artifact only; current PBIR stores phone layout per-visual in mobile.json
 +-- semanticModelDiagramLayout.json        # Model diagrams
 +-- CustomVisuals/                         # Private custom visuals only
 +-- definition/
@@ -127,6 +127,13 @@ For detailed report design guidance (layout, spacing, visual hierarchy, color, a
 | Fix broken field references after model changes | **`references/how-to/fix-broken-field-references.md`** -- diagnosis, repair workflow for renamed/moved/removed fields, slicer value pitfalls |
 | Convert legacy report.json to PBIR format | **`references/how-to/convert-legacy-to-pbir.md`** -- format differences, step-by-step conversion, projections-to-queryState mapping, validation |
 | Understand reportExtensions.json schema | **`references/report-extensions.md`** -- file schema structure, entities, visual calculations; see `references/measures.md` for DAX authoring patterns |
+| Set dynamic (measure-driven) alt text | **`references/visual-container-formatting.md`** -- altText as a Measure expression under visualContainerObjects.general |
+| Add a dynamic text run to a textbox | **`references/textbox.md`** -- measure-bound textRuns; round-trip from Desktop required |
+| Understand drill-down cross-filter behavior | **`references/visual-json.md`** -- drillFilterOtherVisuals vs visualInteractions |
+| Register a custom visual (AppSource, org-store, private .pbiviz) | **`references/report.md`** -- publicCustomVisuals, organizationCustomVisuals, resourcePackages |
+| Understand schema version coupling | **`references/schemas.md`** -- parent/embedded schema sets, copying fragments between reports |
+| Set up mobile (phone) layout | **`references/pbir-structure.md`** -- mobile.json per-visual, coordinate space, git hygiene |
+| Git hygiene for a PBIR project | **`references/pbir-structure.md`** -- what to track, ignore, and leave to Desktop |
 
 ## definition.pbir
 
@@ -149,9 +156,10 @@ A report must be connected to a semantic model. There are two ways to do this:
 - **`examples/visuals/`** -- 54 standalone visual.json examples; see `examples/visuals/__index.md` for a catalog. Split into `default/` (minimal, theme-only) and `formatted/` (bespoke formatting, conditional formatting, gradients, filters)
 
 **Core references:**
-- **`references/visual-json.md`** -- visual.json: expressions, field refs, query roles, position, objects vs vCO, selectors, sorting, filters
-- **`references/pbir-structure.md`** -- PBIR folder structure details
-- **`references/schemas.md`** -- Schema versions and URLs
+- **`references/visual-json.md`** -- visual.json: expressions, field refs, query roles, position, objects vs vCO, selectors, sorting, filters, drill-down propagation
+- **`references/desktop-bridge.md`** -- Verifying PBIR edits on the canvas via the Desktop Bridge CLI (`powerbi-desktop` reload + screenshot); preview setting; locating the open PBIP
+- **`references/pbir-structure.md`** -- PBIR folder structure, mobile.json storage mechanics, git hygiene
+- **`references/schemas.md`** -- Schema versions, URLs, and embedded schema coupling
 - **`references/enumerations.md`** -- Valid property enumerations
 - **`references/version-json.md`** -- version.json format (concise)
 - **`references/platform.md`** -- .platform file format (concise)
@@ -160,14 +168,14 @@ A report must be connected to a semantic model. There are two ways to do this:
 **Formatting & expressions:**
 - **`references/theme.md`** -- Theme wildcards, inheritance, color system, filter pane styling, visual-type overrides. Includes jq patterns for inspecting and modifying theme JSON directly
 - **`references/schema-patterns/`** -- Expressions, selectors, conditional formatting, visual calculations
-- **`references/visual-container-formatting.md`** -- objects vs visualContainerObjects deep-dive
+- **`references/visual-container-formatting.md`** -- objects vs visualContainerObjects deep-dive; dynamic (measure-driven) altText
 - **`references/measures-vs-literals.md`** -- When to use measure expressions vs literal values
 - **`references/measures.md`** -- Extension measure patterns
 
 **Visual & page configuration:**
-- **`references/textbox.md`** -- Textbox visual format
+- **`references/textbox.md`** -- Textbox visual format; dynamic (measure-bound) text runs
 - **`references/page.md`** -- Page configuration and backgrounds
-- **`references/report.md`** -- Report-level settings
+- **`references/report.md`** -- Report-level settings; custom visual registration (AppSource, org-store, private .pbiviz)
 - **`references/wallpaper.md`** -- Report wallpaper/canvas background
 - **`references/filter-pane.md`** -- Filter pane formatting
 - **`references/sort-visuals.md`** -- Visual sort configuration

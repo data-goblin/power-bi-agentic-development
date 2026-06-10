@@ -9,7 +9,7 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-pbir.sh\"",
             "timeout": 10,
-            "if": "Edit(**.Report/**)"
+            "if": "Edit(**/*.Report/**)"
           },
           {
             "type": "command",
@@ -32,7 +32,7 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-pbir.sh\"",
             "timeout": 10,
-            "if": "Write(**.Report/**)"
+            "if": "Write(**/*.Report/**)"
           },
           {
             "type": "command",

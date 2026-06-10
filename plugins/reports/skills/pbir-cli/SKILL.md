@@ -1,7 +1,7 @@
 ---
 name: pbir-cli
-version: 26.20
-description: This skill should be used whenever the user mentions "pbir", "pbir-cli", "Power BI reports", or "PBI reports", or works with .pbir, .pbip, or .pbix files. Covers creating, exploring, formatting, validating, and publishing Power BI reports through the pbir CLI and object model.
+version: 26.24
+description: This skill should be used whenever the user mentions "pbir", "pbir-cli", "Power BI reports", or "PBI reports", works with .pbir, .pbip, or .pbix files, or wants to refresh, screenshot, or visually verify a report that is open in Power BI Desktop. Covers creating, exploring, formatting, validating, and publishing Power BI reports through the pbir CLI and object model, plus driving Power BI Desktop (canvas reload, page screenshots) and querying connected or local semantic models.
 ---
 
 # Working with Power BI reports using `pbir`
@@ -31,7 +31,7 @@ Keep entries concise and generalizable. The memory file is not a change log. Pru
 3. Clarify intent. For vague or open-ended instructions, consult **`references/vague-prompts.md`** and use `AskUserQuestion` to understand expectations and report context before mutating anything.
 4. Plan changes. For new reports, pages, or visuals, draft a wireframe or mock-up for the user to approve before building.
 5. Make changes. Reach for relevant files in `references/`, `examples/`, and related skills like `pbi-report-design`.
-6. Validate. Run `pbir validate` after every mutation. For visual confirmation, ask permission to publish to a sandbox workspace with `pbir publish` and inspect rendering via Chrome MCP, devtools CLI, or Playwright.
+6. Validate. Run `pbir validate` after every mutation. For visual confirmation, prefer the local loop when the report is open in Power BI Desktop: `pbir desktop refresh` then `pbir desktop screenshot` and inspect the PNG (see "Desktop Integration" below). Otherwise ask permission to publish to a sandbox workspace with `pbir publish` and inspect rendering via Chrome MCP, devtools CLI, or Playwright.
 7. Iterate. Expect multiple rounds. Push back on one-shot expectations from vague prompts.
 8. Record learnings. Add concise, generalizable entries to the memory file noted above.
 
@@ -52,6 +52,7 @@ Format: `ReportName.Report/PageName.Page/VisualName.Visual`
 - Properties via `get` or `set` and dot notation: `"Report.Report/Page.Page/Visual.Visual.title.fontSize"`
 - Filters/bookmarks: `"Report.Report/filter:Name"`, `"Report.Report/bookmark:Name"`
 - If multiple reports match, disambiguate with parent folder prefix
+- Absolute filesystem paths work too: `"C:\Reports\Sales.Report"`, `"C:\Reports\Flash.pbix"` (globs do not combine with absolute paths)
 - Workspace destinations use `.Workspace` suffix: `"My Workspace.Workspace/Report.Report"`
 
 
@@ -102,7 +103,23 @@ pbir model "Report.Report" -q "EVALUATE ROW(\"Revenue\", [Total Revenue])"  # Te
 pbir fields list "Report.Report"                 # Fields already in use across report
 ```
 
+Routing depends on the report's model reference: thin reports (`byConnection`) query the Power BI / Fabric service; thick reports (`byPath`) query the local Analysis Services engine of the Power BI Desktop instance that has the report open, so `-q` and `-d` work fully offline against live model state. Local queries need the .NET Framework ADOMD client (found automatically from DAX Studio or Desktop installs; override with `PBIR_ADOMD_DIR`).
+
 For full model query patterns and field binding workflows, consult **`references/fields-and-bindings.md`**.
+
+### Desktop Integration (Refresh and Screenshot)
+
+When the report is open in Power BI Desktop (Windows, with the "external tool access" preview feature enabled), drive the running instance directly. This is the fastest way to visually verify changes; no publishing required.
+
+```bash
+pbir desktop list                                     # Running instances (PID, open file)
+pbir desktop refresh "Report.Report"                  # Reload on-disk definition into the canvas
+pbir desktop screenshot "Report.Report/Page.Page" -o verify.png
+```
+
+The edit-verify loop: mutate with `pbir set`/`add`, then `pbir desktop refresh`, then `pbir desktop screenshot`, then read the PNG. Inspect the rendered page after every meaningful change; screenshots catch what validation cannot (overlap, truncation, wrong field, illegible formatting). Set `PBIR_DESKTOP_AUTO_REFRESH=1` to fold the refresh step into every save.
+
+Screenshots need the Desktop window in the Report view. Refreshing an instance with unsaved changes makes Desktop save first, rewriting the whole definition on disk. PBIX files support screenshot but not refresh. For requirements, multi-instance behavior, and troubleshooting, consult **`references/desktop-integration.md`**.
 
 ### Creating Reports
 
@@ -299,6 +316,7 @@ Data:                fields, filters, dax, bookmarks, annotations
 Theme:               theme (colors, text-classes, fonts, set-formatting, apply-template, diff)
 Schema discovery:    schema (types, containers, describe), visuals properties, visuals format
 Workflow ops:        validate, backup, restore, publish, download, batch, open, bpa
+Desktop (Windows):   desktop (list, refresh, screenshot)
 ```
 
 Notes on the less-obvious groups:
@@ -328,7 +346,8 @@ Top-level flags; place before the subcommand: `pbir -q new report ...`, NOT `pbi
 - **`pbir filters list` has no `-v` flag.** Use `--json` for detailed output.
 - **Do not convert to PBIX then publish the PBIR folder.** If converting to PBIX, publish the `.pbix` file directly. If publishing PBIR, skip conversion entirely.
 - **`pbir pages rename` renames folders only**; it does not change page IDs or display names. Use `--to` for single page folder rename.
-- **Model schema is fetched via TMDL, not DMV**. `pbir model -q` runs EVALUATE DAX only; `INFO.TABLES()` and other DMVs return 400. Use `pbir model -d` for schema introspection.
+- **DMV queries fail against service-connected models.** For thin reports (`byConnection`), `pbir model -q` runs EVALUATE DAX only; `INFO.TABLES()` and other DMVs return 400 from the service, and schema comes from TMDL. Use `pbir model -d` for schema introspection. Thick reports (`byPath`) open in Desktop query the local engine instead, where the live schema is used.
+- **`pbir desktop refresh` does not work on PBIX files.** Desktop only reloads PBIP/PBIR definitions from disk; PBIX instances support `pbir desktop screenshot` only.
 - **Always run `pbir <command> --help`** before using an unfamiliar command to confirm exact syntax.
 
 
@@ -365,6 +384,7 @@ Run `pbir validate "Report.Report"` after **every mutation**. This catches broke
 ```yaml
 references/cli-reference.md: full syntax for any command with all flags
 references/exploration.md: exploring an unfamiliar report systematically
+references/desktop-integration.md: driving Power BI Desktop; canvas refresh, page screenshots, auto-refresh, local model queries, troubleshooting
 references/create-new-report.md: building a report from scratch
 references/add-new-visual.md: adding visuals, layout patterns, bulk creation
 references/visual-groups.md: visual groups (create, add/remove members, ungroup)

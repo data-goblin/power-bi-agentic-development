@@ -10,11 +10,15 @@ Tier 1 DAX patterns (DAX001-DAX021) and Tier 2 query structure patterns (QRY001-
 
 > **Autonomy: Auto-apply freely. Modify only measure/UDF definitions in the DEFINE block. Keep EVALUATE and SUMMARIZECOLUMNS grouping identical.**
 
+> **Candidate optimizations, not guarantees:** Each pattern is a hypothesis to test. Cardinality, data layout, relationships, filters, storage mode, and engine folding can make a rewrite help, do nothing, or hurt. Apply one or more matching patterns, validate trace/runtime and semantic equivalence after each step, and continue iterating because one rewrite can expose the next optimization opportunity. Keep changes that help; revert changes that do not.
+
 > **Prefer SUMMARIZECOLUMNS:** Fully supported inside measure definitions — earlier restrictions no longer apply. Use it to replace `ADDCOLUMNS`/`SUMMARIZE` patterns (DAX002), pre-materialize context transitions before iterating (DAX006), and cache repeated evaluations into a single virtual table (DAX003). Prefer it over `ADDCOLUMNS(VALUES(...), ...)` unless a specific scenario prevents it.
 
 ### DAX001: Use Simple Column Filter Predicates as CALCULATE Arguments
 
-CALCULATE accepts simple boolean column predicates directly — these are more efficient than wrapping a table in FILTER (causes excessive materialization). Split `&&` into separate filter arguments.
+**Identifier:** `FILTER(Table, ...)` as a filter argument, or combined predicates. Verify trace; simple cases can fold to `WHERE`.
+
+**Action:** Keep filters column-scoped. Replace table filters with boolean predicates, and split `&&` into separate filter arguments.
 
 **Anti-pattern — FILTER with table expression uses an iterator:**
 ```dax
@@ -44,9 +48,11 @@ CALCULATETABLE( 'Sales', 'Sales'[Region] = "West", 'Sales'[Amount] > 1000 )
 
 ---
 
-### DAX002: Replace ADDCOLUMNS/SUMMARIZE with SUMMARIZECOLUMNS
+### DAX002: Use SUMMARIZECOLUMNS for Grouped Calculations
 
-SUMMARIZECOLUMNS defines grouping + calculation in one step, enabling better SE fusion. Replace all ADDCOLUMNS/SUMMARIZE patterns.
+**Identifier:** grouped calculation built with `ADDCOLUMNS`/`SUMMARIZE`. Compare trace against a direct `SUMMARIZECOLUMNS` shape.
+
+**Action:** Use `SUMMARIZECOLUMNS` for grouping + calculation when row shape and filter semantics stay identical.
 
 **Anti-patterns:**
 ```dax
@@ -63,9 +69,11 @@ SUMMARIZECOLUMNS ( 'Sales'[ProductKey], "Total Profit", [Profit] )
 
 ---
 
-### DAX003: Cache Repeated and Context-Independent Expressions in Variables
+### DAX003: Cache Repeated Expressions in Variables
 
-Evaluating the same measure multiple times or placing context-independent expressions inside iterators causes redundant SE queries. Cache in a variable.
+**Identifier:** repeated measure or expression references. Verify with FE time, repeated SE requests, or cache matches.
+
+**Action:** Cache repeated or row-independent expressions in variables at the smallest safe scope.
 
 **Anti-pattern — repeated measure reference:**
 ```dax
@@ -109,9 +117,11 @@ RETURN SUMX( 'Sales', 'Sales'[Quantity] * _AvgPrice * 1.1 )
 
 ---
 
-### DAX004: Remove Duplicate and Redundant Filters
+### DAX004: Remove Redundant Filters
 
-Applying the same filter condition twice — whether as duplicate CALCULATE arguments or as a variable that restates an existing predicate — causes redundant SE evaluation.
+**Identifier:** repeated predicates, duplicate filter tables, or redundant key-set filters.
+
+**Action:** Keep one copy of each filter. Remove key sets or variables that restate an active predicate.
 
 **Anti-pattern — same predicate in CALCULATE + FILTER:**
 ```dax
@@ -146,16 +156,18 @@ VAR Result =
 
 ---
 
-### DAX005: SUMMARIZE with Complex Table Expression
+### DAX005: Move Complex SUMMARIZE Inputs to CALCULATETABLE
 
-Instead of using SUMMARIZE with complex table expressions as the first argument, wrap with CALCULATETABLE instead.
+**Identifier:** `SUMMARIZE` starts from a filtered or computed table expression.
+
+**Action:** Keep grouping simple; move filters to an outer `CALCULATETABLE`.
 
 **Anti-pattern:**
 ```dax
 SUMMARIZE(
-    CALCULATETABLE('Sales', 'Sales'[Year] = 2023, 'Sales'[CustomerKey] IN SellingPOCs),
+    CALCULATETABLE('Sales', 'Sales'[Year] = 2023, 'Customer'[Segment] = "Enterprise"),
     'Sales'[CustomerKey],
-    "DistinctSKUs", DISTINCTCOUNT('Sales'[StoreKey])
+    "DistinctStores", DISTINCTCOUNT('Sales'[StoreKey])
 )
 ```
 
@@ -164,18 +176,20 @@ SUMMARIZE(
 CALCULATETABLE(
     SUMMARIZECOLUMNS(
         'Sales'[CustomerKey],
-        "DistinctSKUs", DISTINCTCOUNT('Sales'[StoreKey])
+        "DistinctStores", DISTINCTCOUNT('Sales'[StoreKey])
     ),
     'Sales'[Year] = 2023,
-    'Sales'[CustomerKey] IN SellingPOCs
+    'Customer'[Segment] = "Enterprise"
 )
 ```
 
 ---
 
-### DAX006: Pre-Materialize Context Transitions with SUMMARIZECOLUMNS
+### DAX006: Precompute Iterator Inputs with SUMMARIZECOLUMNS
 
-Materializing context transition results in SUMMARIZECOLUMNS and iterating over pre-calculated values can improve query plan.
+**Identifier:** iterator over `VALUES(...)` with `CALCULATE` or measure evaluation per row.
+
+**Action:** Precompute iterator rows and values with `SUMMARIZECOLUMNS`, then iterate the materialized result.
 
 **Anti-pattern:**
 ```dax
@@ -198,9 +212,11 @@ SUMX(
 
 ---
 
-### DAX007: Replace IF with INT for Boolean Conversion
+### DAX007: Convert Boolean Tests Without IF
 
-INT with boolean expressions avoids conditional logic callbacks that IF statements trigger.
+**Identifier:** row-by-row `IF`/`SWITCH` boolean conversion. Trace may show `CallbackDataID` when it cannot fold.
+
+**Action:** Convert boolean-to-1/0 tests without `IF`; use a predicate + `COUNTROWS` when counting rows.
 
 **Anti-pattern:**
 ```dax
@@ -218,7 +234,7 @@ SUMX(
 )
 ```
 
-**When the result is a count of qualifying rows, eliminate the iterator and callback entirely with a simple predicate:**
+**Count rows case:** eliminate the iterator and callback with a simple predicate.
 ```dax
 -- Anti-pattern: iterator + conditional = callback
 SUMX( 'Sales', IF('Sales'[Amount] > 1000, 1, 0) )
@@ -231,7 +247,9 @@ CALCULATE( COUNTROWS('Sales'), 'Sales'[Amount] > 1000 )
 
 ### DAX008: Context Transition in Iterator
 
-Context transition is powerful but expensive. Optimize by:
+**Identifier:** measure reference or `CALCULATE` inside an iterator. Verify with FE time or repeated short SE events.
+
+**Action:** Reduce or remove iterator context transitions:
 
 1. **Remove it completely:**
 ```dax
@@ -239,23 +257,29 @@ Context transition is powerful but expensive. Optimize by:
 // Use: SUMX( 'Sales', 'Sales'[Unit Price] * 'Sales'[Quantity] )
 ```
 
-2. **Reduce number of columns:**
+2. **Iterate over a narrow key table:**
 ```dax
-// Instead of: SUMX( 'Account', [Total Sales] )
-// Use: SUMX( VALUES ( 'Account'[Account Key] ), [Total Sales] )
+// Instead of: SUMX( 'Customer', [Total Sales] )
+// Use: SUMX( VALUES('Customer'[CustomerKey]), [Total Sales] )
 ```
 
 3. **Reduce cardinality before iteration:**
 ```dax
-// Instead of: SUMX( 'Account', [Total Sales] * 'Account'[Corporate Discount] )
-// Use: SUMX( VALUES ( 'Account'[Corporate Discount] ), [Total Sales] * 'Account'[Corporate Discount] )
+// Instead of: SUMX( 'Customer', [Total Sales] * 'Customer'[DiscountRate] )
+// Use only when grouping customers by DiscountRate preserves the result:
+SUMX(
+    VALUES('Customer'[DiscountRate]),
+    [Total Sales] * 'Customer'[DiscountRate]
+)
 ```
 
 ---
 
-### DAX009: Wrap SUMMARIZECOLUMNS Filters with CALCULATETABLE
+### DAX009: Externalize SUMMARIZECOLUMNS Filters
 
-Filters passed as direct arguments to SUMMARIZECOLUMNS inside measures can produce unexpected results. Move filters to a wrapping CALCULATETABLE instead.
+**Identifier:** filter arguments inside `SUMMARIZECOLUMNS`. Verify materialization and result shape.
+
+**Action:** Move filters to a wrapping `CALCULATETABLE`.
 
 **Anti-pattern:**
 ```dax
@@ -279,9 +303,11 @@ CALCULATETABLE (
 
 ---
 
-### DAX010: Apply Filters Using CALCULATETABLE Instead of FILTER
+### DAX010: Push Table Filters with CALCULATETABLE
 
-CALCULATETABLE modifies filter context directly for better query plans.
+**Identifier:** standalone `FILTER(...)` table where filter context could be applied directly. Simple cases can fold to `WHERE`.
+
+**Action:** Use `CALCULATETABLE` so the filter applies before the table is consumed.
 
 **Anti-pattern:**
 ```dax
@@ -295,9 +321,11 @@ CALCULATETABLE( 'Sales', 'Sales'[Year] = 2023 )
 
 ---
 
-### DAX011: Distinct Count Alternatives
+### DAX011: Test DISTINCTCOUNT Alternatives
 
-Depending on cardinality and data layout, moving DISTINCTCOUNT to SUMX(VALUES(),1) can improve performance by forcing FE evaluation.
+**Identifier:** `DISTINCTCOUNT`; trace cue is `DCOUNT`, especially when cells have different filter sets.
+
+**Action:** Benchmark `DISTINCTCOUNT` against `SUMX(DISTINCT(), 1)`; keep only if equivalent and faster for the target visual.
 
 **Storage Engine Bound:**
 ```dax
@@ -306,60 +334,60 @@ DISTINCTCOUNT('Sales'[CustomerKey])
 
 **Formula Engine Bound (sometimes faster):**
 ```dax
-SUMX(VALUES('Sales'[CustomerKey]), 1)
+SUMX(DISTINCT('Sales'[CustomerKey]), 1)
 ```
 
 ---
 
-### DAX012: Use ALLEXCEPT Instead of ALL and VALUES Restoration
+### DAX012: Preserve Filters Deliberately
 
-When clearing filter context with ALL() and then restoring specific columns via VALUES(), ALLEXCEPT achieves the same in one operation.
+**Identifier:** `ALLEXCEPT` or `REMOVEFILTERS/ALL + VALUES` used to preserve filters. Validate across report groupings.
 
-**Anti-pattern:**
-```dax
-CALCULATE( [Total Sales], ALL('Sales'), VALUES('Sales'[Region]) )
-```
+**Action:** Choose the preservation form that matches how the retained value is filtered.
 
-**Preferred:**
+**Use `ALLEXCEPT` only when the preserved column is already directly filtered:**
 ```dax
 CALCULATE( [Total Sales], ALLEXCEPT('Sales', 'Sales'[Region]) )
 ```
 
-> **Note:** Only valid when `'Sales'[Region]` is actively filtered. Without it, `VALUES` returns all regions (no-op restore) while `ALLEXCEPT` still clears other filters — the two forms are not equivalent, and `ALL + VALUES` is required.
-
----
-
-### DAX013: SWITCH/IF Branch Optimization in SUMMARIZECOLUMNS
-
-SWITCH/IF inside SUMMARIZECOLUMNS enables branch optimization — the engine evaluates only the matching branch. When this fails, it materializes a full cartesian product. Three things break it:
-
-1. **Multiple aggregations in one branch** — merge into single SUMX: `SUMX('Sales', 'Sales'[SalesAmount] - 'Sales'[TotalCost])`
-2. **Mismatched data types across branches** — an implicit cast breaks the optimization; use explicit conversion: `CONVERT(SUM('Sales'[OrderQuantity]), CURRENCY)`
-3. **Context transition inside a branch iterator** — a measure reference that requires a context transition (e.g., `SUMX(Sales, 'Sales'[Quantity] * [selection])`) forces a full crossjoin. If the measure is context-independent, cache it before the iterator: `VAR _UnitDiscount = [Unit Discount]`
-
----
-
-### DAX014: Use COUNTROWS Instead of DISTINCTCOUNT on Key Columns
-
-Use when a column is a primary key (one-side of a relationship).
-
-**Anti-pattern:**
+**Keep `ALL/REMOVEFILTERS + VALUES` when the preserved value may be cross-filtered by another column:**
 ```dax
-DISTINCTCOUNT ( 'Product'[ProductKey] )
+CALCULATE( [Total Sales], REMOVEFILTERS('Sales'), VALUES('Sales'[Region]) )
 ```
 
-**Preferred:**
-```dax
-COUNTROWS ( 'Product' )
-```
+---
 
-For non-key columns where DISTINCTCOUNT is a bottleneck, see DAX011 for alternatives.
+### DAX013: Keep Branch Measures SE-Friendly
+
+**Identifier:** `SWITCH`/`IF` chooses between measure branches. Verify FE time and unused branch work in trace/query plan.
+
+**Action checklist:**
+- Read the selector column directly filtered by the slicer/query; avoid hidden sort keys unless filtered directly.
+- Keep branches SE-native: one simple aggregation or one fact iterator with row-level arithmetic, not multiple separate aggregations.
+- Use one numeric type across branches; cast mixed branches explicitly.
+- Avoid iterator context transition; lift row-independent measures into variables.
+
+For disconnected parameter tables, prefer field parameters or aligning the selector/filter column before making model metadata changes.
 
 ---
 
-### DAX015: Move Calculation to Lower Granularity
+### DAX014: Use COUNTROWS for Recognized Keys
 
-When an iterator scans a high-cardinality table but the calculation depends on a low-cardinality attribute, iterate over the attribute instead.
+**Identifier:** `DISTINCTCOUNT` over a recognized unique key. Trace may compile to `COUNT`; verify before rewriting.
+
+**Action:** Prefer `COUNTROWS` only when the counted column is a recognized unique key.
+
+- Safe candidates: table key, or one-side key of a regular active relationship.
+- Test first: inactive relationships, `USERELATIONSHIP`, or unmarked keys.
+- Non-key/high-cardinality bottleneck → see DAX011.
+
+---
+
+### DAX015: Iterate at the Required Grain
+
+**Identifier:** iterator scans more rows than a repeated measure/context-transition dependency requires. Do not use for simple SE-native column sums.
+
+**Action:** Iterate the lowest distinct grain only when it removes repeated measure or context-transition work.
 
 **Anti-pattern:**
 ```dax
@@ -375,26 +403,28 @@ SUMX( VALUES('Customer'[DiscountRate]), CALCULATE(SUM('Sales'[Amount])) * 'Custo
 
 ---
 
-### DAX016: Experiment with Relationship Overrides via TREATAS and CROSSFILTER
+### DAX016: Test Relationship Overrides Locally
 
-Relationship direction and filter propagation directly affect SE query plans. Sometimes bidirectional is faster; sometimes explicit filter propagation wins. Use TREATAS and CROSSFILTER to experiment without model changes.
+**Identifier:** bidirectional/M2M filter path, or `TREATAS`/`CROSSFILTER` override. Verify joins in xmSQL.
+
+**Action:** Test alternate filter propagation in the measure with `TREATAS`/`CROSSFILTER` before changing the model.
 
 **Example — replace bidirectional bridge with explicit filter:**
 ```dax
 CALCULATE(
     SUM('Sales'[Amount]),
-    CROSSFILTER('Customer'[CustomerKey], 'SportBridge'[CustomerKey], NONE),
-    TREATAS(VALUES('SportBridge'[CustomerKey]), 'Customer'[CustomerKey])
+    CROSSFILTER('Customer'[CustomerKey], 'CustomerBridge'[CustomerKey], NONE),
+    TREATAS(VALUES('CustomerBridge'[CustomerKey]), 'Customer'[CustomerKey])
 )
 ```
 
 ---
 
-### DAX017: Apply Boolean Multiplier to Unblock Fusion
+### DAX017: Align Scan Shape with Boolean Multipliers
 
-**SE signal:** Near-identical SE queries on the same fact table that differ only by a column filter value or by per-measure `VAND` tuple predicates on the same column.
+**Identifier:** sibling measures differ only by per-measure filters on the same fact. Trace may show near-identical SE scans differing only by `WHERE` values.
 
-**Fix:** Replace the per-measure filter with `SUMX(KEEPFILTERS(ALL(Column)), expr * boolean)` to move the filter from SE to FE, making SE queries structurally identical across measures.
+**Action:** Move the per-measure filter into a boolean multiplier so competing SE scans can share shape; verify fusion in trace.
 
 ```dax
 -- Anti-pattern: separate SE query per measure
@@ -402,21 +432,24 @@ CALCULATE( SUM('Sales'[Amount]), 'Product'[Category] = "Bikes" )
 CALCULATE( SUM('Sales'[Amount]), 'Date'[Date] = _dateAnchor )
 CALCULATE( MAX('Sales'[DateKey]),  'Sales'[Metric] <> 0 )
 
--- Fix: boolean multiplier — structurally identical SE queries → engine fuses
+-- Fix: boolean multiplier — structurally similar SE queries can fuse; verify in trace
 SUMX( KEEPFILTERS(ALL('Product'[Category])), CALCULATE(SUM('Sales'[Amount])) * ('Product'[Category] = "Bikes") )
 SUMX( KEEPFILTERS(ALL('Date'[Date])),        CALCULATE(SUM('Sales'[Amount])) * ('Date'[Date] = _dateAnchor) )
 MAXX( ALL('Date'[Date]),                     CALCULATE(MAX('Sales'[DateKey])) * INT(NOT ISBLANK(CALCULATE(SUM('Sales'[Metric])))) )
 ```
 
-`KEEPFILTERS` preserves external context; when the column is in the groupby, detail cells iterate only 1 row. Works with all aggregation types.
-
-**BLANK → 0 caveat:** the boolean pattern returns 0 instead of BLANK when no data exists. If `ISBLANK()` checks matter downstream, wrap: `VAR _r = SUMX(...) RETURN IF(_r = 0, BLANK(), _r)`.
+- `KEEPFILTERS` preserves external context; column in the groupby → detail cells iterate 1 row.
+- Best for additive (`SUM`-style) aggregations.
+- Validate `MIN`/`MAX`/`AVERAGE`: injected 0 values can corrupt the result.
+- BLANK caveat: returns 0 instead of BLANK when no data exists; wrap if downstream `ISBLANK()` checks matter.
 
 ---
 
-### DAX018: Replace DIVIDE with Division Operator in Iterators
+### DAX018: Keep Iterator Division SE-Native
 
-DIVIDE() includes divide-by-zero protection that forces FE callbacks inside iterators. Use the native `/` operator to keep the expression SE-native. Only use `/` when the denominator is guaranteed non-zero. If zero is possible, pre-filter: `CALCULATETABLE('Items', 'Items'[LocationAdjustment] <> 0)`.
+**Identifier:** `DIVIDE()` inside an iterator. Trace may show `CallbackDataID` when it cannot fold.
+
+**Action:** Use `/` only when the denominator is known non-zero; otherwise pre-filter zero denominators first.
 
 **Anti-pattern:**
 ```dax
@@ -430,11 +463,13 @@ SUMX('Fact', 'Fact'[BaseAmount] * (RELATED('Items'[Discount]) / RELATED('Items'[
 
 ---
 
-### DAX019: Lift Time Intelligence to Outer CALCULATE for Vertical Fusion
+### DAX019: Move Time Windows Outside Sibling Measures
 
-TI functions (DATESYTD, DATEADD, etc.) break vertical fusion — each TI-modified measure gets its own SE query. Keep base measures TI-free and apply TI once in an outer wrapper.
+**Identifier:** sibling measures each apply time-window filters. Verify whether trace shows separate SE scans.
 
-> **Custom time intelligence (VAR-based predicates):** When measures use manual date anchoring via `CALCULATE(expr, Column = _var)` instead of built-in TI functions, DAX019 does not apply — see **DAX017** for the boolean multiplier workaround.
+**Action:** Keep base measures time-window free; apply TI once in the outer `CALCULATE`.
+
+> **Custom time predicates:** `CALCULATE(expr, Column = _var)` does not match this rule; see **DAX017**.
 
 **Anti-pattern — each measure applies TI independently (no fusion):**
 ```dax
@@ -452,9 +487,11 @@ MEASURE 'Sales'[Margin YTD] =
 
 ---
 
-### DAX020: Unblock Horizontal Fusion by Lifting Filters
+### DAX020: Keep Slice Measures Fusion-Friendly
 
-Horizontal fusion merges SE queries that differ only by column-slice filter. It breaks when the filtered column is missing from groupby, or when table-valued / runtime-computed filters are applied per measure. Fix: keep only simple column-slice filters inside base measures; lift everything else (TI, dynamic variables) to an outer CALCULATE.
+**Identifier:** slice measures differ only by simple filters or dynamic values. Verify whether trace fuses or separates scans.
+
+**Action:** Keep slice measures simple and literal; lift time-intelligence or dynamic filters to the combining measure.
 
 **Anti-pattern — TI inside each slice measure (no fusion):**
 ```dax
@@ -469,17 +506,19 @@ MEASURE 'Sales'[Accessories] = CALCULATE ( SUM('Sales'[Amount]), 'Product'[Categ
 MEASURE 'Sales'[Combined YTD] = CALCULATE ( [Bikes] + [Accessories], DATESYTD('Date'[Date]) )
 ```
 
-Same principle applies to runtime variable filters — move them to the consuming measure. See DAX017 when the filtered column is not in the groupby.
+- Variable-driven slicers: leave base measures filter-free; put the dynamic predicate on the outer measure.
+- Sliced column not in the groupby → see DAX017.
 
 ---
 
-### DAX021: Pre-Compute and Join Instead of Filter Round-Trip
+### DAX021: Join Precomputed Key Sets in FE
 
-When a measure computes a qualifying key set from a filtered aggregation and then uses TREATAS or IN to filter a second aggregation by those keys, the outer SUMMARIZECOLUMNS context compounds the key filter with groupby columns — generating large tuple semi-joins (e.g., 500+ `(Brand, Key)` pairs in a single WHERE clause). The compound-tuple SE scan often dominates total query time.
+**Identifier:** computed key set re-filters the same fact via `TREATAS`/`IN`. Trace cue is large `IN`/`INB`; `ININDEX` or compound tuples can also appear.
 
-**SE signal:** `VertiPaqSEQueryEnd` with `DEFINE TABLE ... ININDEX` or `WHERE ... IN` containing hundreds of compound tuples. Single scan duration disproportionately high relative to others.
+**Action:** Precompute both aggregations at the shared key grain, then join in FE.
 
-**Fix:** Pre-compute both aggregations independently at the shared key grain, then join with NATURALINNERJOIN in the FE. The table expression used to build each side — `ADDCOLUMNS(VALUES(...), ...)`, `SUMMARIZECOLUMNS(...)`, etc. — does not matter; the key is that both sides share a common lineage column for the join.
+- Avoid pushing computed key sets back to the fact scan with `TREATAS`/`IN`.
+- Both sides must keep a shared lineage column for `NATURALINNERJOIN`.
 
 **Anti-pattern — TREATAS pushes key set back to SE, compounded by outer groupby:**
 ```dax
@@ -510,7 +549,7 @@ VAR _Joined = NATURALINNERJOIN ( _Qualifying, _UnfilteredAgg )
 VAR _Result = SUMX ( _Joined, [@Agg2] )
 ```
 
-> **Why it works:** Each pre-computed table generates independent SE scans — clean, no tuple filters. NATURALINNERJOIN matches on the shared `'Fact'[Key]` lineage column in the FE, replacing the expensive compound-tuple SE round-trip with a fast in-memory join over small pre-materialized tables.
+> **Goal:** replace the final key-set fact scan with precomputed tables and an FE join. Keep only if trace/runtime improves.
 
 ---
 
@@ -519,7 +558,7 @@ VAR _Result = SUMX ( _Joined, [@Agg2] )
 > **STOP — Requires user approval before applying any change. Explain the impact on query output and wait for explicit confirmation.**
 
 > **Scope: Desktop-Achievable Changes Only**
-> 
+>
 > Every Tier 2 recommendation must map to an action the report author can perform in Power BI Desktop's UI. The agent optimizes the *generated* DAX query, but the user implements changes through the Desktop interface — not by editing DAX directly in the query pane. Examples of valid changes:
 > - **Changing the axis/groupby field** (e.g., swap `Calendar Date` for `Calendar Month` on a visual axis)
 > - **Removing or adding visual-level filters** (e.g., drop an unneeded slicer selection)
@@ -529,11 +568,11 @@ VAR _Result = SUMX ( _Joined, [@Agg2] )
 
 ### QRY001: Remove Unneeded Filters
 
-Every filter adds a `WHERE` clause in xmSQL and may force an extra SE join. Users often apply global slicer or visual-level filters that don't actually affect the calculation being optimized.
+Every filter adds a `WHERE` clause in xmSQL and may force an extra SE join. Users often apply slicer or visual-level filters that don't affect the calculation being optimized.
 
 **Detection:** `WHERE` clauses on columns not used in the measure logic, or filter variables that restrict to a single value (e.g., `Currency[Code] = "USD"` in a USD-only model).
 
-**Fix:** Experiment — remove filters one at a time and re-run. If the result doesn't change, the filter might be unnecessary. Global filters that are needed across all visuals should be pushed to the data source (model-level change — see [Section 5](./model-optimization.md#section-5-tier-3-model-optimization-patterns)).
+**Fix:** Remove filters one at a time and re-run; if the result doesn't change, the filter is unneeded. Filters needed across all visuals → push to the data source (model-level — see [Section 5](./model-optimization.md#section-5-tier-3-model-optimization-patterns)).
 
 ```dax
 -- Before: filter on Currency adds an SE join for no benefit
@@ -551,7 +590,7 @@ SUMMARIZECOLUMNS ( 'Product'[Category], "Revenue", [Total Revenue] )
 
 ### QRY002: Eliminate Report Measure Filters (__ValueFilterDM)
 
-When a visual filters on a measure value (e.g., "Revenue > 1M"), Power BI generates a `__ValueFilterDM` variable that evaluates the measure twice — once for the filter check, once for display. Roughly doubles execution time.
+When a visual filters on a measure value (e.g., "Revenue > 1M"), Power BI generates a `__ValueFilterDM` variable that can evaluate the measure twice — once for the filter check, once for display.
 
 **Detection:** `__ValueFilterDM` in the generated query.
 

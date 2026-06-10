@@ -1,6 +1,6 @@
 ---
 name: svg-visuals
-version: 26.20
+version: 26.24
 description: SVG generation via DAX measures and extension measures with ImageUrl data category for inline visualizations in PBIR reports. Automatically invoke when the user mentions "SVG visual", "DAX sparkline", "SVG measure", "inline graphics with DAX", "ImageUrl data category", "extension measure", or asks to create any DAX-generated chart (progress bars, bullet charts, KPI indicators, data bars, gauges, donut charts, lollipop charts, dumbbell charts, status pills, overlapping bars, boxplots, IBCS bars, jitter plots, box-and-whisker charts).
 ---
 
@@ -22,13 +22,11 @@ Generate inline SVG graphics using DAX measures that return SVG markup strings. 
 
 ## Supported Visuals
 
-| Visual | visualType | Binding | Reference |
-|--------|------------|---------|-----------|
-| Table | `tableEx` | `grid.imageHeight` / `grid.imageWidth` | `references/svg-table-matrix.md` |
-| Matrix | `pivotTable` | Same as table | `references/svg-table-matrix.md` |
-| Image | `image` | `sourceType='imageData'` + `sourceField` | `references/svg-image-visual.md` |
-| Card (New) | `cardVisual` | `callout.imageFX` | `references/svg-card-slicer.md` |
-| Slicer (New) | `advancedSlicerVisual` | Header images | `references/svg-card-slicer.md` |
+- Table (`tableEx`): `grid.imageHeight` / `grid.imageWidth` -- `references/svg-table-matrix.md`
+- Matrix (`pivotTable`): same as table -- `references/svg-table-matrix.md`
+- Image (`image`): `sourceType='imageData'` + `sourceField` -- `references/svg-image-visual.md`
+- Card/New (`cardVisual`): `callout.imageFX` -- `references/svg-card-slicer.md`
+- Slicer/New (`advancedSlicerVisual`): header images -- `references/svg-card-slicer.md`
 
 ## Workflow: Creating an SVG Measure
 
@@ -216,19 +214,21 @@ VAR _Points = CONCATENATEX(
 
 ## Best Practices
 
-1. **Check UDF libraries first** -- use DaxLib.SVG or MacGuyver Toolbox functions before writing custom DAX
-2. **VAR pattern mandatory** -- one VAR per config value, one VAR per SVG element, assembly at the end
-3. **Normalize all values** -- raw measure values must be scaled to SVG coordinate range
-4. **HASONEVALUE guard** -- always guard against total/subtotal rows in table/matrix context
-5. **`<desc>` sort trick** -- embed formatted value in `<desc>` for sortable SVG columns
-6. **Use `viewBox`** for responsive scaling instead of fixed width/height
-7. **Round coordinates** to 1-2 decimal places for performance
-8. **Store as extension measures** -- SVG measures don't belong in the semantic model
-9. **Use `display_folder`** to organize SVG measures together (e.g., `"SVG Charts"`)
-10. **Preview first** -- save static SVG to `/tmp/`, open in browser, iterate before writing DAX
-11. **Limit complexity** -- ~32K character limit on rendered SVG string (not DAX expression)
-12. **Hex colors only** -- `#` directly, never `%23` URL encoding
-13. **Image visuals need no `query` block** -- only `objects.image` with `sourceType='imageData'` and `sourceField`
+- Check UDF libraries first -- use DaxLib.SVG or MacGuyver Toolbox functions before writing custom DAX
+- VAR pattern mandatory -- one VAR per config value, one VAR per SVG element, assembly at the end
+- Normalize all values -- raw measure values must be scaled to SVG coordinate range
+- HASONEVALUE guard -- always guard against total/subtotal rows in table/matrix context; use `ISINSCOPE` for nested hierarchy levels
+- `<desc>` sort trick -- embed formatted value in `<desc>` for sortable SVG columns
+- Use `viewBox` for responsive scaling instead of fixed width/height
+- Round coordinates to integers for performance (shorter strings, cheaper FORMAT calls)
+- Store as extension measures -- SVG measures don't belong in the semantic model
+- Use `display_folder` to organize SVG measures (e.g., `"SVG Charts"`)
+- Preview first -- save static SVG to `/tmp/`, open in browser, iterate before writing DAX
+- 32K character limit on the rendered SVG string per cell (not the DAX expression); see `references/svg-table-matrix.md` for diagnosis and mitigation
+- Pre-aggregate in model measures -- let the storage engine cache aggregations; the SVG measure maps numbers to coordinates only
+- Hex colors only -- `#` directly, never `%23` URL encoding
+- Image visuals need no `query` block -- only `objects.image` with `sourceType='imageData'` and `sourceField`
+- Accessibility: every SVG encoding primary data needs adjacent readable columns and a dynamic alt-text measure; see `references/svg-accessibility.md`
 
 ## reportExtensions.json Format
 
@@ -251,11 +251,12 @@ VAR _Points = CONCATENATEX(
 
 ## Limitations
 
-- **No interactivity** -- SVG images are static (no hover, click, tooltip)
-- **No JavaScript** -- inline scripts are stripped
-- **32K character limit** -- on the rendered SVG string, not the DAX expression. CONCATENATEX over 30+ rows easily exceeds this. Prefer polylines over individual dots, integer coordinates over decimals. Split complex designs into multiple simpler measures or use Deneb instead.
-- **Performance** -- complex SVG with many elements impacts rendering
-- **Classic card** does NOT support SVG -- use `cardVisual` instead
+- No interactivity -- SVG images are static (no hover, click, tooltip)
+- No JavaScript -- inline scripts are stripped
+- 32K character limit per rendered cell string (not the DAX expression); `CONCATENATEX` over 30+ series points easily approaches this; prefer `<polyline>` over individual shapes, integer coordinates, and pre-aggregated series; see `references/svg-table-matrix.md` for full diagnosis
+- Per-cell formula-engine cost -- each visible cell evaluates the string-building expression; push aggregations into model measures so SVG assembly is coordinate-mapping only
+- Accessibility gap -- screen readers receive no per-cell data from an SVG URI; mitigate with adjacent readable columns and dynamic alt text; see `references/svg-accessibility.md`
+- Classic card (`card`) does NOT support SVG -- use `cardVisual` instead
 
 ## When to Use SVG Measures
 
@@ -276,9 +277,13 @@ SVG measures are the preferred choice for **simple inline graphics** embedded in
 
 ### By Visual Type
 
-- **`references/svg-table-matrix.md`** -- Patterns for Table/Matrix: data bar, bullet chart, dumbbell, overlapping bars, lollipop, status pill, sparkline, bar sparkline, area sparkline, UDF patterns. Includes axis normalization, sort trick, and image size configuration.
-- **`references/svg-image-visual.md`** -- Patterns for Image visuals: KPI header, sparkline with endpoint, dashboard tile. Covers sourceType, Python API, and design considerations.
-- **`references/svg-card-slicer.md`** -- Patterns for Card/Slicer: arrow indicator, mini gauge, mini donut, progress bar. Card binding via `callout.imageFX`.
+- **`references/svg-table-matrix.md`** -- Patterns for Table/Matrix: data bar, bullet chart, dumbbell, overlapping bars, lollipop, status pill, sparkline, bar sparkline, area sparkline, UDF patterns; axis normalization, sort trick, image size configuration, and per-cell performance guidance
+- **`references/svg-image-visual.md`** -- Patterns for Image visuals: KPI header, sparkline with endpoint, dashboard tile; sourceType binding, dynamic/conditional layout, responsive width guidance
+- **`references/svg-card-slicer.md`** -- Patterns for Card/Slicer: arrow indicator, mini gauge, mini donut, progress bar, narrative sentence; card binding via `callout.imageFX`
+
+### Accessibility
+
+- **`references/svg-accessibility.md`** -- Accessibility for SVG measures: adjacent readable columns, dynamic alt text, color-only encoding, contrast requirements, and severity guidance for audit findings
 
 ### General
 

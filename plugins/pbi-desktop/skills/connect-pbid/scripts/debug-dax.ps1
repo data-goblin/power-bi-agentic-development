@@ -1,7 +1,8 @@
 # Debug DAX expressions using EVALUATEANDLOG and the TOM Trace API.
 # Captures intermediate results and performance timings programmatically.
 #
-# Usage: Modify $port and $queries, then run.
+# Usage: Run with -Port <port> (auto-detected if omitted). Add Invoke-DebugQuery
+# calls in the "Run Queries" region, then rerun.
 # Requires TOM + ADOMD.NET NuGet packages (see connect-pbid skill Section 1).
 
 param(
@@ -48,8 +49,8 @@ Write-Output "Connected to: $($db.Name) on port $Port"
 # DAX Evaluation Log trace
 $evalTrace = $server.Traces.Add("EvalDbg_" + [guid]::NewGuid().ToString("N").Substring(0,8))
 $te = $evalTrace.Events.Add([Microsoft.AnalysisServices.TraceEventClass]::DAXEvaluationLog)
-$te.Columns.Add([Microsoft.AnalysisServices.TraceColumn]::TextData)
-$te.Columns.Add([Microsoft.AnalysisServices.TraceColumn]::EventClass)
+$te.Columns.Add([Microsoft.AnalysisServices.TraceColumn]::TextData) | Out-Null
+$te.Columns.Add([Microsoft.AnalysisServices.TraceColumn]::EventClass) | Out-Null
 $evalTrace.Update()
 
 $evalEvents = [System.Collections.ArrayList]::Synchronized((New-Object System.Collections.ArrayList))
@@ -63,14 +64,14 @@ $perfTrace = $server.Traces.Add("PerfDbg_" + [guid]::NewGuid().ToString("N").Sub
 foreach ($ec in @([Microsoft.AnalysisServices.TraceEventClass]::QueryEnd,
                   [Microsoft.AnalysisServices.TraceEventClass]::VertiPaqSEQueryEnd)) {
     $pte = $perfTrace.Events.Add($ec)
-    $pte.Columns.Add([Microsoft.AnalysisServices.TraceColumn]::TextData)
-    $pte.Columns.Add([Microsoft.AnalysisServices.TraceColumn]::EventClass)
-    $pte.Columns.Add([Microsoft.AnalysisServices.TraceColumn]::Duration)
-    $pte.Columns.Add([Microsoft.AnalysisServices.TraceColumn]::CpuTime)
+    $pte.Columns.Add([Microsoft.AnalysisServices.TraceColumn]::TextData) | Out-Null
+    $pte.Columns.Add([Microsoft.AnalysisServices.TraceColumn]::EventClass) | Out-Null
+    $pte.Columns.Add([Microsoft.AnalysisServices.TraceColumn]::Duration) | Out-Null
+    $pte.Columns.Add([Microsoft.AnalysisServices.TraceColumn]::CpuTime) | Out-Null
 }
 $pte2 = $perfTrace.Events.Add([Microsoft.AnalysisServices.TraceEventClass]::VertiPaqSEQueryCacheMatch)
-$pte2.Columns.Add([Microsoft.AnalysisServices.TraceColumn]::TextData)
-$pte2.Columns.Add([Microsoft.AnalysisServices.TraceColumn]::EventClass)
+$pte2.Columns.Add([Microsoft.AnalysisServices.TraceColumn]::TextData) | Out-Null
+$pte2.Columns.Add([Microsoft.AnalysisServices.TraceColumn]::EventClass) | Out-Null
 $perfTrace.Update()
 
 $perfEvents = [System.Collections.ArrayList]::Synchronized((New-Object System.Collections.ArrayList))
@@ -126,7 +127,19 @@ function Invoke-DebugQuery {
     $sw.Stop()
     $conn.Close()
 
-    Start-Sleep -Milliseconds 800
+    # Trace events arrive asynchronously; DAXEvaluationLog typically lags the
+    # query by 2-3.5s. Poll up to 10s instead of a fixed sleep.
+    $expectEval = $Query -match "EVALUATEANDLOG"
+    $deadline = [DateTime]::UtcNow.AddSeconds(10)
+    while ([DateTime]::UtcNow -lt $deadline) {
+        $evalReady = (-not $expectEval) -or ($evalEvents.Count -gt $esi)
+        $perfReady = $perfEvents.Count -gt $psi
+        if ($evalReady -and $perfReady) {
+            Start-Sleep -Milliseconds 300   # let trailing events in the same batch land
+            break
+        }
+        Start-Sleep -Milliseconds 500
+    }
 
     # Performance
     $qe = @($perfEvents[$psi..($perfEvents.Count-1)] | Where-Object { $_.EventClass -eq "QueryEnd" })

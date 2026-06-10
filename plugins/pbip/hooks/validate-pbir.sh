@@ -169,7 +169,8 @@ validate_file() {
                 (has("name") | tostring),
                 (has("displayName") | tostring),
                 (has("displayOption") | tostring),
-                (.name // "")
+                (.name // ""),
+                (.displayOption // "")
             ' "$FILE_PATH" 2>/dev/null) || return 0
 
             VALS=()
@@ -177,6 +178,7 @@ validate_file() {
             SCHEMA="${VALS[0]:-}"
             local HAS_NAME="${VALS[1]:-}" HAS_DISPLAY_NAME="${VALS[2]:-}"
             local HAS_DISPLAY_OPTION="${VALS[3]:-}" NAME="${VALS[4]:-}"
+            local DISPLAY_OPTION="${VALS[5]:-}"
 
             if check_enabled required_fields; then
                 MISSING=()
@@ -192,6 +194,23 @@ validate_file() {
                     echo "$SKILL_TIP" >&2
                     return 2
                 fi
+            fi
+
+            # Valid displayOption values per the Microsoft PageDisplayOption schema.
+            if check_enabled enum_values && [[ -n "$DISPLAY_OPTION" ]]; then
+                case "$DISPLAY_OPTION" in
+                    FitToPage|FitToWidth|ActualSize|DeprecatedDynamic|ActualSizeTopLeft) ;;
+                    *)
+                        echo "PBIR validation failed: $FILE_PATH" >&2
+                        echo "" >&2
+                        echo "Invalid displayOption value: '$DISPLAY_OPTION'" >&2
+                        echo "Valid: FitToPage, FitToWidth, ActualSize (DeprecatedDynamic and ActualSizeTopLeft are deprecated)." >&2
+                        echo "A 16:9 page ratio comes from height/width (e.g. 1080/1920), not displayOption." >&2
+                        echo "" >&2
+                        echo "$SKILL_TIP" >&2
+                        return 2
+                        ;;
+                esac
             fi
 
             if check_enabled schema_url && [[ -n "$SCHEMA" ]]; then

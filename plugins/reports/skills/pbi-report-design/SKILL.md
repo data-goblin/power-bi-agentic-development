@@ -1,10 +1,8 @@
 ---
 name: pbi-report-design
-version: 26.20
+version: 26.24
 description: Power BI report design principles, layout guidance, and formatting best practices. Automatically invoke when the user asks about "report layout", "design best practices", "visual hierarchy", "3-30-300 rule", "KPI card design", "page layout", "accessibility in reports", "visual spacing", "report canvas", "card design patterns", "table formatting", "matrix formatting", or mentions report design principles.
 ---
-
-Warning: This skill is incomplete and still in progress, but may provide value already as-is -- Kurt
 
 # Power BI Report Design
 
@@ -113,12 +111,10 @@ Before modifying visual formatting:
 
 ### When to Modify Theme vs Visual
 
-| Scenario | Modify |
-|----------|--------|
-| All visuals of type need change | Theme |
-| Single visual exception | Visual |
-| Establishing design standards | Theme |
-| Content-specific highlight | Visual |
+- All visuals of a type need change -> theme
+- Establishing design standards -> theme
+- Single visual exception to a theme rule -> visual
+- Content-specific highlight (one callout, one reference line) -> visual
 
 ### Theme Color Usage
 
@@ -203,6 +199,8 @@ For complete guidance on KPI design, targets, trends, formatting hierarchy, icon
 - Use muted colors for non-essential elements
 - Highlight key data points sparingly
 
+For chart-type selection (encoding hierarchy, Cleveland-McGill ranking), data-label discipline, and small-multiples guidance, consult **`references/chart-selection.md`**.
+
 ### Tables and Matrices
 
 Tables require deliberate design -- "easy to create" differs from "easy to read." Key rules:
@@ -226,6 +224,14 @@ For complete guidance on table vs matrix selection, formatting philosophy, condi
 - Use filter pane for additional filters
 - Consider sync slicers across pages
 
+### Filter Pane
+
+The filter pane has its own information architecture beyond color and chrome. Key decisions: lock vs hide per filter card, how to name cards without renaming model fields, and report-level settings (Apply button, search, allow-change-filter-type). See **`references/filter-pane.md`**.
+
+### Mobile
+
+Power BI does not reflow a desktop page for portrait; the phone layout is a hand-picked subset re-placed on a narrow grid. Nothing renders on a phone until explicitly opted in with a `mobile.json`. See **`references/mobile.md`** for the subset-selection model and file mechanics.
+
 ## Report Evaluation Criteria
 
 When asked to evaluate or audit a report, focus on objective criteria. Subjective evaluation is difficult for AI -- the report cannot be "seen" directly, and there is no intuitive sense of aesthetics, cognitive load, or effectiveness. Emphasize this limitation to users.
@@ -233,7 +239,7 @@ When asked to evaluate or audit a report, focus on objective criteria. Subjectiv
 ### Objective Checklist
 
 1. **Page count:** More than 5-8 pages is typically excessive
-2. **Visuals per page:** More than 12-15 can cause performance issues (exceptions: simple visuals like images, textboxes, shapes)
+2. **Visuals per page:** Count is a proxy; query cost per visual is the driver (see `references/layout-guidelines.md` performance section). Textboxes, images, shapes, and buttons do not emit queries.
 3. **Theme usage:** Reports should use a custom theme for consistent formatting
 4. **Layout consistency:**
    - Equal spacing between visuals?
@@ -295,13 +301,16 @@ When evaluating, provide:
 
 ## References
 
-For detailed documentation:
-
-- **`references/cards-and-kpis.md`** - KPI card design: targets, gaps, trends, formatting hierarchy, icons, accessible palettes, anti-patterns, and review checklist
-- **`references/tables-and-matrices.md`** - Table and matrix design: decision-making framework, formatting philosophy (subtract don't add), conditional formatting (data bars, color scales), sorting, sparklines, matrix hierarchies, anti-patterns
-- **`references/layout-guidelines.md`** - Complete layout specifications
-- **`references/visual-colors.md`** - Color usage patterns
-- **`references/page-titles.md`** - Title implementation
+- **`references/cards-and-kpis.md`** -- KPI card design: targets, gaps, trends, formatting hierarchy, icons, accessible palettes, anti-patterns, review checklist
+- **`references/tables-and-matrices.md`** -- Table and matrix design: decision-making framework, subtract-don't-add philosophy, conditional formatting, sorting, sparklines, matrix hierarchies, anti-patterns
+- **`references/layout-guidelines.md`** -- Canvas dimensions, spacing tiers (intra-group/inter-group/margin), alignment rules, performance cost model
+- **`references/visual-colors.md`** -- Color principles, CF basis decision (gradient vs rules vs field-value vs icons), semantic tokens, accessibility
+- **`references/page-titles.md`** -- Title implementation, accessible title wording, hidden-title/alt-text rule
+- **`references/chart-selection.md`** -- Encoding hierarchy (Cleveland-McGill ranking), chart type routing, data-label discipline, small multiples
+- **`references/tooltips-and-annotations.md`** -- Report-page tooltip design, when not to use one, annotation primitives for guided analytics
+- **`references/filter-pane.md`** -- Lock vs hide, card naming, card order, Applied/Available styling, report-level settings
+- **`references/mobile.md`** -- Phone layout as a curated subset, `mobile.json` mechanics, what to include/exclude
+- **`references/custom-visuals.md`** -- Build-vs-buy ranking, AppSource/org-store tradeoffs, licensing gaps
 
 ## Related Skills
 
@@ -312,12 +321,13 @@ For detailed documentation:
 
 ### Custom Visuals
 
-Reports often need visuals beyond what Power BI provides natively. Choose the right tool:
+Reports often need visuals beyond what Power BI provides natively. Always consider in-repo code paths before reaching for a packaged third-party visual. See **`references/custom-visuals.md`** for the build-vs-buy decision and AppSource/org-store tradeoffs.
 
-- **`deneb-visuals`** -- Vega/Vega-Lite declarative visuals. Preferred for advanced custom interactive charts (cross-filtering, tooltips, hover). Use when native visuals can't express the chart type needed.
-- **`svg-visuals`** -- SVG via DAX measures. Preferred for simple inline graphics in tables, matrices, and cards (sparklines, data bars, progress bars, status indicators). No interactivity but lightweight and no custom visual registration needed.
-- **`python-visuals`** -- matplotlib/seaborn scripts (static PNG). Preferred for statistical visualizations (distributions, regressions, correlations). No interactivity.
-- **`r-visuals`** -- ggplot2 scripts (static PNG). Preferred for statistical visualizations, particularly where R's ecosystem excels (forecast, pheatmap, corrplot). No interactivity.
+Skill routing for in-repo code visuals:
+- **`deneb-visuals`** -- Vega/Vega-Lite declarative visuals; preferred for advanced custom interactive charts (cross-filtering, tooltips, hover)
+- **`svg-visuals`** -- SVG via DAX measures; preferred for inline table/matrix/card graphics with no row cap issues
+- **`python-visuals`** -- matplotlib/seaborn scripts (static PNG); for statistical visualizations that must compute at render time
+- **`r-visuals`** -- ggplot2 scripts (static PNG); where R's statistical ecosystem has no Python peer (forecast, pheatmap, corrplot)
 
 ### Semantic Model
 

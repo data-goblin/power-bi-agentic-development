@@ -1,6 +1,6 @@
 # Model and Direct Lake Optimization
 
-Tier 3 model patterns (MDL001-MDL010) and Tier 4 Direct Lake patterns (DL001-DL002).
+Tier 3 model patterns (MDL001-MDL009) and Tier 4 Direct Lake patterns (DL001-DL002).
 
 > **Related references:** [Engine Internals](./engine-internals.md) · [DAX and Query Structure Patterns](./dax-patterns.md)
 
@@ -8,7 +8,7 @@ Tier 3 model patterns (MDL001-MDL010) and Tier 4 Direct Lake patterns (DL001-DL0
 
 ## Section 5: Tier 3 Model Optimization Patterns
 
-> **STOP — Requires user approval before applying any change. Warn that model changes can break downstream reports. Suggest working on a model copy. Implement via `powerbi-semantic-model` skill; upstream source changes (Lakehouse, Warehouse, Power Query) require `fabric-cli` or pipeline coordination.**
+> **STOP — Requires user approval before applying any change. Warn that model changes can break downstream reports. Suggest working on a model copy. Apply changes through whatever semantic-model authoring path is already in use; upstream source changes (Lakehouse, Warehouse, Power Query) must be coordinated with the user's data engineering or pipeline workflow.**
 
 ### General Data Layout Best Practices
 
@@ -131,34 +131,24 @@ CASE WHEN SaleDate >= DATEADD(year, -1, GETDATE()) THEN SalesKey ELSE 'Historica
 
 ---
 
-### MDL010: Set IsAvailableInMDX on Disconnected Slicer Tables
-
-Disconnected slicer tables (e.g., a `'Reporting Scenario'[Scenario]` parameter table with no model relationship) are commonly used with `SELECTEDVALUE` inside `IF`/`SWITCH`. When the slicer has no active selection, `SELECTEDVALUE` returns BLANK. With `IsAvailableInMDX = false`, the engine cannot determine this statically — it queries the table and generates two evaluation branches even though only one will execute. With `IsAvailableInMDX = true`, the engine statically resolves the unfiltered state and eliminates the dead branch without an extra SE scan.
-
-> **Scope:** This optimization only applies when the slicer column is **unfiltered**. When a selection is active, the branch is always evaluated regardless of this property — the static resolution path is not available.
-
----
-
 ## Section 6: Tier 4 Direct Lake Optimization Patterns
 
 > **STOP — Requires user approval before applying any change. Changes here require Spark/ETL jobs or Fabric resource profile configuration outside the semantic model. Coordinate with the user's data engineering workflow.**
 
-Direct Lake reads from OneLake Delta Parquet files instead of importing. Import-like speed when data is memory-resident, but unique characteristics around cold cache and segment loading.
+Direct Lake reads OneLake Delta/Parquet files and loads columns into VertiPaq on demand. Its speed depends on source file layout, memory residency, and segment health.
 
-### DL001: V-Ordering for Optimal VertiPaq Compression
+### DL001: V-Ordering Delta Tables for Direct Lake
 
-Import models are always V-ordered. Direct Lake models are **not** — enable it explicitly. V-ordering reorders rows within each rowgroup to maximize RLE compression (2–5× improvement).
+Import refresh builds optimized VertiPaq storage. Direct Lake depends on Delta/Parquet layout at query time, so use V-Order for read-heavy Power BI tables to improve compression and column loading.
 
 Two approaches:
-- **Spark:** `spark.conf.set("spark.microsoft.delta.vorder.enabled", "true")` then run `OPTIMIZE`.
-- **Fabric resource profile:** Use the [`readHeavyForPBI` resource profile](https://learn.microsoft.com/en-us/fabric/data-engineering/configure-resource-profile-configurations) which enables V-ordering and optimized write settings automatically.
+- **Spark:** `spark.conf.set("spark.sql.parquet.vorder.default", "true")`, then run `OPTIMIZE` for existing Delta tables.
+- **Fabric resource profile:** Use the [`readHeavyForPBI` resource profile](https://learn.microsoft.com/en-us/fabric/data-engineering/configure-resource-profile-configurations), which enables V-Order-oriented write settings for Power BI reads.
 
 ---
 
 ### DL002: Segment Size and Parallelism
 
-Delta rowgroups map directly to VertiPaq segments — one segment per CPU core. More segments = better CPU saturation (see SE Parallelism Factor in [Section 1](./engine-internals.md#section-1-how-the-engine-works)).
+Parquet row groups shape VertiPaq column segment size/count (see SE Parallelism Factor in [Section 1](./engine-internals.md#section-1-how-the-engine-works)).
 
 **Target: 1–16M rows per rowgroup.** Too few rowgroups → single-threaded scans; too many tiny rowgroups → merge overhead. For small tables (< 1M rows) this rarely matters. Run `OPTIMIZE` regularly to consolidate small files into properly sized rowgroups.
-
-Maximize available cores by choosing a capacity SKU that matches table size — a table with 2 segments on an F64 wastes most of its parallelism budget.

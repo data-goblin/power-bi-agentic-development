@@ -1,6 +1,6 @@
 ---
 name: refresh-semantic-model
-version: 26.20
+version: 26.24
 description: Automatically invoke this skill whenever the user asks to refresh a semantic model or a dataset. Can also be used to manage, optimize, troubleshoot, or configure a refresh or a refresh schedule.
 ---
 
@@ -298,7 +298,7 @@ Pro capacity supports only full-model standard refreshes. Enhanced refresh featu
 
 ## Related Skills
 
-- **`review-semantic-model`** -- Structured model quality and performance review
+- **`semantic-model`** -- Model design, build, and quality/performance review
 - **`lineage-analysis`** -- Downstream report discovery and impact analysis
 - **`standardize-naming-conventions`** -- Naming audit and remediation
 - **`fabric-cli`** (fabric-cli plugin) -- Workspace and item management via `fab` CLI

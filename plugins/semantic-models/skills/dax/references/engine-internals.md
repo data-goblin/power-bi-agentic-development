@@ -16,9 +16,12 @@ The **FE** handles all DAX — branching logic, context transitions, complex ari
 
 The **SE** reads compressed columnar data from VertiPaq. It is **multi-threaded** and very fast, but supports only a limited set of operations: the four basic arithmetic operators, GROUP BY, LEFT OUTER JOINs, and basic aggregations (SUM, COUNT, MIN, MAX, DISTINCTCOUNT).
 
-For **Direct Query models**, the SE role is played by the underlying data source (SQL, Spark, etc.). The FE generates SQL and pushes it down. The trade-off is network and source latency instead of in-memory scan cost.
+For **DirectQuery models**, the data source serves as the SE role: the FE generates and pushes down SQL, trading network/source latency for in-memory scan cost.
 
-**How they interact:** The FE requests data from the SE in one or more scans — each result is a **datacache** (a set of columns and aggregated values). Complex queries may require multiple datacaches: one to build a filter set, another to aggregate the fact. When the SE cannot evaluate an expression natively, it **calls back** to the FE row-by-row — making that SE scan effectively single-threaded.
+**How they interact:**
+- FE requests data via one or more SE scans; each result is a **datacache** (columns + aggregated values).
+- Complex queries need multiple datacaches (e.g., one builds a filter set, one aggregates the fact).
+- If the SE can't evaluate an expression natively → **callback** to FE row-by-row → that scan is effectively single-threaded.
 
 The core principle of DAX optimization: **push as much work as possible into the SE, minimize SE scans, and eliminate callbacks entirely.**
 
@@ -38,17 +41,17 @@ FROM Sales
     LEFT OUTER JOIN Product ON 'Sales'[ProductKey] = Product[ProductKey]
 ```
 
-**Joins are always LEFT OUTER:** The many-side table is FROM, the one-side is joined in.
+**Relationship joins are LEFT OUTER unless otherwise stated:** the many-side table is FROM, the one-side is joined in. Other internal forms (`INNER JOIN`, `REDUCED BY`, reverse joins) can also appear depending on the operation.
 
 **Semi-join projections:** Appear as `DEFINE TABLE $Filter0 ... ININDEX` in xmSQL — an initial dimension scan builds a key index injected into the fact WHERE clause.
 
-**Callbacks:** Occur whenever the SE must compute an expression that exceeds VertiPaq's native capabilities — forcing row-by-row evaluation back in the FE. Example: `IF('Sales'[Amount] > 1000, 1, 0)` inside an iterator requires a callback because the SE cannot evaluate conditional logic. Replace with `INT('Sales'[Amount] > 1000)` to keep the expression SE-native. See [DAX002](./dax-patterns.md#dax002-replace-addcolumnssummarize-with-summarizecolumns), [DAX007](./dax-patterns.md#dax007-replace-if-with-int-for-boolean-conversion), [DAX008](./dax-patterns.md#dax008-context-transition-in-iterator), [DAX018](./dax-patterns.md#dax018-replace-divide-with-division-operator-in-iterators) for callback elimination patterns.
+**Callbacks:** Occur whenever the SE must compute an expression that falls outside of VertiPaq's native capabilities. Forms include `CallbackDataID` (arbitrary expressions, most common) and specialized variants exposing individual FE functions (rounding, log/abs math). See [DAX002](./dax-patterns.md#dax002-use-summarizecolumns-for-grouped-calculations), [DAX007](./dax-patterns.md#dax007-convert-boolean-tests-without-if), [DAX008](./dax-patterns.md#dax008-context-transition-in-iterator), [DAX018](./dax-patterns.md#dax018-keep-iterator-division-se-native) for callback elimination patterns.
 
 ---
 
 ### Compression, Segments, and Parallelism
 
-**Compression** determines scan speed. VertiPaq uses run-length encoding (RLE) and dictionary encoding. **V-ordering** reorders rows within segments to maximize RLE compression. Import models are V-ordered automatically. Direct Lake models are **not** — enable V-ordering explicitly (see [DL001](./model-optimization.md#dl001-v-ordering-for-optimal-vertipaq-compression)).
+**Compression** determines scan speed. VertiPaq uses dictionary and run-length-style encodings to reduce scan work. For Direct Lake, source Delta/Parquet layout affects how quickly columns load into VertiPaq; V-Order improves RLE-friendly layout for read-heavy Power BI tables (see [DL001](./model-optimization.md#dl001-v-ordering-delta-tables-for-direct-lake)).
 
 **Segments** are fixed-size column chunks — the unit of both compression and parallel execution. The SE assigns one CPU thread per segment, so segment count determines how many cores a scan can utilize.
 
@@ -56,30 +59,26 @@ FROM Sales
 
 **Segment skew matters equally:** if one segment has 15M rows and the rest have 1M, the scan bottlenecks on the oversized segment. Segments must be evenly sized for parallelism to be effective.
 
-**Diagnosing low parallelism:** The **SE Parallelism Factor** (StorageEngineCpuTime ÷ StorageEngineDuration) shows thread utilization. Values near 1.0 mean single-threaded execution; values of 8–16 indicate strong multi-core use. When a trace shows few SE queries (1–4), high SE Duration, Parallelism Factor ≈ 1.0, and clean xmSQL — the bottleneck is too few segments or skewed segment sizes. This cannot be fixed with DAX; the fix is data layout (see [General Data Layout Best Practices](./model-optimization.md#section-5-tier-3-model-optimization-patterns) and [DL001–DL002](./model-optimization.md#section-6-tier-4-direct-lake-optimization-patterns)).
+**Diagnosing low parallelism:** The **SE Parallelism Factor** (StorageEngineCpuTime ÷ StorageEngineDuration) shows thread utilization. Values near 1.0 mean single-threaded execution; values of 8–16 indicate strong multi-core use. When a trace shows few SE queries (1–4), high SE Duration, Parallelism Factor ≈ 1.0, and clean xmSQL — the bottleneck is likely too few segments or skewed segment sizes. DAX changes are unlikely to help; use data layout instead (see [General Data Layout Best Practices](./model-optimization.md#section-5-tier-3-model-optimization-patterns) and [DL001–DL002](./model-optimization.md#section-6-tier-4-direct-lake-optimization-patterns)).
 
 ---
 
 ### SE Query Fusion
 
-Fusion is the engine's ability to combine multiple SE scans into fewer scans. There are two types:
+Fusion is the engine's ability to combine multiple SE scans into fewer scans. Two flavors:
 
-**Vertical fusion** merges multiple measure aggregations that share the same filter context into a single SE query. Three measures on the same fact table under the same filter = one scan instead of three. Gain scales with fact table size.
+- **Vertical fusion** merges multiple measure aggregations that share the same filter context into a single SE query. Three measures on the same fact table under the same filter = one scan instead of three. Gain scales with fact table size.
+- **Horizontal fusion** merges SE queries that differ only in which value(s) of a column they filter. N separate fact scans collapse to one; the FE partitions the result.
 
-**What blocks vertical fusion:**
-- **Time intelligence functions** (DATESYTD, DATEADD, SAMEPERIODLASTYEAR, etc.) — each TI-modified measure needs its own date-filtered SE scan → see [DAX019](./dax-patterns.md#dax019-lift-time-intelligence-to-outer-calculate-for-vertical-fusion)
-- **Per-measure filter predicates** — can cause the FE to materialize separate `VAND` tuple predicates per measure, producing structurally different SE queries even when the underlying logic is identical → see [DAX017](./dax-patterns.md#dax017-apply-boolean-multiplier-to-unblock-fusion)
-- **SWITCH/IF selecting between measures** — engine cannot determine at plan time which aggregation to include
-- **Calculation group items** applying different filter modifications — each generates its own SE query
+**Why fusion breaks.** Fusion needs the competing SE requests to have compatible scan shapes — the same filter context for vertical fusion, compatible single-column filter differences for horizontal. Common triggers that break that:
 
-**Horizontal fusion** merges SE queries that differ only in which single value of a column they filter. N separate fact scans collapse to one; the FE partitions the result.
+- **FE chooses the branch** — SWITCH/IF between measures, or per-measure filter predicates that materialize separate `VAND` tuples → structurally different SE queries → see [DAX017](./dax-patterns.md#dax017-align-scan-shape-with-boolean-multipliers)
+- **Table- or range-valued filter** — time intelligence (DATESYTD, DATEADD, etc.) injects a per-measure date/range scan the SE can't fold in → see [DAX019](./dax-patterns.md#dax019-move-time-windows-outside-sibling-measures)
+- **Slicing column not in the groupby** — horizontal fusion can only merge slices the result groups by; absent that, scans stay separate
+- **Runtime-computed filter value** — a predicate held in a variable is treated as dynamic and won't fuse
+- **Calculation group items** — each item applies its own filter modification → structurally different SE query
 
-**What blocks horizontal fusion:**
-- **Filtered column not in groupby** — engine cannot merge slices if the slicing column is absent from the groupby
-- **Table-valued filter per measure** (e.g., time intelligence) — prevents slice merging even when column filters are identical
-- **Filter value computed at runtime** (stored in a variable) — engine treats it as dynamic and will not fuse
-
-**Trace diagnosis:** Multiple SE queries hitting the same fact table with same joins → vertical fusion blocked. N near-identical SE queries with only the WHERE filter differing → horizontal fusion blocked. See [DAX patterns](./dax-patterns.md) and [Section 2 trace analysis](#section-2-reading-and-diagnosing-traces).
+**Trace diagnosis:** Same fact table + same joins across multiple SE queries → missed vertical fusion. Near-identical queries differing only by `WHERE` values → blocked horizontal fusion. See [Section 3](./dax-patterns.md#section-3-tier-1-dax-optimization-patterns) and [Section 2 trace analysis](#section-2-reading-and-diagnosing-traces).
 
 ---
 
@@ -165,3 +164,11 @@ Fusion is blocked, callbacks are present, or filters resolve iteratively. Fix th
 **Few SE queries + low FE time + high SE duration + low parallelism → Data layout problem**
 
 The DAX is clean but SE scans are slow due to insufficient segments or poor compression. DAX changes will not help — see [Section 5](./model-optimization.md#section-5-tier-3-model-optimization-patterns) / [Section 6](./model-optimization.md#section-6-tier-4-direct-lake-optimization-patterns) (General Data Layout Best Practices, DL001–DL002).
+
+---
+
+## Further Reading
+
+- [Analysis Services trace events](https://learn.microsoft.com/analysis-services/trace-events/analysis-services-trace-events)
+- [Horizontal fusion in Power BI and Analysis Services](https://powerbi.microsoft.com/en-us/blog/announcing-horizontal-fusion-a-query-performance-optimization-in-power-bi-and-analysis-services/)
+- [Understand Direct Lake query performance](https://learn.microsoft.com/fabric/fundamentals/direct-lake-understand-storage)

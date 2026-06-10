@@ -1,6 +1,6 @@
 ---
 name: r-visuals
-version: 26.20
+version: 26.24
 description: R visual creation and ggplot2 patterns for PBIR reports. Automatically invoke when the user mentions "R visual", "ggplot2", "ggplot in Power BI", or asks to "create an R visual", "add an R chart", "write an R visual script", "inject an R script into Power BI".
 ---
 
@@ -133,7 +133,7 @@ Any locally installed R package works without restriction. R must be installed s
 | Cross-filter FROM | Not supported | Not supported |
 | Receive cross-filter | Yes | Yes |
 | Publish to web | Not supported | Not supported |
-| Embed (app-owns-data) | Ending May 2026 | Ending May 2026 |
+| Embed (app-owns-data) | Not supported | Not supported |
 
 ## Script Structure Template
 
@@ -165,30 +165,36 @@ if (nrow(dataset) == 0) {
 }
 ```
 
-## R vs Python Comparison
+## R vs Python Syntax Reference
+
+For the language-choice decision, see the "When to Use a Script Visual" section above. This table covers only mechanical syntax differences for scripts already committed to R:
 
 | Aspect | R (`scriptVisual`) | Python (`pythonVisual`) |
 |--------|-------|--------|
-| Primary library | ggplot2 | matplotlib |
 | Render call | `print(p)` | `plt.show()` |
 | Column access | `dataset[,1]` or `dataset$col` | `dataset.iloc[:,0]` or `dataset["col"]` |
 | Empty guard | `if (nrow(dataset) == 0)` | `if len(dataset) == 0:` |
-| Factor control | `factor(x, levels=...)` | `pd.Categorical(x, categories=...)` |
+| Factor/category order | `factor(x, levels=...)` | `pd.Categorical(x, categories=...)` |
 | Runtime (Service) | R 4.3.3 | Python 3.11 |
 
-## When to Use R Visuals
+## When to Use a Script Visual
 
-R visuals are the preferred choice for **statistical and analytical visualizations**, particularly where R's statistical ecosystem excels. Use R visuals when you need:
+Reach for an R visual only when **all** of the following hold:
 
-- Distribution analysis (violin, ridgeline, density, boxplot)
-- Statistical modeling (regression, correlation, ANOVA)
-- Publication-quality analytical charts with ggplot2
-- Packages like forecast, corrplot, pheatmap that have no Python equivalent of equal quality
+- The chart has no native equivalent and no reasonable Deneb spec
+- The value is in a statistical computation that must run at render time (model fit, kernel density, forecast band), not just a shape Vega could draw
+- The visual does not need to be a cross-filter source, hover tooltips, publish-to-web, or app-owns-data embed
+- The report is served in a Pro/PPU or higher capacity with a Fabric-enabled region
 
-**Output is static PNG** -- no cross-filtering FROM the visual, no hover/tooltip interactivity. Use Deneb instead for interactive custom visuals. Use SVG measures for simple inline graphics in tables/cards.
+If interactivity or cross-filtering matters, use **Deneb** (a static PNG cannot be a selection source). If the need is a small inline mark (sparkline, bar, status pill), use an **SVG measure** (no row cap, no timeout, no licensing/region gate, renders under publish-to-web). The script visual's niche is narrow: compute-at-render statistical plots for internal or org consumption.
+
+**R vs Python once a script visual is the right call:** use R for publication-quality statistical defaults and packages with no Python peer (`forecast`, `corrplot`, `pheatmap`, ridgeline/violin). Use Python when the computation leans on scikit-learn, statsmodels, or scipy, or when surrounding report logic is already Python. Where equal, default to whichever language the report's other scripts use; mixing doubles the publish-time package surface to validate.
+
+Do not default to a script visual because a chart type "looks statistical." A box plot, lollipop, or dumbbell is an SVG-measure or Deneb job; reserve scripts for charts that genuinely compute.
 
 ## References
 
+- **`references/data-model.md`** -- `dataset` grouping mechanic, row/byte caps, forcing per-row input, and R-specific traps (Time type, text rendering flags, CJK fonts)
 - **`references/community-examples.md`** -- R Graph Gallery examples organized by chart type (distribution, correlation, ranking, evolution, flow)
 - **`references/ggplot2-patterns.md`** -- Common ggplot2 chart patterns (bar, donut, line, heatmap, bullet)
 - **`examples/script/`** -- Standalone R scripts (bar-chart, trend-line) -- ready to inject into visual.json after escaping

@@ -1,6 +1,6 @@
 ---
 name: python-visuals
-version: 26.20
+version: 26.24
 description: Python visual creation and matplotlib/seaborn patterns for PBIR reports. Automatically invoke when the user mentions "Python visual", "matplotlib in Power BI", "seaborn in Power BI", "pythonVisual", or asks to "create a Python visual", "add a matplotlib chart", "write a Python visual script".
 ---
 
@@ -128,7 +128,7 @@ Any locally installed package works without restriction.
 | Cross-filter FROM | Not supported | Not supported |
 | Receive cross-filter | Yes | Yes |
 | Publish to web | Not supported | Not supported |
-| Embed (app-owns-data) | Ending May 2026 | Ending May 2026 |
+| Embed (app-owns-data) | Not supported | Not supported |
 
 ## Script Structure Template
 
@@ -162,18 +162,24 @@ else:
     plt.show()
 ```
 
-## When to Use Python Visuals
+## When to Use a Script Visual
 
-Python visuals are appropriate for **statistical and analytical visualizations** where the focus is on data analysis rather than interactivity. Use Python visuals when you need:
+Reach for a Python visual only when **all** of the following hold:
 
-- Statistical charts (distributions, regressions, correlations, violin plots)
-- Analytical visualizations leveraging scipy, scikit-learn, or statsmodels
-- Chart types that seaborn/matplotlib handle well but Power BI natives don't support
+- The chart has no native equivalent and no reasonable Deneb spec
+- The value is in a statistical computation that must run at render time (model fit, kernel density, forecast band), not just a shape Vega could draw
+- The visual does not need to be a cross-filter source, hover tooltips, publish-to-web, or app-owns-data embed
+- The report is served in a Pro/PPU or higher capacity with a Fabric-enabled region
 
-**Output is static PNG** -- no cross-filtering FROM the visual, no hover/tooltip interactivity. Use Deneb instead for interactive custom visuals. Use SVG measures for simple inline graphics in tables/cards.
+If interactivity or cross-filtering matters, use **Deneb** (a static PNG cannot be a selection source). If the need is a small inline mark (sparkline, bar, status pill), use an **SVG measure** (no row cap, no timeout, no licensing/region gate, renders under publish-to-web). The script visual's niche is narrow: compute-at-render statistical plots for internal or org consumption.
+
+**Python vs R once a script visual is the right call:** use Python when the computation leans on scikit-learn, statsmodels, or scipy, or when surrounding report logic is already Python. Use R for publication-quality statistical defaults and packages with no Python peer (`forecast`, `corrplot`, `pheatmap`, ridgeline/violin). Where equal, default to whichever language the report's other scripts use; mixing doubles the publish-time package surface to validate.
+
+Do not default to a script visual because a chart type "looks statistical." A box plot, lollipop, or dumbbell is an SVG-measure or Deneb job; reserve scripts for charts that genuinely compute.
 
 ## References
 
+- **`references/data-model.md`** -- `dataset` grouping mechanic, the row/byte caps, and how to force per-row input
 - **`references/community-examples.md`** -- seaborn gallery examples organized by chart type, plus matplotlib and Python Graph Gallery links
 - **`references/chart-patterns.md`** -- Common matplotlib/seaborn chart patterns (bar, heatmap, donut, KPI, area)
 - **`examples/script/`** -- Standalone Python scripts (bar-chart, trend-line) -- ready to inject into visual.json after escaping

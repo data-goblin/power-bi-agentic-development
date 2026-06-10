@@ -115,7 +115,7 @@ RETURN
 }
 ```
 
-**Theme color names:** `"bad"`, `"good"`, `"neutral"`, `"minColor"`, `"midColor"`, `"maxColor"`
+**Theme color names:** `"bad"`, `"good"`, `"neutral"`, `"minColor"`, `"maxColor"` (note: `"midColor"` is NOT a valid token; use `"neutral"` for a middle state)
 
 ### Two-Color Gradient (linearGradient2)
 

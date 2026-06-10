@@ -83,17 +83,15 @@ extract_command() {
     echo "$STDIN_BUF" | jq -r '.tool_input.command // empty' 2>/dev/null
 }
 
-resolve_command_text() {
-    # If the command is a -File <path>.ps1 invocation, read the .ps1 file contents.
-    # Otherwise return the command text as-is.
-    # Handles UNC paths (\\Mac\Home\...) from Parallels by converting to macOS paths.
+extract_ps1_path() {
+    # Extracts the .ps1 path from a -File <path>.ps1 invocation.
+    # Outputs nothing if the command is not a -File invocation.
     local cmd="$1"
     local lower
     lower="$(echo "$cmd" | tr '[:upper:]' '[:lower:]')"
 
     if [[ "$lower" != *"-file"* ]]; then
-        echo "$cmd"
-        return
+        return 0
     fi
 
     # Extract everything after -File, strip quotes and whitespace
@@ -104,8 +102,32 @@ resolve_command_text() {
     after_file=$(printf '%s' "$after_file" | sed 's/^["]*//;s/["]*$//;s/^\\"//;s/\\"$//')
 
     # Trim to just the .ps1 path (stop at first .ps1)
+    printf '%s' "$after_file" | sed -n 's/\(.*\.ps1\).*/\1/p'
+}
+
+is_bundled_connect_pbid_script() {
+    # Returns 0 if the command runs a .ps1 bundled with the connect-pbid skill.
+    # These scripts are exempt from content validation: load-tmdl.ps1 calls
+    # .Measures.Add without metadata by design, and doc strings like
+    # 'SUM(Sales[Amount])' would otherwise trip the DAX reference checks.
+    local cmd="$1"
     local ps1_path
-    ps1_path=$(printf '%s' "$after_file" | sed -n 's/\(.*\.ps1\).*/\1/p')
+    ps1_path="$(extract_ps1_path "$cmd")"
+    [[ -n "$ps1_path" ]] || return 1
+    case "$ps1_path" in
+        *skills/connect-pbid/scripts*|*skills\\connect-pbid\\scripts*) return 0 ;;
+    esac
+    return 1
+}
+
+resolve_command_text() {
+    # If the command is a -File <path>.ps1 invocation, read the .ps1 file contents.
+    # Otherwise return the command text as-is.
+    # Handles UNC paths (\\Mac\Home\...) from Parallels by converting to macOS paths.
+    local cmd="$1"
+
+    local ps1_path
+    ps1_path="$(extract_ps1_path "$cmd")"
 
     if [[ -z "$ps1_path" ]]; then
         echo "$cmd"
@@ -283,6 +305,9 @@ cmd_validate_dax() {
     raw_command="$(extract_command)"
     [[ -n "$raw_command" ]] || exit 0
 
+    # Plugin-bundled connect-pbid scripts are exempt from content validation
+    is_bundled_connect_pbid_script "$raw_command" && exit 0
+
     local command_text
     command_text="$(resolve_command_text "$raw_command")"
 
@@ -399,6 +424,9 @@ cmd_validate_measure() {
     raw_command="$(extract_command)"
     [[ -n "$raw_command" ]] || exit 0
 
+    # Plugin-bundled connect-pbid scripts are exempt from content validation
+    is_bundled_connect_pbid_script "$raw_command" && exit 0
+
     local command_text
     command_text="$(resolve_command_text "$raw_command")"
 
@@ -443,9 +471,12 @@ cmd_refresh_cache() {
     tool_name="$(extract_tool_name)"
     [[ "$tool_name" == "Bash" ]] || exit 0
 
+    local raw_command
+    raw_command="$(extract_command)"
+    [[ -n "$raw_command" ]] || exit 0
+
     local command_text
-    command_text="$(extract_command)"
-    [[ -n "$command_text" ]] || exit 0
+    command_text="$(resolve_command_text "$raw_command")"
 
     # Detect trigger
     local is_connect=false is_modification=false
@@ -489,9 +520,12 @@ cmd_check_ri() {
     tool_name="$(extract_tool_name)"
     [[ "$tool_name" == "Bash" ]] || exit 0
 
+    local raw_command
+    raw_command="$(extract_command)"
+    [[ -n "$raw_command" ]] || exit 0
+
     local command_text
-    command_text="$(extract_command)"
-    [[ -n "$command_text" ]] || exit 0
+    command_text="$(resolve_command_text "$raw_command")"
 
     # Only run for relationship or column changes
     local relevant=false

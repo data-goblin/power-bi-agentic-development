@@ -6,6 +6,7 @@
 #   powershell.exe -NoProfile -ExecutionPolicy Bypass -File load-tmdl.ps1 -Path "C:\MyModel\definition"
 #   powershell.exe -NoProfile -ExecutionPolicy Bypass -File load-tmdl.ps1 -Path "C:\model.bim"
 #   powershell.exe -NoProfile -ExecutionPolicy Bypass -File load-tmdl.ps1 -Path "C:\MyModel\definition" -AddMeasure "Sales:Test Measure:SUM(Sales[Amount])"
+#   powershell.exe -NoProfile -ExecutionPolicy Bypass -File load-tmdl.ps1 -Path "C:\MyModel\definition" -AddMeasure "Sales:Test Measure:SUM(Sales[Amount])" -Save
 
 param(
     [Parameter(Mandatory=$true)]
@@ -170,6 +171,10 @@ if ($savePath -ne "") {
         [Microsoft.AnalysisServices.Tabular.TmdlSerializer]::SerializeDatabaseToFolder($db, $savePath)
         Write-Output "Saved TMDL to: $savePath"
     }
+}
+elseif ($AddMeasure -ne "") {
+    Write-Output ""
+    Write-Output "WARNING: -AddMeasure changed the in-memory model only; pass -Save or -SaveTo to persist."
 }
 
 #endregion

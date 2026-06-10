@@ -1,12 +1,15 @@
 ---
 name: te2-cli
-version: 26.20
+version: 26.24
 description: CLI syntax reference for Tabular Editor 2 (TabularEditor.exe); deployment, scripting, BPA analysis, and CI/CD integration. Automatically invoke when the user mentions "TabularEditor.exe", TE2 CLI flags (-D, -S, -A, -B, -TMDL, -O, -C), or asks to "deploy a model via CLI", "set up CI/CD for Power BI", "automate model deployment", "run BPA from command line", "save model as TMDL".
 ---
 
 # Tabular Editor 2 CLI
 
 Command-line interface for Tabular Editor 2 (TE2). This skill covers the `TabularEditor.exe` executable; TE3 has its own CLI and is a separate product.
+
+> [!NOTE]
+> The TE2 CLI (`TabularEditor.exe`) is still supported and stable, and remains a solid choice for existing Windows CI/CD pipelines. It is now considered outdated against the newer cross-platform Tabular Editor CLI (`te`), which is built on TE3 and is in preview until Q4 2026. For the `te` command set and a flag-by-flag migration, see the `te-cli` skill. Download `te` preview binaries from the [Tabular Editor CLI downloads page](https://tabulareditor.com/download-tabular-editor-cli).
 
 
 ## Installation

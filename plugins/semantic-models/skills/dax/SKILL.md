@@ -1,6 +1,6 @@
 ---
 name: dax
-version: 26.20
+version: 26.24
 description: DAX performance optimization for semantic models. Automatically invoke when the user asks to "optimize DAX", "fix slow DAX", "DAX performance", "tune a measure", "debug a measure", "DAX anti-patterns", or mentions slow queries, server timings, or DAX authoring.
 ---
 
@@ -18,7 +18,7 @@ Detailed reference files (progressive disclosure — consult as directed by the 
 
 - **[`references/engine-internals.md`](./references/engine-internals.md)** — FE/SE architecture, xmSQL, compression/segments, SE fusion, trace diagnostics
 - **[`references/dax-patterns.md`](./references/dax-patterns.md)** — Tier 1 DAX patterns (DAX001–DAX021) + Tier 2 query structure (QRY001–QRY004)
-- **[`references/model-optimization.md`](./references/model-optimization.md)** — Tier 3 model patterns (MDL001–MDL010) + Tier 4 Direct Lake (DL001–DL002)
+- **[`references/model-optimization.md`](./references/model-optimization.md)** — Tier 3 model patterns (MDL001–MDL009) + Tier 4 Direct Lake (DL001–DL002)
 
 Trace capture and performance profiling:
 
@@ -27,6 +27,6 @@ Trace capture and performance profiling:
 
 ## Related Skills
 
-- [`review-semantic-model`](../review-semantic-model/) — Model auditing including DAX anti-patterns and best practices
+- [`semantic-model`](../semantic-model/) — Model design, build, and auditing including DAX anti-patterns and best practices
 - [`connect-pbid` (pbi-desktop plugin)](../../../pbi-desktop/skills/connect-pbid/) — Trace capture, performance profiling, EVALUATEANDLOG debugging
 - [`lineage-analysis`](../lineage-analysis/) — Impact analysis before model changes

@@ -22,6 +22,9 @@ required_fields: true
 # $schema URL format validation
 schema_url: true
 
+# Enumerated property values (e.g. page displayOption) must match the schema enum
+enum_values: true
+
 # Visual/page name format (word chars and hyphens only)
 name_format: true
 

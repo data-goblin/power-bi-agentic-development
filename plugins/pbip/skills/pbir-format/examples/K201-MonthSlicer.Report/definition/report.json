@@ -11,7 +11,7 @@
       "type": "SharedResources"
     },
     "customTheme": {
-      "name": "SqlbiDataGoblinTheme0699179381108107.json",
+      "name": "SqlbiDataGoblinTheme.json",
       "reportVersionAtImport": {
         "visual": "2.1.0",
         "report": "2.1.0",
@@ -557,8 +557,8 @@
       "type": "RegisteredResources",
       "items": [
         {
-          "name": "SqlbiDataGoblinTheme0699179381108107.json",
-          "path": "SqlbiDataGoblinTheme0699179381108107.json",
+          "name": "SqlbiDataGoblinTheme.json",
+          "path": "SqlbiDataGoblinTheme.json",
           "type": "CustomTheme"
         }
       ]

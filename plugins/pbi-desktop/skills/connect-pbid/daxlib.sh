@@ -12,6 +12,12 @@
 
 set -euo pipefail
 
+# jq is required for registry parsing; fail fast with a clear message.
+# Skip the check for usage-only invocations.
+if [[ $# -gt 0 && "$1" != "--help" && "$1" != "-h" ]]; then
+    command -v jq >/dev/null 2>&1 || { echo "Error: jq is required but not installed (https://jqlang.github.io/jq/)" >&2; exit 1; }
+fi
+
 
 # #region Constants
 
@@ -791,6 +797,11 @@ parse_args() {
     if [[ $# -eq 0 ]]; then
         print_usage
         exit 1
+    fi
+
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        print_usage
+        exit 0
     fi
 
     COMMAND="$1"

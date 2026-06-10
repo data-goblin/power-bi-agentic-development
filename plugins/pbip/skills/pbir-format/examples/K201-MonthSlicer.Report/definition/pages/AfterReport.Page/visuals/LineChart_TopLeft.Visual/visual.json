@@ -61,7 +61,7 @@
                   "Property": "OTD % (Value; PY REPT)"
                 }
               },
-              "queryRef": "On-Time Delivery.OTD % (Value; PY)",
+              "queryRef": "On-Time Delivery.OTD % (Value; PY REPT)",
               "nativeQueryRef": "PY",
               "displayName": "PY"
             }
@@ -107,7 +107,7 @@
             }
           },
           "selector": {
-            "metadata": "On-Time Delivery.OTD % (Value; PY)"
+            "metadata": "On-Time Delivery.OTD % (Value; PY REPT)"
           }
         }
       ]

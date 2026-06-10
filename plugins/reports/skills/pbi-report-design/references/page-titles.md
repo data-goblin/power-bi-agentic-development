@@ -166,10 +166,30 @@ For titles, typically disable:
 }
 ```
 
+## Accessible Titles
+
+A screen reader speaks a visual's title and type before any alt text. This means an acronym or jargon title is unintelligible spoken aloud; the accessibility constraint is stronger than the visual-design constraint.
+
+- Spell out the subject ("Current year sales vs prior year", not "CY Sales vs PY")
+- Reserve abbreviations for axis labels inside the chart, not the title
+- Do not encode the chart type in the title; the reader announces it already
+- A dynamic measure-bound title is spoken on every filter change; keep it a plain readable phrase with no glyphs or unit-suffix soup
+
+Scan titles across a page:
+```bash
+pbir visuals format "MyPage/*" -p title.text
+```
+
+### Title visibility and alt text
+
+A hidden title (`title.show=false`) makes the reader fall back to a worthless auto name ("chart 4"). If the title is hidden for layout reasons, supply descriptive alt text on the visual's `general.altText` property instead.
+
+Decorative title textboxes (section headers, visual labels) should be removed from the tab order (set `tabOrder` to -1) so readers skip them rather than announcing them as navigation stops.
+
 ## Best Practices
 
 1. **Consistent positioning** - Same x, y across all pages
 2. **Consistent sizing** - Same width, height, font size
-3. **Descriptive text** - Clearly describe page purpose
+3. **Descriptive text** - Clearly describe page purpose, spell out abbreviations
 4. **Avoid redundancy** - Don't repeat report name if obvious
-5. **Consider mobile** - Ensure readable on smaller screens
+5. **Consider mobile** - Ensure readable on smaller screens; see `mobile.md`

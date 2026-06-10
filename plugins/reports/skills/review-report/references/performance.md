@@ -155,4 +155,4 @@ The most expensive queries reveal the visuals that need optimization. Common fix
 - Reduce grouping columns or filter the data (page or report filters) (fewer dimensions = smaller result set)
 - Simplify or remove conditional formatting where not essential
 - Avoid or remove custom visuals that are overly-complex
-- Audit the DAX and semantic model for issues there (see the semantic-models plugin and related skills like `review-semantic-model`)
+- Audit the DAX and semantic model for issues there (see the semantic-models plugin and the `semantic-model` skill)
