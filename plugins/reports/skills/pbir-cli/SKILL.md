@@ -1,6 +1,6 @@
 ---
 name: pbir-cli
-version: 26.24.2
+version: 26.24.3
 description: This skill should be used whenever the user mentions "pbir", "pbir-cli", "Power BI reports", or "PBI reports", works with .pbir, .pbip, or .pbix files, or wants to refresh, screenshot, or visually verify a report that is open in Power BI Desktop. Covers creating, exploring, formatting, validating, and publishing Power BI reports through the pbir CLI and object model, plus driving Power BI Desktop (canvas reload, page screenshots) and querying connected or local semantic models.
 ---
 
@@ -72,7 +72,7 @@ Follow all rules below.
 
 5. **Validate after changes.** Run `pbir validate "Report.Report"` after changes. Use `--qa` for overlap/overflow checks, `--fields` for model field verification, `--all` for everything
 
-6. **Verify rendering through the Desktop bridge.** When the report is open in Power BI Desktop, run `pbir desktop refresh` after every change unless the user asks not to, then `pbir desktop screenshot` and inspect the PNG after every meaningful change. Validation cannot catch rendering problems (overlap, truncation, wrong field, illegible formatting); the screenshot is the only proof a change rendered as intended. When a request involves many changes, ask the user up front whether to refresh after each step (so they watch progress in the canvas) or once at the end
+6. **Verify rendering through the Desktop bridge.** When the report is open in Power BI Desktop, run `pbir desktop refresh` after every change unless the user asks not to, then `pbir desktop screenshot` and inspect the PNG after every meaningful change. Validation cannot catch rendering problems (overlap, truncation, wrong field, illegible formatting); the screenshot is the only proof a change rendered as intended. When a request involves many changes, ask the user up front whether to refresh after each step (so they watch progress in the canvas) or once at the end. Check availability once with `pbir desktop list` before starting the loop; if the bridge is unavailable, do not retry it after every change (see "When the bridge is unavailable" below)
 
 
 ## Core Workflows
@@ -122,6 +122,8 @@ pbir desktop screenshot "Report.Report/Page.Page" -o verify.png
 The edit-verify loop: mutate with `pbir set`/`add`, then `pbir desktop refresh`, then `pbir desktop screenshot`, then read the PNG. Inspect the rendered page after every meaningful change; screenshots catch what validation cannot (overlap, truncation, wrong field, illegible formatting). Set `PBIR_DESKTOP_AUTO_REFRESH=1` to fold the refresh step into every save.
 
 Screenshots need the Desktop window in the Report view. Refreshing an instance with unsaved changes makes Desktop save first, rewriting the whole definition on disk. PBIX files support screenshot but not refresh. For requirements, multi-instance behavior, and troubleshooting, consult **`references/desktop-integration.md`**.
+
+**When the bridge is unavailable.** `pbir desktop list` distinguishes the cases: the bridge is unreachable when the preview feature is off ("Enable external tool access to Power BI Desktop through secure local APIs" under File > Options and settings > Options > Preview features, then restart Desktop), and it reports when no running instance has the target report open. If the preview feature is off, relay the enable steps to the user once and ask whether they want to turn it on; do not keep retrying bridge commands meanwhile. Until the bridge works (or when not on Windows at all), verify with `pbir validate --all` and, with the user's permission, the publish-to-sandbox path from the general workflow.
 
 ### Creating Reports
 
