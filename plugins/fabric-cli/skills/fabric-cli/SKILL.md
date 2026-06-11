@@ -1,6 +1,6 @@
 ---
 name: fabric-cli
-version: 26.24
+version: 26.24.1
 description: Expert guidance for using the Fabric CLI (`fab`) to fully interact with Fabric workspaces, items, and configuration. Automatically invoke this skill whenever the user mentions "Fabric" or "Power BI Service" or a "Fabric/Power BI workspace".
 ---
 
@@ -10,7 +10,7 @@ Guidance for using `fab` to programmatically manage Fabric & Power BI service
 
 - Install via `uv tool install ms-fabric-cli` (get `uv` via `winget install uv` or `brew install uv`)
 - Fabric CLI is for working with the Cloud environment and not local files; it works with Power BI Pro, PPU, or Fabric; you DO NOT need a Fabric SKU to use the Fabric CLI
-- Keep `fab` current: `uv tool upgrade ms-fabric-cli`. Discover commands and flags with `fab --help` and `fab <command> --help` rather than hard-coding behavior; the CLI surface changes regularly
+- Keep `fab` current: check the installed version against the latest `ms-fabric-cli` release and upgrade with `uv tool upgrade ms-fabric-cli` unless the user has pinned a specific version. Discover commands and flags with `fab --help` and `fab <command> --help` rather than hard-coding behavior; the CLI surface changes regularly
 
 > [!IMPORTANT] 
 > Any time you encounter errors, user preferences or learnings when using the Fabric cli, ALWAYS note these down in the user memory rules, i.e. `.claude/rules/fabric-cli.md` for future improvement. 
@@ -24,7 +24,7 @@ Guidance for using `fab` to programmatically manage Fabric & Power BI service
 
 ## Critical general rules
 
-- IMPORTANT: The first time you use `fab` run check that it is up to date to the latest version and run `fab auth status`; If user isn't authenticated, ask them to run `fab auth login`
+- IMPORTANT: The first time you use `fab` run check that it is up to date to the latest version (upgrade with `uv tool upgrade ms-fabric-cli` unless the user has pinned a version) and run `fab auth status`; If user isn't authenticated, ask them to run `fab auth login`
 - Always use `fab --help` and `fab <command> --help` the first time you use a command to understand its syntax
 - You must search the skill /references/ for relevant reference files that explain certain commands, examples, scripts, or workflows before you start using `fab`
 - Before first use, ask the user if they have Fabric admin access, sensitivity labels or DLP policies, any API restrictions, or preferences for Fabric/Power BI API usage; remind user to add this to memory files

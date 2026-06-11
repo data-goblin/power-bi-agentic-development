@@ -1,6 +1,6 @@
 ---
 name: pbir-cli
-version: 26.24.6
+version: 26.24.7
 description: This skill should be used whenever the user mentions "pbir", "pbir-cli", "Power BI reports", or "PBI reports", works with .pbir, .pbip, or .pbix files, or wants to refresh, screenshot, or visually verify a report that is open in Power BI Desktop. Covers creating, exploring, formatting, validating, and publishing Power BI reports through the pbir CLI and object model, plus driving Power BI Desktop (canvas reload, page screenshots) and querying connected or local semantic models.
 ---
 
@@ -17,6 +17,8 @@ CLI for exploring, building, managing, formatting Power BI reports. All commands
 Check the installed CLI version with `pbir --version` and compare it against the latest `pbir-cli` release on PyPI (https://pypi.org/project/pbir-cli/). When the installed version is behind, suggest the user upgrade with `pip install --upgrade pbir-cli` so the CLI matches the commands this skill documents.
 
 **If a command or flag documented in this skill does not exist in the installed CLI, the skill is likely ahead of the installed `pbir-cli` release.** This is especially common for the `pbir desktop` commands, which evolve quickly. Before treating a missing command as a CLI failure (and before falling back to editing JSON directly), confirm with `pbir <command> --help` and `pbir --version`, then upgrade to the latest `pbir-cli` from PyPI. Do not work around a missing newer command by hand-editing report JSON when an upgrade would provide it.
+
+When publishing to Fabric (`pbir publish`) alongside the `fabric-cli` plugin, also keep the Fabric CLI (`fab`) current — upgrade with `uv tool upgrade ms-fabric-cli` unless the user has pinned a specific version.
 
 ## Learning from Mistakes
 
