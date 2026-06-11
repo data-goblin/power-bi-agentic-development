@@ -5,8 +5,8 @@
 <h1 align="center">power-bi-agentic-development</h1>
 
 <p align="center">
-  The best source for agentic development resources for Power BI in one marketplace <br></br>
-  <i> Teach agents like Claude Code or GitHub Copilot to do literally anything in Power BI </i>
+  The best source for Power BI AI skills and agentic development resources in one marketplace <br></br>
+  <i> Teach AI agents like Claude Code or GitHub Copilot Power BI and Microsoft Fabric </i>
 </p>
 
 <p align="center">
@@ -26,7 +26,7 @@
 
 - *Agentic development* is when you use agents to help you build, manage, and optimize artifacts and software. This includes semantic models, reports, and the things around them, like workspaces, deployment pipelines, and also processes.
 - A *marketplace* hosts *plugins* that you can install. Plugins are a collection of resources that help coding agents perform better. They are typically special instruction files and scripts. Plugins can contain skills, subagents, hooks, and MCP servers focused on special topics or tasks.
-- This marketplace is focused on everything to help your agent work well with Power BI and Fabric! Read further for more information.
+- This marketplace is focused on everything to help your agent work well with Power BI and Fabric: Power BI skills, Fabric skills, subagents, and hooks for coding agents. Read further for more information.
 
 ## Installation
 
@@ -147,7 +147,7 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 - `plugins/pbip/hooks/config.yaml` -- PBIR, TMDL, and report binding validation
 - `plugins/pbi-desktop/hooks/config.yaml` -- DAX references, measure metadata, referential integrity, metadata cache
 
-### Available plugins for Power BI and Fabric
+### Power BI and Fabric skills, agents, and hooks: available plugins
 
 <details>
 <summary><img src="media/icons/tabular-editor.svg" alt="" height="20"> <strong>tabular-editor</strong> &ensp; BPA rules, C# scripting, and CLI automation for Tabular Editor</summary>
