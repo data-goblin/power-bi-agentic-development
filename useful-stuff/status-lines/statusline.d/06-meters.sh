@@ -1,3 +1,10 @@
+# Per-bar reset reveal: clicking the S/W bar toggles a marker file that this
+# renderer reads to emit line 3 (assembled in statusline.sh). Markers live in a
+# fixed /tmp namespace so the click handler and this script agree on the path.
+SL_TOGGLE_DIR="/tmp/claude-sl-toggle"
+reset_seg_s=""
+reset_seg_w=""
+
 # Bullet bar with linear projection to end of cycle.
 #   used:      current usage percentage (integer)
 #   resets_at: unix timestamp when this window's quota refreshes
@@ -65,7 +72,36 @@ render_bullet () {
     # ↑ as soon as the projection is on track to hit the limit (>=100).
     [ "$projected" -ge 100 ] 2>/dev/null && overflow=" ${BLINK}${CRIMSON}󰀦${R}"
 
-    seg "${pct_color_val}${used}% ${label}${R} ${bar}${overflow}"
+    # Wrap the bar in an OSC 8 hyperlink to a per-session toggle marker. A
+    # terminal hyperlink handler (statusline-click.sh) flips the marker on
+    # click; this renderer then reveals the reset time on line 3.
+    local marker="${SL_TOGGLE_DIR}/${session_key}.${label}"
+    local link_open="\033]8;;file://${marker}\a"
+    local link_close="\033]8;;\a"
+    seg "${link_open}${pct_color_val}${used}% ${label}${R} ${bar}${link_close}${overflow}"
+
+    # When the marker is set, compose this bar's reset reveal for line 3.
+    if [ -e "$marker" ] && [ -n "$resets_at" ] && [ "$resets_at" -gt 0 ] 2>/dev/null; then
+        local now_r=$(date +%s)
+        local rel=$((resets_at - now_r))
+        local clock rel_str
+        if [ "$label" = "W" ]; then
+            clock=$(date -r "$resets_at" +"%a %H:%M" 2>/dev/null || date -d "@$resets_at" +"%a %H:%M" 2>/dev/null)
+        else
+            clock=$(date -r "$resets_at" +"%H:%M" 2>/dev/null || date -d "@$resets_at" +"%H:%M" 2>/dev/null)
+        fi
+        if [ "$rel" -le 0 ]; then
+            rel_str="now"
+        else
+            local d=$((rel / 86400)) h=$(((rel % 86400) / 3600)) m=$(((rel % 3600) / 60))
+            if   [ "$d" -gt 0 ]; then rel_str="${d}d${h}h"
+            elif [ "$h" -gt 0 ]; then rel_str="${h}h${m}m"
+            else                      rel_str="${m}m"
+            fi
+        fi
+        local txt="${pct_color_val}${label}${R} resets in ${rel_str} ${DIM}(${clock})${R}"
+        if [ "$label" = "W" ]; then reset_seg_w="$txt"; else reset_seg_s="$txt"; fi
+    fi
 }
 
 # Context window: no time-based projection (no rolling cycle).

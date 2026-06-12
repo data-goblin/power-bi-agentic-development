@@ -58,6 +58,9 @@ pr_review=$(echo "$input" | jq -r '.pr.review_state // empty' 2>/dev/null)
 wt_path=$(echo "$input" | jq -r '.worktree.path // empty' 2>/dev/null)
 wt_name=$(echo "$input" | jq -r '.worktree.name // empty' 2>/dev/null)
 wt_branch=$(echo "$input" | jq -r '.worktree.branch // empty' 2>/dev/null)
+session_id=$(echo "$input" | jq -r '.session_id // empty' 2>/dev/null)
+# Filesystem-safe key for the per-session meter reset-reveal toggle markers.
+session_key=$(printf '%s' "$session_id" | tr -c 'A-Za-z0-9_-' '_')
 
 R="\033[0m"
 DIM="\033[38;5;241m"
@@ -76,8 +79,9 @@ PURPLE="\033[38;5;141m"
 CRIMSON="\033[38;5;160m"
 
 # Model icons: NerdFonts MDI (nf-md-robot_*), confirmed present in JetBrainsMono NF 3.4.0
-# 󱚝 U+F169D nf-md-robot_angry  󱜙 U+F1719 nf-md-robot_happy  󱜚 U+F171A nf-md-robot_happy_outline
-if echo "$model_full" | grep -qi "opus";   then model="Opus";   model_color="$RED";     model_icon="󱚝"
+# 󰈸 U+F0238 nf-md-fire  󱚝 U+F169D nf-md-robot_angry  󱜙 U+F1719 nf-md-robot_happy  󱜚 U+F171A nf-md-robot_happy_outline
+if echo "$model_full" | grep -qi "fable"; then model="Fable"; model_color="$PINK";   model_icon="󰈸"
+elif echo "$model_full" | grep -qi "opus";   then model="Opus";   model_color="$RED";     model_icon="󱚝"
 elif echo "$model_full" | grep -qi "haiku"; then model="Haiku";  model_color="$YELLOW";  model_icon="󱜚"
 elif echo "$model_full" | grep -qi "sonnet";then model="Sonnet"; model_color="$ORANGE";  model_icon="󱜙"
 else model=""; model_color=""; model_icon=""
@@ -85,12 +89,13 @@ fi
 
 # Hide version on the family-latest model (assumed default), show it on older
 # releases (e.g. "Opus 4.6"). Bump LATEST_*_ID when a new model takes over the family.
+LATEST_FABLE_ID="fable-5"
 LATEST_OPUS_ID="opus-4-7"
 LATEST_SONNET_ID="sonnet-4-6"
 LATEST_HAIKU_ID="haiku-4-5"
 if [ -n "$model" ]; then
     case "$model_id" in
-        *$LATEST_OPUS_ID*|*$LATEST_SONNET_ID*|*$LATEST_HAIKU_ID*) : ;;
+        *$LATEST_FABLE_ID*|*$LATEST_OPUS_ID*|*$LATEST_SONNET_ID*|*$LATEST_HAIKU_ID*) : ;;
         *)
             # Prefer model_id (always has version, e.g. "claude-opus-4-6") since
             # display_name is just the family per the docs example.
@@ -102,19 +107,29 @@ if [ -n "$model" ]; then
 fi
 
 # Effort dots, calibrated per model. Haiku has no effort support and stays blank.
-# Opus 4.7: 5 levels (low/medium/high/xhigh/max). Opus 4.6 + Sonnet 4.6: 4 levels
+# Fable + Opus 4.7+: 5 levels (low/medium/high/xhigh|ultracode/max). Opus 4.6 + Sonnet 4.6: 4 levels
 # (low/medium/high/max; xhigh falls back to high). See code.claude.com/docs/en/model-config.
 case "$model" in
+    Fable*)
+        case "$effort_level" in
+            low)    effort_dots="●○○○○" ;;
+            medium) effort_dots="●●○○○" ;;
+            high)   effort_dots="●●●○○" ;;
+            xhigh|ultracode) effort_dots="●●●●○" ;;
+            max)    effort_dots="●●●●●" ;;
+            *)      effort_dots="" ;;
+        esac
+        ;;
     Haiku*)
         effort_dots=""
         ;;
     Opus*)
-        if echo "$model_id $model_full" | grep -qE '4\.7|4-7'; then
+        if echo "$model_id $model_full" | grep -qE '4\.[7-9]|4-[7-9]|4\.1[0-9]|4-1[0-9]'; then
             case "$effort_level" in
                 low)    effort_dots="●○○○○" ;;
                 medium) effort_dots="●●○○○" ;;
                 high)   effort_dots="●●●○○" ;;
-                xhigh)  effort_dots="●●●●○" ;;
+                xhigh|ultracode) effort_dots="●●●●○" ;;
                 max)    effort_dots="●●●●●" ;;
                 *)      effort_dots="" ;;
             esac
@@ -182,9 +197,8 @@ load_segment() {
     . "$STATUSLINE_D/$file"
 }
 
-# Two-line layout. Version segment on line 2 is the visual counterpart
-# of time on line 1 -- both leftmost, both short, dim. Keeps the model
-# segment column-aligned with the cwd above.
+# Statusline layout. A third line appears only when a meter bar is clicked
+# open (06-meters.sh sets reset_seg_s / reset_seg_w from the toggle markers).
 #   line 1: time · host/cwd · git
 #   line 2: version · model · meters
 load_segment "$ENABLE_TIME"           05-time.sh
@@ -195,5 +209,10 @@ load_segment "$ENABLE_VERSION"        01-version.sh
 load_segment "$ENABLE_VIM"            04a-vim.sh
 load_segment "$ENABLE_MODEL"          04-model.sh
 load_segment "$ENABLE_METERS"         06-meters.sh
-
+# Line 3: rate-limit reset reveal, shown only while a meter toggle is open.
+if [ -n "$reset_seg_s" ] || [ -n "$reset_seg_w" ]; then
+    nl
+    [ -n "$reset_seg_s" ] && seg "$reset_seg_s"
+    [ -n "$reset_seg_w" ] && seg "$reset_seg_w"
+fi
 echo -e "$out"
