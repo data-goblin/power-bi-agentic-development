@@ -79,8 +79,8 @@ url_encode() {
 # Worktree mode: when an anthropic-managed worktree session is active, replace
 # the cwd display with the worktree triple (path · name · branch) in orange so
 # isolation is visually obvious. 03-git.sh suppresses the branch in this mode.
-# Both modes wrap the path in an OSC 8 hyperlink; alacritty's hint handler
-# (scripts/alacritty-url-open.sh) opens it in `alacritty -e nvim` on click.
+# Both modes wrap the path in an OSC 8 hyperlink (file:// URL); whether a click
+# does anything depends on your terminal's hyperlink handler.
 if [ -n "$wt_path" ]; then
     wt_glyph=$'\xf3\xb0\x99\x85'  # U+F0645 nf-md-file_tree
     wt_display="$wt_path"
