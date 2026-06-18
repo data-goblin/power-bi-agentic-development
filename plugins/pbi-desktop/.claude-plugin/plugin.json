@@ -1,7 +1,7 @@
 {
   "name": "pbi-desktop",
-  "version": "26.24.2",
-  "description": "Connect to Power BI Desktop's local Analysis Services instance via TOM and ADOMD.NET. No MCP server required.",
+  "version": "26.25",
+  "description": "The live model in Power BI Desktop via TOM and ADOMD.NET; no MCP needed.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

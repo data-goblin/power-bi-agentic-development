@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-26.24.10-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-26.25-blue" alt="Version">
   <img src="https://img.shields.io/badge/Power_BI-F2C811?logo=powerbi&logoColor=000" alt="Power BI">
   <img src="https://img.shields.io/badge/Microsoft_Fabric-008272" alt="Microsoft Fabric">
   <img src="https://img.shields.io/badge/Tabular_Editor-2E7D32" alt="Tabular Editor">
@@ -18,7 +18,9 @@
 </p>
 
 > [!WARNING]
-> Under active development with a weekly release cadence; regular renaming or restructuring.
+> These skills are under active development with a weekly release cadence, so expect regular renaming and restructuring.
+>
+> **26.26 (out next week) is a large, breaking re-organization:** many skills will be consolidated or disappear, and skills will activate less automatically, so they will be less suited to fully autonomous tasks unless you invoke them with an explicit argument. Pin to **26.25** if you want stability. More info to come on the 26.26 release.
 
 ---
 
@@ -148,6 +150,9 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 - `plugins/pbi-desktop/hooks/config.yaml` -- DAX references, measure metadata, referential integrity, metadata cache
 
 ### Power BI and Fabric skills, agents, and hooks: available plugins
+
+> [!WARNING]
+> Don't install every plugin. Each skill competes for the agent's attention and context window, so install a plugin only when you need it and remove it when you don't. Prefer installing plugins scoped to a project rather than to your user, so each project carries only the skills it actually uses.
 
 <details>
 <summary><img src="media/icons/tabular-editor.svg" alt="" height="20"> <strong>tabular-editor</strong> &ensp; BPA rules, C# scripting, and CLI automation for Tabular Editor</summary>

@@ -115,6 +115,16 @@ Each property category is an array of objects, each with a `properties` key and 
 
 Both are found in real reports. When editing an older report, container properties in `objects` are legitimate and correct for that schema version. Don't "fix" them unless upgrading the schema.
 
+## Where the valid names come from
+
+For built-in visuals, the valid `visualType` ids, the `objects` names per visual type, and the 15 `visualContainerObjects` names are enumerated by the core visual catalog that the pbir CLI bundles and pins, so it is the authoritative source for these names rather than reverse-engineering them from theme files or the format pane.
+
+The catalog is preview (0.1.x) and can lag the shipping product, so treat its enumeration as advisory: unknown but plausible names may still be valid, and custom visuals are out of scope. Use it as a quick check, not a hard gate.
+
+- `pbir visuals list` lists the built-in visual type ids (add `--vco` for container object names, `--selectors` for instance-selector objects)
+- `pbir visuals capabilities <type>` shows the valid `objects` and their properties plus the data roles for one built-in visual type
+- `pbir validate --semantic` (or `--all`) flags `visualType`, `objects`, and `visualContainerObjects` names that the catalog does not recognize; `--strict` promotes those advisories to errors
+
 ## Common Container Configurations
 
 ### Clean visual (no chrome)

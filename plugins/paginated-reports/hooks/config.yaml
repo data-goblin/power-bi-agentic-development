@@ -1,0 +1,10 @@
+# Toggles for the paginated-reports validation hook.
+# Set any key to false to disable. Changes take effect immediately.
+
+# Master kill-switch: set false to disable all hooks in this plugin
+# (escape hatch, e.g. on Windows if a hook misbehaves).
+all_hooks_enabled: true
+
+# Validate .rdl structure with validate_rdl.py after Write/Edit (and on Bash
+# commands that touch .rdl files). Blocks on structural errors only.
+rdl_validation: true

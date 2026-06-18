@@ -55,7 +55,7 @@ pbir dax measures add "Report.Report" -t Metrics -n "RevenueFormatted" \
 
 ```bash
 # Rename
-pbir dax measures rename "Report.Report" --from "_Fmt.OldName" --to "NewName"
+pbir dax measures rename "Report.Report" "OldName" "NewName"
 
 # Remove all measures
 pbir rm "Report.Report" --measures -f

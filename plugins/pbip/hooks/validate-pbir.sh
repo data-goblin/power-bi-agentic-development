@@ -8,6 +8,8 @@
 #   3. Required fields per file type (from Microsoft JSON schemas)
 #   4. $schema URL format
 #   5. Visual/page name format (word chars and hyphens only)
+#   6. visualContainerObjects names against Microsoft's core visual catalog
+#      (self-contained enum check; allowlist in core-visual-catalog.json)
 #
 # Checks can be toggled via config.yaml in the same directory as this script.
 #
@@ -159,6 +161,38 @@ validate_file() {
                     echo "" >&2
                     echo "$SKILL_TIP" >&2
                     return 2
+                fi
+            fi
+
+            # visualContainerObjects names against the core visual catalog allowlist.
+            # The 15 container objects are universal (same for built-in and custom
+            # visuals), so this is safe to enforce. Visual type ids are NOT checked:
+            # custom visuals use arbitrary type strings. Allowlist + catalog version
+            # in core-visual-catalog.json; degrades silently if that file is absent.
+            if check_enabled visual_catalog_enum && [[ -f "$HOOK_DIR/core-visual-catalog.json" ]]; then
+                local VCO_ALLOW BAD_VCO CATVER ALLOWED
+                VCO_ALLOW=$(jq -c '.vcoNames' "$HOOK_DIR/core-visual-catalog.json" 2>/dev/null)
+                if [[ -n "$VCO_ALLOW" && "$VCO_ALLOW" != "null" ]]; then
+                    BAD_VCO=$(jq -r --argjson allow "$VCO_ALLOW" '
+                        ((.visual.visualContainerObjects // {}) | keys) - $allow | .[]?
+                    ' "$FILE_PATH" 2>/dev/null)
+                    if [[ -n "$BAD_VCO" ]]; then
+                        CATVER=$(jq -r '.catalogVersion // "?"' "$HOOK_DIR/core-visual-catalog.json" 2>/dev/null)
+                        ALLOWED=$(jq -r '.vcoNames | join(", ")' "$HOOK_DIR/core-visual-catalog.json" 2>/dev/null)
+                        echo "PBIR validation failed: $FILE_PATH" >&2
+                        echo "" >&2
+                        echo "Unrecognized visualContainerObjects name(s):" >&2
+                        printf '  - %s\n' $BAD_VCO >&2
+                        echo "" >&2
+                        echo "Valid container objects (core visual catalog $CATVER):" >&2
+                        echo "  $ALLOWED" >&2
+                        echo "" >&2
+                        echo "Container objects are the same for every visual. Power BI silently" >&2
+                        echo "ignores an unknown name. Disable with visual_catalog_enum: false." >&2
+                        echo "" >&2
+                        echo "$SKILL_TIP" >&2
+                        return 2
+                    fi
                 fi
             fi
             ;;
@@ -392,6 +426,8 @@ elif [[ "$TOOL_NAME" == "Bash" ]]; then
         done
         exit 2
     fi
+
+    exit 0
 fi
 
 exit 0

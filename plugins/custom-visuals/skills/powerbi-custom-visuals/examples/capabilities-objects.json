@@ -1,0 +1,24 @@
+{
+  "_comment": "A capabilities.json 'objects' block. Each object becomes a format-pane card; each property becomes a slice. In the formatting model, the card name matches the object name here and the slice name matches the property name. Drop this objects block into the real capabilities.json alongside dataRoles and dataViewMappings.",
+  "objects": {
+    "circle": {
+      "properties": {
+        "circleColor": {
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "circleThickness": {
+          "type": { "numeric": true }
+        },
+        "show": {
+          "type": { "bool": true }
+        }
+      }
+    },
+    "dataLabels": {
+      "properties": {
+        "fontSize": { "type": { "formatting": { "fontSize": true } } },
+        "fontColor": { "type": { "fill": { "solid": { "color": true } } } }
+      }
+    }
+  }
+}

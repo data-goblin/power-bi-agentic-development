@@ -170,7 +170,7 @@ Set `subtitle.show` to `false` in the visual.json `visualContainerObjects`.
 
 Icons can reinforce the KPI message -- a directional arrow, a warning triangle, or a category icon. In Power BI, **icons must be added as extension measures using SVG code** following the ImageUrl data category pattern.
 
-Refer to the **`/svg-visuals`** skill for the proper logic of creating SVG extension measures. The general pattern:
+Refer to the **`svg-visuals`** skill (custom-visuals plugin) for the proper logic of creating SVG extension measures. The general pattern:
 
 1. Create a DAX measure that returns an SVG string
 2. Set the measure's data category to `ImageUrl`
@@ -216,7 +216,7 @@ Icons should be used sparingly and only when they add information beyond what co
 | Simple headline number | `card` | Add extension measures for gap and color |
 | Multiple related metrics | `multiRowCard` | Groups related KPIs compactly |
 | Custom layout with sparkline | `card` + SVG measure | Maximum control, higher complexity |
-| Rich formatting with icons | `card` + SVG extension measures | Refer to `/svg-visuals` skill |
+| Rich formatting with icons | `card` + SVG extension measures | Refer to `svg-visuals` skill (custom-visuals plugin) |
 
 ## Checklist for KPI Card Review
 

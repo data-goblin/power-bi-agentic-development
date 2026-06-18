@@ -68,8 +68,8 @@ pbir visuals cf "Visual.Visual" --measure "dataPoint.fill _Fmt.VarianceColor"
 6. **Limit categories to 5-10.** Beyond that, bars become thin and unreadable. Use Top N filters or group smaller categories into "Other"
 
 ```bash
-pbir filters add "Visual.Visual" -f "Geography.Region" --type TopN --top 10 \
-  --by "Sales.Revenue"
+pbir add filter Geography Region -v "Visual.Visual" --type TopN --n 10 \
+  --by-table Sales --by-field Revenue
 ```
 
 7. **Bullet chart pattern for target comparison (JSON fallback).** Overlay a target/comparison value as an error bar marker on each bar to create a bullet chart. The `error` object container is not yet supported by `pbir set`; edit `visual.json` directly or use `pbir-format` skill. Set `errorRange.explicit.lowerBound` and `upperBound` to the same target measure so the marker renders as a single line. See `barChart-bullet.json` for the full pattern

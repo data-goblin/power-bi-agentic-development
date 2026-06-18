@@ -36,3 +36,12 @@ fab_exists: true
 
 # TMDL structural syntax validation (requires tmdl-validate binary)
 tmdl_syntax: true
+
+# visualContainerObjects names checked against Microsoft's core visual catalog.
+# Self-contained: allowlist + catalog version live in core-visual-catalog.json,
+# no pbir CLI dependency. On by default because the 15 container objects are a
+# closed, universal set (same for built-in and custom visuals), so it won't
+# false-positive on custom visuals. Visual type ids are intentionally not
+# enforced. Set to false if the bundled catalog lags a newly added container
+# object. (Replaces the former pbir-delegated `semantic_validation` toggle.)
+visual_catalog_enum: true

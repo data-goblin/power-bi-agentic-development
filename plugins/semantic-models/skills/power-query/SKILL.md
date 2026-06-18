@@ -1,6 +1,6 @@
 ---
 name: power-query
-version: 26.24
+version: 26.25
 description: Author, validate, and test Power Query M expressions in semantic model partitions. Automatically invoke when the user mentions "Power Query", "M code", "M expression", "partition expression", "query folding", or asks to "write Power Query", "fix Power Query", "test a partition", "preview partition data", "debug Power Query step", "optimize Power Query".
 ---
 
@@ -106,7 +106,7 @@ Two approaches to validate that an M expression is syntactically correct and pro
 
 Test the expression by running it against real data. This validates syntax, data source connectivity, and transformation correctness in one step.
 
-The `executing-power-query` skill in the `etl` plugin provides the full workflow. In summary:
+The full workflow, run by the bundled `examples/execute_m.py`:
 
 1. Create or reuse a runner dataflow in the workspace
 2. Bind the data source connection to the runner

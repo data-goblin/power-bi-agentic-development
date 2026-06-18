@@ -135,7 +135,7 @@ Sparklines add temporal context that answers "is this improving or declining?" -
 
 Add a native Power BI sparkline by binding a measure to the `Values` role with a sparkline date field in the visual.json query block.
 
-For richer inline visuals (dumbbell charts, bullet charts, progress bars), use SVG extension measures via the `/svg-visuals` skill. The trade-off: higher development and maintenance overhead vs. richer context. Use only when benefits justify added complexity.
+For richer inline visuals (dumbbell charts, bullet charts, progress bars), use SVG extension measures via the `svg-visuals` skill (custom-visuals plugin). The trade-off: higher development and maintenance overhead vs. richer context. Use only when benefits justify added complexity.
 
 ## Matrix-Specific Guidance
 

@@ -1,0 +1,22 @@
+{
+  "name": "custom-visuals",
+  "version": "26.25",
+  "description": "Deneb, Python, R, SVG, and pbiviz custom visuals.",
+  "author": {
+    "name": "Kurt Buhler",
+    "url": "https://data-goblins.com"
+  },
+  "homepage": "https://data-goblins.com",
+  "repository": "https://github.com/data-goblin/power-bi-agentic-development",
+  "license": "GPL-3.0",
+  "keywords": [
+    "power-bi",
+    "custom-visuals",
+    "deneb",
+    "vega",
+    "python",
+    "r",
+    "svg",
+    "pbiviz"
+  ]
+}

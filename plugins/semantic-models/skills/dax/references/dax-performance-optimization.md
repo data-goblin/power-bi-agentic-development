@@ -84,10 +84,10 @@ Only consult these sections if the corresponding signal is present. All require 
 
 | Method | Scope | Capture mode | How you drive it | Notes |
 |--------|-------|--------------|------------------|-------|
-| **`powerbi-modeling-mcp`** | Local PBI Desktop + remote (Fabric XMLA) | Live trace subscription | Tool calls (agent-friendly) | Returns pre-calculated FE/SE split, peak memory, and result rows. |
 | **TOM Trace API (ADOMD.NET / PowerShell)** | Local PBI Desktop + remote (Fabric XMLA) | Live trace subscription | PowerShell / .NET scripts | Subscribe to `QueryEnd`, `VertiPaqSEQueryEnd`, `VertiPaqSEQueryCacheMatch` and derive FE/SE manually (`FE = TotalDuration − union(VertiPaqSEQueryEnd intervals)`; SE wall-clock is the union of overlapping intervals, not the sum). Direct Lake databases are not exposed via the PBI Desktop local AS proxy — connect to the Fabric workspace XMLA endpoint instead. |
 | **DAX Studio** | Local PBI Desktop + remote (Fabric XMLA) | Live trace subscription | Interactive UI | Server Timings pane shows pre-calculated FE/SE. Best for hands-on investigation. |
 | **Fabric Workspace Monitoring** (`SemanticModelLogs` Eventhouse table) | Fabric workspaces (Workspace Monitoring enabled) | Logged events, queried after the fact | KQL queries against the Eventhouse | Per-row `OperationName`, `DurationMs`, `CpuTimeMs`; correlate events for one query via `OperationId`. Best for after-the-fact production analysis at scale; not suited for tight iterate-and-rerun loops. |
+| **Power BI Modeling MCP** | Local PBI Desktop + remote (Fabric XMLA) | Live trace subscription | Tool calls (agent-friendly) | Returns pre-calculated FE/SE split, peak memory, and result rows. Reach for it after the options above. |
 
 ---
 

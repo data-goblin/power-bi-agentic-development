@@ -122,21 +122,19 @@ $pbip      = $state.currentFilePath                              # e.g. C:\Repor
 $reportDir = Join-Path (Split-Path $pbip) ((Split-Path $pbip -LeafBase) + ".Report")
 ```
 
-## Fallback: the npm CLI
+## Higher-level wrapper: the pbir CLI
 
 If the raw pipe client misbehaves (framing, encoding, or a build that changed a param
-shape), fall back to Microsoft's wrapper, which speaks the same methods over the same
-pipe: `@microsoft/powerbi-desktop-bridge-cli` (the `powerbi-desktop` command, Node 20+;
-install only with the user's go-ahead, and the same preview setting must be enabled).
+shape), use the `pbir desktop` commands (reports plugin `pbir-cli` skill); they speak the
+same methods over the same pipe (the same preview setting must be enabled):
 
 ```bash
-npm install -g @microsoft/powerbi-desktop-bridge-cli
-powerbi-desktop status                 # list instances; pick the PID
-powerbi-desktop reload --pid <pid>     # wraps file.reload/v1
-powerbi-desktop screenshot <pageId> --pid <pid> --output page.png   # wraps report.snapshot.capture/v1
+pbir desktop list                                  # list instances; pick the PID (`status` is an alias)
+pbir desktop reload --pid <pid>                    # wraps file.reload/v1
+pbir desktop screenshot "<report>/<page>.Page" --pid <pid> -o page.png   # wraps report.snapshot.capture/v1
 ```
 
-Same endpoint, higher level. The `pbir-format` skill documents this wrapper path in full.
+Same endpoint, higher level. The `pbir-cli` skill documents this path in full.
 
 ## Notes
 

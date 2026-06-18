@@ -1,6 +1,6 @@
 ---
 name: pbir-format
-version: 26.24
+version: 26.25
 description: Format reference for Power BI Enhanced Report (PBIR) JSON schemas and patterns. Automatically invoke when the user asks about PBIR JSON structure, visual.json properties, PBIR expressions, objects vs visualContainerObjects, theme inheritance, conditional formatting patterns, extension measures, bookmarks, field references, filter formatting, query roles, PBIR page structure, report wallpaper, or any PBIR metadata format question.
 ---
 
@@ -121,6 +121,7 @@ For detailed report design guidance (layout, spacing, visual hierarchy, color, a
 | Find model fields | **`references/semantic-model/finding-fields.md`** -- pbir model, te, fab commands |
 | Rebind to different model | **`references/semantic-model/report-rebinding.md`** -- byPath vs byConnection conversion |
 | Understand schema versions | **`references/schemas.md`** -- all schema types and current versions |
+| Validate or check conformance | **`references/validation.md`** -- conformance dimensions, `pbir validate` categories, name and required-field rules, audit and discovery commands |
 | Understand how visuals generate DAX queries | **`references/semantic-model/inferring-queries-from-visuals.md`** -- visual metadata → SUMMARIZECOLUMNS mapping, data roles, IGNORE() context |
 | Build or verify DAX query patterns | **`references/semantic-model/model-queries.md`** -- SUMMARIZECOLUMNS patterns, ROW(), query execution methods |
 | Rename a table or field across visual JSON | **`references/rename-patterns.md`** -- Entity/Property/queryRef patterns in visual.json, filterConfig, reportExtensions |
@@ -157,9 +158,10 @@ A report must be connected to a semantic model. There are two ways to do this:
 
 **Core references:**
 - **`references/visual-json.md`** -- visual.json: expressions, field refs, query roles, position, objects vs vCO, selectors, sorting, filters, drill-down propagation
-- **`references/desktop-bridge.md`** -- Verifying PBIR edits on the canvas via the Desktop Bridge CLI (`powerbi-desktop` reload + screenshot); preview setting; locating the open PBIP
+- **`references/desktop-bridge.md`** -- Verifying PBIR edits on the canvas via `pbir desktop` reload + screenshot; preview setting; locating the open PBIP
 - **`references/pbir-structure.md`** -- PBIR folder structure, mobile.json storage mechanics, git hygiene
 - **`references/schemas.md`** -- Schema versions, URLs, and embedded schema coupling
+- **`references/validation.md`** -- Conformance dimensions and how to validate (schema, names and ids, required fields, fields, enums, roles, layout, theme, semantic); `pbir validate` categories; audit and discovery commands
 - **`references/enumerations.md`** -- Valid property enumerations
 - **`references/version-json.md`** -- version.json format (concise)
 - **`references/platform.md`** -- .platform file format (concise)

@@ -6,7 +6,7 @@ Complete guide to managing field bindings in visuals, swapping fields across rep
 
 ```bash
 pbir fields list "Report.Report"                 # All fields used across the report
-pbir fields find "Report.Report" -f "Sales.Revenue"  # Where a specific field is used
+pbir fields find "Sales.Revenue" "Report.Report"  # Where a specific field is used
 pbir tree "Report.Report" -v                     # Visual tree with field bindings
 ```
 
@@ -101,7 +101,7 @@ pbir visuals bind "Visual.Visual" -a "Category:Date.Month" -t Column
 
 **CLI (`pbir add visual`)**: The `-d` flag auto-detects type from the model when possible. If the model is unavailable, explicitly specify with `-t`:
 ```bash
-pbir add visual card "Page.Page" -d "Values:Sales.Revenue" -t Measure
+pbir add visual card "Page.Page" -d "Values:Sales.Revenue"
 ```
 
 **Python object model (`Field()`)**: Set `kind` parameter:
@@ -168,7 +168,7 @@ pbir visuals bind "Visual.Visual" -c "Legend"
 | `-a` / `--add` | Add field binding (`Role:Table.Field`) |
 | `-r` / `--remove` | Remove field binding (`Role:Table.Field`) |
 | `-c` / `--clear` | Clear all fields from a role |
-| `-t` / `--type` | Field type hint: `Column`, `Measure`, `Aggregation` |
+| `-t` / `--type` | Field type: `Column` or `Measure` |
 | `-l` / `--list-roles` | Show available data roles for the visual type |
 | `-s` / `--show` | Show current bindings |
 
@@ -227,17 +227,20 @@ pbir fields add "Report.Report/Page.Page/Visual.Visual" \
 pbir fields rename "Report.Report" --list
 
 # Rename a field reference across the report
-pbir fields rename "Report.Report" -f "Sales.OldName" -v "Sales.NewName"
+pbir fields rename "Report.Report" "Sales.OldName" "Sales.NewName"
 
 # Dry run
-pbir fields rename "Report.Report" -f "Sales.OldName" -v "Sales.NewName" --dry-run
+pbir fields rename "Report.Report" "Sales.OldName" "Sales.NewName" --dry-run
 ```
 
 ### Clear Fields
 
 ```bash
-# Remove all uses of a field
-pbir fields clear "Report.Report" -f "Sales.ObsoleteField"
+# Remove all field bindings from visuals in the report
+pbir rm "Report.Report" --fields -f
+
+# Remove one field from one visual's role
+pbir visuals bind "Visual.Visual" -c "Values"
 ```
 
 ## Rebinding Reports to Different Models
@@ -265,7 +268,7 @@ pbir report rebind "Report.Report" --model-id "abc-123-def"
 
 ```bash
 # Rebind to a local PBIP semantic model
-pbir report rebind "Report.Report" "path/to/Model.SemanticModel" --local
+pbir report rebind "Report.Report" --local "path/to/Model.SemanticModel"
 ```
 
 ### Field Mapping After Rebind
@@ -292,7 +295,7 @@ pbir fields replace "Report.Report" --from "OldTable.OldMeasure" --to "NewTable.
 
 ## Recommended Workflow: Swapping Fields
 
-1. **Discover**: `pbir fields find "Report.Report" -f "Table.OldField"` to see all usages
+1. **Discover**: `pbir fields find "Table.OldField" "Report.Report"` to see all usages
 2. **Dry run**: `pbir fields replace "Report.Report" --from "Table.OldField" --to "Table.NewField" --dry-run`
 3. **Apply**: Remove `--dry-run` to execute
 4. **Validate**: `pbir validate "Report.Report"`

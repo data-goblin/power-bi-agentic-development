@@ -35,4 +35,4 @@ Renders output from an R script (e.g. ggplot2, base R graphics) as a static imag
 
 - The `script` container holds `provider` and `source` (the R code string); neither property is meaningful to theme — they are set per-visual.
 - The rendered plot image fills the container; axis colors, fonts, and chart styling inside the R plot are not controlled by Power BI themes — apply those via ggplot2 themes or base R `par()` in the script itself.
-- Use the `r-visuals` skill when authoring or editing the R script.
+- Use the `r-visuals` skill (custom-visuals plugin) when authoring or editing the R script.

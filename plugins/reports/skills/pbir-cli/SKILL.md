@@ -1,6 +1,6 @@
 ---
 name: pbir-cli
-version: 26.24.8
+version: 26.25
 description: This skill should be used whenever the user mentions "pbir", "pbir-cli", "Power BI reports", or "PBI reports", works with .pbir, .pbip, or .pbix files, or wants to refresh, screenshot, or visually verify a report that is open in Power BI Desktop. Covers creating, exploring, formatting, validating, and publishing Power BI reports through the pbir CLI and object model, plus driving Power BI Desktop (canvas reload, page screenshots) and querying connected or local semantic models.
 ---
 
@@ -70,7 +70,7 @@ Follow all rules below.
 
 2. **NEVER edit report JSON files directly.** Always use `pbir` CLI commands. Use `pbir cat` or `pbir get` to inspect JSON or properties; use `pbir set` for any property not covered by a dedicated command.
 
-3. **Discover before setting.** Run `pbir schema containers <type>` then `pbir schema describe <type>.<container>` to find correct property names, types, ranges, and enums before formatting. Do not guess property names
+3. **Discover before setting.** Run `pbir schema describe <type>` to list a visual type's objects, then `pbir schema describe <type> <object>` for property names, types, ranges, and enums before formatting. Do not guess property names
 
 4. **Theme-first formatting.** Check `pbir visuals format` before applying bespoke formatting; the theme may already set the property. Prefer `pbir theme set-formatting` for changes that apply to all visuals of a type. Reserve `pbir visuals title/background/border` for one-off overrides
 
@@ -119,12 +119,15 @@ For full model query patterns and field binding workflows, consult **`references
 When the report is open in Power BI Desktop (Windows, with the "external tool access" preview feature enabled), drive the running instance directly. This is the fastest way to visually verify changes; no publishing required.
 
 ```bash
-pbir desktop list                                     # Running instances (PID, open file)
-pbir desktop refresh "Report.Report"                  # Reload on-disk definition into the canvas
+pbir desktop list                                     # Running instances (PID, open file, unsaved state, pages); `status` is an alias
+pbir desktop refresh "Report.Report"                  # Reload on-disk definition into the canvas (`reload` is an alias)
+pbir desktop refresh "Report.Report" -m               # --model: also re-apply the model (TMDL) definition
 pbir desktop screenshot "Report.Report/Page.Page" -o verify.png
+pbir desktop screenshot "Report.Report" --all         # Every page -> ./screenshots (--output-dir to set; --settle <ms> before first capture)
+pbir desktop manifest --pid 1234                      # Bridge methods one instance exposes
 ```
 
-The edit-verify loop: mutate with `pbir set`/`add`, then `pbir desktop refresh`, then `pbir desktop screenshot`, then read the PNG. Inspect the rendered page after every meaningful change; screenshots catch what validation cannot (overlap, truncation, wrong field, illegible formatting). Set `PBIR_DESKTOP_AUTO_REFRESH=1` to fold the refresh step into every save.
+The edit-verify loop: mutate with `pbir set`/`add`, then `pbir desktop refresh`, then `pbir desktop screenshot`, then read the PNG. Inspect the rendered page after every meaningful change; screenshots catch what validation cannot (overlap, truncation, wrong field, illegible formatting). Set `PBIR_DESKTOP_AUTO_REFRESH=1` to fold the refresh step into every save. `--scale` is clamped to 1-3 (default 2); `--pid` targets a specific instance when several are open.
 
 Screenshots need the Desktop window in the Report view. Refreshing an instance with unsaved changes makes Desktop save first, rewriting the whole definition on disk. PBIX files support screenshot but not refresh. For requirements, multi-instance behavior, and troubleshooting, consult **`references/desktop-integration.md`**.
 
@@ -140,7 +143,7 @@ Connection: pass `--connection "Workspace/Model.SemanticModel"`, or set an activ
 
 ```bash
 pbir new report "Sales.Report" -c "Workspace/Model.SemanticModel"
-pbir pages rename "Sales.Report/Page 1.Page" "Overview"        # Rename default page
+pbir pages rename "Sales.Report/Page 1.Page" --to "Overview" -f   # Rename default page (new name via --to)
 pbir add visual card "Sales.Report/Overview.Page" --title "Revenue" -d "Values:Sales.Revenue" --y 120
 pbir add filter Date Year -r "Sales.Report"
 pbir validate "Sales.Report"
@@ -210,23 +213,34 @@ Presets are themed; pair them with `pbir theme apply-template` for full visual c
 
 ### Property Discovery (Required Before Formatting)
 
-Every visual type has dozens of containers with hundreds of properties. Use the schema discovery workflow to find the right container and property name before setting values. Do not guess property names.
+Every visual type has dozens of objects with hundreds of properties. Use the schema discovery workflow to find the right object and property name before setting values. Do not guess property names.
 
 ```bash
-# Step 1: What containers exist for this visual type?
-pbir schema containers "lineChart"
+# Step 1: What objects exist for this visual type? (objects + property counts)
+pbir schema describe "lineChart"
 
-# Step 2: What properties does a container have? (includes types, ranges, enums, descriptions)
-pbir schema describe "lineChart.lineStyles"
+# Step 2: What properties does an object have? (includes types, ranges, enums, descriptions)
+pbir schema describe "lineChart" "lineStyles"
 
 # Step 3: What's currently set on a live visual? (shows source: default/wildcard/visualType/visual)
 pbir visuals format "Report.Report/Page.Page/Visual.Visual"
 pbir visuals format "Report.Report/Page.Page/Visual.Visual" -v   # Include unset (None) properties
-pbir visuals format "Report.Report/Page.Page/Visual.Visual" -p lineStyles  # Filter to container
+pbir visuals format "Report.Report/Page.Page/Visual.Visual" -p lineStyles  # Filter to object
 
 # Step 4: Fuzzy search for a property by name
 pbir visuals properties -s "marker"
 ```
+
+For built-in visuals, the authoritative list of valid type ids and per-type `objects` names comes from Microsoft's core visual catalog (bundled and pinned by the CLI). Use it to confirm a type or object name exists before authoring:
+
+```bash
+pbir schema types                       # Built-in visual + entity type ids (--vco for universal container objects, --selectors for selector objects)
+pbir schema describe "barChart"         # Valid objects + their properties for one type
+pbir schema roles "barChart"            # Data roles the type accepts (required? multiple? Column/Measure)
+pbir schema describe "tableEx" --json   # Full JSON for agent consumption
+```
+
+`pbir schema describe` draws from this core catalog (the authority `pbir set` enforces) and enriches it with the theme schema for value ranges and enums. Custom visuals are out of scope for the catalog.
 
 Schema descriptions include practical usage notes (e.g., error bars as target lines, title.text supporting measure-driven dynamic values). Use `--json` output for full descriptions.
 
@@ -307,6 +321,7 @@ pbir bpa run "Report.Report"                        # Best Practice Analyzer rul
 pbir bpa run "Report.Report" --fix --save           # Apply safe automatic fixes
 pbir tree "Report.Report" -v                        # Structure + field bindings
 pbir theme colors "Report.Report"                   # Palette and usage
+pbir color list "Report.Report"                     # Every hard-coded color literal and where it is used
 pbir fields list "Report.Report"                    # Fields in use
 pbir dax measures list "Report.Report"              # Extension measures
 pbir filters list "Report.Report"                   # Filters at every scope
@@ -323,13 +338,13 @@ Quick map of command groups:
 
 ```yaml
 Getting started:     setup, config, connect (+ --profile), profile, new
-Browse and query:    ls, tree, find, get, cat, model
+Browse and query:    ls (+ --tree), find, get, cat, model     # `tree` is an alias of `ls --tree`
 Modify:              set, add, mv, cp, rm, visuals, pages
 Data:                fields, filters, dax, bookmarks, annotations
-Theme:               theme (colors, text-classes, fonts, set-formatting, apply-template, diff)
-Schema discovery:    schema (types, containers, describe), visuals properties, visuals format
-Workflow ops:        validate, backup, restore, publish, download, batch, open, bpa
-Desktop (Windows):   desktop (list, refresh, screenshot)
+Theme and style:     theme (colors, fonts, set-colors, set-fonts, set-formatting, apply-template), color (list, replace), fonts (list, replace, clear, available)
+Schema discovery:    schema (= capabilities) (types, describe, roles, status, upgrade), visuals properties, visuals format
+Workflow ops:        validate, backup, restore, publish, download, batch, open, bpa, usage
+Desktop (Windows):   desktop (list/status, refresh/reload, screenshot, manifest)
 ```
 
 Notes on the less-obvious groups:
@@ -338,6 +353,9 @@ Notes on the less-obvious groups:
 - **visuals group**: visual groups let users scale and position multiple visuals together. See "Visual groups" workflow below.
 - **visuals preset**: named style presets (`minimal`, `bold`, `clean`, `emphasis`, `presentation`) apply curated formatting in one step.
 - **bpa**: Best Practice Analyzer. `pbir bpa run "Report.Report"` reports rule violations; `--fix --save` applies safe fixes. `pbir bpa rules list/ignore/unignore` manages the rule set.
+- **color**: `pbir color list` enumerates every hard-coded color literal and where it is used; `pbir color replace --from <hex> --to <hex>` swaps one across the report (scope with `--theme`/`--report`). Distinct from the `theme` group, which edits the theme JSON rather than inline literals.
+- **fonts**: the typography mirror of `color`. `pbir fonts list` audits families/sizes/weights across report + theme; `pbir fonts replace --from --to` swaps a family everywhere; `pbir fonts clear` drops per-visual font/format overrides so the theme default applies. To set the theme's own fonts, use `pbir theme set-fonts`.
+- **usage**: `pbir usage "Report.Report"` (or a workspace / published report) pulls views, viewers, pages, and load times from the Power BI service via your `az login` token. `--model` adds the workspace usage metrics model for richer detail (Contributor+, generates a hidden model). Relies on undocumented service telemetry.
 
 ## Global Flags
 
@@ -348,7 +366,11 @@ Top-level flags; place before the subcommand: `pbir -q new report ...`, NOT `pbi
 --debug: enable tracebacks and timing
 --json: machine-readable output (on find, model, validate, etc.)
 -f / --force: skip confirmation prompts (required for glob patterns in set and rm)
+--rawdog: skip EVERY validation check (umbrella for --skip all)
+--skip <category>: skip validation categories (repeatable, comma-separated): structure, schema, schema-version, fields, enums, qa, roles, layout, theme
 ```
+
+`pbir` validates implicitly on mutations. `--skip`/`--rawdog` relax that for deliberate cases, e.g. `pbir --skip fields set ...` to author a visual whose field is not in the model yet. They are global, so they go before the subcommand. Prefer fixing the underlying issue over `--rawdog`.
 
 
 ## Common Mistakes
@@ -383,12 +405,17 @@ Run `pbir validate "Report.Report"` after **every mutation**. This catches broke
 ```yaml
 (no flags): structure + schema validation
 --fields: also validate fields exist in model with correct types (Column/Measure)
---qa: also run quality assurance rules
---all: structure + schema + fields + QA
---strict: promote field/QA warnings to errors
+--qa: also run quality-assurance rules (overlap/overflow, hidden visuals, visual filters, field counts, layout and role-cardinality heuristics)
+--semantic: also check visual type ids + objects/visualContainerObjects names against the core visual catalog
+--all: structure + schema + fields + QA + semantic
+--strict: promote field/QA/semantic warnings to errors
 --json / --tree: output format
 --allow-download-schemas: download missing schemas on the fly
 ```
+
+The same checks run implicitly on mutations. To bypass a category deliberately, use the global flags before the subcommand: `--skip <category>` (`structure, schema, schema-version, fields, enums, qa, roles, layout, theme`; repeatable, comma-separated) or `--rawdog` (skip all). Prefer fixing the cause over skipping.
+
+`--semantic` is backed by the core visual catalog bundled and pinned by the CLI. It flags unrecognized `visualType`, `objects`, and `visualContainerObjects` names as advisory warnings (info for unlisted properties); `--strict` makes them errors. The catalog is preview and may lag the product, so unknown but plausible names and custom visuals can still be valid. Treat semantic findings as a quick authoring check, not a hard gate.
 
 **Schema version errors**: Fix with `pbir schema fetch --yes` then `pbir schema upgrade "Report.Report"`.
 

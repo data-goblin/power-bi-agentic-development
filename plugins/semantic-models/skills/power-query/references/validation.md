@@ -9,7 +9,7 @@ Full validation that runs the expression and returns actual data. Catches syntax
 ### Prerequisites
 
 - A runner dataflow in the workspace with the data source connection bound
-- See the `executing-power-query` skill in the `etl` plugin for the full setup procedure
+- See the Power Query API section in SKILL.md for creating the runner dataflow and executing expressions
 
 ### Step 1: Extract the Expression and Parameters
 

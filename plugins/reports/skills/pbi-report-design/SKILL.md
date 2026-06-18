@@ -1,7 +1,7 @@
 ---
 name: pbi-report-design
-version: 26.24
-description: Power BI report design principles, layout guidance, and formatting best practices. Automatically invoke when the user asks about "report layout", "design best practices", "visual hierarchy", "3-30-300 rule", "KPI card design", "page layout", "accessibility in reports", "visual spacing", "report canvas", "card design patterns", "table formatting", "matrix formatting", or mentions report design principles.
+version: 26.25
+description: The Power BI report design canon: design identity, visual hierarchy and the 3-30-300 rule, layout/spacing/alignment, color discipline, chart selection, KPI and card design, tables and matrices, accessibility, and the closing design gate. The shared reference home for report design judgment, routed to by the create-pbi-report, pbir-cli, review-report, modifying-theme-json, and custom-visual skills. Load when committing a design identity or making a design, layout, color, chart-selection, or accessibility decision for a report.
 ---
 
 # Power BI Report Design
@@ -18,6 +18,16 @@ Be innovative, pushing boundaries while adhering to data visualization rules and
 
 When a user request contradicts these guidelines, push back and explain better alternatives. The goal is to inform the user of options that lead to improved outcomes.
 
+## Design identity (commit before layout)
+
+Before any layout work, lock the report's identity so every later choice has something to cite:
+
+1. **Pick one tone** ... a committed ink budget (`restrained`, `corporate`, `editorial`, or `technical`) that fixes accent count, saturation, gridline weight, and how forward annotation gets
+2. **Pick one signature** (two at most) ... a single recurring element (header band, single-accent-hue rule, fixed nav rail, KPI silhouette, callout style, target-line convention) repeated identically on every page, so the report reads as one artifact
+3. **Route each page to one shape** by the question it answers (`summary`, `monitoring`, `exploration`, `comparison`, `narrative`)
+
+Recording tone and signature once is what turns "use muted colors" into a propagating decision. See `references/design-identity.md` for the tone budgets and signature catalog, and `references/page-shapes.md` for routing each page to a shape. Serialize the identity into the theme via the `modifying-theme-json` skill, not into per-visual overrides.
+
 ## Core rules
 
 1. **3-30-300 Rule:** The most important and least detailed information should be in the top-left (KPIs, cards, etc.) while the least important and most detailed information should be in the bottom-right
@@ -28,9 +38,10 @@ When a user request contradicts these guidelines, push back and explain better a
 6. **Report extensions, or thin report measures:** It is possible to create calculation logic in Power BI report, called "thin report measures" or "visual calculations". These should be used sparingly and only for "report-specific" scenarios
 7. **Visual fields:** All data visuals should have field bindings, and all field bindings should be for fields that actually exist in the model; there is no reason for visuals to exist that have no fields bound
 8. **Chart selection:** Make smart choices about what visuals to use for each scenario. Visual vocabulary is essential for this skill.
-9. **Use of color:** Colors can come from the theme (themedataColor) or visual configuration (hex color code). Colors should be muted and soft; colors that implicitly encode meaning (like red=bad, green=good) should be avoided unless using them for that encoding. Consider colorblindness and use accessible palettes (blues instead of greens with reds, for instance).
+9. **Use of color:** Color and formatting decisions must cite the locked identity (the chosen tone and signature), not be picked per visual. Colors come from the theme (themedataColor) rather than inline hex, so the identity propagates and re-themes cleanly. Colors should be muted and soft; colors that implicitly encode meaning (like red=bad, green=good) should be avoided unless using them for that encoding. Consider colorblindness and use accessible palettes (blues instead of greens with reds, for instance).
 10. **Pre-attentive attributes:** Styles and colors should be used to steer and direct attention, and not to decorate charts. Formatting of visuals should be intentional and not purely aesthetic. Styles should where possible be stored in the theme and not in bespoke visual configuration.
 11. **Fonts:** Prefer *Segoe UI* and *Segoe UI Semibold*. Do not use custom fonts, since they aren't guaranteed to render on user computers. Evaluate whether fonts are sufficiently large to be readable given the visual and page size.
+12. **Page intent:** Route each page to exactly one shape by the question it answers (see `references/page-shapes.md`). A page trying to answer two questions is two pages.
 
 ## Page Layout Guidelines
 
@@ -188,7 +199,7 @@ A bare number lacks meaning. Every KPI must answer "Is this good or bad?" (targe
 - Round aggressively at summary level ("518M" not "517,893,412")
 - Choose **actionable metrics** that drive decisions over vanity metrics (apply the "20% change test": if this number changed 20%, should someone act differently?)
 - Hide redundant auto-generated subtitles
-- Use SVG extension measures for inline icons (see `/svg-visuals` skill)
+- Use SVG extension measures for inline icons (see the `svg-visuals` skill in the **custom-visuals** plugin)
 
 For complete guidance on KPI design, targets, trends, formatting hierarchy, icon implementation, accessible palettes, and anti-patterns, consult **`references/cards-and-kpis.md`**.
 
@@ -200,6 +211,8 @@ For complete guidance on KPI design, targets, trends, formatting hierarchy, icon
 - Highlight key data points sparingly
 
 For chart-type selection (encoding hierarchy, Cleveland-McGill ranking), data-label discipline, and small-multiples guidance, consult **`references/chart-selection.md`**.
+
+**Refuse common LLM defaults.** Gauge-as-KPI, monochrome categorical bars, missing sort, card walls, raw field names as titles, inline hex, off-grid drift, dual y-axis, 3D, and oversized pies are plausible-looking attractors that defeat the reader. When a request reaches for one, push back with the better option; see **`references/anti-patterns.md`**.
 
 ### Tables and Matrices
 
@@ -266,6 +279,10 @@ When evaluating, provide:
 - Severity (critical, warning, suggestion)
 - Recommended fixes with commands or patterns
 
+### The design gate
+
+Before declaring a design done, run the closing gate in **`references/quality-gate.md`**. It is not the planning-stage checklist that runs before the build; it runs against the finished artifact and decides whether it ships. It verifies the identity propagated, every page has one intent, spacing and margins are equal and on-grid, callouts are backed by model evidence, and accessibility is met. Because an agent cannot see the canvas, pair the gate with the screenshot-review loop in the **`pbir-cli`** skill: render the pages, look, and confirm what the JSON inferred.
+
 ## Common Design Issues
 
 ### Issue: Cognitive Overload
@@ -301,6 +318,10 @@ When evaluating, provide:
 
 ## References
 
+- **`references/design-identity.md`** -- Commit-first identity: tone budgets (restrained/corporate/editorial/technical), the signature catalog, and serializing identity into the theme
+- **`references/page-shapes.md`** -- Routing each page to one shape by intent (summary/monitoring/exploration/comparison/narrative): what belongs, what stays off, layout lean
+- **`references/anti-patterns.md`** -- Cross-cutting defaults to refuse (gauge-as-KPI, monochrome bars, missing sort, card walls, raw titles, inline hex, off-grid, dual-axis, 3D, oversized pie) with the repair
+- **`references/quality-gate.md`** -- The design gate: closing checks (identity propagated, one intent per page, equal spacing, evidence-backed callouts, accessibility) in issue/location/severity/fix form
 - **`references/cards-and-kpis.md`** -- KPI card design: targets, gaps, trends, formatting hierarchy, icons, accessible palettes, anti-patterns, review checklist
 - **`references/tables-and-matrices.md`** -- Table and matrix design: decision-making framework, subtract-don't-add philosophy, conditional formatting, sorting, sparklines, matrix hierarchies, anti-patterns
 - **`references/layout-guidelines.md`** -- Canvas dimensions, spacing tiers (intra-group/inter-group/margin), alignment rules, performance cost model
@@ -323,7 +344,7 @@ When evaluating, provide:
 
 Reports often need visuals beyond what Power BI provides natively. Always consider in-repo code paths before reaching for a packaged third-party visual. See **`references/custom-visuals.md`** for the build-vs-buy decision and AppSource/org-store tradeoffs.
 
-Skill routing for in-repo code visuals:
+Skill routing for in-repo code visuals (all in the **custom-visuals** plugin; add with `claude plugin install custom-visuals@power-bi-agentic-development`):
 - **`deneb-visuals`** -- Vega/Vega-Lite declarative visuals; preferred for advanced custom interactive charts (cross-filtering, tooltips, hover)
 - **`svg-visuals`** -- SVG via DAX measures; preferred for inline table/matrix/card graphics with no row cap issues
 - **`python-visuals`** -- matplotlib/seaborn scripts (static PNG); for statistical visualizations that must compute at render time

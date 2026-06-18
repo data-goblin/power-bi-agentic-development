@@ -1,6 +1,6 @@
 ---
 name: modifying-theme-json
-version: 26.24
+version: 26.25
 description: Design, enforce, audit, and validate Power BI report themes. This skill MUST be invoked when a report uses the default or built-in theme, has a minimal custom theme (few or no visualStyles), or has accumulated many visual-level formatting overrides (objects/visualContainerObjects in visual.json); these are signs the theme needs attention. Also automatically invoke when the user asks to "create a theme", "design a theme", "enforce theme compliance", "audit theme adherence", "push formatting to theme", "clear visual overrides", "standardize report formatting", "update theme colors", "change theme typography", "set theme text classes", "validate a theme", "add visual-type overrides to the theme", "copy a theme", "download a theme", "apply a template", or mentions theme design, enforcement, compliance, or visual formatting inconsistency.
 ---
 
@@ -109,6 +109,10 @@ jq empty visual.json
 ```
 
 > When in doubt, clear `visualContainerObjects` only. Leave `objects` unless you have confirmed no conditional formatting exists in that visual.
+
+### Switching to a Different Theme (Re-Theming)
+
+Swapping a report from one theme to another is a migration, and editing only the theme JSON leaves **theme residue**: surviving level-4 overrides that still win at the cascade, plus colors that were correct under the old polarity and break (often invisible text) under the new one. Re-theming sits between apply and enforce: build an old-to-new color map first, then apply the theme, sweep overrides, remap surviving literals, and run the polarity gate so foreground text survives the new background. See **`references/re-theming.md`**.
 
 ## Workflow: Author or Modify a Theme
 
@@ -309,6 +313,7 @@ For `visualStyles`: named style presets are a second key alongside `"*"` inside 
 - **`references/advanced-theme-features.md`** — Named style presets (Format-pane dropdown), base theme layering model, organizational theme distribution, mobile-only formatting overrides
 - **`references/serialize-build.md`** — Serialize/build workflow: splitting themes into editable files, editing, rebuilding, validation, temporary folder guidance
 - **`references/applying-themes.md`** — Applying templates, post-apply enforcement, clearing visual overrides, normalizing hardcoded colors
+- **`references/re-theming.md`** — Switching a report to a new theme without leaving residue: old-to-new color map, inline-override sweep on shapes/textboxes/buttons, the polarity-flip foreground-text sweep, dark-mode checklist, slicer header role-preserving remap
 - **`references/copying-themes.md`** — Copying themes between reports, extracting/downloading themes, comparing themes, consolidating across a portfolio
 - **`references/promoting-formatting.md`** — Promoting bespoke visual.json formatting to theme: push-visual CLI, objects vs visualContainerObjects, wildcard vs visual-type, property mapping tables
 - **`references/theme-compliance.md`** — Systematic audit workflow, stale override classification, severity levels, fix decision tree

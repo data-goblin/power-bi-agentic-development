@@ -1,7 +1,7 @@
 ---
 name: semantic-model
-version: 26.24
-description: This skill should be used whenever the user mentions a "semantic model", "data model", or "dataset", or asks to "build", "model", "design", "optimize", "review", or "audit" one, or to "add a measure", "add a relationship", "create a role" / "set up RLS", "add a calculation group", "set up incremental refresh", "fix a star schema", "reduce model size", "prepare a model for Copilot / AI", or "check model quality". Covers the full lifecycle (design, build, refresh, review) and drives every operation through the `te` CLI first, then a model MCP or TOM (connect-pbid), then TMDL authoring (the tmdl skill). Not for report visuals (use pbir-cli) or isolated DAX query tuning (use the dax skill).
+version: 26.25
+description: This skill should be used whenever the user mentions a "semantic model", "data model", or "dataset", or asks to "build", "model", "design", "optimize", "review", or "audit" one, or to "add a measure", "add a relationship", "create a role" / "set up RLS", "add a calculation group", "set up incremental refresh", "fix a star schema", "reduce model size", "prepare a model for Copilot / AI", or "check model quality". Covers the full lifecycle (design, build, refresh, review) and drives every operation through the `te` CLI first, then TOM (connect-pbid) or a model MCP, then TMDL authoring (the tmdl skill). Not for report visuals (use pbir-cli) or isolated DAX query tuning (use the dax skill).
 ---
 
 # Semantic models: design, build, refresh, review
@@ -27,7 +27,7 @@ Guidance for designing, building, refreshing, and reviewing Power BI / Analysis 
 Reach for the narrowest capable tool, in order. Most edits never leave step 1.
 
 1. **`te` CLI first.** One verb per operation, staged in memory until `--save`, with a save-time DAX + referential-integrity gate. Covers add/set/rm/mv for measures, columns, relationships (`Sales[K]->Dim[K]` shorthand on `te add`), roles + RLS filters, calculation groups / items, incremental-refresh policy, `te format`, `te bpa`, `te vertipaq`, `te query`. Each Bash call is a fresh shell, so pass `-m <model>` (and `-s`/`-d` for remote) on every command, or set `TE_SESSION`. Read the real object's settable surface first with `te get <obj>` and `te set <obj> -q <prop>` (no value). The `te-cli` skill is the full command reference.
-2. **A model MCP, or TOM, when `te` cannot reach a property.** Some properties are absent from `te set -q` (for example `alternateOf`, `securityFilteringBehavior`, `crossFilteringBehavior`, KPI sub-objects, linguistic-schema content, calendar objects). Drive these through the Power BI Modeling MCP server when available, a `te script` C# pass (in-process TOM), or the `connect-pbid` skill (PowerShell + TOM/ADOMD against a live local Desktop instance, and the only route to traces: `EVALUATEANDLOG`, aggregation-hit events, storage DMVs). The local Desktop proxy cannot reach Direct Lake; use a remote XMLA endpoint there.
+2. **TOM, or a model MCP, when `te` cannot reach a property.** Some properties are absent from `te set -q` (for example `alternateOf`, `securityFilteringBehavior`, `crossFilteringBehavior`, KPI sub-objects, linguistic-schema content, calendar objects). Drive these through a `te script` C# pass (in-process TOM), or the `connect-pbid` skill (PowerShell + TOM/ADOMD against a live local Desktop instance, and the only route to traces: `EVALUATEANDLOG`, aggregation-hit events, storage DMVs). The Power BI Modeling MCP server is also available if you prefer an MCP. The local Desktop proxy cannot reach Direct Lake; use a remote XMLA endpoint there.
 3. **`fab` + direct TMDL last, with the `tmdl` skill.** Service- and file-shape operations with no model-edit verb: assigning Entra principals to roles (workspace-side, not in `.tmdl`), report-to-model binding, Copilot-folder features (AI instructions, AI data schema, verified answers), Lakehouse / Delta reshaping behind Direct Lake, and bulk structural surgery that is cleaner as one TMDL diff than N `te` calls. Author the TMDL with the `tmdl` skill, then run `te validate`.
 
 Ordering gate: add relationships before any measure that uses `RELATED()` or a cross-table `CALCULATE()`, or the save gate fails with `DAX0002` (no relationship in context).
@@ -61,7 +61,7 @@ Audit against the categories below and produce prioritized findings with file lo
 
 - `tmdl`: TMDL file authoring (the cascade's step-3 fallback)
 - `dax`: DAX query performance optimization
-- `connect-pbid`: TOM / ADOMD via PowerShell against a live Desktop instance; traces; the MCP / TOM tier
+- `connect-pbid`: TOM / ADOMD via PowerShell against a live Desktop instance; traces; the TOM / MCP tier
 - `te-cli`: the `te` command reference
 - `c-sharp-scripting`: TOM C# scripts and macros (`te script`) for properties `te` cannot reach
 - `standardize-naming-conventions`: naming audit and remediation

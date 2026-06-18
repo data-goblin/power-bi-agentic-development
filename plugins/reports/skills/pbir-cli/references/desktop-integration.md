@@ -23,12 +23,19 @@ When the bridge is unreachable, the CLI prints the preview-feature hint; when no
 ## Commands
 
 ```bash
-pbir desktop list                                    # Running Desktop instances (PID, open file)
+pbir desktop list                                    # Running Desktop instances (PID, open file, unsaved state, page count)
+pbir desktop status                                  # Alias of `list`
+pbir desktop manifest --pid 1234                     # Bridge methods one instance exposes (capability probe)
 pbir desktop refresh "Report.Report"                 # Reload on-disk definition into the canvas
+pbir desktop reload "Report.Report"                  # Alias of `refresh`
+pbir desktop refresh "Report.Report" -m              # --model: also re-apply the model (TMDL) definition
 pbir desktop screenshot "Report.Report"              # PNG of the first page
 pbir desktop screenshot "Report.Report/Page.Page"    # PNG of a specific page
 pbir desktop screenshot "Report.Report/Page.Page" -o out.png --scale 2
+pbir desktop screenshot "Report.Report" --all        # Every page, one PNG each, into ./screenshots
+pbir desktop screenshot "Report.Report" --all --output-dir shots --settle 500
 pbir desktop screenshot "Report.Report" --pid 1234   # Target a specific instance
+pbir desktop screenshot "Report.Report" --json       # Machine-readable result (paths, sizes)
 ```
 
 Paths accept the usual report resolution plus absolute filesystem paths:
@@ -38,7 +45,7 @@ pbir desktop refresh "C:\Temp\Sales.Report"          # Absolute path to a .Repor
 pbir desktop screenshot "C:\Reports\Flash.pbix"      # Absolute path to an open .pbix
 ```
 
-Default screenshot file name derives from the page display name (forbidden characters replaced); default scale is 2, maximum 3. Captures follow Desktop's current canvas zoom, which reloads can change -- for pixel-level checks, capture at `--scale 3` and crop, or move the visual under test to the page's top-left first.
+Default screenshot file name derives from the page display name (forbidden characters replaced); default scale is 2, clamped to 1-3 (values outside the range are pinned, not rejected). `--all` captures every page; pages land in `./screenshots` unless `--output-dir` overrides it, and `--settle <ms>` delays the first capture so the canvas finishes rendering before shooting. Captures follow Desktop's current canvas zoom, which reloads can change; for pixel-level checks, capture at `--scale 3` and crop, or move the visual under test to the page's top-left first. `refresh -m` (`--model`) re-applies the model definition alongside the report, useful after editing TMDL in a thick report. `pbir desktop manifest` reports which bridge methods the running build exposes; use it when a desktop subcommand returns "not supported" to confirm the installed Desktop's capabilities.
 
 ## The Edit-Verify Loop
 

@@ -24,6 +24,7 @@ All checks are toggleable via `config.yaml`. Set any key to `false` to disable.
 | `bypath_exists` | byPath target directory exists locally | validate-report-binding |
 | `fab_exists` | byConnection model exists in Fabric (via `fab exists`) | validate-report-binding |
 | `tmdl_syntax` | TMDL structural syntax (via `tmdl-validate`) | validate-tmdl |
+| `visual_catalog_enum` | `visualContainerObjects` names vs Microsoft's core visual catalog (self-contained; allowlist in `core-visual-catalog.json`, **on by default**) | validate-pbir |
 
 ## Required fields (from schemas)
 
@@ -41,6 +42,7 @@ Derived from Microsoft's published JSON schemas at [github.com/microsoft/json-sc
 - If `jq` is not installed, all hooks skip silently
 - If `fab` CLI is not installed or not authenticated, the `fab_exists` check skips silently
 - If `tmdl-validate` binary is not found, TMDL hooks skip silently
+- If `core-visual-catalog.json` is missing, the `visual_catalog_enum` check skips silently
 - If `config.yaml` is missing, all checks default to enabled
 
 ## Known Windows issues
@@ -122,4 +124,4 @@ Pipes not supported in `"if"`; use separate Edit and Write matchers instead of `
 - Must work on bash 3.2 (macOS) and bash 4+ (Git Bash / Linux); no `mapfile`, no associative arrays
 - `.gitattributes` enforces `eol=lf` so scripts work on Windows checkout
 - Only exit 2 + stderr surfaces in Claude Code; stdout exit 0 is invisible
-- Full semantic validation (visual types, expressions, field references) belongs in pbir-cli
+- Full semantic validation (visual types, expressions, field references) belongs in pbir-cli; the `visual_catalog_enum` check is the one exception kept here, a self-contained `visualContainerObjects` name check against the bundled `core-visual-catalog.json` allowlist (15 container objects, universal to every visual). Visual type ids are not enforced, custom visuals use arbitrary ids. Refresh the bundled catalog when its upstream core visual schema ships new container objects

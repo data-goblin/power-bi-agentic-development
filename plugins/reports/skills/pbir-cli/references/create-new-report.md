@@ -74,7 +74,7 @@ The report already has a "Page 1" with a textbox. Rename it rather than creating
 
 ```bash
 # Rename the default page
-pbir pages rename "Sales.Report/Page 1.Page" "Overview"
+pbir pages rename "Sales.Report/Page 1.Page" --to "Overview" -f
 
 # Add more pages only if needed
 pbir add page "Sales.Report/Detail.Page" -n "Detail" --width 1920 --height 1080
@@ -97,7 +97,7 @@ pbir theme apply-template "Sales.Report" custom-theme
 
 # Or to customize specific colors:
 pbir theme set-colors "Sales.Report" --good "#00B050" --bad "#FF0000"
-pbir theme set-text-classes "Sales.Report" title --font-size 16
+pbir theme set-fonts "Sales.Report" title --font-size 16
 
 # Set visual-type defaults in the theme
 pbir theme set-formatting "Sales.Report" "card.*.border.radius" --value 8

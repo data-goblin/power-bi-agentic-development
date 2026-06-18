@@ -1,6 +1,6 @@
 ---
 name: dax
-version: 26.24
+version: 26.25
 description: DAX performance optimization for semantic models. Automatically invoke when the user asks to "optimize DAX", "fix slow DAX", "DAX performance", "tune a measure", "debug a measure", "DAX anti-patterns", or mentions slow queries, server timings, or DAX authoring.
 ---
 
@@ -22,8 +22,9 @@ Detailed reference files (progressive disclosure — consult as directed by the 
 
 Trace capture and performance profiling:
 
-- **Local models (Power BI Desktop):** Use the [`connect-pbid` skill](../../../pbi-desktop/skills/connect-pbid/) — specifically `performance-profiling.md` for FE/SE timing and `evaluateandlog-debugging.md` for intermediate result inspection.
-- **Remote models (Fabric Service / XMLA):** Use the [`powerbi-modeling-mcp`](https://marketplace.visualstudio.com/items?itemName=analysis-services.powerbi-modeling-mcp) VS Code extension for trace and query operations. Install: `code --install-extension analysis-services.powerbi-modeling-mcp`
+- **Local models (Power BI Desktop):** Use the Tabular Editor CLI `te query` (see the [`te-cli` skill](../../../tabular-editor/skills/te-cli/)) first; as an alternative, the [`connect-pbid` skill](../../../pbi-desktop/skills/connect-pbid/) covers FE/SE timing (`performance-profiling.md`) and intermediate result inspection (`evaluateandlog-debugging.md`).
+- **Remote models (Fabric Service / XMLA):** Run DAX with the Tabular Editor CLI `te query` (`-s <workspace> -d <model>`) against the workspace XMLA endpoint; see the [`te-cli` skill](../../../tabular-editor/skills/te-cli/) (tabular-editor plugin).
+- **Power BI Modeling MCP:** also available for trace and query if you prefer an MCP tool; reach for it after the options above.
 
 ## Related Skills
 

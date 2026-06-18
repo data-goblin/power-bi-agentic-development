@@ -5,43 +5,58 @@
   },
   "metadata": {
     "description": "A marketplace for skills and tools for agentic Power BI development.",
-    "version": "26.24.8"
+    "version": "26.25"
   },
   "plugins": [
     {
       "name": "tabular-editor",
-      "description": "Agentic development tools for Power BI semantic models with Tabular Editor.",
+      "description": "Semantic models from the terminal with the Tabular Editor CLI.",
       "source": "./plugins/tabular-editor"
     },
     {
       "name": "pbi-desktop",
-      "description": "Connect to Power BI Desktop's local Analysis Services instance to enumerate models, query with DAX, refresh data, and modify metadata via TOM. No MCP server required.",
+      "description": "The live model in Power BI Desktop via TOM and ADOMD.NET; no MCP needed.",
       "source": "./plugins/pbi-desktop"
     },
     {
       "name": "pbip",
-      "description": "Get this plugin if you'll work with pbip files, tmdl, or pbir. It helps with file structure and direct modifications.",
+      "description": "PBIP up close: TMDL, PBIR, and project file structure.",
       "source": "./plugins/pbip"
     },
     {
       "name": "semantic-models",
-      "description": "Get this plugin for agentic development and management of semantic models.",
+      "description": "Design, build, optimize, and review semantic models.",
       "source": "./plugins/semantic-models"
     },
     {
       "name": "reports",
-      "description": "Get this plugin for agentic development and management of reports.",
+      "description": "Build, format, and review Power BI reports (PBIR).",
       "source": "./plugins/reports"
     },
     {
+      "name": "paginated-reports",
+      "description": "Author, validate, publish, and test paginated reports (RDL).",
+      "source": "./plugins/paginated-reports"
+    },
+    {
       "name": "fabric-cli",
-      "description": "Get this plugin to work with Fabric / Power BI service, by means of the fabric cli.",
+      "description": "Fabric and the Power BI service via the fab CLI.",
       "source": "./plugins/fabric-cli"
     },
     {
       "name": "fabric-admin",
-      "description": "Fabric and Power BI administration; tenant settings audits, governance, delegated overrides, and Entra security group investigation. Requires the fabric-cli plugin.",
+      "description": "Audit and govern your Fabric and Power BI tenant.",
       "source": "./plugins/fabric-admin"
+    },
+    {
+      "name": "custom-visuals",
+      "description": "Deneb, Python, R, SVG, and pbiviz custom visuals.",
+      "source": "./plugins/custom-visuals"
+    },
+    {
+      "name": "etl",
+      "description": "Execute code and queries on Fabric compute: Spark via Livy and DuckDB.",
+      "source": "./plugins/etl"
     }
   ]
 }

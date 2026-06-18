@@ -1,6 +1,6 @@
 ---
 name: te-cli
-version: 26.24
+version: 26.25
 description: Expert guidance for the cross-platform Tabular Editor CLI (the `te` binary, currently in preview) that manages Power BI / Analysis Services semantic models from the terminal on macOS, Linux, and Windows. Use when the user mentions the `te` CLI or "Tabular Editor CLI" (not the "2"), or runs a `te <command>` to scaffold, inspect, edit, validate, run BPA on, query, deploy, refresh, test, or migrate a semantic model. Not for the legacy Windows-only `TabularEditor.exe` (TE2).
 ---
 

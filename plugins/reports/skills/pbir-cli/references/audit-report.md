@@ -34,7 +34,7 @@ Is there a custom theme or the default? Default Power BI themes are poor quality
 
 ```bash
 pbir theme colors "Report.Report"                # Color palette with visual usage audit
-pbir theme text-classes "Report.Report"          # Text style definitions
+pbir theme fonts "Report.Report"                 # Font levels (title, label, callout, etc.)
 pbir theme fonts "Report.Report"                 # Font usage
 pbir theme validate "Report.Report"              # Theme structure
 pbir visuals format "Report.Report/Page.Page/Visual.Visual"  # Check theme cascade vs overrides
@@ -46,7 +46,7 @@ Check for disabled export, restricted filter types, cross-report drillthrough, p
 
 ```bash
 pbir get "Report.Report"                         # Report properties
-pbir report json "Report.Report"                 # Full report.json for detailed settings
+pbir cat "Report.Report/report"                  # Full report.json for detailed settings
 ```
 
 ## 5. Check Pages and Contents
@@ -87,7 +87,7 @@ When a visual's type is changed (e.g., bar chart to card), the old query state a
 ```bash
 pbir cat "Report.Report/Page.Page/Visual.Visual"  # Inspect raw JSON for stale roles
 pbir visuals bind "Report.Report/Page.Page/Visual.Visual" --show  # Compare bound fields to expected roles
-pbir schema containers "card"                      # Check what roles the visual type actually supports
+pbir schema describe card                          # Check what objects the visual type actually supports
 ```
 
 ## 6. Check Report Extensions

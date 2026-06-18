@@ -1,7 +1,7 @@
 {
   "name": "tabular-editor",
-  "version": "26.24",
-  "description": "Agentic development tools for Power BI semantic models with Tabular Editor.",
+  "version": "26.25",
+  "description": "Semantic models from the terminal with the Tabular Editor CLI.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

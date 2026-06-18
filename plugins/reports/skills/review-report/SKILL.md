@@ -1,6 +1,6 @@
 ---
 name: review-report
-version: 26.24
+version: 26.25
 description: Actionable feedback on the quality, usage, and effectiveness of Power BI reports. Automatically invoke when the user asks to "review a report", "audit a report", "report usage analysis", "report health check", "find unused reports", "check if a report is being used", "assess report performance", "evaluate report quality".
 ---
 
@@ -279,4 +279,4 @@ LOW
 - **`semantic-model`** -- Companion skill for semantic model design and review (run in parallel when model is in scope)
 - **`pbi-report-design`** -- Detailed report design guidelines and layout rules
 - **`modifying-theme-json`** -- Theme authoring, compliance auditing, formatting promotion
-- **`deneb-visuals`**, **`python-visuals`**, **`r-visuals`**, **`svg-visuals`** -- Visual-specific review criteria
+- **`deneb-visuals`**, **`python-visuals`**, **`r-visuals`**, **`svg-visuals`** -- Visual-specific review criteria (now in the **custom-visuals** plugin; add with `claude plugin install custom-visuals@power-bi-agentic-development`)

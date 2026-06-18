@@ -17,18 +17,12 @@ pbir theme colors "Report.Report" --visuals
 # Filter by color type: literal, theme, measure, gradient, conditional, named
 pbir theme colors "Report.Report" --visuals --type literal
 
-# Text class definitions (title, label, callout, header, etc.)
-pbir theme text-classes "Report.Report"
-
-# Font usage and validation
+# Font levels (title, label, callout, header, etc.)
 pbir theme fonts "Report.Report"
-pbir theme fonts "Report.Report" --validate          # Check for invalid fonts
-pbir theme fonts --list-supported                    # 26 supported PBI fonts
 
-# Compare themes
-pbir theme diff "Report1.Report" "Report2.Report"
-pbir theme diff "Report.Report" "theme.json"         # Compare against file
-pbir theme diff "Report.Report" "Report.Report" --colors  # Colors only
+# Font usage audit
+pbir fonts list "Report.Report"                      # Report-wide font audit
+pbir fonts available                                 # Supported PBI font families
 ```
 
 ## Serialize/Build Workflow (Recommended for Large Changes)
@@ -39,7 +33,7 @@ For substantial theme edits, serialize the theme into separate editable files, m
 # Step 1: Serialize into a .Theme folder
 pbir theme serialize "Report.Report"                 # Creates Report.Theme/
 pbir theme serialize "Report.Report" -o MyTheme.Theme
-pbir theme serialize "Report.Report" --full          # Include all supported properties
+pbir theme serialize "Report.Report" -o Extracted.Theme   # Extract theme to an editable .Theme folder
 
 # Step 2: Edit the serialized files (colors.json, textClasses.json, etc.)
 # These are small, focused JSON files
@@ -115,33 +109,36 @@ pbir theme colors "Report.Report" --replace --from "#118DFF" --to theme:0 --dry-
 pbir theme colors "Report.Report" --replace --from "#118DFF" --to theme:0 --in fill
 ```
 
-## Setting Text Classes
+## Setting Fonts per Level
 
-Text classes define default text styles used across the report (title, label, callout, etc.).
+Font levels define default text styles used across the report (title, label, callout, etc.).
 
 ```bash
-# Available text classes:
+# Available levels:
 #   title, label, callout, header, largeTitle, dataTitle,
 #   boldLabel, largeLabel, largeLightLabel, lightLabel,
 #   semiboldLabel, smallLabel, smallLightLabel, smallDataLabel
 
-pbir theme set-text-classes "Report.Report" title --font-size 14 --font-face "Segoe UI Semibold"
-pbir theme set-text-classes "Report.Report" label --font-size 10 --color "#605E5C"
-pbir theme set-text-classes "Report.Report" callout --font-size 48 --bold
-pbir theme set-text-classes "Report.Report" header --font-size 12 --font-face "DIN"
+pbir theme set-fonts "Report.Report" title --font-size 14 --font-face "Segoe UI Semibold"
+pbir theme set-fonts "Report.Report" label --font-size 10 --color "#605E5C"
+pbir theme set-fonts "Report.Report" callout --font-size 48 --bold
+pbir theme set-fonts "Report.Report" header --font-size 12 --font-face "DIN"
 ```
 
 ## Setting Fonts
 
 ```bash
-# Replace a font globally in the theme
-pbir theme fonts "Report.Report" --replace "Arial" --with "DIN"
+# Set all font levels to the same font face
+pbir theme fonts "Report.Report" --all --font-face "Segoe UI"
 
-# Set all text classes to the same font
-pbir theme fonts "Report.Report" --set-default "Segoe UI"
+# Replace a font family everywhere in the report and theme
+pbir fonts replace "Report.Report" --from "Arial" --to "DIN" -f
 
-# Auto-fix invalid fonts (suggests closest supported match)
-pbir theme fonts "Report.Report" --fix
+# Audit all fonts in the report
+pbir fonts list "Report.Report"
+
+# List supported font families
+pbir fonts available
 ```
 
 ## Setting Background Image
@@ -244,9 +241,9 @@ pbir theme validate "CustomTheme.Theme"              # Validate serialized folde
 ## Recommended Workflow
 
 1. **Understand intent**: **Use `AskUserQuestion`** to discuss what the user wants the report to feel like -- brand colors, visual tone, data density. This shapes color palette, font choices, and default formatting
-2. **Inspect**: `pbir theme colors`, `pbir theme text-classes`, `pbir theme fonts`
+2. **Inspect**: `pbir theme colors`, `pbir theme fonts`
 3. **Serialize** (for large changes): `pbir theme serialize "Report.Report" -o Work.Theme`
-4. **Modify**: Use `set-colors`, `set-text-classes`, `set-formatting`, or edit serialized files
+4. **Modify**: Use `set-colors`, `set-fonts`, `set-formatting`, or edit serialized files
 5. **Build** (if serialized): `pbir theme build "Work.Theme" -o "Report.Report" -f --clean`
 6. **Clear visual overrides** (if enforcing a new theme): `pbir visuals clear-formatting "Report.Report/**/*.Visual" --keep-cf -f` -- see **`references/apply-theme.md` > Clearing Visual-Level Formatting** for selective clearing options
 7. **Normalize**: `pbir theme colors "Report.Report" --normalize --apply`

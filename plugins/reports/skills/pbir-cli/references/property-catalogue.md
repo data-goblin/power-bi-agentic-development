@@ -1,21 +1,21 @@
 # Property Catalogue
 
-Formatting properties for all 49 visual types. Universal containers are detailed below;
-for type-specific containers use `pbir schema describe "type.container"` to get full property details.
+Formatting properties for all 49 visual types. Universal objects are detailed below;
+for type-specific objects use `pbir schema describe type object` to get full property details.
 
 ## Discovery Commands
 
 ```bash
-pbir schema containers card               # List containers for a type
-pbir schema describe card.title            # Properties with types, ranges, enums
-pbir visuals format "path" -v              # Current values on a live visual
-pbir visuals properties -s "marker"        # Fuzzy search across all types
-pbir set "path.container.property" --value X  # Set any property
+pbir schema describe card                 # List objects for a type (with property counts)
+pbir schema describe card title           # Properties with types, ranges, enums
+pbir visuals format "path" -v             # Current values on a live visual
+pbir visuals properties -s "marker"       # Fuzzy search across all types
+pbir set "path.object.property" --value X # Set any property
 ```
 
-## Universal Containers
+## Universal Objects
 
-Present on all/most visual types. Set via `pbir set "path.CONTAINER.PROPERTY" --value X`
+Present on all/most visual types. Set via `pbir set "path.OBJECT.PROPERTY" --value X`
 
 ### background
 
@@ -215,9 +215,9 @@ Present on all/most visual types. Set via `pbir set "path.CONTAINER.PROPERTY" --
 | underline | boolean |  |
 | valueFontColor | object |  |
 
-## Type-Specific Container Index
+## Type-Specific Object Index
 
-Containers unique to each visual type. Run `pbir schema describe "type.container"`
+Objects unique to each visual type. Run `pbir schema describe type object`
 to see full property details with types, ranges, and descriptions.
 
 **actionButton** (76 props): fill, glow, icon, outline, rotation, shadow, shape, text
@@ -273,7 +273,7 @@ to see full property details with types, ranges, and descriptions.
 ## Entity Types
 
 Non-visual objects (report settings, page background, filter pane).
-Use `pbir schema describe "entity.container"` for details.
+Use `pbir schema describe entity object` for details.
 
 **page**: background, outspace, outspacePane, pageSize, filterCard, pageInformation, pageRefresh, personalizeVisual
 **report**: settings, outspacePane, section
@@ -284,6 +284,6 @@ Use `pbir schema describe "entity.container"` for details.
 ## Summary
 
 - 49 visual types
-- 15 universal containers (detailed above)
+- 15 universal objects (detailed above)
 - 12627 total property slots across all types
-- Use `pbir schema describe` for type-specific property details
+- Use `pbir schema describe type object` for type-specific property details

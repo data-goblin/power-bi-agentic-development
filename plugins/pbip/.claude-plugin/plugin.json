@@ -1,7 +1,7 @@
 {
   "name": "pbip",
-  "version": "26.24",
-  "description": "Get this plugin if you'll work with pbip files, tmdl, or pbir. It helps with file structure and direct modifications.",
+  "version": "26.25",
+  "description": "PBIP up close: TMDL, PBIR, and project file structure.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

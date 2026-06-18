@@ -31,7 +31,7 @@ Understand default formatting that will apply. Prefer theme-level formatting ove
 
 ```bash
 pbir theme colors "Report.Report"                # Color palette
-pbir theme text-classes "Report.Report"          # Text style defaults
+pbir theme fonts "Report.Report"                 # Text style defaults
 pbir visuals format "Report.Report/Page.Page/ExistingVisual.Visual"  # See what theme provides
 ```
 

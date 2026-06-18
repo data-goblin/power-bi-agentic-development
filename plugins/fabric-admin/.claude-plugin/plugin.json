@@ -1,7 +1,7 @@
 {
   "name": "fabric-admin",
-  "version": "26.24",
-  "description": "Fabric and Power BI administration; tenant settings audits, governance, delegated overrides, and Entra security group investigation. Requires the fabric-cli plugin.",
+  "version": "26.25",
+  "description": "Audit and govern your Fabric and Power BI tenant.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

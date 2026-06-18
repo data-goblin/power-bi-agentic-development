@@ -33,6 +33,8 @@ Some scenarios need custom visuals. Route to the appropriate skill:
 | Statistical charts (distributions, regressions, correlation) | `python-visuals` | matplotlib/seaborn |
 | Statistical charts (forecast, heatmap, corrplot) | `r-visuals` | ggplot2 |
 
+These skills live in the **custom-visuals** plugin (add with `claude plugin install custom-visuals@power-bi-agentic-development`).
+
 **Trade-offs**: Custom visuals offer more flexibility but take more iterations to develop and are harder to maintain. Always discuss with the user before committing to a custom visual approach using `AskUserQuestion`.
 
 ## Page Dimensions
@@ -132,7 +134,7 @@ Arrange visuals top-to-bottom by importance and detail level:
 
 ```bash
 # Title
-pbir add title "Report.Report/Page.Page" "Sales Dashboard" --x 24 --y 24
+pbir add title "Report.Report/Page.Page" "Sales Dashboard"
 
 # KPI row (4 cards, equal width)
 pbir add visual cardVisual "Page.Page" --title "Revenue" \

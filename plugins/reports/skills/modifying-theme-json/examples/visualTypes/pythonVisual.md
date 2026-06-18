@@ -35,4 +35,4 @@ Renders output from a Python script (e.g. matplotlib, seaborn) as a static image
 
 - The `script` container holds `provider` (e.g. `"PBI_CV_..."`) and `source` (the Python code string); neither is meaningful to theme — they are set per-visual.
 - The rendered plot image fills the visual container; no data-layer formatting (axes, colors, fonts inside the plot) is controlled by Power BI themes — style those inside the Python script itself.
-- Use the `python-visuals` skill when authoring or editing the Python script.
+- Use the `python-visuals` skill (custom-visuals plugin) when authoring or editing the Python script.

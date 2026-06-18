@@ -22,7 +22,7 @@ pbir visuals format "Report.Report/Page.Page/Visual.Visual"
 pbir theme colors "Report.Report"
 
 # Text style definitions (title sizes, fonts, etc.)
-pbir theme text-classes "Report.Report"
+pbir theme fonts "Report.Report"
 
 # Font usage
 pbir theme fonts "Report.Report"
@@ -46,8 +46,8 @@ pbir theme set-formatting "Report.Report" "card.*.border.radius" --value 8
 # Wildcard: set for ALL visual types
 pbir theme set-formatting "Report.Report" "*.*.background.color" --value "#F5F5F5"
 
-# Set text classes (affect all text across report)
-pbir theme set-text-classes "Report.Report" title --font-size 16
+# Set font level (affects all text of that level across report)
+pbir theme set-fonts "Report.Report" title --font-size 16
 
 # Set theme colors
 pbir theme set-colors "Report.Report" --good "#00B050" --bad "#FF0000" --neutral "#FFC000"
@@ -62,15 +62,15 @@ Only apply formatting directly to a visual when it genuinely needs to differ fro
 
 ## Discovering Properties
 
-Every visual type has dozens of containers with hundreds of properties. Use the discovery workflow to find the right container and property name before setting values.
+Every visual type has dozens of objects with hundreds of properties. Use the discovery workflow to find the right object and property name before setting values.
 
 ```bash
-# Step 1: Find what containers exist for a visual type
-pbir schema containers "lineChart"
+# Step 1: Find what objects exist for a visual type (with property counts)
+pbir schema describe "lineChart"
 # Output: markers (7 props), lineStyles (24 props), forecast (27 props), etc.
 
-# Step 2: Find what properties a container has (with types, ranges, enums)
-pbir schema describe "lineChart.lineStyles"
+# Step 2: Find what properties an object has (with types, ranges, enums)
+pbir schema describe lineChart lineStyles
 # Output: markerSize (number 1-50), markerShape (circle/square/diamond/...),
 #         showMarker (boolean), lineStyle (solid/dashed/dotted), strokeWidth, etc.
 
@@ -81,7 +81,7 @@ pbir visuals format "Report.Report/Page.Page/Visual.Visual"
 # Include unset (None) properties too (100% coverage)
 pbir visuals format "Report.Report/Page.Page/Visual.Visual" -v
 
-# Filter to a single container
+# Filter to a single object
 pbir visuals format "Report.Report/Page.Page/Visual.Visual" -p lineStyles
 
 # Fuzzy search for a property by name
@@ -91,7 +91,7 @@ pbir visuals properties -s "marker"
 pbir get "Report.Report/Page.Page/Visual.Visual.lineStyles.markerSize"
 ```
 
-**Key insight**: `pbir schema containers` + `pbir schema describe` work from the schema (no visual needed). `pbir visuals format` works from a live visual with theme cascade. Use both: schema to discover what's possible, format to see what's currently set and where it comes from.
+**Key insight**: `pbir schema describe` works from the schema (no visual needed); pass just the type to list objects, or type + object to see property detail. `pbir visuals format` works from a live visual with theme cascade. Use both: schema to discover what's possible, format to see what's currently set and where it comes from.
 
 ## Setting Properties
 
@@ -153,9 +153,9 @@ pbir visuals sort "Report.Report/Page.Page/*.Visual" -f "Date.Month" -d Ascendin
 | `*.Report/**/*.Visual` | All visuals in one report |
 | `**/*.Report/**/*.Visual` | All visuals across all reports |
 
-## Container Formatting Subcommands
+## Object Formatting Subcommands
 
-These dedicated subcommands provide convenient flags for common containers. For any container not listed here, use `pbir set` with the discovery workflow above.
+These dedicated subcommands provide convenient flags for common objects. For any object not listed here, use `pbir set` with the discovery workflow above.
 
 ### Title and Subtitle
 
@@ -396,10 +396,10 @@ pbir visuals clear-formatting "Report.Report/**/*.Visual" -f
 # Preserve conditional formatting (recommended)
 pbir visuals clear-formatting "Report.Report/**/*.Visual" --keep-cf -f
 
-# Clear only container formatting (title, border, background, shadow, padding)
+# Clear only universal object formatting (title, border, background, shadow, padding)
 pbir visuals clear-formatting "Report.Report/**/*.Visual" --only-containers -f
 
-# Clear only chart objects (legend, axis, labels, dataPoint)
+# Clear only chart-specific objects (legend, axis, labels, dataPoint)
 pbir visuals clear-formatting "Report.Report/**/*.Visual" --only-objects -f
 ```
 
@@ -407,8 +407,8 @@ See **`references/apply-theme.md` > Clearing Visual-Level Formatting** for the f
 
 ## Recommended Workflow
 
-1. **Discover**: `pbir schema containers "type"` + `pbir schema describe "type.container"` to find container and property names
-2. **Inspect**: `pbir visuals format "...Visual" -p container` to see current values and sources
+1. **Discover**: `pbir schema describe "type"` to list objects, then `pbir schema describe type object` for property details
+2. **Inspect**: `pbir visuals format "...Visual" -p object` to see current values and sources
 3. **Theme first**: `pbir theme set-formatting` or `pbir theme push-visual` for changes that should apply broadly
 4. **Clear overrides** (if enforcing theme): Strip visual-level formatting so theme cascade applies cleanly (see above)
 5. **Set bespoke** (only if one-off): `pbir set "...Visual.container.property" --value X`

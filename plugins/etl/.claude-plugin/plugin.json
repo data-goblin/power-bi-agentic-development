@@ -1,0 +1,22 @@
+{
+  "name": "etl",
+  "version": "26.25",
+  "description": "Execute code and queries on Fabric compute: Spark sessions via the Livy API and DuckDB for lakehouse queries.",
+  "author": {
+    "name": "Kurt Buhler",
+    "url": "https://data-goblins.com"
+  },
+  "homepage": "https://data-goblins.com",
+  "repository": "https://github.com/data-goblin/power-bi-agentic-development",
+  "license": "GPL-3.0",
+  "keywords": [
+    "etl",
+    "spark",
+    "livy",
+    "duckdb",
+    "lakehouse",
+    "fabric",
+    "pyspark",
+    "python"
+  ]
+}

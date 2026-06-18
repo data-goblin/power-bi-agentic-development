@@ -746,6 +746,31 @@ run_powershell_script_capture() {
 
 # #region Main
 
+# Re-apply the hooks.json "if" filters in-script. Those filters are a Claude Code
+# feature; agents that fire hooks by tool name only (Copilot CLI ignores "if")
+# would otherwise run every subcommand on every Bash command, and because a
+# non-zero PreToolUse exit DENIES the tool, an unrelated command (e.g. a plain
+# Get-Process) gets blocked with "hook errored". Exit 0 (no-op) unless this
+# command is the one the subcommand actually targets.
+GATE_CMD="$(extract_command)"
+GATE_PS1="$(extract_ps1_path "$GATE_CMD")"
+gate_is_model_ps1() {
+    # True only for a .ps1 -File run that touches the model: a bundled
+    # connect-pbid script, or content referencing TOM or a measure add. Keeps
+    # the hooks from firing on unrelated PowerShell scripts.
+    [[ -n "$GATE_PS1" ]] || return 1
+    is_bundled_connect_pbid_script "$GATE_CMD" && return 0
+    local text
+    text="$(resolve_command_text "$GATE_CMD")"
+    [[ "$text" == *Microsoft.AnalysisServices* || "$text" == *Measures.Add* ]]
+}
+case "$SUBCOMMAND" in
+    validate-dax)             [[ "$GATE_CMD" == *tom_nuget* ]] || gate_is_model_ps1 || exit 0 ;;
+    validate-measure)         [[ "$GATE_CMD" == *Measures.Add* ]] || gate_is_model_ps1 || exit 0 ;;
+    refresh-cache|check-compat) gate_is_model_ps1 || exit 0 ;;
+    check-ri)                 [[ "$GATE_CMD" == *SaveChanges* ]] || exit 0 ;;
+esac
+
 case "$SUBCOMMAND" in
     validate-dax)     cmd_validate_dax ;;
     validate-measure) cmd_validate_measure ;;

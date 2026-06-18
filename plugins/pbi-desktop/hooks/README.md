@@ -46,7 +46,7 @@ Claude Code has several open bugs that affect Bash hooks on Windows. If you see 
 | [#50243](https://github.com/anthropics/claude-code/issues/50243) | Bash hooks silently not invoked on Windows with `settings.local.json`-only config |
 | [#34457](https://github.com/anthropics/claude-code/issues/34457) | Hooks with shell commands cause 5+ minute hangs/crashes on Windows |
 
-The hook scripts in this plugin defensively exit 0 on any environmental failure so the errors are cosmetic (commands still run). If the noise bothers you, flip the master kill-switch in `config.yaml`:
+The hook scripts re-apply the `if` triggers internally (see Known limitations) and defensively exit 0 on any environmental failure or non-target command, so a host that ignores `if` cannot turn the hook into a spurious deny. If the noise bothers you, flip the master kill-switch in `config.yaml`:
 
 ```yaml
 all_hooks_enabled: false
@@ -57,6 +57,7 @@ That disables every hook in this plugin without touching individual check toggle
 ## Known limitations
 
 - `if` glob patterns match only the raw command line, not `.ps1` file contents; the scripts compensate by reading executed `.ps1` files internally (`resolve_command_text`), gated by the `Bash(* -File *.ps1*)` triggers
+- The `if` triggers are a Claude Code feature. Some hosts ignore them and fire every hook on every Bash call: Copilot CLI by design (its `matcher` filters on tool name only, with no command-content filter, and a non-zero PreToolUse exit denies the tool), and Claude Code on Windows via bug #49229. `pbi-hooks.sh` therefore re-applies each `if` condition before doing any work and exits 0 on non-target commands, so the hook never denies an unrelated command (e.g. `Get-Process`). A `.ps1` run additionally only fires when the script touches the model (references TOM, or adds a measure), so unrelated PowerShell is ignored
 - `if` glob patterns are case-sensitive
 - UNC path conversion assumes `/Users/<user>/` prefix (macOS Parallels)
 

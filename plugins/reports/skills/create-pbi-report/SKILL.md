@@ -1,6 +1,6 @@
 ---
 name: create-pbi-report
-version: 26.24
+version: 26.25
 description: Step-by-step workflow for creating complete Power BI reports from scratch using pbir CLI. Covers model discovery, report creation, page layout, theme setup, visual placement, field binding, filtering, formatting, validation, and publishing. Automatically invoke when the user asks to "create a new report", "build a report from scratch", "make a dashboard", "set up a report with KPIs", "create an executive dashboard", "add pages and visuals to a new report".
 ---
 
@@ -26,8 +26,9 @@ When the user's request lacks specific measures, audience context, structural pr
 
 1. Get the workspace and semantic model from the user. If the user wants to connect to Power BI Desktop or create a report with source data, explain that a published semantic model in Fabric or Power BI is required first.
 2. Analyze the user's requirements. Consider missing information -- charts, filters, formatting, analyses. Use `AskUserQuestion` if something is unclear.
-3. Consider missing semantic model objects -- not just what the user asks for, but targets (1 year prior), baselines (avg for period), or trend aggregations (14-day rolling) that enrich visuals.
-4. Create a project folder and report (default format is PBIP):
+3. Assemble a design brief (audience, purpose, decision questions, page list with per-page intent, committed design identity, delivery target); get user approval before building; see `references/design-brief.md`.
+4. Consider missing semantic model objects -- not just what the user asks for, but targets (1 year prior), baselines (avg for period), or trend aggregations (14-day rolling) that enrich visuals.
+5. Create a project folder and report (default format is PBIP):
 
     ```bash
     mkdir -p /path/to/report-name
@@ -35,19 +36,19 @@ When the user's request lacks specific measures, audience context, structural pr
     pbir new report "Name.Report" -c "Workspace/Model.SemanticModel"
     ```
 
-5. Rename the default page (do NOT add a new page unless the report needs multiple pages): `pbir pages rename "Name.Report/Page 1.Page" "Overview"`
-6. Only if the user requests a custom theme: `pbir theme apply-template "Name.Report" template-name` (the sqlbi theme is already included by default)
-7. Discover model fields: `pbir model "Name.Report" -d`
-8. Query field values for filters or formatting: `pbir model "Name.Report" -q "EVALUATE VALUES('Table'[Column])"`
-9. Inspect field data types: `pbir model "Name.Report" -d -t Table`
-10. Add visuals (the page already has a textbox for the title): `pbir add visual kpi "Name.Report/Overview.Page" --title "Revenue"`
-11. Configure query reduction (slicers + heavy visuals): see `references/interactivity.md`
-12. Wire cross-filter overrides and page navigation: see `references/interactivity.md`
-13. Add filters and slicers; configure slicer sync and reset: see `references/interactivity.md`
-14. Validate: `pbir validate "Name.Report"`
-15. Publish: `pbir publish "Name.Report" "Workspace.Workspace/Name.Report"`
-16. Open in Fabric after publish: `pbir publish "Name.Report" "Workspace.Workspace/Name.Report" -o`
-17. Or open locally in Power BI Desktop: `pbir open "Name.Report"`
+6. Rename the default page (do NOT add a new page unless the report needs multiple pages): `pbir pages rename "Name.Report/Page 1.Page" "Overview"`
+7. Only if the user requests a custom theme: `pbir theme apply-template "Name.Report" template-name` (the sqlbi theme is already included by default)
+8. Discover model fields: `pbir model "Name.Report" -d`
+9. Query field values for filters or formatting: `pbir model "Name.Report" -q "EVALUATE VALUES('Table'[Column])"`
+10. Inspect field data types: `pbir model "Name.Report" -d -t Table`
+11. Add visuals (the page already has a textbox for the title): `pbir add visual kpi "Name.Report/Overview.Page" --title "Revenue"`
+12. Configure query reduction (slicers + heavy visuals): see `references/interactivity.md`
+13. Wire cross-filter overrides and page navigation: see `references/interactivity.md`
+14. Add filters and slicers; configure slicer sync and reset: see `references/interactivity.md`
+15. Validate: `pbir validate "Name.Report"`
+16. Publish: `pbir publish "Name.Report" "Workspace.Workspace/Name.Report"`
+17. Open in Fabric after publish: `pbir publish "Name.Report" "Workspace.Workspace/Name.Report" -o`
+18. Or open locally in Power BI Desktop: `pbir open "Name.Report"`
 
 ## Step-by-Step Process
 
@@ -70,9 +71,17 @@ Present a concrete proposal via `AskUserQuestion` before building anything. The 
 
 Iterate on the design before executing -- revising a plan is cheaper than rebuilding visuals.
 
+### Step 1b: Assemble and Lock the Design Brief
+
+Consolidate the Step 1 exploration and any vague-prompt findings into one design brief. This is not a second round of requirements gathering; it freezes what is already known into a single spec the build steps execute against. The brief names the audience, the purpose, the 2-5 decision questions a viewer must answer, a page list where each page carries one stated intent, the committed design identity (tone plus signature), and the delivery target. See **`references/design-brief.md`** for the copy-able template and how to fill each field.
+
+Present the brief once via `AskUserQuestion` for explicit "yes" or "change X" approval. On approval, treat it as frozen: the build steps run against it without re-litigating scope, and any later scope change re-opens the brief rather than silently drifting the visuals.
+
+The approved brief routes to the **`pbi-report-design`** skill (which owns the design canon: commit the identity there, and map each page intent to a concrete layout), then into the build steps below. Reference identity and page-intent-to-layout by concept; `pbi-report-design` is the home for that reasoning, so do not restate it here.
+
 ### Step 2: Identify Location and Connection
 
-Determine where to create the report and what model it connects to. Use `AskUserQuestion` to understand the report's purpose, audience, and what decisions it should support.
+Determine where to create the report and which model it connects to. Purpose, audience, and decision questions are already settled in the locked brief (Step 1b); do not re-elicit them here.
 
 ```bash
 pbir model                                       # List all known reports/models
@@ -248,6 +257,7 @@ pbir open "Sales.Report"                                               # Open in
 ## Reference Files
 
 - **`references/vague-prompts.md`** -- Handling underspecified prompts: targeted questions, sensible defaults, propose-before-building workflow
+- **`references/design-brief.md`** -- Locked design-brief template: decision questions, per-page intent, committed design identity (tone plus signature), delivery target, approval gate, routing to pbi-report-design
 - **`references/layout-example.md`** -- Complete layout with coordinates, spacing verification, time granularity guidance
 - **`references/interactivity.md`** -- Query reduction, cross-filter wiring, navigation, slicer type/sync/reset, field parameters
 - **`references/limitations.md`** -- Agent limitations to communicate to users

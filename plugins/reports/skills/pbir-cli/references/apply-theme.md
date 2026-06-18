@@ -52,25 +52,6 @@ Recommendation statuses for `--recommended`:
 - `warning` -- usable but with caveats
 - `none` -- no recommendation
 
-## Comparing Themes
-
-```bash
-# Full comparison
-pbir theme diff "Report1.Report" "Report2.Report"
-
-# Colors only
-pbir theme diff "Report1.Report" "Report2.Report" --colors
-
-# Text classes only
-pbir theme diff "Report1.Report" "Report2.Report" --text-classes
-
-# Compare report theme against a standalone file
-pbir theme diff "Report.Report" "exported-theme.json"
-
-# Compare two serialized .Theme folders
-pbir theme diff "BrandA.Theme" "BrandB.Theme"
-```
-
 ## Clearing Visual-Level Formatting (Reset to Theme)
 
 When applying a new theme, visual-level overrides (stored in `objects` and `visualContainerObjects` in each visual.json) take precedence over the theme. To enforce the new theme fully, clear these overrides first. This preserves field bindings, conditional formatting, position/size, and visual type -- only bespoke formatting is removed.
@@ -191,8 +172,8 @@ pbir theme set-colors "Report.Report" --accent "#0F3460" --background "#FAFAFA"
 pbir theme set-colors "Report.Report" --good "#2F9E44" --bad "#E03131" --neutral "#F59F00"
 
 # 3. Update fonts
-pbir theme fonts "Report.Report" --set-default "DIN"
-pbir theme set-text-classes "Report.Report" title --font-face "DIN" --font-size 16 --bold
+pbir theme fonts "Report.Report" --all --font-face "DIN"
+pbir theme set-fonts "Report.Report" title --font-face "DIN" --font-size 16 --bold
 
 # 4. Update background
 pbir theme background "Report.Report" --image new-logo.png
@@ -208,7 +189,7 @@ pbir theme validate "Report.Report"
 
 ```bash
 # 1. Serialize to editable files
-pbir theme serialize "Report.Report" -o Extracted.Theme --full
+pbir theme serialize "Report.Report" -o Extracted.Theme
 
 # 2. Review and clean up the serialized files
 
