@@ -1,7 +1,7 @@
 ---
 name: pbi-report-design
 version: 26.25
-description: The Power BI report design canon: design identity, visual hierarchy and the 3-30-300 rule, layout/spacing/alignment, color discipline, chart selection, KPI and card design, tables and matrices, accessibility, and the closing design gate. The shared reference home for report design judgment, routed to by the create-pbi-report, pbir-cli, review-report, modifying-theme-json, and custom-visual skills. Load when committing a design identity or making a design, layout, color, chart-selection, or accessibility decision for a report.
+description: The Power BI report design canon covering design identity, visual hierarchy and the 3-30-300 rule, layout/spacing/alignment, color discipline, chart selection, KPI and card design, tables and matrices, accessibility, and the closing design gate. The shared reference home for report design judgment, routed to by the create-pbi-report, pbir-cli, review-report, modifying-theme-json, and custom-visual skills. Load when committing a design identity or making a design, layout, color, chart-selection, or accessibility decision for a report.
 ---
 
 # Power BI Report Design
