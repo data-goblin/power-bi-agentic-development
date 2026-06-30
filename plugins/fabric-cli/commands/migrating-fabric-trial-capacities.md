@@ -1,6 +1,6 @@
 ---
 description: Migrate workspaces from trial capacity to production capacity
-argument-hint: [target-capacity]
+argument-hint: "[target-capacity]"
 ---
 
 # Migrate Trial Capacity Workspaces
