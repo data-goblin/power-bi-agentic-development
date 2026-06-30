@@ -1,7 +1,7 @@
 ---
 name: suggest-rule
 description: Suggest BPA rules based on a description or model analysis. Use when creating new Best Practice Analyzer rules for Tabular Editor.
-argument-hint: [description or model path]
+argument-hint: "[description or model path]"
 model: sonnet
 ---
 
