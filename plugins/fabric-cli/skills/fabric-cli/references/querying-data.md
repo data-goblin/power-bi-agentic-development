@@ -24,7 +24,7 @@ claude mcp add --transport http --scope project fabric-sql \
   https://api.fabric.microsoft.com/v1/mcp/dataPlane/sqlEndpoint
 ```
 
-After adding it, approve and authenticate the server on the next `claude` start, then the `execute_query` tool is available in-session.
+That writes a `mcpServers.fabric-sql` entry into a project-root `.mcp.json`; you can author that file by hand instead, with the same URL and the bearer header shown under Authentication below. After adding it, approve and authenticate the server on the next `claude` start, then the `execute_query` tool is available in-session.
 
 ### Endpoint and tool
 
