@@ -36,17 +36,19 @@ shared CLIs       jq (nearly every hook + script), plus gh and ripgrep where not
 
 Each block lists what a plugin needs beyond the base layer. `windows-only` means there is no native macOS path (on a Mac, run it inside a Windows VM). `optional` means the plugin degrades gracefully without it. The `install:` line points to the reference file with the commands.
 
+One stance to carry into these choices: prefer CLIs and MCP servers over the live local Desktop path. For model work, reach for the `te` CLI (or a Power BI Modeling MCP) and TMDL authoring first. The `pbi-desktop` / `connect-pbid` path (TOM and ADOMD.NET over PowerShell) is a fallback for when neither a CLI nor an MCP server is available, and it is best kept to querying and tracing a running local model. Modifying model metadata through that live TOM path is not recommended; those edits are easily left undescribed by the project's source files, so route model changes through `te` or TMDL where they are captured. That is why the local model stack shows up as `optional` below.
+
 ```yaml
 tabular-editor:
   needs: [te CLI]
   windows-only: [TabularEditor.exe (TE2)]        # Mac: Windows VM only
-  optional: [pbi-search (te-docs), Rust toolchain (to build pbi-search/nb from source)]
   install: references/models.md
 
-pbi-desktop:
+pbi-desktop:                                     # fallback path; skip it if you use te or an MCP
   needs: [Power BI Desktop, PowerShell, NuGet CLI, TOM + ADOMD.NET NuGet packages, jq]
   optional: [.NET 8 SDK (daxlib model ops), gh (daxlib registry), Parallels Desktop (Mac -> Windows VM)]
-  note: Power BI Desktop is Windows-only; the whole plugin runs against a local model
+  note: Windows-only, runs against a live local model; best for querying and tracing
+  model-edits: not recommended via the live TOM path; route model changes through te / TMDL
   install: references/models.md
 
 pbip:
@@ -56,8 +58,8 @@ pbip:
   install: references/reports-and-visuals.md   # pbir CLI + Gemini; tmdl-validate is bundled
 
 semantic-models:
-  needs: [te CLI, fab (Fabric CLI), az (Azure CLI)]
-  optional: [pbir CLI (rename propagation), connect-pbid stack (TOM/PowerShell), Power BI Modeling MCP]
+  needs: [te CLI, fab (Fabric CLI), az (Azure CLI)]   # te is the primary path for every model change
+  optional: [pbir CLI (rename propagation), Power BI Modeling MCP, connect-pbid/TOM (last-resort fallback)]
   python: [requests, azure-identity, pyarrow]    # auto-installed via uv run --with
   install: references/models.md   # te + local model tools; fab/az live in references/fabric.md
 
@@ -72,7 +74,7 @@ custom-visuals:
   by-skill:
     python-visuals: [Python 3.11 runtime + matplotlib/seaborn locally]
     r-visuals: [R runtime (4.3.3 matches the Service)]
-    svg-visuals: [a model-editing tool: te / connect-pbid / tmdl; daxlib packages]
+    svg-visuals: [a model-editing tool: te or tmdl (connect-pbid/TOM only as a fallback); daxlib packages]
   mcp: [pbiviz MCP (npx powerbi-visuals-tools mcp)]
   install: references/reports-and-visuals.md
 
@@ -114,7 +116,7 @@ references/fabric.md                Cloud and service tools: fab, az (+ microsof
                                     Spark/Livy. For fabric-cli, fabric-admin, etl, and the
                                     cloud operations of semantic-models and reports
 
-references/models.md                Semantic model tools: te CLI, TE2, pbi-search, Power BI
+references/models.md                Semantic model tools: te CLI, TE2, Power BI
                                     Desktop + PowerShell + TOM/ADOMD.NET (NuGet) + .NET 8,
                                     daxlib, the bundled tmdl-validate, and Mac-via-Parallels.
                                     For tabular-editor, pbi-desktop, pbip (TMDL), semantic-models
@@ -156,7 +158,6 @@ az version && az account show
 
 # Semantic models
 te --version && te auth status
-pbi-search --version        # if te-docs is in use
 
 # Reports / visuals
 pbir --version

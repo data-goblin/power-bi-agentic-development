@@ -43,21 +43,6 @@ choco install tabulareditor2
 
 Releases: [github.com/TabularEditor/TabularEditor/releases](https://github.com/TabularEditor/TabularEditor/releases). There is no native macOS build; on a Mac, run it inside a Windows VM. Auth uses Windows integrated auth by default, or a service principal via the same `AZURE_*` env vars, or an MSOLAP connection string.
 
-## pbi-search (docs search, optional)
-
-Powers the `te-docs` skill; searches Tabular Editor docs, DAX.guide, SQLBI, Microsoft Learn, and more. Same commands on Windows and macOS.
-
-```bash
-# From source (recommended; needs the Rust toolchain, https://rustup.rs)
-cargo install --git https://github.com/data-goblin/pbi-search
-pbi-search sync
-
-# Or download a prebuilt binary and put it on PATH
-#   https://github.com/data-goblin/pbi-search/releases
-```
-
-Run `pbi-search sync` once to build the cache (add `--descriptions` for a richer index). Verify: `pbi-search --version`. If it is not installed, the skill falls back to the microsoft-learn MCP or `WebFetch`.
-
 ## Power BI Desktop (Windows-only)
 
 Required by the whole `pbi-desktop` plugin (connect to a live local model) and the local paths of `pbir` and `semantic-models`.
@@ -71,7 +56,11 @@ There is no macOS build; on a Mac it runs inside a Windows VM. For the Desktop B
 
 ## PowerShell + TOM/ADOMD.NET (the connect-pbid stack)
 
-The `connect-pbid` skill talks to Power BI Desktop's local Analysis Services instance over the Tabular Object Model (TOM) and ADOMD.NET, from PowerShell. This whole stack is Windows (native, or in a Mac's Windows VM).
+This stack is a fallback, not a default; install it only if you need the local read path. The `connect-pbid` skill talks to Power BI Desktop's local Analysis Services instance over the Tabular Object Model (TOM) and ADOMD.NET, from PowerShell. Reach for it only when neither the `te` CLI nor a Power BI Modeling MCP is available, and keep it to querying and tracing a running local model.
+
+Modifying model metadata through this live TOM path is not recommended. Those edits are easily left undescribed by the project's TMDL, so the model on disk and the model in Desktop drift apart. Make model changes with `te` or by authoring TMDL instead, where every change is captured in source. Use this stack to inspect, query, and trace, not to mutate.
+
+The whole stack is Windows (native, or in a Mac's Windows VM).
 
 PowerShell 7, if you want it alongside Windows PowerShell:
 
