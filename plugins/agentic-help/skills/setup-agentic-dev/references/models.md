@@ -56,9 +56,9 @@ There is no macOS build; on a Mac it runs inside a Windows VM. For the Desktop B
 
 ## PowerShell + TOM/ADOMD.NET (the connect-pbid stack)
 
-This stack is a fallback, not a default; install it only if you need the local read path. The `connect-pbid` skill talks to Power BI Desktop's local Analysis Services instance over the Tabular Object Model (TOM) and ADOMD.NET, from PowerShell. Reach for it only when neither the `te` CLI nor a Power BI Modeling MCP is available, and keep it to querying and tracing a running local model.
+This stack is a fallback, not a default. The `connect-pbid` skill talks to Power BI Desktop's local Analysis Services instance over the Tabular Object Model (TOM) and ADOMD.NET, from PowerShell. In the model-change cascade it sits third: `te` CLI, then a Power BI Modeling MCP, then this live TOM path, and only then hand-authored TMDL. Install it when you need the local read/trace path, or to make a change when no CLI or MCP is available.
 
-Modifying model metadata through this live TOM path is not recommended. Those edits are easily left undescribed by the project's TMDL, so the model on disk and the model in Desktop drift apart. Make model changes with `te` or by authoring TMDL instead, where every change is captured in source. Use this stack to inspect, query, and trace, not to mutate.
+Directly modifying model metadata is not recommended as a habit; prefer the validated tools higher in the cascade. TOM is at least a structured API against the live model, which is why it outranks hand-editing TMDL (raw text surgery, the easiest way to leave the model inconsistent). Whichever fallback you use, capture the result back to source afterward.
 
 The whole stack is Windows (native, or in a Mac's Windows VM).
 

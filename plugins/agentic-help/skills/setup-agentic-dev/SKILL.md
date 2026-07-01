@@ -36,7 +36,13 @@ shared CLIs       jq (nearly every hook + script), plus gh and ripgrep where not
 
 Each block lists what a plugin needs beyond the base layer. `windows-only` means there is no native macOS path (on a Mac, run it inside a Windows VM). `optional` means the plugin degrades gracefully without it. The `install:` line points to the reference file with the commands.
 
-One stance to carry into these choices: prefer CLIs and MCP servers over the live local Desktop path. For model work, reach for the `te` CLI (or a Power BI Modeling MCP) and TMDL authoring first. The `pbi-desktop` / `connect-pbid` path (TOM and ADOMD.NET over PowerShell) is a fallback for when neither a CLI nor an MCP server is available, and it is best kept to querying and tracing a running local model. Modifying model metadata through that live TOM path is not recommended; those edits are easily left undescribed by the project's source files, so route model changes through `te` or TMDL where they are captured. That is why the local model stack shows up as `optional` below.
+One stance to carry into these choices: for any model change, work down this cascade and stop at the first tool that is available.
+
+```
+te CLI  >  Power BI Modeling MCP  >  connect-pbid (live TOM/ADOMD)  >  hand-authored TMDL
+```
+
+`te` is the default because it drives changes through a validated API and keeps the model consistent; an MCP server is the next best. The `pbi-desktop` / `connect-pbid` path (TOM and ADOMD.NET over PowerShell) is a fallback for when no CLI or MCP is available; it is also the tool for querying and tracing a live local model. Hand-authoring TMDL is the last resort: it is manual text surgery, the easiest way to leave the model inconsistent. Directly modifying model metadata is not recommended as a habit; prefer the validated tools at the top of the cascade and descend only when you must. That is why the connect-pbid stack and hand-authored TMDL show up as `optional` / last-resort below.
 
 ```yaml
 tabular-editor:
@@ -47,8 +53,8 @@ tabular-editor:
 pbi-desktop:                                     # fallback path; skip it if you use te or an MCP
   needs: [Power BI Desktop, PowerShell, NuGet CLI, TOM + ADOMD.NET NuGet packages, jq]
   optional: [.NET 8 SDK (daxlib model ops), gh (daxlib registry), Parallels Desktop (Mac -> Windows VM)]
-  note: Windows-only, runs against a live local model; best for querying and tracing
-  model-edits: not recommended via the live TOM path; route model changes through te / TMDL
+  note: Windows-only, runs against a live local model; good for querying and tracing
+  model-edits: fallback only; prefer te then an MCP. Live TOM outranks hand-authored TMDL, below both tools
   install: references/models.md
 
 pbip:
@@ -59,7 +65,8 @@ pbip:
 
 semantic-models:
   needs: [te CLI, fab (Fabric CLI), az (Azure CLI)]   # te is the primary path for every model change
-  optional: [pbir CLI (rename propagation), Power BI Modeling MCP, connect-pbid/TOM (last-resort fallback)]
+  optional: [pbir CLI (rename propagation), Power BI Modeling MCP, connect-pbid/TOM (fallback)]
+  change-order: te > MCP > connect-pbid > hand-authored TMDL (last resort)
   python: [requests, azure-identity, pyarrow]    # auto-installed via uv run --with
   install: references/models.md   # te + local model tools; fab/az live in references/fabric.md
 
@@ -74,7 +81,7 @@ custom-visuals:
   by-skill:
     python-visuals: [Python 3.11 runtime + matplotlib/seaborn locally]
     r-visuals: [R runtime (4.3.3 matches the Service)]
-    svg-visuals: [a model-editing tool: te or tmdl (connect-pbid/TOM only as a fallback); daxlib packages]
+    svg-visuals: [a model-editing path (te > MCP > connect-pbid > TMDL) + daxlib packages]
   mcp: [pbiviz MCP (npx powerbi-visuals-tools mcp)]
   install: references/reports-and-visuals.md
 

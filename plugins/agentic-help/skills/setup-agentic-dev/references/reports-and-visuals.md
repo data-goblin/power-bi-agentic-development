@@ -71,7 +71,7 @@ R visuals run on Pro/PPU or better, and cannot be certified for AppSource.
 
 ## SVG visuals: model-editing tools + DAX libraries
 
-The `svg-visuals` skill writes SVG measures into the semantic model, so it needs one model-editing path (the `te` CLI, the `connect-pbid` TOM stack, or the `tmdl` skill; all covered in `references/models.md`) plus the DAX UDF libraries it draws from, installed from [daxlib.org](https://daxlib.org) (for example `DaxLib.SVG`, `PowerofBI.IBCS`).
+The `svg-visuals` skill writes SVG measures into the semantic model, so it needs one model-editing path. Follow the usual cascade in order of preference: the `te` CLI, then a Power BI Modeling MCP, then the `connect-pbid` TOM stack, then the `tmdl` skill as a last resort (all covered in `references/models.md`). It also needs the DAX UDF libraries it draws from, installed from [daxlib.org](https://daxlib.org) (for example `DaxLib.SVG`, `PowerofBI.IBCS`).
 
 ## AI report backgrounds (optional, pbip)
 
