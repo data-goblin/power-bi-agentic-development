@@ -1,6 +1,6 @@
 ---
 name: executing-spark
-version: 26.25
+version: 26.26
 description: Execute arbitrary Python or PySpark code on Fabric Spark compute without creating a notebook artifact; ephemeral Livy sessions with full Delta table access. Automatically invoke when the user asks to "run PySpark in Fabric", "create a Livy session", "execute Python on Fabric compute", "run Spark without a notebook", "submit code to Fabric", "ephemeral Spark execution", "run ETL in Fabric".
 ---
 
