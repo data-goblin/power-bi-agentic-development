@@ -1,6 +1,6 @@
 {
   "name": "custom-visuals",
-  "version": "26.25",
+  "version": "26.26",
   "description": "Deneb, Python, R, SVG, and pbiviz custom visuals.",
   "author": {
     "name": "Kurt Buhler",

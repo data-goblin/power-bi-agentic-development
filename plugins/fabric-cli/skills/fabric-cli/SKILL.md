@@ -68,8 +68,8 @@ You must read and understand the common list of operations with simple examples
    - Table schema: `fab table schema "ws.Workspace/LH.Lakehouse/Tables/gold/orders"`
 7. Query data (always prefer the wrapper scripts over raw `fab api` / `duckdb` / `sqlcmd`; they resolve IDs, hosts, and auth for you):
    - Semantic model (DAX): `python3 scripts/execute_dax.py "ws.Workspace/Model.SemanticModel" -q "EVALUATE TOPN(10, 'Orders')"`
-   - Lakehouse or warehouse (DuckDB + Delta against OneLake): `python3 scripts/query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" -q "SELECT * FROM tbl LIMIT 10" -t gold.orders`
-   - Lakehouse SQL endpoint, warehouse, or SQL database (T-SQL via `sqlcmd` + `az` session): `python3 scripts/query_sql_endpoint.py "ws.Workspace/LH.Lakehouse" -q "SELECT TOP 10 * FROM dbo.orders"`
+   - Lakehouse SQL endpoint, warehouse, or SQL database (T-SQL): prefer the `fabric-sql` MCP `execute_query(workspaceId, itemId, query)` when it is loaded; fall back to `python3 scripts/query_sql_endpoint.py "ws.Workspace/LH.Lakehouse" -q "SELECT TOP 10 * FROM dbo.orders"`. See [querying-data.md](./references/querying-data.md#querying-the-sql-endpoint-route-priority)
+   - Lakehouse or warehouse Delta over OneLake (DuckDB): `python3 scripts/query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" -q "SELECT * FROM tbl LIMIT 10" -t gold.orders`
 8. Set properties for an item or workspace: `fab set "ws.Workspace/Item.Notebook" -q displayName -i "New Name"` or `fab set "ws.Workspace" -q description -i "Production environment"`
 9. Review or manage permissions:
    - Item ACL: `fab acl ls "ws.Workspace/Model.SemanticModel"` then `fab acl set "ws.Workspace/Model.SemanticModel" -I user@contoso.com -R Read`
@@ -289,9 +289,11 @@ Fabric exposes three query paths depending on the source; always prefer the wrap
   - Query a single table: [`scripts/query_lakehouse_duckdb.py`](./scripts/query_lakehouse_duckdb.py) (use `tbl` as a placeholder and pass `-t schema.table`)
   - Multi-table joins or raw files in `Files/`: pass `--sql` with your own `delta_scan()` / `read_csv` / `read_json_auto` calls
   - Optionally scaffold a Direct Lake model instead: [`scripts/create_direct_lake_model.py`](./scripts/create_direct_lake_model.py)
-- Lakehouse SQL endpoint, Warehouse, or SQL Database (T-SQL via `sqlcmd`):
-  - Query any SQL-capable item: [`scripts/query_sql_endpoint.py`](./scripts/query_sql_endpoint.py) (auto-detects host per item type, reuses `az login` via `ActiveDirectoryAzCli`)
-  - Prefer this over DuckDB when you need `INFORMATION_SCHEMA`, `sys.*` metadata, CTEs, or window functions
+- Lakehouse SQL endpoint, Warehouse, or SQL Database (T-SQL):
+  - Prefer the `fabric-sql` MCP `execute_query(workspaceId, itemId, query)` when loaded; server-side, no local tooling
+  - Fall back to [`scripts/query_sql_endpoint.py`](./scripts/query_sql_endpoint.py) (`sqlcmd`; auto-detects host per item type, reuses `az login` via `ActiveDirectoryAzCli`) when the MCP is unavailable
+  - Prefer either over DuckDB when you need `INFORMATION_SCHEMA`, `sys.*` metadata, CTEs, or window functions
+  - Full route priority: [querying-data.md](./references/querying-data.md#querying-the-sql-endpoint-route-priority)
 
 Check references before writing queries:
 

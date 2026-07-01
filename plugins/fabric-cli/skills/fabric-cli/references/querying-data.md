@@ -2,7 +2,70 @@
 
 How to query semantic models in DAX and lakehouses, warehouses, or SQL databases in SQL.
 
-## Wrapper scripts (recommended)
+## Querying the SQL endpoint: route priority
+
+For T-SQL against a Lakehouse SQL endpoint, Warehouse, or SQL Database:
+
+1. **`fabric-sql` MCP server** ; the hosted Fabric SQL endpoint MCP. The most convenient route: zero local setup (no `sqlcmd`, no DuckDB, no Spark), runs server-side, returns CSV. Reach for it first when ergonomics matter and the tool is loaded. See [Fabric SQL Endpoint MCP](#fabric-sql-endpoint-mcp-convenient-route) below.
+2. **`sqlcmd`** ; [`scripts/query_sql_endpoint.py`](../scripts/query_sql_endpoint.py). The fastest and most reliable route in practice; reuses `az login`. Prefer it for speed, for scripted/repeated queries, or whenever the MCP is unavailable, and when you need flags the MCP doesn't expose (`-o` file output, `GO`-separated scripts, severity filtering).
+3. **DuckDB over OneLake** ; [`scripts/query_lakehouse_duckdb.py`](../scripts/query_lakehouse_duckdb.py). Reads the Delta files directly from OneLake (not the SQL endpoint). Use to bypass the endpoint's metadata sync lag, join across lakehouses in different workspaces, or use DuckDB-only functions.
+4. **PySpark** ; `nb exec code`. Spark SQL on Fabric compute (not the SQL endpoint). Use when you need to write back to Delta, run distributed transforms, or use Delta features (time travel, OPTIMIZE, VACUUM); the session cold start makes it by far the slowest for ad-hoc reads.
+
+Tradeoff: the MCP wins on convenience but adds a gateway hop over the same TDS endpoint `sqlcmd` uses, and is in **preview** ; it can intermittently fail (e.g. `Could not obtain activation parameters`) and is not the fastest. When latency or reliability matters, `sqlcmd` is the safer default.
+
+DAX against a semantic model is a separate path (queries the model, not the table); see [Query a Semantic Model (DAX)](#query-a-semantic-model-dax).
+
+## Fabric SQL Endpoint MCP (convenient route)
+
+The hosted `fabric-sql` MCP server (`microsoft.fabric.sqlEndpoint`, preview) executes T-SQL against any Fabric item that exposes a SQL endpoint (Lakehouse, Warehouse, SQL Database). It runs entirely server-side, so there is nothing to install locally and no `abfss://` path or host discovery to do. Register it as an `http` server:
+
+```bash
+claude mcp add --transport http --scope project fabric-sql \
+  https://api.fabric.microsoft.com/v1/mcp/dataPlane/sqlEndpoint
+```
+
+After adding it, approve and authenticate the server on the next `claude` start, then the `execute_query` tool is available in-session.
+
+### Endpoint and tool
+
+```
+url:  https://api.fabric.microsoft.com/v1/mcp/dataPlane/sqlEndpoint   (global)
+tool: execute_query(workspaceId, itemId, query)  ->  CSV resource
+```
+
+- `workspaceId` ; the workspace GUID (`fab get "ws.Workspace" -q "id"`)
+- `itemId` ; the GUID of the SQL-capable item. For a Lakehouse, either the Lakehouse GUID (`fab get "ws.Workspace/LH.Lakehouse" -q "id"`) or its SQL endpoint GUID (`...-q "properties.sqlEndpointProperties.id"`) works
+- `query` ; the T-SQL text; results come back as an embedded CSV resource plus a row-count line
+
+The global URL needs `workspaceId` and `itemId` on every call. An item-scoped URL variant exists (`.../dataPlane/workspaces/<wsId>/items/<itemId>/sqlEndpoint`) but it still requires the same arguments, so the global URL is the better shared default.
+
+### Authentication
+
+The endpoint uses Entra OAuth on the Power BI scope (`https://analysis.windows.net/powerbi/api/.default`).
+
+**Use a bearer header.** Claude Code's interactive `/mcp` OAuth does **not** work here: the SDK tries RFC 7591 dynamic client registration, which Entra refuses, and auth fails with *"Incompatible auth server: does not support dynamic client registration."* Instead, export a Power BI token into the environment before launching Claude Code and reference it from the server's `headers` (token in env only, never written to disk):
+
+```bash
+export FABRIC_PBI_TOKEN="$(az account get-access-token --resource https://analysis.windows.net/powerbi/api --query accessToken -o tsv)"
+```
+
+```json
+"fabric-sql": {
+  "type": "http",
+  "url": "https://api.fabric.microsoft.com/v1/mcp/dataPlane/sqlEndpoint",
+  "headers": { "Authorization": "Bearer ${FABRIC_PBI_TOKEN}" }
+}
+```
+
+The token expires after ~1 hour; re-export and restart Claude Code to refresh. For a self-refreshing alternative, register a dedicated Entra public-client app and pass its `--client-id` / `--callback-port` to `claude mcp add` so the SDK skips dynamic registration and does auth-code + PKCE against it.
+
+### Quirks
+
+- First call against a cold workspace can return `Could not obtain activation parameters for workspace`; retry once after a few seconds.
+- The Lakehouse SQL endpoint is read-only (same constraint as `sqlcmd`); the tool advertises a destructive hint because Warehouse and SQL Database endpoints accept writes.
+- Same metadata sync lag as `sqlcmd`: a table written via Spark may take 10-60s to appear in `INFORMATION_SCHEMA.TABLES`.
+
+## Wrapper scripts (fallback)
 
 Three Python scripts in `scripts/` wrap the raw `fab api` / `duckdb` / `sqlcmd` invocations and handle path resolution, ID lookup, host discovery, auth, and output formatting for you. Prefer them over hand-rolled commands unless you need a feature they don't expose.
 
@@ -288,9 +351,10 @@ sqlcmd -S "$SQL_HOST" -d LH \
 - **Schemas are case-sensitive**: `dbo.Orders` and `dbo.orders` are different objects if the underlying Delta path uses mixed case. Always confirm with `INFORMATION_SCHEMA.TABLES`.
 - **Three-part names work within the same endpoint** (`<database>.<schema>.<table>`); four-part cross-endpoint queries do not.
 
-### When to use sqlcmd vs DuckDB vs PySpark
+### When to use the MCP vs sqlcmd vs DuckDB vs PySpark
 
-- **sqlcmd**: you already know the table names, the query is standard T-SQL, and the host is reachable. First choice for ad-hoc exploration, schema discovery, data validation, smoke tests, and anything you'd paste into SSMS.
+- **`fabric-sql` MCP**: the table is reachable through the SQL endpoint and the server is loaded/authenticated. Most convenient (no local tooling, runs server-side), but a gateway hop over `sqlcmd`'s TDS and in preview ; reach for it for ergonomics, not for speed or reliability. See [Fabric SQL Endpoint MCP](#fabric-sql-endpoint-mcp-convenient-route).
+- **sqlcmd**: the same T-SQL niche as the MCP and faster/more reliable in practice. First choice for speed, scripted/repeated queries, anything you'd paste into SSMS, or when you need its file output / `GO` scripts / severity filtering.
 - **DuckDB**: you need to read Delta files directly (bypass the SQL endpoint sync lag), join across lakehouses in different workspaces, or use DuckDB-specific functions (`PIVOT`, `UNPIVOT`, `read_json_auto`). See [Query Lakehouse or Warehouse Data with DuckDB](#query-lakehouse-or-warehouse-data-with-duckdb).
 - **PySpark**: you need to write back to Delta, run distributed transforms on large tables, use Delta-specific features (time travel, OPTIMIZE, VACUUM), or call the Fabric runtime's pre-installed libraries. See [Execute PySpark/Python Directly Against a Lakehouse](#execute-pysparkpython-directly-against-a-lakehouse-no-notebook).
 

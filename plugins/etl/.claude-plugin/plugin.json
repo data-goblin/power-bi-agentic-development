@@ -1,6 +1,6 @@
 {
   "name": "etl",
-  "version": "26.25",
+  "version": "26.26",
   "description": "Execute code and queries on Fabric compute: Spark sessions via the Livy API and DuckDB for lakehouse queries.",
   "author": {
     "name": "Kurt Buhler",

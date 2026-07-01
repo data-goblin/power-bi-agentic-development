@@ -1,6 +1,6 @@
 {
   "name": "pbi-desktop",
-  "version": "26.25",
+  "version": "26.26",
   "description": "The live model in Power BI Desktop via TOM and ADOMD.NET; no MCP needed.",
   "author": {
     "name": "Kurt Buhler",

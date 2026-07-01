@@ -1,6 +1,6 @@
 {
   "name": "fabric-admin",
-  "version": "26.25",
+  "version": "26.26",
   "description": "Audit and govern your Fabric and Power BI tenant.",
   "author": {
     "name": "Kurt Buhler",

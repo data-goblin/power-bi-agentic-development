@@ -3,6 +3,13 @@
     "microsoft-learn": {
       "type": "http",
       "url": "https://learn.microsoft.com/api/mcp"
+    },
+    "fabric-sql": {
+      "type": "http",
+      "url": "https://api.fabric.microsoft.com/v1/mcp/dataPlane/sqlEndpoint",
+      "headers": {
+        "Authorization": "Bearer ${FABRIC_PBI_TOKEN}"
+      }
     }
   }
 }
