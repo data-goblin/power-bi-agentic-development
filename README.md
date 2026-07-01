@@ -155,6 +155,15 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 > Don't install every plugin. Each skill competes for the agent's attention and context window, so install a plugin only when you need it and remove it when you don't. Prefer installing plugins scoped to a project rather than to your user, so each project carries only the skills it actually uses.
 
 <details>
+<summary><strong>agentic-help</strong> &ensp; Get started: install and set up the tools the other plugins need, on Windows or Mac</summary>
+
+| Type | Name | Description |
+|------|------|-------------|
+| Skill | [`setup-agentic-dev`](plugins/agentic-help/skills/setup-agentic-dev/) | Prescriptive setup workflow; maps each plugin to the CLIs, runtimes, and MCP servers it needs, with Windows and macOS install commands, auth, and a verification pass |
+
+</details>
+
+<details>
 <summary><img src="media/icons/tabular-editor.svg" alt="" height="20"> <strong>tabular-editor</strong> &ensp; BPA rules, C# scripting, and CLI automation for Tabular Editor</summary>
 
 | Type | Name | Description |

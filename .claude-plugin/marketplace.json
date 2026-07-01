@@ -9,6 +9,11 @@
   },
   "plugins": [
     {
+      "name": "agentic-help",
+      "description": "Get started: install and set up the tools the other plugins need, on Windows or Mac.",
+      "source": "./plugins/agentic-help"
+    },
+    {
       "name": "tabular-editor",
       "description": "Semantic models from the terminal with the Tabular Editor CLI.",
       "source": "./plugins/tabular-editor"
