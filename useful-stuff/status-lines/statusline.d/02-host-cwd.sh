@@ -5,7 +5,7 @@
 # tracked files (~50ms worst case).
 icon=$'\xef\x81\xbb'         # U+F07B nf-fa-folder (fallback)
 
-repo_root=$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null)
+repo_root=$(_timeout 2 git -C "$cwd" rev-parse --show-toplevel 2>/dev/null)
 if [ -n "$repo_root" ]; then
     cache_dir="${TMPDIR:-/tmp}/sl-lang"
     [ -d "$cache_dir" ] || mkdir -p "$cache_dir"
@@ -13,8 +13,7 @@ if [ -n "$repo_root" ]; then
     head_file="$repo_root/.git/HEAD"
     index_file="$repo_root/.git/index"
 
-    mt=$(stat -f '%m' "$cache_file" "$head_file" "$index_file" 2>/dev/null \
-       || stat -c '%Y' "$cache_file" "$head_file" "$index_file" 2>/dev/null)
+    mt=$(_mtime "$cache_file" "$head_file" "$index_file")
     cm=$(echo "$mt" | sed -n '1p'); hm=$(echo "$mt" | sed -n '2p'); im=$(echo "$mt" | sed -n '3p')
     : "${cm:=0}" "${hm:=0}" "${im:=0}"
 
@@ -76,19 +75,12 @@ url_encode() {
     printf '%s' "$result"
 }
 
-# Worktree mode: when an anthropic-managed worktree session is active, replace
-# the cwd display with the worktree triple (path · name · branch) in orange so
-# isolation is visually obvious. 03-git.sh suppresses the branch in this mode.
-# Both modes wrap the path in an OSC 8 hyperlink (file:// URL); whether a click
-# does anything depends on your terminal's hyperlink handler.
-if [ -n "$wt_path" ]; then
-    wt_glyph=$'\xf3\xb0\x99\x85'  # U+F0645 nf-md-file_tree
-    wt_display="$wt_path"
-    [ -n "$wt_name" ]   && wt_display="$wt_display${DIM} · ${ORANGE}$wt_name"
-    [ -n "$wt_branch" ] && wt_display="$wt_display${DIM} · ${ORANGE}$wt_branch"
-    osc_url=$(url_encode "$wt_path")
-    seg "${ORANGE}${wt_glyph}  \033]8;;file://${osc_url}\a${wt_display}\033]8;;\a${R}"
-else
-    osc_url=$(url_encode "$cwd")
-    seg "${host_color}${icon}  \033]8;;file://${osc_url}\a${dir}\033]8;;\a${R}"
-fi
+# Worktree sessions tint the cwd orange to flag isolation; the worktree name is
+# shown as a purple segment after the branch (03-git.sh). The path is wrapped in
+# an OSC 8 hyperlink; whether a click does anything depends on your terminal's
+# hyperlink handler.
+cwd_color="$host_color"
+[ -n "$wt_active" ] && cwd_color="$ORANGE"
+osc_url=$(url_encode "$cwd")
+seg "${cwd_color}${icon}  \033]8;;file://${osc_url}\a${dir}\033]8;;\a${R}"
+

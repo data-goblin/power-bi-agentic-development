@@ -1,6 +1,6 @@
 {
   "name": "tabular-editor",
-  "version": "26.26",
+  "version": "26.26.1",
   "description": "Semantic models from the terminal with the Tabular Editor CLI.",
   "author": {
     "name": "Kurt Buhler",

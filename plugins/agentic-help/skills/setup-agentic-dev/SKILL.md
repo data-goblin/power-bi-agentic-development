@@ -1,6 +1,6 @@
 ---
 name: setup-agentic-dev
-version: 26.26
+version: 26.26.1
 description: Prescriptive setup workflow for agentic Power BI and Fabric development; the getting-started guide for this marketplace. Use whenever someone is onboarding, setting up a new machine, or asks what to install or which prerequisites they need for these plugins; e.g. "how do I get started", "set up my environment for Power BI agentic dev", "what do I need to install for the reports / semantic-models / fabric-cli plugin", "install the Fabric CLI / te / pbir on Windows or Mac", "prerequisites", "onboarding". Covers Windows and macOS install commands, authentication, and verification for every external tool the marketplace's plugins depend on. Route here for installing tools and setting up the environment, not for using them (the domain skills cover usage).
 ---
 

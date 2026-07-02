@@ -1,7 +1,6 @@
 # Per-bar reset reveal: clicking the S/W bar toggles a marker file that this
 # renderer reads to emit line 3 (assembled in statusline.sh). Markers live in a
 # fixed /tmp namespace so the click handler and this script agree on the path.
-SL_TOGGLE_DIR="/tmp/claude-sl-toggle"
 reset_seg_s=""
 reset_seg_w=""
 
@@ -12,6 +11,15 @@ reset_seg_w=""
 #   label:     letter shown before the bar (S, W, etc.)
 render_bullet () {
     local used=$1 resets_at=$2 cycle=$3 label=$4
+
+    # Over 100% the bar is just maxed-out red and the line is at its longest
+    # (overflow glyph + the cost segment, which 07-cost.sh activates on any
+    # window >100%). On a split pane that wraps and looks broken. So in overage
+    # drop the bar entirely and let cost stand in for it. Claude's own overage
+    # line still shows when the window resets.
+    if [ "$used" -gt 100 ] 2>/dev/null; then
+        return 0
+    fi
 
     local projected=$used
     if [ -n "$resets_at" ] && [ "$resets_at" -gt 0 ] 2>/dev/null; then
@@ -72,9 +80,9 @@ render_bullet () {
     # ↑ as soon as the projection is on track to hit the limit (>=100).
     [ "$projected" -ge 100 ] 2>/dev/null && overflow=" ${BLINK}${CRIMSON}󰀦${R}"
 
-    # Wrap the bar in an OSC 8 hyperlink to a per-session toggle marker. A
-    # terminal hyperlink handler (statusline-click.sh) flips the marker on
-    # click; this renderer then reveals the reset time on line 3.
+    # Wrap the bar in an OSC 8 hyperlink to a per-session toggle marker. The
+    # click handler (statusline-click.sh) flips the marker on click; this
+    # renderer then reveals the reset time on line 3. Path is plain ASCII.
     local marker="${SL_TOGGLE_DIR}/${session_key}.${label}"
     local link_open="\033]8;;file://${marker}\a"
     local link_close="\033]8;;\a"
@@ -86,9 +94,9 @@ render_bullet () {
         local rel=$((resets_at - now_r))
         local clock rel_str
         if [ "$label" = "W" ]; then
-            clock=$(date -r "$resets_at" +"%a %H:%M" 2>/dev/null || date -d "@$resets_at" +"%a %H:%M" 2>/dev/null)
+            clock=$(date -d "@$resets_at" +"%a %H:%M" 2>/dev/null || date -r "$resets_at" +"%a %H:%M" 2>/dev/null)
         else
-            clock=$(date -r "$resets_at" +"%H:%M" 2>/dev/null || date -d "@$resets_at" +"%H:%M" 2>/dev/null)
+            clock=$(date -d "@$resets_at" +"%H:%M" 2>/dev/null || date -r "$resets_at" +"%H:%M" 2>/dev/null)
         fi
         if [ "$rel" -le 0 ]; then
             rel_str="now"

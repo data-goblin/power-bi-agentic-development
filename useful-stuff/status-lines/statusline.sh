@@ -10,6 +10,7 @@ ENABLE_GIT=TRUE
 ENABLE_MODEL=TRUE
 ENABLE_TIME=TRUE
 ENABLE_METERS=TRUE
+ENABLE_COST=TRUE
 ENABLE_VERSION=FALSE
 ENABLE_VIM=TRUE
 
@@ -25,7 +26,45 @@ if command -v timeout >/dev/null 2>&1; then
 elif command -v gtimeout >/dev/null 2>&1; then
     _timeout() { gtimeout "$@"; }
 else
-    _timeout() { shift; "$@"; }
+    # No coreutils timeout/gtimeout (stock macOS): enforce the cap by polling.
+    # The command's stdout goes to a temp file, NOT the inherited pipe, so an
+    # orphaned grandchild (e.g. az's python, which it forks rather than exec's)
+    # can't hold a command-substitution open and stall the render past the cap.
+    # Polling is done with FOREGROUND sleeps so nothing is left backgrounded to
+    # orphan (bash 3.2 has no `wait -n` to race a sleeper against the command).
+    # On timeout we SIGTERM the child tree and emit whatever it wrote.
+    # Input: <secs> <cmd...>. Granularity 0.05s.
+    _timeout() {
+        local secs=$1; shift
+        local tmp
+        tmp=$(mktemp 2>/dev/null) || tmp="${TMPDIR:-/tmp}/sl-to.$$.$RANDOM"
+        "$@" >"$tmp" 2>/dev/null &
+        local cmd_pid=$!
+        local steps=$(( ${secs%.*} * 20 + 1 ))
+        while [ "$steps" -gt 0 ] && kill -0 "$cmd_pid" 2>/dev/null; do
+            sleep 0.05
+            steps=$(( steps - 1 ))
+        done
+        if kill -0 "$cmd_pid" 2>/dev/null; then
+            pkill -TERM -P "$cmd_pid" 2>/dev/null
+            kill -TERM "$cmd_pid" 2>/dev/null
+        fi
+        wait "$cmd_pid" 2>/dev/null
+        local rc=$?
+        cat "$tmp" 2>/dev/null
+        rm -f "$tmp" 2>/dev/null
+        return $rc
+    }
+fi
+
+# Portable mtime in epoch seconds for one or more files. GNU coreutils uses
+# `stat -c %Y`; BSD/macOS uses `stat -f %m`. Probe once via the GNU form: on
+# Linux `stat -f` silently succeeds with filesystem info instead of erroring,
+# so a BSD-first `||` fallback never reaches the GNU branch.
+if stat -c %Y . >/dev/null 2>&1; then
+    _mtime() { stat -c %Y "$@" 2>/dev/null; }
+else
+    _mtime() { stat -f %m "$@" 2>/dev/null; }
 fi
 
 input=$(cat)
@@ -52,15 +91,29 @@ rate_5h=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty
 rate_7d=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty' 2>/dev/null)
 rate_5h_resets=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty' 2>/dev/null)
 rate_7d_resets=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty' 2>/dev/null)
+session_cost=$(echo "$input" | jq -r '.cost.total_cost_usd // empty' 2>/dev/null)
+fast_mode=$(echo "$input" | jq -r '.fast_mode // empty' 2>/dev/null)
 vim_mode=$(echo "$input" | jq -r '.vim.mode // empty' 2>/dev/null)
 pr_number=$(echo "$input" | jq -r '.pr.number // empty' 2>/dev/null)
 pr_review=$(echo "$input" | jq -r '.pr.review_state // empty' 2>/dev/null)
 wt_path=$(echo "$input" | jq -r '.worktree.path // empty' 2>/dev/null)
 wt_name=$(echo "$input" | jq -r '.worktree.name // empty' 2>/dev/null)
 wt_branch=$(echo "$input" | jq -r '.worktree.branch // empty' 2>/dev/null)
+
+# Worktree mode is scoped to Claude `--worktree` sessions ONLY: the harness
+# populates .worktree.* and we trust that exclusively. We deliberately do NOT
+# auto-detect arbitrary `git worktree` checkouts -- that produced false positives
+# (sibling trees, idle leftovers, .claude/ subdirs). Opt in via `claude --worktree`.
+wt_active=""
+if [ -n "$wt_path" ]; then
+    wt_active=1
+    [ -z "$wt_name" ] && wt_name=$(basename "$wt_path")
+fi
 session_id=$(echo "$input" | jq -r '.session_id // empty' 2>/dev/null)
 # Filesystem-safe key for the per-session meter reset-reveal toggle markers.
 session_key=$(printf '%s' "$session_id" | tr -c 'A-Za-z0-9_-' '_')
+# Shared namespace for statusline click-toggle markers (meters + branch collapse).
+SL_TOGGLE_DIR="/tmp/claude-sl-toggle"
 
 R="\033[0m"
 DIM="\033[38;5;241m"
@@ -87,23 +140,12 @@ elif echo "$model_full" | grep -qi "sonnet";then model="Sonnet"; model_color="$O
 else model=""; model_color=""; model_icon=""
 fi
 
-# Hide version on the family-latest model (assumed default), show it on older
-# releases (e.g. "Opus 4.6"). Bump LATEST_*_ID when a new model takes over the family.
-LATEST_FABLE_ID="fable-5"
-LATEST_OPUS_ID="opus-4-7"
-LATEST_SONNET_ID="sonnet-4-6"
-LATEST_HAIKU_ID="haiku-4-5"
+# Always show the model version (e.g. "Opus 4.8", "Sonnet 4.6").
 if [ -n "$model" ]; then
-    case "$model_id" in
-        *$LATEST_FABLE_ID*|*$LATEST_OPUS_ID*|*$LATEST_SONNET_ID*|*$LATEST_HAIKU_ID*) : ;;
-        *)
-            # Prefer model_id (always has version, e.g. "claude-opus-4-6") since
-            # display_name is just the family per the docs example.
-            model_version=$(echo "$model_id" | grep -oE '[0-9]+-[0-9]+' | head -1 | tr '-' '.')
-            [ -z "$model_version" ] && model_version=$(echo "$model_full" | grep -oE '[0-9]+\.[0-9]+' | head -1)
-            [ -n "$model_version" ] && model="$model $model_version"
-            ;;
-    esac
+    model_version=$(echo "$model_id" | grep -oE '[0-9]+-[0-9]+' | head -1 | tr '-' '.')
+    [ -z "$model_version" ] && model_version=$(echo "$model_full" | grep -oE '[0-9]+\.[0-9]+' | head -1)
+    [ -z "$model_version" ] && model_version=$(echo "$model_id" | grep -oE '[0-9]+$' | head -1)
+    [ -n "$model_version" ] && model="$model $model_version"
 fi
 
 # Effort dots, calibrated per model. Haiku has no effort support and stays blank.
@@ -197,10 +239,9 @@ load_segment() {
     . "$STATUSLINE_D/$file"
 }
 
-# Statusline layout. A third line appears only when a meter bar is clicked
-# open (06-meters.sh sets reset_seg_s / reset_seg_w from the toggle markers).
+# Statusline layout (a third line appears when a meter bar is clicked open).
 #   line 1: time · host/cwd · git
-#   line 2: version · model · meters
+#   line 2: version · model · meters · cost
 load_segment "$ENABLE_TIME"           05-time.sh
 load_segment "$ENABLE_HOST_CWD"       02-host-cwd.sh
 load_segment "$ENABLE_GIT"            03-git.sh
@@ -209,6 +250,7 @@ load_segment "$ENABLE_VERSION"        01-version.sh
 load_segment "$ENABLE_VIM"            04a-vim.sh
 load_segment "$ENABLE_MODEL"          04-model.sh
 load_segment "$ENABLE_METERS"         06-meters.sh
+load_segment "$ENABLE_COST"           07-cost.sh
 # Line 3: rate-limit reset reveal, shown only while a meter toggle is open.
 if [ -n "$reset_seg_s" ] || [ -n "$reset_seg_w" ]; then
     nl

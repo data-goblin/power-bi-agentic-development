@@ -1,6 +1,6 @@
 {
   "name": "reports",
-  "version": "26.26",
+  "version": "26.26.1",
   "description": "Build, format, and review Power BI reports (PBIR).",
   "author": {
     "name": "Kurt Buhler",

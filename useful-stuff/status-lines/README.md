@@ -1,6 +1,6 @@
 # Statusline
 
-A Claude Code statusline script laid out over two lines (line 1: time, host + cwd, git; line 2: version, vim mode, model + effort, usage meters). Each segment is a separate file under `statusline.d/` and is sourced in numeric order, so you can edit one without touching the rest. A third line appears on demand when you click one of the usage meters (see [Clickable reset times](#clickable-reset-times)).
+A Claude Code statusline script laid out over two lines (line 1: time, host + cwd, git; line 2: version, vim mode, model + effort, usage meters, marginal cost). Each segment is a separate file under `statusline.d/` and is sourced in numeric order, so you can edit one without touching the rest. A third line appears on demand when you click one of the usage meters (see [Clickable reset times](#clickable-reset-times)).
 
 ## Layout
 
@@ -11,11 +11,12 @@ status-lines/
 ├── statusline.d/
 │   ├── 01-version.sh    # Claude Code version (off by default)
 │   ├── 02-host-cwd.sh   # host-colored cwd with a per-language repo glyph
-│   ├── 03-git.sh        # branch, change count, PR number (GitHub + Azure DevOps), worktree
+│   ├── 03-git.sh        # branch, behind/unpushed count, change count, PR number (GitHub + Azure DevOps), worktree
 │   ├── 04-model.sh      # model name, version, effort dots
 │   ├── 04a-vim.sh       # vim mode indicator (when editorMode is vim)
 │   ├── 05-time.sh       # HH:MM
-│   └── 06-meters.sh     # context %, 5-hour and 7-day rate % (click a bar to reveal its reset)
+│   ├── 06-meters.sh     # context %, 5-hour and 7-day rate % (click a bar to reveal its reset)
+│   └── 07-cost.sh       # marginal $ spend, shown only in rate-limit overage or fast mode
 └── README.md
 ```
 
@@ -25,11 +26,12 @@ status-lines/
 |---|---|
 | version | Claude Code version. Off by default; enable with `ENABLE_VERSION=TRUE` |
 | host-cwd | hostname + current directory, colored per host, with a per-language glyph for git repos. `$HOME` collapses to the hostname so paths read as `host/project/...` |
-| git | `<branch> <+adds> <-deletes>` plus the current PR number, resolved from GitHub (Claude Code provides it) or Azure DevOps (via `az repos pr list`, cached on disk). Worktree-aware. Untracked files count as adds. `not tracking` when not in a repo |
+| git | `<branch> <behind> <unpushed> <+adds> <-deletes>` plus the current PR number, resolved from GitHub (Claude Code provides it) or Azure DevOps (via `az repos pr list`, cached on disk). The behind-count comes from a non-blocking background `git fetch` (TTL-cached); the LOC delta is background-refreshed too, so large trees never stall the render. Worktree-aware. Untracked files count as adds. `not tracking` when not in a repo |
 | vim | current vim mode (NORMAL / INSERT / VISUAL), colored lualine-style. Empty unless `editorMode` is `vim` |
-| model | NerdFonts icon plus family name (Fable / Opus / Sonnet / Haiku); Fable uses a flame glyph, the others a robot. Older releases keep their version suffix; the family-latest hides it. Effort dots are calibrated per family |
+| model | NerdFonts icon plus family name (Fable / Opus / Sonnet / Haiku); Fable uses a flame glyph, the others a robot. Version suffix is always shown (e.g. `Opus 4.8`). Effort dots are calibrated per family |
 | time | `HH:MM` |
-| meters | Context window %, 5-hour and 7-day rate-limit % with a linear projection to cycle end. Each colored by threshold (dim / yellow / orange / red / maroon). Click the 5-hour (`S`) or 7-day (`W`) bar to reveal/hide a third line with that window's reset time (see [Clickable reset times](#clickable-reset-times)) |
+| meters | Context window %, 5-hour and 7-day rate-limit % with a linear projection to cycle end. Each colored by threshold (dim / yellow / orange / red / maroon). Click the 5-hour (`S`) or 7-day (`W`) bar to reveal/hide a third line with that window's reset time (see [Clickable reset times](#clickable-reset-times)). In overage the bar drops out and the cost segment stands in |
+| cost | Marginal `$` spend for the current billable stint, in gold. Hidden on a subscription until spend actually matters: a rate window over 100% or fast mode on. Meters from the point the stint began, not the inflated cumulative session estimate |
 
 ## Clickable reset times
 
