@@ -1,19 +1,13 @@
----
-name: setup-agentic-dev
-version: 26.26.1
-description: Prescriptive setup workflow for agentic Power BI and Fabric development; the getting-started guide for this marketplace. Use whenever someone is onboarding, setting up a new machine, or asks what to install or which prerequisites they need for these plugins; e.g. "how do I get started", "set up my environment for Power BI agentic dev", "what do I need to install for the reports / semantic-models / fabric-cli plugin", "install the Fabric CLI / te / pbir on Windows or Mac", "prerequisites", "onboarding". Covers Windows and macOS install commands, authentication, and verification for every external tool the marketplace's plugins depend on. Route here for installing tools and setting up the environment, not for using them (the domain skills cover usage).
----
-
 # Set up agentic Power BI and Fabric development
 
 A prescriptive workflow to get a machine ready to work these plugins. It maps each plugin to the external tools it needs, gives Windows and macOS install commands for each tool, and ends with authentication and a verification pass.
 
 The guiding principle, echoed in the marketplace README: install only what the task needs. Each installed tool and skill competes for the agent's attention and context. Install the small base layer everyone shares, then add the tools for the plugins actually in use; skip the rest.
 
-## How to use this skill
+## How to use this install workflow
 
 1. Confirm the target OS (Windows or macOS) and whether the user drives Power BI Desktop locally, since that decides several Windows-only paths
-2. Install the base layer (everyone needs it); see `references/foundation.md`
+2. Install the base layer (everyone needs it); see `foundation.md`
 3. Look up the plugins in the map below, collect the union of tools, and install them from the matching reference file
 4. Authenticate the cloud tools and any MCP servers
 5. Run the verification pass at the end of this file
@@ -22,7 +16,7 @@ Do not install tools the user has no plugin for. If unsure which plugins they wa
 
 ## The base layer (everyone)
 
-Install once regardless of which plugins follow. Details and commands: `references/foundation.md`.
+Install once regardless of which plugins follow. Details and commands: `foundation.md`.
 
 ```
 coding agent      Claude Code CLI (or GitHub Copilot CLI) + add this marketplace
@@ -48,33 +42,33 @@ te CLI  >  Power BI Modeling MCP  >  connect-pbid (live TOM/ADOMD)  >  hand-auth
 tabular-editor:
   needs: [te CLI]
   windows-only: [TabularEditor.exe (TE2)]        # Mac: Windows VM only
-  install: references/models.md
+  install: models.md
 
 pbi-desktop:                                     # fallback path; skip it if you use te or an MCP
   needs: [Power BI Desktop, PowerShell, NuGet CLI, TOM + ADOMD.NET NuGet packages, jq]
   optional: [.NET 8 SDK (daxlib model ops), gh (daxlib registry), Parallels Desktop (Mac -> Windows VM)]
   note: Windows-only, runs against a live local model; good for querying and tracing
   model-edits: fallback only; prefer te then an MCP. Live TOM outranks hand-authored TMDL, below both tools
-  install: references/models.md
+  install: models.md
 
 pbip:
   needs: [pbir CLI, jq]
   bundled: [tmdl-validate binary (ships in the plugin; no install)]
   optional: [Gemini API deps (google-genai, pillow, keyring) for AI report backgrounds]
-  install: references/reports-and-visuals.md   # pbir CLI + Gemini; tmdl-validate is bundled
+  install: reports-and-visuals.md   # pbir CLI + Gemini; tmdl-validate is bundled
 
 semantic-models:
   needs: [te CLI, fab (Fabric CLI), az (Azure CLI)]   # te is the primary path for every model change
   optional: [pbir CLI (rename propagation), Power BI Modeling MCP, connect-pbid/TOM (fallback)]
   change-order: te > MCP > connect-pbid > hand-authored TMDL (last resort)
   python: [requests, azure-identity, pyarrow]    # auto-installed via uv run --with
-  install: references/models.md   # te + local model tools; fab/az live in references/fabric.md
+  install: models.md   # te + local model tools; fab/az live in fabric.md
 
 reports:
   needs: [pbir CLI, fab, az, jq]
   optional: [DAX Studio or Power BI Desktop (local thick-report DAX via ADOMD.NET), gh, Chrome MCP (Mac verify)]
   python: [requests]
-  install: references/reports-and-visuals.md
+  install: reports-and-visuals.md
 
 custom-visuals:
   needs: [Node.js 20.19+, pbiviz (powerbi-visuals-tools), pbir CLI]
@@ -83,30 +77,30 @@ custom-visuals:
     r-visuals: [R runtime (4.3.3 matches the Service)]
     svg-visuals: [a model-editing path (te > MCP > connect-pbid > TMDL) + daxlib packages]
   mcp: [pbiviz MCP (npx powerbi-visuals-tools mcp)]
-  install: references/reports-and-visuals.md
+  install: reports-and-visuals.md
 
 paginated-reports:
   needs: [az, curl, jq, python3]
   optional: [Power BI Report Builder (Windows GUI), Power BI Report Server (local render)]
   capacity: publish/render needs Premium / Embedded / Fabric capacity (shared won't render)
-  install: references/reports-and-visuals.md
+  install: reports-and-visuals.md
 
 fabric-cli:
   needs: [fab (Fabric CLI), az (Azure CLI)]
   optional: [DuckDB (lakehouse queries), sqlcmd (SQL endpoint), nb (notebooks), az microsoft-fabric extension]
   mcp: [microsoft-learn (public), fabric-sql (needs FABRIC_PBI_TOKEN)]
-  install: references/fabric.md
+  install: fabric.md
 
 fabric-admin:
   needs: [fab (admin account), az (with Graph permissions)]
   requires: fabric-cli plugin installed
   python: [pyyaml, reportlab]                     # auto-installed via uv run
-  install: references/fabric.md
+  install: fabric.md
 
 etl:
   needs: [fab, az, DuckDB]
   capacity: Spark/Livy needs Fabric capacity (F SKU or trial) + a lakehouse
-  install: references/fabric.md
+  install: fabric.md
 ```
 
 ## Reference files
@@ -114,21 +108,21 @@ etl:
 Read the file that matches the plugins in scope. Each is self-contained with Windows + macOS commands, auth, and prerequisites.
 
 ```
-references/foundation.md            Base layer everyone needs: coding agent + marketplace,
+foundation.md            Base layer everyone needs: coding agent + marketplace,
                                     uv, git + Windows long paths, Python, Node/bun, shared
                                     CLIs (jq, gh, ripgrep), and the auth + verify overview
 
-references/fabric.md                Cloud and service tools: fab, az (+ microsoft-fabric),
+fabric.md                Cloud and service tools: fab, az (+ microsoft-fabric),
                                     the MCP servers and their tokens, DuckDB, sqlcmd, nb,
                                     Spark/Livy. For fabric-cli, fabric-admin, etl, and the
                                     cloud operations of semantic-models and reports
 
-references/models.md                Semantic model tools: te CLI, TE2, Power BI
+models.md                Semantic model tools: te CLI, TE2, Power BI
                                     Desktop + PowerShell + TOM/ADOMD.NET (NuGet) + .NET 8,
                                     daxlib, the bundled tmdl-validate, and Mac-via-Parallels.
                                     For tabular-editor, pbi-desktop, pbip (TMDL), semantic-models
 
-references/reports-and-visuals.md   Report and visual tools: pbir CLI (+ Desktop bridge and
+reports-and-visuals.md   Report and visual tools: pbir CLI (+ Desktop bridge and
                                     local DAX), pbiviz + Node, R and Python visual runtimes,
                                     the Gemini background script, and paginated report tooling.
                                     For reports, custom-visuals, paginated-reports, pbip (PBIR)
