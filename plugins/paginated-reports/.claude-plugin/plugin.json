@@ -1,7 +1,7 @@
 {
   "name": "paginated-reports",
-  "version": "26.26.1",
-  "description": "Author, validate, publish, and test Power BI paginated reports (RDL).",
+  "version": "26.26.2",
+  "description": "Use this when you are building print-ready paginated reports.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

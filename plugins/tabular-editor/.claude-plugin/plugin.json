@@ -1,7 +1,7 @@
 {
   "name": "tabular-editor",
-  "version": "26.26.1",
-  "description": "Semantic models from the terminal with the Tabular Editor CLI.",
+  "version": "26.26.2",
+  "description": "Use this when Tabular Editor is the right tool for model automation.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

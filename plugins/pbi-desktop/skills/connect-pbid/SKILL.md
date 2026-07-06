@@ -1,6 +1,6 @@
 ---
 name: connect-pbid
-version: 26.26.1
+version: 26.26.2
 description: TOM and ADOMD.NET guidance via PowerShell for connecting to Power BI Desktop's local Analysis Services instance. Covers model enumeration, DAX queries, metadata modification, annotations, calendar definitions, field parameters, query tracing, DAX library package management (daxlib.org), and the Desktop Bridge for reloading and screenshotting the report canvas. Automatically invoke when the user mentions "Power BI Desktop", "Analysis Services port", "TOM", "ADOMD", "daxlib", "DAX library", "DAX UDF package", or asks to "connect to PBI Desktop", "query PBI Desktop with DAX", "modify PBI Desktop model", "add a measure to PBI", "capture visual queries", "create a field parameter", "validate DAX", "intercept DAX queries", "install daxlib", "add DAX SVG", "add IBCS", "reload the report canvas", "screenshot a report page", "Desktop Bridge", or to work with the model and report in Power BI Desktop together.
 ---
 

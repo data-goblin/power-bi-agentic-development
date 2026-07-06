@@ -1,7 +1,7 @@
 {
   "name": "fabric-cli",
-  "version": "26.26.1",
-  "description": "Fabric and the Power BI service via the fab CLI.",
+  "version": "26.26.2",
+  "description": "Use this when you need to work with Fabric workspaces from the terminal.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

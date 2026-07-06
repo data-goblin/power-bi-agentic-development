@@ -1,6 +1,6 @@
 ---
 name: paginated-report
-version: 26.26.1
+version: 26.26.2
 description: Author, validate, publish, and test Power BI paginated reports in the RDL format. Automatically invoke when the user mentions "paginated report", "RDL", ".rdl", "Report Builder", "Power BI Report Builder", "SSRS report", "PBIRS", "Power BI Report Server", or asks to "create a paginated report", "build an invoice/statement report", "make a print-perfect report", "connect a paginated report to a semantic model", "edit an RDL file", "publish an .rdl", or "render a paginated report to PDF/Excel".
 ---
 

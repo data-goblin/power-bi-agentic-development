@@ -155,11 +155,12 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 > Don't install every plugin. Each skill competes for the agent's attention and context window, so install a plugin only when you need it and remove it when you don't. Prefer installing plugins scoped to a project rather than to your user, so each project carries only the skills it actually uses.
 
 <details>
-<summary><strong>agentic-help</strong> &ensp; Get started: install and set up the tools the other plugins need, on Windows or Mac</summary>
+<summary><strong>goblin-mode</strong> &ensp; Get started, set up your tools, and audit and improve your whole agentic setup</summary>
 
 | Type | Name | Description |
 |------|------|-------------|
-| Skill | [`setup-agentic-dev`](plugins/agentic-help/skills/setup-agentic-dev/) | Prescriptive setup workflow; maps each plugin to the CLIs, runtimes, and MCP servers it needs, with Windows and macOS install commands, auth, and a verification pass |
+| Skill | [`help-me-get-started`](plugins/goblin-mode/skills/help-me-get-started/) | A slow, friendly, jargon-free guide to agentic development for people new to agents; talks through what you want to do, feels out your role and access, teaches the five pillars (model, context, prompt, tools, environment) with local interactive explainers, and checks and installs what you need (Windows/macOS commands). Adapts pace: full tutorial or a fast install run |
+| Skill | [`improve-my-agent-setup`](plugins/goblin-mode/skills/improve-my-agent-setup/) | Setup-wide health check with modes (shallow/deep/ultra/yolo): skills, memory, tools, STT, model independence, other clients, harness config, git, permission/isolation, network and autonomous-agent exposure, safety enforcement, secrets and PII hygiene, and workflow habits; then offers to fix what's weak. Absorbs the old `/audit-context` |
 
 </details>
 
@@ -249,7 +250,6 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 | Type | Name | Description |
 |------|------|-------------|
 | Skill | [`fabric-cli`](plugins/fabric-cli/skills/fabric-cli/) | Fabric CLI (fab) for any remote operation in Power BI or Fabric (works fully on Pro, PPU; Fabric not required) |
-| Command | [`/audit-context`](plugins/fabric-cli/commands/audit-context.md) | Review project context files (CLAUDE.md, agents.md, memory files) |
 | Command | [`/migrating-fabric-trial-capacities`](plugins/fabric-cli/commands/migrating-fabric-trial-capacities.md) | Migrate workspaces from trial to production capacity |
 
 </details>

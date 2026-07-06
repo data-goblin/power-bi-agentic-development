@@ -1,7 +1,7 @@
 {
   "name": "pbi-desktop",
-  "version": "26.26.1",
-  "description": "The live model in Power BI Desktop via TOM and ADOMD.NET; no MCP needed.",
+  "version": "26.26.2",
+  "description": "Use this when Power BI Desktop is open and you need to inspect its model.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

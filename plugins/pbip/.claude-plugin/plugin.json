@@ -1,7 +1,7 @@
 {
   "name": "pbip",
-  "version": "26.26.1",
-  "description": "PBIP up close: TMDL, PBIR, and project file structure.",
+  "version": "26.26.2",
+  "description": "Use this when you need to edit or understand a Power BI project folder.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

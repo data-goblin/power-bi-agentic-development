@@ -1,7 +1,7 @@
 {
   "name": "etl",
-  "version": "26.26.1",
-  "description": "Execute code and queries on Fabric compute: Spark sessions via the Livy API and DuckDB for lakehouse queries.",
+  "version": "26.26.2",
+  "description": "Use this when you need to inspect, query, or transform lakehouse data.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

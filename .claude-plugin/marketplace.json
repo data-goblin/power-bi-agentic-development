@@ -5,13 +5,13 @@
   },
   "metadata": {
     "description": "A marketplace for skills and tools for agentic Power BI development.",
-    "version": "26.26.1"
+    "version": "26.26.2"
   },
   "plugins": [
     {
-      "name": "agentic-help",
-      "description": "Get started: install and set up the tools the other plugins need, on Windows or Mac.",
-      "source": "./plugins/agentic-help"
+      "name": "goblin-mode",
+      "description": "Goblin Mode: get started with agentic dev, set up your tools, and audit and improve your whole setup.",
+      "source": "./plugins/goblin-mode"
     },
     {
       "name": "tabular-editor",
