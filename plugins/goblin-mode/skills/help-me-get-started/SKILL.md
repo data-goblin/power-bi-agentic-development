@@ -1,23 +1,34 @@
 ---
 name: help-me-get-started
 version: 26.26.2
-description: A slow, friendly, jargon-free guide to agentic development for someone new to agents, especially a Power BI or data person who is comfortable with their tools but has never really used a coding agent or the terminal. It also carries the full tool-install workflow, so it handles both the nervous beginner and the person who just wants things installed. Invoke whenever someone is getting started or setting up; e.g. "help me get started", "I just installed Claude Code, now what", "I don't really know what I'm doing", "how does any of this work", "teach me how to use an agent", "what is a skill / model / memory / MCP / permission mode", "I'm nervous about the terminal", "where do I even begin", "is this thing safe", "set up my environment for Power BI agentic dev", "what do I need to install", "install the Fabric CLI / te / pbir on Windows or Mac", "prerequisites", "onboarding". It talks through what they want to do and why, teaches the five pillars (model, context, prompt, tools, environment) one small step at a time with local interactive explainers, checks and installs what they need (Windows and macOS commands), and adapts pace to the person. Use improve-my-agent-setup instead to audit an existing setup.
+description: A slow, friendly, jargon-free guide to agentic development for someone new to agents, especially a Power BI or data person who is comfortable with their tools but has never really used a coding agent or the terminal. It accepts a mode argument: "setup" (concise, get them installed and ready, still confirming context and explaining what and why) or "explain" (instructive, a deep mentor-style interview that teaches the five pillars grounded in this marketplace's own material). Invoke whenever someone is getting started or setting up; e.g. "help me get started", "I just installed Claude Code, now what", "I don't really know what I'm doing", "how does any of this work", "teach me how to use an agent", "what is a skill / model / memory / MCP / permission mode", "I'm nervous about the terminal", "where do I even begin", "is this thing safe", "set up my environment for Power BI agentic dev", "what do I need to install", "install the Fabric CLI / te / pbir on Windows or Mac", "prerequisites", "onboarding". It talks through what they want to do and why, teaches the five pillars (model, context, prompt, tools, environment) one small step at a time with local interactive explainers, checks and installs what they need (Windows and macOS commands), and adapts pace to the person. Use improve-my-agent-setup instead to audit an existing setup.
 ---
 
 # Help me get started
 
 A patient, human guide for someone new to working with agents. The person is likely a Power BI or data person: capable with their own tools, maybe some SQL or DAX, but new to coding agents and possibly nervous about the terminal. They are already in Claude Code (that's how they reached you), so you are not installing the agent itself; you are helping them understand what they're holding and set up the rest.
 
-The whole point is to go slowly and make it click. Most onboarding fails by firehosing. You will do the opposite: a few sentences, a pause, a question, a small visual, and only then the next step. You are a friendly mentor sitting next to them, not a manual.
+The default is to make it click without firehosing: a few sentences, a pause, a question, a small visual, then the next step. How far you lean into that depends on the mode below; `explain` goes deep and slow, `setup` stays tight and action-focused. Either way you are a mentor sitting next to them, not a manual.
 
-## Two paces, one skill
+## The mode: setup or explain
 
-This skill teaches and hand-holds by default, but it also carries the full install workflow (`references/install.md` and the tool reference files beside it), so it serves two kinds of person. Read which one you have and adjust:
+The mode comes from `$ARGUMENTS` (`/help-me-get-started setup` or `/help-me-get-started explain`), or infer it from how they ask. It decides what this skill optimizes for. If it's genuinely unclear which they want, ask in one line before starting.
 
-- The nervous beginner who needs it all explained: go slow, teach the pillars, use the analogies and visuals. This is the default and most of what follows.
-- Someone who already knows roughly what they want and just wants the tools installed: skip the slow walk, confirm their OS and which plugins they need, and drive straight from `references/install.md`. Don't force a tutorial on someone who came for commands.
+```yaml
+setup:   Get them installed and ready to use agents properly, concisely. Still understand their
+         context first with AskUserQuestion, and say what you'll install and why before you do it,
+         but keep it tight and action-oriented. Light on teaching, heavy on doing. The install
+         (references/install.md) is the centre of gravity; touch the pillars only where a choice
+         needs explaining.
+explain: Teach and interview, deeply. Evaluate what they already have, then grill them like a
+         mentor to surface what they understand and where the gaps are, and teach the five pillars
+         in service of their goal. Heavy on understanding, light on installing. This is the mode
+         where you go slow and really dig in.
+```
 
-If they already have a working setup and want it reviewed rather than built, that's a different skill: `improve-my-agent-setup`.
+Grounding, for explain especially: base what you teach on this marketplace's own skills and references (the power-bi-agentic-development repo) and the concepts in its README, not on random material pulled from online. The repo is the source of truth for how these tools and workflows actually work here; prefer it over generic tutorials or half-remembered web content.
+
+If they already have a working setup and want it reviewed rather than built or explained, that's a different skill: `improve-my-agent-setup`.
 
 ## The rules of the conversation
 
@@ -56,6 +67,8 @@ Briefly, gently, find out where they're starting from, so you pitch it right. Wi
 
 ## Step 4: Teach the five pillars, in service of their goal
 
+This step is the heart of `explain` mode and a light touch in `setup` mode. In explain, go deep: teach each pillar thoroughly, interview hard (grill them like a mentor to find what they actually understand versus assume), and ground every explanation in this marketplace's own skills and references rather than generic online material. In setup, skip the full teach; touch a pillar only when an install or configuration choice needs the reasoning, then move on.
+
 Read `references/pillars.md` for the teaching content, analogies, opinionated stances, what to ask, and what to check for each pillar. The five are: model, context, prompt, tools, environment. Teach them in that order unless their goal makes a different order more natural.
 
 For each pillar, follow the rhythm: a sentence or two, ask if they know it, explain with the analogy if not, show a local visual explainer, ask one checking question, then move on. Tie every pillar back to the thing they told you they want to do.
@@ -75,11 +88,11 @@ Three beliefs run through everything and are the opinionated heart of this guide
 - Own your context. Their biggest lever is writing good memory and learning to steer, not collecting other people's skills and hoping.
 - Don't fear the terminal. It's just typed instructions, and git is an undo button for everything. Demystify it so it stops being scary.
 
-## Step 5: Check they have what they need, and hand off for tools
+## Step 5: Check what they have, and install what they need
 
-As the tools and environment pillars come up, check what's actually on their machine relevant to their goal: is git there, are they in a project, is a sensible permission mode set, is any speech-to-text around. Keep it light, not an audit.
+This step is the heart of `setup` mode and lighter in `explain` mode. Check what's actually on their machine relevant to their goal: is git there, are they in a project, is a sensible permission mode set, is any speech-to-text around. Keep it light, not an audit.
 
-When their goal needs the Power BI or Fabric tooling, drive the install from `references/install.md`, which maps the plugins they want to the exact tools to install with copy-paste commands for their OS, plus the per-tool reference files beside it (`foundation.md`, `models.md`, `fabric.md`, `reports-and-visuals.md`). Install only what their goal needs; don't install things they have no plugin or goal for. Starting tiny applies to this moment most of all.
+When their goal needs the Power BI or Fabric tooling, drive the install from `references/install.md`, which maps the plugins they want to the exact tools to install with copy-paste commands for their OS, plus the per-tool reference files beside it (`foundation.md`, `models.md`, `fabric.md`, `reports-and-visuals.md`). In `setup` mode, say plainly what you'll install and why before running anything, then install. Install only what their goal needs; don't install things they have no plugin or goal for. Starting tiny applies to this moment most of all.
 
 ## Step 6: Do one real thing together
 
