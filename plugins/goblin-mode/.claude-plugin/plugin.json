@@ -1,0 +1,26 @@
+{
+  "name": "goblin-mode",
+  "version": "26.26.2",
+  "description": "Get started with agentic development, set up your tools, and audit and improve your whole setup.",
+  "author": {
+    "name": "Kurt Buhler",
+    "url": "https://data-goblins.com"
+  },
+  "homepage": "https://data-goblins.com",
+  "repository": "https://github.com/data-goblin/power-bi-agentic-development",
+  "license": "GPL-3.0",
+  "keywords": [
+    "agentic",
+    "getting-started",
+    "onboarding",
+    "setup",
+    "install",
+    "audit",
+    "skills",
+    "memory",
+    "context-engineering",
+    "secrets",
+    "claude-code",
+    "workflow"
+  ]
+}
