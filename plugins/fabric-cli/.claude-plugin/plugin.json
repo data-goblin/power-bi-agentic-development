@@ -1,6 +1,6 @@
 {
   "name": "fabric-cli",
-  "version": "26.25",
+  "version": "26.26.2",
   "description": "Fabric and the Power BI service via the fab CLI.",
   "author": {
     "name": "Kurt Buhler",
