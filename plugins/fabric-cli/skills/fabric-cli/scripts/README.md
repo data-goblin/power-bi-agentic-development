@@ -119,6 +119,31 @@ python3 export_semantic_model_as_pbip.py "Sales.Workspace/Sales Model.SemanticMo
 
 Creates complete PBIP structure with TMDL definition and blank report.
 
+### get_semantic_model_ai_metadata.py
+
+Read semantic model AI instructions and AI schema from a Fabric semantic model
+definition. This is the service-definition roundtrip path for metadata managed
+through Tabular Editor or the VS Code extension.
+
+```bash
+python3 get_semantic_model_ai_metadata.py \
+  "Sales.Workspace/Sales Model.SemanticModel" --format json
+
+python3 get_semantic_model_ai_metadata.py \
+  "Sales.Workspace/Sales Model.SemanticModel" \
+  --instructions-out instructions.md --schema-out schema.json
+```
+
+For offline parsing of a saved Fabric definition payload:
+
+```bash
+fab get "Sales.Workspace/Sales Model.SemanticModel" -q definition -f > definition.json
+python3 get_semantic_model_ai_metadata.py --definition-file definition.json --format json
+```
+
+The script reads friendly Copilot files and culture `linguisticMetadata`,
+preferring friendly files when both are present.
+
 ### download_workspace.py
 
 Download complete workspace with all items and lakehouse files.

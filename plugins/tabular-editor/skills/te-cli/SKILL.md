@@ -162,6 +162,18 @@ For build scripts that issue many `te` calls, set `te config set bpa.onSave fals
 
 Gate any cross-tool refactor with `te validate` before touching the report or the service, and remember every `te` mutation stages in memory until `--save`.
 
+## Bundled scripts
+
+- `scripts/manage-ai-metadata.csx` - non-interactive `te script` CRUD for
+  semantic model AI instructions (`CustomInstructions`) and AI schema
+  (`Entities`) stored in culture linguistic metadata.
+- `scripts/edit-ai-instructions-interactive.csx` - TE3 Desktop GUI editor for
+  semantic model AI instructions.
+- `scripts/edit-ai-schema-interactive.csx` - TE3 Desktop GUI editor for
+  semantic model AI schema.
+- `scripts/manage-ai-metadata-interactive.csx` - original combined TE3 Desktop
+  editor prototype.
+
 ## References
 
 Bundled (load as needed):
