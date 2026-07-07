@@ -1,6 +1,6 @@
 ---
 name: semantic-model
-version: 26.25
+version: 26.26.2
 description: This skill should be used whenever the user mentions a "semantic model", "data model", or "dataset", or asks to "build", "model", "design", "optimize", "review", or "audit" one, or to "add a measure", "add a relationship", "create a role" / "set up RLS", "add a calculation group", "set up incremental refresh", "fix a star schema", "reduce model size", "prepare a model for Copilot / AI", or "check model quality". Covers the full lifecycle (design, build, refresh, review) and drives every operation through the `te` CLI first, then TOM (connect-pbid) or a model MCP, then TMDL authoring (the tmdl skill). Not for report visuals (use pbir-cli) or isolated DAX query tuning (use the dax skill).
 ---
 
