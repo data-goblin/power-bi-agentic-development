@@ -94,6 +94,8 @@ references/refactoring-renaming.md:    safe rename workflow (lineage check first
 references/review-checklist.md:        full audit checklist with remediation
 references/performance.md:             performance testing, unused-column detection, memory analysis
 scripts/get_model_info.py:             model metadata overview (mode, size, reports, endorsement, sources, refresh)
+scripts/manage-ai-metadata.csx:        read/write AI instructions and AI schema through TOM culture linguistic metadata
+scripts/get_semantic_model_ai_metadata.py: Fabric CLI service-definition readback for AI instructions and AI schema
 ```
 
 ## What this skill deliberately leaves out
