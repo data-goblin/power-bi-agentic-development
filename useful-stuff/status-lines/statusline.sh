@@ -106,32 +106,64 @@ if [ -n "$model" ]; then
     esac
 fi
 
-# Effort dots, calibrated per model. Haiku has no effort support and stays blank.
-# Fable + Opus 4.7+: 5 levels (low/medium/high/xhigh|ultracode/max). Opus 4.6 + Sonnet 4.6: 4 levels
-# (low/medium/high/max; xhigh falls back to high). See code.claude.com/docs/en/model-config.
+# Effort dots, calibrated per model by probing each model's live /effort picker.
+# Fable 5, Opus 4.7+, and Sonnet 5+ expose the full low/medium/high/xhigh/max
+# range plus a separate `ultracode` mode (xhigh effort + standing workflow
+# orchestration), rendered as five purple diamonds so it reads as its own tier
+# rather than reusing the xhigh dots. Haiku 4.5+ has the same 5-level range but
+# no ultracode. Older Sonnet/Opus (pre-5 / pre-4.7) collapse high+xhigh into one
+# dot and have no ultracode either. See code.claude.com/docs/en/model-config.
+#
+# _effort_model_version is independent of the display-only $model_version above
+# (which is deliberately left blank for the assumed-latest model per family) --
+# tier gating needs the real version even when we're not showing it.
+_effort_model_version() {
+    local v
+    v=$(echo "$model_id" | grep -oE '[0-9]+-[0-9]+' | head -1 | tr '-' '.')
+    [ -z "$v" ] && v=$(echo "$model_full" | grep -oE '[0-9]+\.[0-9]+' | head -1)
+    [ -z "$v" ] && v=$(echo "$model_id" | grep -oE '[0-9]+$' | head -1)
+    echo "$v"
+}
+_effort_ge() {
+    local v; v=$(_effort_model_version)
+    [ -n "$v" ] && [ "$(printf '%s\n%s\n' "$1" "$v" | sort -V | head -1)" = "$1" ]
+}
 case "$model" in
     Fable*)
         case "$effort_level" in
-            low)    effort_dots="●○○○○" ;;
-            medium) effort_dots="●●○○○" ;;
-            high)   effort_dots="●●●○○" ;;
-            xhigh|ultracode) effort_dots="●●●●○" ;;
-            max)    effort_dots="●●●●●" ;;
-            *)      effort_dots="" ;;
+            low)       effort_dots="●○○○○" ;;
+            medium)    effort_dots="●●○○○" ;;
+            high)      effort_dots="●●●○○" ;;
+            xhigh)     effort_dots="●●●●○" ;;
+            max)       effort_dots="●●●●●" ;;
+            ultracode) effort_dots="${PURPLE}◆◆◆◆◆${R}" ;;
+            *)         effort_dots="" ;;
         esac
         ;;
     Haiku*)
-        effort_dots=""
-        ;;
-    Opus*)
-        if echo "$model_id $model_full" | grep -qE '4\.[7-9]|4-[7-9]|4\.1[0-9]|4-1[0-9]'; then
+        if _effort_ge "4.5"; then
             case "$effort_level" in
                 low)    effort_dots="●○○○○" ;;
                 medium) effort_dots="●●○○○" ;;
                 high)   effort_dots="●●●○○" ;;
-                xhigh|ultracode) effort_dots="●●●●○" ;;
+                xhigh)  effort_dots="●●●●○" ;;
                 max)    effort_dots="●●●●●" ;;
                 *)      effort_dots="" ;;
+            esac
+        else
+            effort_dots=""
+        fi
+        ;;
+    Opus*)
+        if echo "$model_id $model_full" | grep -qE '4\.[7-9]|4-[7-9]|4\.1[0-9]|4-1[0-9]'; then
+            case "$effort_level" in
+                low)       effort_dots="●○○○○" ;;
+                medium)    effort_dots="●●○○○" ;;
+                high)      effort_dots="●●●○○" ;;
+                xhigh)     effort_dots="●●●●○" ;;
+                max)       effort_dots="●●●●●" ;;
+                ultracode) effort_dots="${PURPLE}◆◆◆◆◆${R}" ;;
+                *)         effort_dots="" ;;
             esac
         else
             case "$effort_level" in
@@ -144,13 +176,25 @@ case "$model" in
         fi
         ;;
     Sonnet*)
-        case "$effort_level" in
-            low)        effort_dots="●○○○" ;;
-            medium)     effort_dots="●●○○" ;;
-            high|xhigh) effort_dots="●●●○" ;;
-            max)        effort_dots="●●●●" ;;
-            *)          effort_dots="" ;;
-        esac
+        if _effort_ge "5"; then
+            case "$effort_level" in
+                low)       effort_dots="●○○○○" ;;
+                medium)    effort_dots="●●○○○" ;;
+                high)      effort_dots="●●●○○" ;;
+                xhigh)     effort_dots="●●●●○" ;;
+                max)       effort_dots="●●●●●" ;;
+                ultracode) effort_dots="${PURPLE}◆◆◆◆◆${R}" ;;
+                *)         effort_dots="" ;;
+            esac
+        else
+            case "$effort_level" in
+                low)        effort_dots="●○○○" ;;
+                medium)     effort_dots="●●○○" ;;
+                high|xhigh) effort_dots="●●●○" ;;
+                max)        effort_dots="●●●●" ;;
+                *)          effort_dots="" ;;
+            esac
+        fi
         ;;
     *)
         effort_dots=""
