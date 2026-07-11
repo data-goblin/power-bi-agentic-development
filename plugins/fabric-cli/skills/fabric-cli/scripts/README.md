@@ -119,6 +119,25 @@ python3 export_semantic_model_as_pbip.py "Sales.Workspace/Sales Model.SemanticMo
 
 Creates complete PBIP structure with TMDL definition and blank report.
 
+### get_semantic_model_ai_metadata.py
+
+Retrieve semantic model AI instructions and AI schema using `fab get -q definition -f`. The parser understands both documented Copilot sidecars and TMDL culture `linguisticMetadata`.
+
+```bash
+python3 get_semantic_model_ai_metadata.py "ws.Workspace/Model.SemanticModel"
+python3 get_semantic_model_ai_metadata.py "ws.Workspace/Model.SemanticModel" \
+  --instructions-out instructions.md --schema-out schema.json
+fab get "ws.Workspace/Model.SemanticModel" -q "definition" -f > definition.json
+python3 get_semantic_model_ai_metadata.py --definition-file definition.json
+```
+
+Options:
+
+- `--culture` - filter TMDL culture metadata to one culture
+- `--instructions-out` - write the first instruction payload to a Markdown file
+- `--schema-out` - write the first schema payload to a JSON file
+- `--format text` - print only the first instructions payload
+
 ### download_workspace.py
 
 Download complete workspace with all items and lakehouse files.

@@ -1,6 +1,5 @@
 ---
 name: fabric-cli
-version: 26.26.2
 description: Expert guidance for using the Fabric CLI (`fab`) to fully interact with Fabric workspaces, items, and configuration. Automatically invoke this skill whenever the user mentions "Fabric" or "Power BI Service" or a "Fabric/Power BI workspace".
 ---
 
@@ -62,6 +61,7 @@ You must read and understand the common list of operations with simple examples
 5. What's in that item; what's it for; what is it?:
    - Full TMDL definition: `fab get "spaceparts-dev.Workspace/spaceparts-otc-full.SemanticModel" -q "definition" -f`
    - Search a specific measure / table / column: `fab get "ws.Workspace/Model.SemanticModel" -q "definition" -f | rga -i "Sales Amount"`
+   - Retrieve AI instructions / AI schema: `python3 scripts/get_semantic_model_ai_metadata.py "ws.Workspace/Model.SemanticModel" --instructions-out instructions.md --schema-out schema.json`
 6. Get files, tables, or table schemas:
    - List lakehouse files: `fab ls "ws.Workspace/LH.Lakehouse/Files"`
    - List lakehouse tables: `fab ls "ws.Workspace/LH.Lakehouse/Tables"`

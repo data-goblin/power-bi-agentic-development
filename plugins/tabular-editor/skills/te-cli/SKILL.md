@@ -1,6 +1,5 @@
 ---
 name: te-cli
-version: 26.26.2
 description: Expert guidance for the cross-platform Tabular Editor CLI (the `te` binary, currently in preview) that manages Power BI / Analysis Services semantic models from the terminal on macOS, Linux, and Windows. Use when the user mentions the `te` CLI or "Tabular Editor CLI" (not the "2"), or runs a `te <command>` to scaffold, inspect, edit, validate, run BPA on, query, deploy, refresh, test, or migrate a semantic model. Not for the legacy Windows-only `TabularEditor.exe` (TE2).
 ---
 
@@ -86,6 +85,7 @@ The highest-frequency tasks in their most concise form. Full flags are in `refer
 5. **Make bulk changes**:
    - Text find/replace across the whole model: `te replace "Old" "New" --in expressions --save` (previews unless `--save`).
    - Arbitrary bulk logic in one pass (the model loads once, avoiding ~1-2s per-call startup): `te script -S bulk.csx --save`, or inline `echo '<C# foreach over Model.AllMeasures>' | te script -e - --save`. Predefined macros: `te macro run "<name>" --on "Sales/A,Sales/B" --save`.
+   - AI metadata CRUD: use `scripts/manage-ai-metadata.csx` for non-interactive `CustomInstructions` and Copilot schema `Entities` management; use `scripts/edit-ai-instructions-interactive.csx` or `scripts/edit-ai-schema-interactive.csx` inside TE3 Desktop.
 6. **Validate and optimize**:
    - Validate DAX, schema, and relationships: `te validate -m ./model --errors-only`.
    - Best-practice gate: `te bpa run --fail-on warning -m ./model` (`--fix` auto-applies fixes); format DAX with `te format --save -m ./model`.
@@ -174,6 +174,10 @@ Bundled (load as needed):
 - `references/te2-migration.md` - TE2 compat activation and full flag mapping
 - `references/pbir-cli-tandem.md` - using `te` with the `pbir` CLI (rename and refactor propagation, thin reports, validation pairing)
 - `references/fabric-cli-tandem.md` - using `te` with the `fab` CLI (export/edit/deploy round-trip, discovery, refresh, promotion)
+- `scripts/manage-ai-metadata.csx` - non-interactive AI instructions / AI schema CRUD through culture linguistic metadata
+- `scripts/edit-ai-instructions-interactive.csx` - TE3 GUI editor for AI instructions; uses the connected model, defaults to `en-US`, and does not require a selected object
+- `scripts/edit-ai-schema-interactive.csx` - TE3 GUI editor for AI schema JSON; uses the connected model, defaults to `en-US`, and does not require a selected object
+- `scripts/manage-ai-metadata-interactive.csx` - experimental combined TE3 GUI editor for the same AI metadata
 
 Authoritative docs:
 
