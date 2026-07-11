@@ -1,7 +1,7 @@
 {
   "name": "fabric-admin",
-  "version": "26.26.2",
-  "description": "Use this when you need tenant-level checks, governance, or admin review.",
+  "version": "26.28.0",
+  "description": "Audit tenant settings, governance, security groups, and Fabric admin state.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

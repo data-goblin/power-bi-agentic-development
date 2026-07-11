@@ -1,7 +1,7 @@
 {
   "name": "pbi-desktop",
-  "version": "26.26.2",
-  "description": "Use this when Power BI Desktop is open and you need to inspect its model.",
+  "version": "26.28.0",
+  "description": "Inspect and query the live Power BI Desktop model via TOM and ADOMD.NET.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

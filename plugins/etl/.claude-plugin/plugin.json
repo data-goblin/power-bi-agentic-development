@@ -1,7 +1,7 @@
 {
   "name": "etl",
-  "version": "26.26.2",
-  "description": "Use this when you need to inspect, query, or transform lakehouse data.",
+  "version": "26.28.0",
+  "description": "Inspect, query, and transform lakehouse data with Spark, Livy, and DuckDB.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

@@ -1,7 +1,7 @@
 {
   "name": "goblin-mode",
-  "version": "26.26.2",
-  "description": "Get started with agentic development, set up your tools, and audit and improve your whole setup.",
+  "version": "26.28.0",
+  "description": "Set up, audit, and improve your agentic Power BI development workspace.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

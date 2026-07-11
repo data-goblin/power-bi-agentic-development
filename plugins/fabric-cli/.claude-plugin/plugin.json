@@ -1,7 +1,7 @@
 {
   "name": "fabric-cli",
-  "version": "26.26.2",
-  "description": "Use this when you need to work with Fabric workspaces from the terminal.",
+  "version": "26.28.0",
+  "description": "Connect to, read, and modify anything in Fabric via the CLI.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

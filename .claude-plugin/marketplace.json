@@ -5,62 +5,62 @@
   },
   "metadata": {
     "description": "A marketplace for skills and tools for agentic Power BI development.",
-    "version": "26.26.2"
+    "version": "26.28.0"
   },
   "plugins": [
     {
       "name": "goblin-mode",
-      "description": "Goblin Mode: get started with agentic dev, set up your tools, and audit and improve your whole setup.",
+      "description": "Set up, audit, and improve your agentic Power BI development workspace.",
       "source": "./plugins/goblin-mode"
     },
     {
       "name": "tabular-editor",
-      "description": "Semantic models from the terminal with the Tabular Editor CLI.",
+      "description": "Automate semantic models from the terminal with Tabular Editor.",
       "source": "./plugins/tabular-editor"
     },
     {
       "name": "pbi-desktop",
-      "description": "The live model in Power BI Desktop via TOM and ADOMD.NET; no MCP needed.",
+      "description": "Inspect and query the live Power BI Desktop model via TOM and ADOMD.NET.",
       "source": "./plugins/pbi-desktop"
     },
     {
       "name": "pbip",
-      "description": "PBIP up close: TMDL, PBIR, and project file structure.",
+      "description": "Edit and understand PBIP projects, including TMDL, PBIR, and project structure.",
       "source": "./plugins/pbip"
     },
     {
       "name": "semantic-models",
-      "description": "Design, build, optimize, and review semantic models.",
+      "description": "Design, build, optimize, and review Power BI semantic models.",
       "source": "./plugins/semantic-models"
     },
     {
       "name": "reports",
-      "description": "Build, format, and review Power BI reports (PBIR).",
+      "description": "Build, format, optimize, and review interactive Power BI reports.",
       "source": "./plugins/reports"
     },
     {
       "name": "paginated-reports",
-      "description": "Author, validate, publish, and test paginated reports (RDL).",
+      "description": "Author, validate, publish, and test print-ready paginated reports.",
       "source": "./plugins/paginated-reports"
     },
     {
       "name": "fabric-cli",
-      "description": "Fabric and the Power BI service via the fab CLI.",
+      "description": "Connect to, read, and modify anything in Fabric via the CLI.",
       "source": "./plugins/fabric-cli"
     },
     {
       "name": "fabric-admin",
-      "description": "Audit and govern your Fabric and Power BI tenant.",
+      "description": "Audit tenant settings, governance, security groups, and Fabric admin state.",
       "source": "./plugins/fabric-admin"
     },
     {
       "name": "custom-visuals",
-      "description": "Deneb, Python, R, SVG, and pbiviz custom visuals.",
+      "description": "Build Deneb, Python, R, SVG, and pbiviz custom visuals for Power BI.",
       "source": "./plugins/custom-visuals"
     },
     {
       "name": "etl",
-      "description": "Execute code and queries on Fabric compute: Spark via Livy and DuckDB.",
+      "description": "Inspect, query, and transform lakehouse data with Spark, Livy, and DuckDB.",
       "source": "./plugins/etl"
     }
   ]

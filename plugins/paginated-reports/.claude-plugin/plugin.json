@@ -1,7 +1,7 @@
 {
   "name": "paginated-reports",
-  "version": "26.26.2",
-  "description": "Use this when you are building print-ready paginated reports.",
+  "version": "26.28.0",
+  "description": "Author, validate, publish, and test print-ready paginated reports.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

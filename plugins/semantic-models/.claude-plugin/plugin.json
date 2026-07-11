@@ -1,7 +1,7 @@
 {
   "name": "semantic-models",
-  "version": "26.26.2",
-  "description": "Use this when you are shaping the model behind a Power BI report.",
+  "version": "26.28.0",
+  "description": "Design, build, optimize, and review Power BI semantic models.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

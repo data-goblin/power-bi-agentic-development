@@ -1,7 +1,7 @@
 {
   "name": "custom-visuals",
-  "version": "26.26.2",
-  "description": "Use this when a report needs visuals beyond the built-in Power BI charts.",
+  "version": "26.28.0",
+  "description": "Build Deneb, Python, R, SVG, and pbiviz custom visuals for Power BI.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"
