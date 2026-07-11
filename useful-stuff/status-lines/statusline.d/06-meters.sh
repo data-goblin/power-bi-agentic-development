@@ -37,42 +37,6 @@ render_bullet () {
     fi
     [ "$projected" -gt 999 ] 2>/dev/null && projected=999
 
-    # Layered fill: 5 shades, each spans a 20% band. As usage climbs, the
-    # next shade overpaints from the left, so every cell shows the topmost
-    # layer that has reached it. Projection is conveyed only by the ↑
-    # overflow glyph below; the bar itself reflects used% only.
-    local layer k
-    if [ "$used" -le 0 ] 2>/dev/null; then
-        layer=0; k=0
-    else
-        layer=$(( (used + 19) / 20 ))
-        [ "$layer" -gt 5 ] && layer=5
-        k=$(( (used - (layer - 1) * 20) / 2 ))
-        [ "$k" -gt 10 ] && k=10
-        [ "$k" -lt 0 ] && k=0
-    fi
-
-    local bar="" i cell_layer cell_char cell_color
-    for i in 1 2 3 4 5 6 7 8 9 10; do
-        if [ "$layer" -eq 0 ] 2>/dev/null; then
-            cell_layer=0
-        elif [ "$i" -le "$k" ] 2>/dev/null; then
-            cell_layer=$layer
-        else
-            cell_layer=$((layer - 1))
-        fi
-        case "$cell_layer" in
-            0) cell_char="░"; cell_color="$DIM" ;;
-            1) cell_char="▒"; cell_color="$DIM" ;;
-            2) cell_char="▒"; cell_color="$YELLOW" ;;
-            3) cell_char="▓"; cell_color="$ORANGE" ;;
-            4) cell_char="█"; cell_color="$BRIGHT_RED" ;;
-            5) cell_char="█"; cell_color="$MAROON" ;;
-        esac
-        bar="${bar}${cell_color}${cell_char}"
-    done
-    bar="${bar}${R}"
-
     local pct_color_val
     pct_color_val=$(pct_color "$used")
     local overflow=""
@@ -80,16 +44,26 @@ render_bullet () {
     # ↑ as soon as the projection is on track to hit the limit (>=100).
     [ "$projected" -ge 100 ] 2>/dev/null && overflow=" ${BLINK}${CRIMSON}󰀦${R}"
 
+    local visible="${pct_color_val}${used}% ${label}${R}"
+    meter_visual=$(render_meter_visual "$used" 10)
+    if [ -n "$meter_visual" ]; then
+        visible="${visible} ${meter_visual}"
+    fi
+
     # Wrap the bar in an OSC 8 hyperlink to a per-session toggle marker. The
     # click handler (statusline-click.sh) flips the marker on click; this
     # renderer then reveals the reset time on line 3. Path is plain ASCII.
     local marker="${SL_TOGGLE_DIR}/${session_key}.${label}"
-    local link_open="\033]8;;file://${marker}\a"
-    local link_close="\033]8;;\a"
-    seg "${link_open}${pct_color_val}${used}% ${label}${R} ${bar}${link_close}${overflow}"
+    if [ "$STATUSLINE_CLICKABLE_RESETS" = "TRUE" ]; then
+        local link_open="\033]8;;file://${marker}\a"
+        local link_close="\033]8;;\a"
+        seg "${link_open}${visible}${link_close}${overflow}"
+    else
+        seg "${visible}${overflow}"
+    fi
 
     # When the marker is set, compose this bar's reset reveal for line 3.
-    if [ -e "$marker" ] && [ -n "$resets_at" ] && [ "$resets_at" -gt 0 ] 2>/dev/null; then
+    if [ "$STATUSLINE_CLICKABLE_RESETS" = "TRUE" ] && [ -e "$marker" ] && [ -n "$resets_at" ] && [ "$resets_at" -gt 0 ] 2>/dev/null; then
         local now_r=$(date +%s)
         local rel=$((resets_at - now_r))
         local clock rel_str
@@ -112,19 +86,91 @@ render_bullet () {
     fi
 }
 
+render_meter_visual () {
+    local used=$1 width=$2
+    case "$STATUSLINE_METER_STYLE" in
+        label|percent) return 0 ;;
+        thin|thin-bar) render_statusline_linear_bar "$used" "$width" "━" "─" ;;
+        bar|full-bar) render_statusline_linear_bar "$used" "$width" "█" "░" ;;
+        *) render_statusline_step_bar "$used" "$width" ;;
+    esac
+}
+
+render_statusline_step_bar () {
+    local used=$1 width=$2
+    local layer k
+    if [ "$used" -le 0 ] 2>/dev/null; then
+        layer=0; k=0
+    else
+        layer=$(( (used + 19) / 20 ))
+        [ "$layer" -gt 5 ] && layer=5
+        k=$(( (used - (layer - 1) * 20) * width / 20 ))
+        [ "$k" -gt "$width" ] && k=$width
+        [ "$k" -lt 0 ] && k=0
+    fi
+
+    local bar="" i=1 cell_layer cell_char cell_color
+    while [ "$i" -le "$width" ]; do
+        if [ "$layer" -eq 0 ] 2>/dev/null; then
+            cell_layer=0
+        elif [ "$i" -le "$k" ] 2>/dev/null; then
+            cell_layer=$layer
+        else
+            cell_layer=$((layer - 1))
+        fi
+        case "$cell_layer" in
+            0) cell_char="░"; cell_color="$DIM" ;;
+            1) cell_char="▒"; cell_color="$DIM" ;;
+            2) cell_char="▒"; cell_color="$YELLOW" ;;
+            3) cell_char="▓"; cell_color="$ORANGE" ;;
+            4) cell_char="█"; cell_color="$BRIGHT_RED" ;;
+            5) cell_char="█"; cell_color="$MAROON" ;;
+        esac
+        bar="${bar}${cell_color}${cell_char}"
+        i=$((i + 1))
+    done
+    printf '%s' "${bar}${R}"
+}
+
+render_statusline_linear_bar () {
+    local used=$1 width=$2 fill_char=$3 empty_char=$4
+    local capped=$used
+    [ "$capped" -lt 0 ] 2>/dev/null && capped=0
+    [ "$capped" -gt 100 ] 2>/dev/null && capped=100
+    local filled=$(( (capped * width + 99) / 100 ))
+    [ "$filled" -gt "$width" ] && filled=$width
+    local color
+    color=$(pct_color "$used")
+    local bar="" i=1
+    while [ "$i" -le "$width" ]; do
+        if [ "$i" -le "$filled" ]; then
+            bar="${bar}${color}${fill_char}"
+        else
+            bar="${bar}${DIM}${empty_char}"
+        fi
+        i=$((i + 1))
+    done
+    printf '%s' "${bar}${R}"
+}
+
 # Context window: no time-based projection (no rolling cycle).
-if [ -n "$ctx_pct" ] && [ "$ctx_pct" != "null" ]; then
+if [ "$ENABLE_CONTEXT" = "TRUE" ] && [ -n "$ctx_pct" ] && [ "$ctx_pct" != "null" ]; then
     pct=$(printf "%.0f" "$ctx_pct" 2>/dev/null || echo "0")
     color=$(pct_color "$pct")
-    seg "${color}${pct}% C${R}"
+    context_seg="${color}${pct}% C${R}"
+    if [ "$STATUSLINE_CONTEXT_STYLE" = "bar" ]; then
+        context_visual=$(render_meter_visual "$pct" 5)
+        [ -n "$context_visual" ] && context_seg="${context_seg} ${context_visual}"
+    fi
+    seg "$context_seg"
 fi
 
 # 5-hour and 7-day windows: bullet bar with projection.
-if [ -n "$rate_5h" ] && [ "$rate_5h" != "null" ]; then
+if [ "$ENABLE_LIMIT_5H" = "TRUE" ] && [ -n "$rate_5h" ] && [ "$rate_5h" != "null" ]; then
     used=$(printf "%.0f" "$rate_5h" 2>/dev/null || echo "0")
     render_bullet "$used" "$rate_5h_resets" $((5 * 3600)) "S"
 fi
-if [ -n "$rate_7d" ] && [ "$rate_7d" != "null" ]; then
+if [ "$ENABLE_LIMIT_WEEKLY" = "TRUE" ] && [ -n "$rate_7d" ] && [ "$rate_7d" != "null" ]; then
     used=$(printf "%.0f" "$rate_7d" 2>/dev/null || echo "0")
     render_bullet "$used" "$rate_7d_resets" $((7 * 24 * 3600)) "W"
 fi

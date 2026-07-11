@@ -1,25 +1,72 @@
 branch=$(_timeout 2 git -C "$cwd" branch --show-current 2>/dev/null)
 
+compact_count() {
+    awk -v n="$1" '
+        BEGIN {
+            n += 0
+            units[0] = ""; units[1] = "K"; units[2] = "M"; units[3] = "B"; units[4] = "T"
+            u = 0
+            v = n
+            while (v >= 1000 && u < 4) {
+                v = v / 1000
+                u++
+            }
+            while (1) {
+                if (v < 10) { dec = 2; scale = 100 }
+                else if (v < 100) { dec = 1; scale = 10 }
+                else { dec = 0; scale = 1 }
+                rv = int(v * scale + 0.5) / scale
+                if (rv >= 1000 && u < 4) {
+                    v = rv / 1000
+                    u++
+                    continue
+                }
+                s = sprintf("%.*f", dec, rv)
+                sub(/\.?0+$/, "", s)
+                printf "%s%s", s, units[u]
+                exit
+            }
+        }
+    '
+}
+
 if [ -z "$branch" ]; then
     seg "${DIM}not tracking${R}"
 else
-    branch_marker="${SL_TOGGLE_DIR}/${session_key}.branch"
-    bl_open="\033]8;;file://${branch_marker}\a"
-    bl_close="\033]8;;\a"
-    # Clickable branch (default fg, matches the time): click collapses the name to the glyph.
-    if [ -e "$branch_marker" ]; then
-        seg "${bl_open}${bl_close}"
-    else
-        seg "${bl_open}  ${branch}${bl_close}"
+    [ -z "$repo_root" ] && repo_root=$(cd "$cwd" 2>/dev/null && git rev-parse --show-toplevel 2>/dev/null)
+    if [ "$ENABLE_BRANCH" = "TRUE" ]; then
+        branch_visible="  ${branch}"
+        bl_open=""
+        bl_close=""
+        if [ "$STATUSLINE_CLICK_OPEN_LAZYGIT" = "TRUE" ] && [ -n "$repo_root" ]; then
+            mkdir -p "$SL_LAZYGIT_DIR" 2>/dev/null
+            lazygit_marker="${SL_LAZYGIT_DIR}/${session_key}.repo"
+            printf '%s\n' "$repo_root" > "$lazygit_marker" 2>/dev/null
+            bl_open="\033]8;;file://${lazygit_marker}\a"
+            bl_close="\033]8;;\a"
+        elif [ "$STATUSLINE_CLICK_BRANCH_COLLAPSE" = "TRUE" ]; then
+            branch_marker="${SL_TOGGLE_DIR}/${session_key}.branch"
+            bl_open="\033]8;;file://${branch_marker}\a"
+            bl_close="\033]8;;\a"
+            # Clickable branch (default fg, matches the time): click collapses the name to the glyph.
+            if [ -e "$branch_marker" ]; then
+                branch_visible=""
+            fi
+        fi
+        if [ -n "$bl_open" ]; then
+            seg "${bl_open}${branch_visible}${bl_close}"
+        else
+            seg "$branch_visible"
+        fi
     fi
 
     # Keep the behind-count honest -- what `git fetch` would reveal -- without
     # ever blocking the render. Same non-blocking pattern as the PR lookup: a TTL
-    # stamp + lock dir gate a DETACHED `git fetch`. A private remote that needs
-    # auth relies on your configured credential helper; a fetch that can't
-    # authenticate just backs off for the TTL and the behind-count stays at its
-    # last value. repo_root is usually already set by 02-host-cwd.sh.
-    [ -z "$repo_root" ] && repo_root=$(cd "$cwd" 2>/dev/null && git rev-parse --show-toplevel 2>/dev/null)
+    # stamp + lock dir gate a DETACHED `git fetch`. ADO bare-fetch auth goes stale,
+    # so for dev.azure.com/visualstudio remotes we inject the PAT via the op
+    # service account (same path as the ado-git wrapper); falls back to a bare
+    # fetch when op/keychain aren't present. repo_root is usually already set by
+    # 02-host-cwd.sh.
     # On-disk cache shared by this repo's background-refreshed values (fetch + LOC).
     FCACHE="${XDG_CACHE_HOME:-$HOME/.cache}/statusline"
     mkdir -p "$FCACHE" 2>/dev/null
@@ -41,8 +88,22 @@ else
             if mkdir "$flock" 2>/dev/null; then
                 # Stamp up-front so a failed/auth-rejected fetch still backs off for the TTL.
                 : > "$fstamp" 2>/dev/null
+                fetch_remote_url=$(cd "$cwd" 2>/dev/null && git remote get-url origin 2>/dev/null)
                 ( trap 'rmdir "$flock" 2>/dev/null' EXIT
                   export GIT_TERMINAL_PROMPT=0
+                  case "$fetch_remote_url" in
+                      *dev.azure.com*|*visualstudio.com*)
+                          sa_tok=$(security find-generic-password -s 'op-te-service-account' -w 2>/dev/null)
+                          if [ -n "$sa_tok" ] && command -v op >/dev/null 2>&1; then
+                              export OP_SERVICE_ACCOUNT_TOKEN="$sa_tok"
+                              export ADO_PAT='op://Tabular Editor/ADO Innovation PAT/password'
+                              _timeout 20 op run -- bash -c \
+                                  'git -C "$1" -c http.extraheader="Authorization: Basic $(printf ":%s" "$ADO_PAT" | base64 | tr -d "\n")" fetch --quiet' \
+                                  _ "$repo_root"
+                              exit 0
+                          fi
+                          ;;
+                  esac
                   _timeout 15 git -C "$repo_root" fetch --quiet
                 ) >/dev/null 2>&1 </dev/null &
                 disown 2>/dev/null
@@ -56,13 +117,13 @@ else
     # the branch has no upstream.
     behind=$(cd "$cwd" 2>/dev/null && git rev-list --count HEAD..@{u} 2>/dev/null)
     [ -z "$behind" ] && behind=0
-    if [ "$behind" -gt 0 ] 2>/dev/null; then
+    if [ "$ENABLE_PULLS" = "TRUE" ] && [ "$behind" -gt 0 ] 2>/dev/null; then
         behind_glyph=$'\xef\x81\xa3'  # U+F063 nf-fa-arrow_down
         seg "${ORANGE}${behind_glyph}  ${behind}${R}"
     fi
 
     # Worktree name in purple, right after the branch (SEP supplies the dot).
-    if [ -n "$wt_active" ]; then
+    if [ "$ENABLE_WORKTREE" = "TRUE" ] && [ -n "$wt_active" ]; then
         wt_glyph=$'\xf3\xb0\x99\x85'  # U+F0645 nf-md-file_tree
         seg "${PURPLE}${wt_glyph}  ${wt_name}${R}"
     fi
@@ -73,7 +134,7 @@ else
     # Azure DevOps: not provided by Claude; we detect via the origin URL and
     # query `az repos pr list`. Result is cached on disk so we don't pay the
     # ~2s az roundtrip on every statusline render.
-    if [ -z "$pr_number" ]; then
+    if [ "$ENABLE_PR" = "TRUE" ] && [ -z "$pr_number" ]; then
         remote_url=$(cd "$cwd" 2>/dev/null && git remote get-url origin 2>/dev/null)
         if [ -n "$remote_url" ]; then
             CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/statusline"
@@ -189,7 +250,7 @@ else
         fi
     fi
 
-    if [ -n "$pr_number" ]; then
+    if [ "$ENABLE_PR" = "TRUE" ] && [ -n "$pr_number" ]; then
         case "$pr_review" in
             approved)          pr_c="$GREEN"  ;;
             pending)           pr_c="$YELLOW" ;;
@@ -237,17 +298,15 @@ else
         unpushed=$(cd "$cwd" 2>/dev/null && git rev-list --count HEAD --not --remotes 2>/dev/null)
     fi
     [ -z "$unpushed" ] && unpushed=0
-    if [ "$unpushed" -gt 0 ]; then
-        plural="s"
-        [ "$unpushed" -eq 1 ] && plural=""
-        seg "  $unpushed commit$plural"
+    if [ "$ENABLE_COMMITS" = "TRUE" ] && [ "$unpushed" -gt 0 ]; then
+        seg "  $unpushed"
     fi
 
     # File-level counts from `git status --porcelain`, categorised by INTENT.
     # Untracked directories ("?? dir/") are expanded via find -maxdepth 2
     # to get the real file count without the cost of -uall on huge trees.
     status_out=$(cd "$cwd" 2>/dev/null && git status --porcelain 2>/dev/null)
-    if [ -n "$status_out" ]; then
+    if [ "$ENABLE_FILE_CHANGES" = "TRUE" ] && [ -n "$status_out" ]; then
         added=0; modified=0; deleted=0
         while IFS= read -r line; do
             [ -z "$line" ] && continue
@@ -269,14 +328,14 @@ else
         done <<< "$status_out"
 
         file_seg=""
-        [ "$added"    -gt 0 ] && file_seg+="${GREEN}?:${added}${R}"
+        [ "$added"    -gt 0 ] && file_seg+="${GREEN}?:$(compact_count "$added")${R}"
         if [ "$modified" -gt 0 ]; then
             [ -n "$file_seg" ] && file_seg+="  "
-            file_seg+="${YELLOW}M:${modified}${R}"
+            file_seg+="${YELLOW}M:$(compact_count "$modified")${R}"
         fi
         if [ "$deleted" -gt 0 ]; then
             [ -n "$file_seg" ] && file_seg+="  "
-            file_seg+="${RED}D:${deleted}${R}"
+            file_seg+="${RED}D:$(compact_count "$deleted")${R}"
         fi
         [ -n "$file_seg" ] && seg "  $file_seg"
     fi
@@ -327,26 +386,26 @@ else
     fi
 
 
-    if [ "$add" -eq 0 ] && [ "$del" -eq 0 ]; then
+    if [ "$ENABLE_LOC_CHANGES" = "TRUE" ] && [ "$add" -eq 0 ] && [ "$del" -eq 0 ]; then
         # Only show "no changes" when there are also no file-level changes at all
         if [ -z "$status_out" ]; then
             seg "${DIM}no changes${R}"
         fi
-    else
+    elif [ "$ENABLE_LOC_CHANGES" = "TRUE" ]; then
         loc=""
-        [ "$add" -gt 0 ] && loc+="${GREEN}+${add}${R}"
+        [ "$add" -gt 0 ] && loc+="${GREEN}+$(compact_count "$add")${R}"
         [ "$add" -gt 0 ] && [ "$del" -gt 0 ] && loc+=" "
-        [ "$del" -gt 0 ] && loc+="${RED}-${del}${R}"
+        [ "$del" -gt 0 ] && loc+="${RED}-$(compact_count "$del")${R}"
         seg "  $loc"
     fi
 
     # Staged-files indicator at the very end of the git segment, dim
-    if [ -n "$status_out" ]; then
+    if [ "$ENABLE_FILE_CHANGES" = "TRUE" ] && [ -n "$status_out" ]; then
         staged_total=$(echo "$status_out" | grep -cE '^[MADRCU]')
         if [ "$staged_total" -gt 0 ]; then
             plural="s"
             [ "$staged_total" -eq 1 ] && plural=""
-            seg "${DIM}(${staged_total} staged change${plural})${R}"
+            seg "${DIM}($(compact_count "$staged_total") staged change${plural})${R}"
         fi
     fi
 fi

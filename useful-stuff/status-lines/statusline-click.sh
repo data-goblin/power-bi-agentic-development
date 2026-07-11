@@ -16,11 +16,50 @@ case "$(uname -s)" in
     *)      opener=xdg-open ;;
 esac
 
+launch_lazygit() {
+    repo="$1"
+    [ -d "$repo" ] || exit 0
+    command -v lazygit >/dev/null 2>&1 || exit 0
+
+    case "$(uname -s)" in
+        Darwin)
+            if command -v alacritty >/dev/null 2>&1; then
+                open -na Alacritty --args -e lazygit -p "$repo" >/dev/null 2>&1 && exit 0
+            fi
+            if command -v wezterm >/dev/null 2>&1; then
+                open -na WezTerm --args start --cwd "$repo" lazygit >/dev/null 2>&1 && exit 0
+            fi
+            ;;
+        Linux)
+            if command -v x-terminal-emulator >/dev/null 2>&1; then
+                x-terminal-emulator -e lazygit -p "$repo" >/dev/null 2>&1 & exit 0
+            fi
+            if command -v alacritty >/dev/null 2>&1; then
+                alacritty -e lazygit -p "$repo" >/dev/null 2>&1 & exit 0
+            fi
+            ;;
+    esac
+
+    cd "$repo" 2>/dev/null && exec lazygit
+}
+
 case "$url" in
     file://*)
         raw="${url#file://}"
         # Percent-decode (printf %b expands \xHH escapes after substitution).
         path=$(printf '%b' "${raw//%/\\x}")
+        # LazyGit launcher marker: the file content is the repo root to open.
+        case "$path" in
+            /tmp/claude-sl-lazygit/*)
+                name="${path#/tmp/claude-sl-lazygit/}"
+                case "$name" in
+                    ""|*/*|*..*) exit 0 ;;
+                esac
+                repo=$(cat "$path" 2>/dev/null)
+                launch_lazygit "$repo"
+                exit 0
+                ;;
+        esac
         # Statusline reset-reveal toggle: flip a marker file, never open anything.
         # Confined to a fixed namespace; reject empty / nested / traversal keys.
         case "$path" in

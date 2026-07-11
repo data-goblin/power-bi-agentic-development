@@ -82,5 +82,8 @@ url_encode() {
 cwd_color="$host_color"
 [ -n "$wt_active" ] && cwd_color="$ORANGE"
 osc_url=$(url_encode "$cwd")
-seg "${cwd_color}${icon}  \033]8;;file://${osc_url}\a${dir}\033]8;;\a${R}"
-
+if [ "$STATUSLINE_CLICK_OPEN_PATHS" = "TRUE" ]; then
+    seg "${cwd_color}${icon}  \033]8;;file://${osc_url}\a${dir}\033]8;;\a${R}"
+else
+    seg "${cwd_color}${icon}  ${dir}${R}"
+fi
