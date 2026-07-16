@@ -1,6 +1,5 @@
 ---
 name: modifying-theme-json
-version: 26.28.0
 description: Design, enforce, audit, and validate Power BI report themes through the pbir CLI. Invoke when a report uses a default or minimal theme, visuals have inconsistent formatting or many local overrides, or the user asks to create, copy, apply, standardize, rebrand, audit, or validate a theme; change theme colors or typography; promote visual formatting into the theme; clear overrides; or improve theme compliance.
 ---
 

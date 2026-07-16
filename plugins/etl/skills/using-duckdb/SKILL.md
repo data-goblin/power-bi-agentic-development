@@ -1,6 +1,5 @@
 ---
 name: using-duckdb
-version: 26.28.0
 description: Query Fabric lakehouse and warehouse data using DuckDB, either locally or inside a Fabric notebook. Automatically invoke when the user mentions "DuckDB", "query Delta tables locally", or asks to "attach DuckDB to a lakehouse", "query OneLake data", "explore lakehouse data", "data freshness check", "validate data quality", "use DuckDB in Fabric".
 ---
 

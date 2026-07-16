@@ -1,6 +1,5 @@
 ---
 name: improve-my-agent-setup
-version: 26.28.0
 description: Audit and improve an entire agentic-development setup, including skills, context, memory, tools, models, permissions, hooks, workflow habits, and secrets hygiene. Invoke for setup reviews, workflow grading, Goblin Mode, or questions about what to improve. Supports shallow, deep, ultra, and yolo modes. Use domain-specific skills for a single model, report, or tenant.
 ---
 
