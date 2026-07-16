@@ -72,17 +72,14 @@ pbir add filter Geography Region -v "Visual.Visual" --type TopN --n 10 \
   --by-table Sales --by-field Revenue
 ```
 
-7. **Bullet chart pattern for target comparison (JSON fallback).** Overlay a target/comparison value as an error bar marker on each bar to create a bullet chart. The `error` object container is not yet supported by `pbir set`; edit `visual.json` directly or use `pbir-format` skill. Set `errorRange.explicit.lowerBound` and `upperBound` to the same target measure so the marker renders as a single line. See `barChart-bullet.json` for the full pattern
+7. **Bullet chart pattern for target comparison.** Overlay a target/comparison value as an error-bar marker on each bar. Use `pbir visuals error-bars add` to create the range binding, passing the same target measure as both bounds, then style the generated entry with `pbir set`. Never edit `visual.json` directly. See `references/error-bars.md` for the full workflow
 
-```json
-"error": [{
-  "properties": {
-    "enabled": { "expr": { "Literal": { "Value": "true" } } },
-    "barWidth": { "expr": { "Literal": { "Value": "1L" } } },
-    "markerSize": { "expr": { "Literal": { "Value": "10D" } } }
-  },
-  "selector": { "metadata": "Measures.Revenue" }
-}]
+```bash
+QR=$(pbir visuals error-bars add "Visual.Visual" \
+  --series "Sales.Revenue" --upper "Sales.Target" --lower "Sales.Target")
+pbir set "Visual.Visual.error.field($QR).markerShape" --value "longDash"
+pbir set "Visual.Visual.error.field($QR).markerSize" --value 12
+pbir set "Visual.Visual.error.field($QR).barShow" --value false
 ```
 
 8. **Disable the legend for single-series.** The legend adds no information when there is only one measure; remove it and use the visual title instead
@@ -103,7 +100,7 @@ pbir visuals cf "Visual.Visual" --measure "valueAxis.end _Fmt.AxisCeiling"
 
 ## Examples
 
-Working `visual.json` files demonstrating these patterns:
+Read-only `visual.json` examples demonstrating these patterns. Reproduce them with CLI commands; never copy them into a report:
 
 - **`examples/visuals/default/barChart.json`** -- minimal barChart; theme defaults only
 - **`examples/visuals/formatted/barChart-bullet.json`** -- bullet chart pattern with error bars as comparison markers, conditional dataPoint fill, and per-category color overrides

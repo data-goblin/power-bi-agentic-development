@@ -34,7 +34,7 @@ Sharp edges and non-obvious behavior. Companion to the te-cli skill (SKILL.md).
 - **`te validate` does not exercise partition M**; it checks structural/DAX validity, not whether `Table.FromRows` literals parse or SQL endpoints respond. A model with broken partitions still passes `te validate` cleanly. Verify partitions explicitly after table creation.
 - **`te connect` is session-scoped (per shell PID)**. Each fresh shell (each Claude Code `Bash` tool call spawns one) starts a new session without the active connection. Either set `TE_SESSION=<name>` to share state between shells, or pass `-m <model>` (and `-s`/`-d` where needed) explicitly to every command.
 - **BPA config keys are nested under `bpa.`**. `te config set bpaOnDeploy false` will fail with "Unknown key"; the correct form is `te config set bpa.onDeploy false`. Same for `bpa.onSave`, `bpa.onMutation`, `bpa.rules`, `bpa.builtInRules`, `bpa.disabledBuiltInRuleIds`.
-- **`--output-format` (stdout) vs `--serialization` (on-disk)** are different flags. The first picks how stdout is rendered (text/json/csv/tmsl/tmdl); the second picks the model file format (tmdl/bim/te-folder/pbip/database.json). Passing one when the other was meant gives a confusing error or silent wrong output.
+- **`--output-format` (stdout) vs `--serialization` (on-disk)** are different flags. The first picks how stdout is rendered (text/json/csv/tmsl/tmdl); the second picks the model file format (tmdl/bim/database.json/pbip). Passing one when the other was meant gives a confusing error or silent wrong output.
 - **`te deploy --create-only` fails if model exists**. Use without `--create-only` to overwrite (the default), or check with a probe call first.
 - **`te deploy` confirmation prompt hangs CI** without `--force`. Default answer is `n` (safe), so non-interactive runs need `--force --non-interactive`.
 - **BPA gate on deploy/save can mask sloppy commits**. If bypassing with `--skip-bpa`, log it loudly. Prefer `--fix-bpa` or address violations.
@@ -42,4 +42,3 @@ Sharp edges and non-obvious behavior. Companion to the te-cli skill (SKILL.md).
 - **Local SSAS / Power BI Desktop are Windows-only**: `te connect --local` and `te connect "localhost:PORT"` won't work on macOS/Linux even though the binary runs there.
 - **Preview banner reappears 14 days before the 2026-09-30 cutoff** regardless of `hidePreviewNotice`. Plan for the hard expiry.
 - **Secrets on the cmd line leak** into `ps`, shell history, CI logs. Use `--auth env` with env vars, stdin (`-`), or `--auth managed-identity`.
-

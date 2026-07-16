@@ -185,19 +185,14 @@ pbir theme colors "Report.Report" --normalize --apply
 pbir theme validate "Report.Report"
 ```
 
-### Extract Theme from Existing Report
+### Reuse a Theme from an Existing Report
 
 ```bash
-# 1. Serialize to editable files
-pbir theme serialize "Report.Report" -o Extracted.Theme
+# Copy the complete theme through the CLI
+pbir cp "Source.Report/theme" "Target.Report/theme" -f
 
-# 2. Review and clean up the serialized files
-
-# 3. Push a well-formatted visual's settings into the theme
-pbir theme push-visual "Report.Report/Page.Page/BestCard.Visual" --dry-run
-pbir theme push-visual "Report.Report/Page.Page/BestCard.Visual"
-
-# 4. Save as template for reuse
-pbir theme create-template --new-template theme.json --name "extracted" \
-  --description "Extracted from existing report"
+# Optionally push a well-formatted target visual into the copied theme
+pbir theme push-visual "Target.Report/Page.Page/BestCard.Visual" --dry-run
+pbir theme push-visual "Target.Report/Page.Page/BestCard.Visual"
+pbir theme validate "Target.Report"
 ```

@@ -2,6 +2,10 @@
 
 Detailed before/after examples for every location that must be updated when renaming tables, measures, or columns in a PBIP project.
 
+These examples explain what the validators cover. Do not perform the cascade with text
+replacement. Rename the model object with `te mv ... --save`, then repair reports with
+`pbir fields replace` or `pbir fields replace-table`.
+
 ## Table Rename Examples
 
 The examples below show renaming a table from `Customers` to `Customer`.
@@ -599,7 +603,7 @@ grep -r '"Entity": "Order"' --include="*.json"
 
 For large-scale renames (e.g., applying SQLBI naming conventions to all tables):
 
-1. Build a rename mapping (old name → new name)
-2. Sort by longest name first to avoid substring collisions
-3. Process one table at a time, running verification after each
-4. Use a script for consistency to avoid manual errors
+1. Build a rename mapping (old name → new name).
+2. Apply one model rename at a time with `te mv ... --save`.
+3. Apply the matching report rename with `pbir fields replace` or `replace-table`.
+4. Validate the semantic model and every affected report before the next rename.

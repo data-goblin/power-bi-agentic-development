@@ -14,13 +14,13 @@ Scripts for organizing objects into display folders in Tabular models.
 
 ### Execute Inline
 ```bash
-te "model.bim" 'foreach(var m in Model.AllMeasures.Where(m => m.Name.StartsWith("Total"))) { m.DisplayFolder = "Totals"; }'
+te script "model.bim" -e 'foreach(var m in Model.AllMeasures.Where(m => m.Name.StartsWith("Total"))) { m.DisplayFolder = "Totals"; }' --save
 ```
 
 ### Execute Script File
 ```bash
-te "model.bim" samples/display-folders/organize_folders.csx --file
-te "Production/Sales" samples/display-folders/organize_measures_by_type.csx --file
+te script "model.bim" -S samples/display-folders/organize_folders.csx --save
+te script -s "Production" -d "Sales" -S samples/display-folders/organize_measures_by_type.csx --save
 ```
 
 ### With Fabric CLI Workflow
@@ -29,7 +29,7 @@ te "Production/Sales" samples/display-folders/organize_measures_by_type.csx --fi
 fab export "Workspace/Model.SemanticModel" -o ./model -f
 
 # Organize folders
-te "./model/Model.SemanticModel/model.bim" samples/display-folders/organize_folders.csx --file
+te script "./model/Model.SemanticModel/definition" -S samples/display-folders/organize_folders.csx --save
 
 # Import back
 fab import "Workspace/Model.SemanticModel" -i ./model/Model.SemanticModel -f

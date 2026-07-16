@@ -14,13 +14,13 @@ Scripts for managing table partitions and incremental refresh.
 
 ### Execute Script File
 ```bash
-te "model.bim" samples/partitions/setup-custom-partitions.csx --file
-te "Production/Sales" samples/partitions/refresh-partition.csx --file
+te script "model.bim" -S samples/partitions/setup-custom-partitions.csx --save
+te script -s "Production" -d "Sales" -S samples/partitions/refresh-partition.csx --save
 ```
 
 ### Execute Inline
 ```bash
-te "model.bim" 'Model.Tables["Sales"].Partitions["Sales_2024"].RequestRefresh(RefreshType.Full);'
+te script "model.bim" -e 'Model.Tables["Sales"].Partitions["Sales_2024"].RequestRefresh(RefreshType.Full);' --save
 ```
 
 ### With Fabric CLI Workflow
@@ -29,7 +29,7 @@ te "model.bim" 'Model.Tables["Sales"].Partitions["Sales_2024"].RequestRefresh(Re
 fab export "Workspace/Model.SemanticModel" -o ./model -f
 
 # Setup partitions
-te "./model/Model.SemanticModel/model.bim" samples/partitions/setup-custom-partitions.csx --file
+te script "./model/Model.SemanticModel/definition" -S samples/partitions/setup-custom-partitions.csx --save
 
 # Import back
 fab import "Workspace/Model.SemanticModel" -i ./model/Model.SemanticModel -f

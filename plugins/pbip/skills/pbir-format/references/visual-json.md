@@ -349,7 +349,13 @@ Child visuals reference the group via `parentGroupName`:
 
 ### Hiding an entire visual
 
-Set `isHidden: true` at the root level of visual.json (outside `visual`):
+Hide the visual through the CLI:
+
+```bash
+pbir visuals hide "Report.Report/Page.Page/Visual.Visual"
+```
+
+For read-only schema context, this corresponds to `isHidden: true` at the root level:
 
 ```json
 {

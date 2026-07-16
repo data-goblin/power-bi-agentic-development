@@ -46,9 +46,9 @@ fab api -X post "workspaces/$WS_ID/folders" -i "{\"displayName\": \"Bronze\", \"
 {
   "status_code": 201,
   "text": {
-    "id": "c92e1cfb-2983-49d6-8cb1-40875f18f396",
+    "id": "<folder-id>",
     "displayName": "ETL",
-    "workspaceId": "6f356f2f-8428-4249-a6a7-f6ee438717d4"
+    "workspaceId": "<workspace-id>"
   }
 }
 ```

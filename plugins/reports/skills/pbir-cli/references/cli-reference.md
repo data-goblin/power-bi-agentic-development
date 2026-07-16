@@ -180,7 +180,7 @@ pbir add visual --list                            # List all 50+ visual types wi
 # Role names match the visual list (Values, Category, Y, Series, Indicator, ...).
 # The CLI matches role names case-insensitively, so lowercase also works.
 
-# Bulk creation from JSON
+# Import a pre-existing bulk-creation spec; do not edit report JSON directly
 pbir add visual "Report.Report/Page.Page" --from-json visuals.json
 # JSON format: [{"visual_type": "card", "x": 0, "y": 0, "title": "Sales", "fields": {"Values": "Sales.Revenue"}}]
 
@@ -264,8 +264,8 @@ pbir visuals clear-formatting "Report.Report/**/*.Visual" --dry-run            #
 pbir visuals legend "Visual.Visual" --show --position Right
 
 # Axes
-pbir visuals axis "Visual.Visual" --axis category --show --title "Category"
-pbir visuals axis "Visual.Visual" --axis value --show --title "Amount"
+pbir visuals axis "Visual.Visual" category --show --title "Category"
+pbir visuals axis "Visual.Visual" value --show --title "Amount"
 
 # Data labels (22 visual types)
 pbir visuals labels "Visual.Visual" --show --fontSize 10
@@ -278,14 +278,14 @@ pbir visuals sort "Visual.Visual" --remove
 pbir visuals reference-line add "Visual.Visual" --value 100        # Constant line; --value also accepts a field ref
 pbir visuals reference-line list "Visual.Visual"
 pbir visuals reference-line remove "Visual.Visual" --id 1
-pbir set "Visual.Visual.y1AxisReferenceLine.id(1).displayName" "Target"   # Style after creation
+pbir set "Visual.Visual.y1AxisReferenceLine.id(1).displayName" --value "Target"   # Style after creation
 # `add` is NOT idempotent (each call appends); it prints the new id to stdout for chaining: ID=$(pbir visuals reference-line add ...)
 
 # Error bars (upsert per series; style via pbir set with field())
 pbir visuals error-bars add "Visual.Visual" --series "Sales.Revenue" --upper "Sales.Target" --lower "Sales.Target"
 pbir visuals error-bars list "Visual.Visual"
 pbir visuals error-bars remove "Visual.Visual" --series "Sales.Revenue"
-pbir set "Visual.Visual.error.field(Sales.Revenue).markerShape" "diamond"  # Style after creation
+pbir set "Visual.Visual.error.field(Sales.Revenue).markerShape" --value "diamond"  # Style after creation
 ```
 
 ### Data Binding
@@ -395,10 +395,9 @@ pbir theme background "Report.Report" --image bg.png
 pbir theme icons "Report.Report" --set custom-icon --url "data:image/svg+xml;utf8,..."
 pbir theme rename "Report.Report" "NewThemeName"
 
-# Serialize/build workflow (for detailed theme editing)
-pbir theme serialize "Report.Report" -o CustomTheme.Theme    # Extract to editable files
-# ... edit files in CustomTheme.Theme/ ...
-pbir theme build "CustomTheme.Theme"                         # Rebuild from files
+# Import/export only; do not hand-edit serialized theme JSON
+pbir theme serialize "Report.Report" -o CustomTheme.Theme    # Read-only export for inspection
+pbir theme build "Provided.Theme"                            # Build a user-provided theme folder
 
 # Templates
 pbir theme list-templates
@@ -472,7 +471,7 @@ pbir fields where-used "Report.Report" "Sales.Revenue"        # Every known loca
 pbir fields replace "Report.Report" --from "Sales.Revenue" --to "Finance.Revenue"   # Repoint a field everywhere
 pbir fields replace-table "Report.Report" --from "f_invoices" --to "Invoices"        # Rename a TABLE across all references (--dry-run)
 pbir fields rename "Report.Report" "Sales.Revenue" "Total Sales"   # Set a field's display name (--list to view, --clear to reset)
-pbir fields add "Report.Report/Page.Page/Visual.Visual" Values Sales.Revenue  # Add field
+pbir fields add "Report.Report/Page.Page/Visual.Visual" --bucket Values --field Sales.Revenue
 ```
 
 ## Filter Operations
@@ -483,7 +482,7 @@ pbir filters list "Report.Report"
 pbir filters set "Report.Report/Date.Year.Filter" --values 2024 --values 2025   # Repeat --values per value (not comma-separated)
 pbir filters set "Report.Report/Date.Date.Filter" --type RelativeDate
 pbir filters clear "Report.Report/Date.Year.Filter"
-pbir filters rename "Report.Report/OldName.Filter" "New Display Name"
+pbir filters rename "Report.Report" "OldName" "New Display Name"
 pbir filters json "Report.Report"
 
 # Visibility and locking
@@ -584,7 +583,6 @@ Requires Power BI Desktop running with the report open and the preview feature "
 ```bash
 pbir desktop list                                # Running instances (PID, open file, unsaved state, pages)
 pbir desktop status                              # Alias of list
-pbir desktop manifest --pid 1234                 # Bridge methods one instance exposes
 
 # Reload the on-disk definition into the canvas (refresh and reload are aliases)
 pbir desktop refresh "Report.Report"
@@ -630,11 +628,8 @@ pbir config show                                 # Current settings
 pbir config init                                 # Create config file
 pbir config set debug true                       # Set config value
 
-# Setup
-pbir setup                                       # Initialize .pbir/ context files
-pbir setup --force                               # Overwrite existing files
-pbir setup --claude-code                         # Install Claude Code skills
-pbir setup report MyReport.Report --claude-hooks # Add agent config files
+# Plugin installation guidance
+pbir setup                                       # Prints native marketplace installation instructions
 
 # Schema discovery and management (pbir capabilities is an alias of pbir schema)
 pbir schema status                               # Compare local vs remote schema versions
@@ -688,19 +683,21 @@ pbir schema roles "lineChart"                    # Canonical PBIR data roles (re
 
 Global flags go BEFORE the subcommand: `pbir -q new report ...`, not `pbir new report -q ...`.
 
-```bash
-pbir --quiet / -q         # Suppress animations, tips, spinners (agent-friendly)
-pbir --debug              # Enable tracebacks, timing, and resolution logging
-pbir --version / -V       # Show version
-pbir --interactive / -i   # Launch the interactive browser (human users)
+```text
+--quiet / -q              # Suppress animations, tips, spinners (agent-friendly)
+--output-format text|json # Structured stdout for commands that support it
+--error-format text|json  # Structured stderr where supported
+--debug                   # Enable tracebacks, timing, and resolution logging
+--version / -V            # Show version
+--interactive / -i        # Launch the interactive browser (human users)
 
 # Validation bypass (pbir validates implicitly on mutations; these relax that)
-pbir --rawdog             # Skip EVERY validation check (umbrella for --skip all)
-pbir --skip <category>    # Skip validation categories; repeatable, comma-separated.
+--rawdog                  # Skip EVERY validation check (umbrella for --skip all)
+--skip <category>         # Skip validation categories; repeatable, comma-separated.
                           # Categories: structure, schema, schema-version, fields,
                           #             enums, qa, roles, layout, theme
 # Example: author a visual whose field is not in the model yet
 pbir --skip fields set "R.Report/P.Page/V.Visual.title.text" --value "Draft"
 ```
 
-`-f/--force` (skip prompts; required for globs on `set`/`rm`) and `--json`/`-F json` (machine-readable output) are per-command, not global; check `pbir <command> --help`.
+Use global `--output-format json` before the subcommand when supported. Command-specific `-f/--force`, `--json`, and `-F json` go after their subcommand; check `pbir <command> --help` because availability varies.

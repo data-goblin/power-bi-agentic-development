@@ -19,7 +19,7 @@ Not supported on: pie, donut, cards, KPIs, slicers, tables, matrices, treemaps, 
 The CLI splits the work across two commands with clear boundaries:
 
 - **`pbir visuals reference-line add|list|remove`** creates, enumerates, and deletes the reference-line entries. The only things it controls are value (literal number or bound measure), axis (`y` or `x`), and entry id (auto-assigned).
-- **`pbir set "<container>.id(N).<property>" <value>`** sets every styling property on an existing entry: label, color, line style, transparency, data label visibility, data label text, label font, and so on.
+- **`pbir set "<container>.id(N).<property>" --value <value>`** sets every styling property on an existing entry: label, color, line style, transparency, data label visibility, data label text, label font, and so on.
 
 This split exists because `pbir set` cannot array-append into a container or invent id selectors; those are the structural operations only `reference-line add` can do. Once the entry exists, the id selector form `id(N)` lets `pbir set` reach it like any other property path.
 
@@ -50,7 +50,7 @@ Chaining example:
 
 ```bash
 ID=$(pbir visuals reference-line add "Test.Report/P.Page/V.Visual" --value 100)
-pbir set "Test.Report/P.Page/V.Visual.y1AxisReferenceLine.id($ID).displayName" "Target"
+pbir set "Test.Report/P.Page/V.Visual.y1AxisReferenceLine.id($ID).displayName" --value "Target"
 ```
 
 ## Style a reference line with `pbir set`
@@ -59,15 +59,15 @@ Every other property is schema-backed and reachable via `pbir set` with the `id(
 
 ```bash
 # Label text
-pbir set "V.Visual.y1AxisReferenceLine.id(1).displayName" "Target"
+pbir set "V.Visual.y1AxisReferenceLine.id(1).displayName" --value "Target"
 
 # Show the data label
-pbir set "V.Visual.y1AxisReferenceLine.id(1).dataLabelShow" true
-pbir set "V.Visual.y1AxisReferenceLine.id(1).dataLabelText" "ValueAndName"
+pbir set "V.Visual.y1AxisReferenceLine.id(1).dataLabelShow" --value true
+pbir set "V.Visual.y1AxisReferenceLine.id(1).dataLabelText" --value "ValueAndName"
 
 # Line styling
-pbir set "V.Visual.y1AxisReferenceLine.id(1).style" "dashed"
-pbir set "V.Visual.y1AxisReferenceLine.id(1).transparency" 20
+pbir set "V.Visual.y1AxisReferenceLine.id(1).style" --value "dashed"
+pbir set "V.Visual.y1AxisReferenceLine.id(1).transparency" --value 20
 
 # Color -- hex strings on color-named properties are auto-wrapped in solid.color
 pbir set "V.Visual.y1AxisReferenceLine.id(1).lineColor" --value "#7EB2BB"
@@ -79,7 +79,7 @@ Discover available styling properties with:
 pbir schema describe clusteredBarChart.y1AxisReferenceLine
 ```
 
-Common properties include `displayName`, `value`, `lineColor`, `style` (`solid`/`dashed`/`dotted`), `transparency`, `position` (`front`/`behind`), `dataLabelShow`, `dataLabelText`, `dataLabelColor`, `dataLabelFontFamily`, `dataLabelFontSize`, `dataLabelDisplayUnits`, `dataLabelHorizontalPosition`, `dataLabelVerticalPosition`. Shading between the line and the axis lives under `shadeColor`/`shadeShow`/`shadeTransparency`/`shadeRegion` on the same entry.
+Common properties include `displayName`, `value`, `lineColor`, `style` (`solid`/`dashed`/`dotted`), `transparency`, `position` (`front`/`back`), `dataLabelShow`, `dataLabelText`, `dataLabelColor`, `dataLabelFontFamily`, `dataLabelFontSize`, `dataLabelDisplayUnits`, `dataLabelHorizontalPosition`, `dataLabelVerticalPosition`. Shading between the line and the axis lives under `shadeColor`/`shadeShow`/`shadeTransparency`/`shadeRegion` on the same entry.
 
 ## List reference lines
 
@@ -111,17 +111,17 @@ Reference lines compose well with `pbir batch` when you want to add and style li
 
 ```bash
 ID=$(pbir visuals reference-line add "V.Visual" --value "Measures.Target")
-pbir set "V.Visual.y1AxisReferenceLine.id($ID).displayName" "Target"
-pbir set "V.Visual.y1AxisReferenceLine.id($ID).style" "dashed"
-pbir set "V.Visual.y1AxisReferenceLine.id($ID).dataLabelShow" true
+pbir set "V.Visual.y1AxisReferenceLine.id($ID).displayName" --value "Target"
+pbir set "V.Visual.y1AxisReferenceLine.id($ID).style" --value "dashed"
+pbir set "V.Visual.y1AxisReferenceLine.id($ID).dataLabelShow" --value true
 ```
 
 **Zero line on a variance column chart:**
 
 ```bash
 ID=$(pbir visuals reference-line add "V.Visual" --value 0)
-pbir set "V.Visual.y1AxisReferenceLine.id($ID).style" "solid"
-pbir set "V.Visual.y1AxisReferenceLine.id($ID).transparency" 40
+pbir set "V.Visual.y1AxisReferenceLine.id($ID).style" --value "solid"
+pbir set "V.Visual.y1AxisReferenceLine.id($ID).transparency" --value 40
 ```
 
 **Min and max bracket lines:**
@@ -129,8 +129,8 @@ pbir set "V.Visual.y1AxisReferenceLine.id($ID).transparency" 40
 ```bash
 MIN=$(pbir visuals reference-line add "V.Visual" --value "Measures.Min")
 MAX=$(pbir visuals reference-line add "V.Visual" --value "Measures.Max")
-pbir set "V.Visual.y1AxisReferenceLine.id($MIN).displayName" "Min"
-pbir set "V.Visual.y1AxisReferenceLine.id($MAX).displayName" "Max"
+pbir set "V.Visual.y1AxisReferenceLine.id($MIN).displayName" --value "Min"
+pbir set "V.Visual.y1AxisReferenceLine.id($MAX).displayName" --value "Max"
 ```
 
 ## Notes and caveats

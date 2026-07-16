@@ -12,7 +12,8 @@ pbir visuals properties "Sales.Report/Overview.Page/*" -s position --json
 
 Build four sorted lists from the output: left `x`, right `x+width`, top `y`, bottom `y+height`. Any cluster of near-but-not-identical values is a misalignment candidate; snap to the modal value. Compute gutters as gaps between a row's right edges and the next left edge; flag rows where the spread exceeds a couple of pixels. Verify that distinct x-edges on row 1 match row 2 (continuous vertical lines).
 
-Round survivors to the grid unit with `pbir set <path>.position.x <value>`, then re-validate.
+Round survivors to the grid unit with `pbir set "<path>.position.x" --value <value>`, then
+re-validate.
 
 Notes:
 - `basicShape`, decorative `image`/`textbox`, and `actionButton` participate in the grid for alignment checks but should be excluded from visual-density counts
@@ -60,11 +61,13 @@ The Desktop Bridge screenshot does not confirm accessibility; alt text is invisi
 
 ## Script Visuals (Python/R)
 
-`pythonVisual` and `scriptVisual` have additional accessibility exposure because they render a static PNG with no data table fallback and no per-cell alt text slot.
+`pythonVisual` and `scriptVisual` have additional accessibility exposure because they render a
+static PNG with no data table fallback and no per-cell alt text slot. List all visuals, filter the
+JSON result by `visualType`, then inspect each matching visual:
 
 ```bash
-pbir visuals query --type pythonVisual --json
-pbir visuals query --type scriptVisual --json
+pbir ls "Report.Report" --all visuals --json
+pbir visuals query "Report.Report/Page.Page/Script.Visual" --json
 ```
 
 For each script visual found:
@@ -75,7 +78,7 @@ For each script visual found:
 
 Also audit the script literal:
 ```bash
-pbir get 'Page/MyScriptVisual.Visual' objects.script
+pbir get "Report.Report/Page.Page/MyScriptVisual.Visual.script" --json
 ```
 An unreviewed third-party script is a security finding.
 

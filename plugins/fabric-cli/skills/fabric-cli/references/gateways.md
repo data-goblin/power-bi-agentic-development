@@ -177,15 +177,15 @@ Example response:
   "value": [
     {
       "datasourceAccessRight": "Read",
-      "displayName": "John Nick",
-      "emailAddress": "john@contoso.com",
-      "identifier": "john@contoso.com",
+      "displayName": "Example User",
+      "emailAddress": "user@contoso.com",
+      "identifier": "user@contoso.com",
       "principalType": "User"
     },
     {
       "datasourceAccessRight": "ReadOverrideEffectiveIdentity",
       "displayName": "ContosoTestApp",
-      "identifier": "3d9b93c6-7b6d-4801-a491-1738910904fd",
+      "identifier": "<service-principal-object-id>",
       "principalType": "App"
     }
   ]
@@ -198,7 +198,7 @@ Add by email:
 
 ```bash
 fab api -A powerbi -X post "gateways/<gw-id>/datasources/<ds-id>/users" -i '{
-  "emailAddress": "john@contoso.com",
+  "emailAddress": "user@contoso.com",
   "datasourceAccessRight": "Read"
 }'
 ```
@@ -207,7 +207,7 @@ Add by service principal object ID:
 
 ```bash
 fab api -A powerbi -X post "gateways/<gw-id>/datasources/<ds-id>/users" -i '{
-  "identifier": "3d9b93c6-7b6d-4801-a491-1738910904fd",
+  "identifier": "<service-principal-object-id>",
   "datasourceAccessRight": "ReadOverrideEffectiveIdentity"
 }'
 ```
@@ -215,7 +215,7 @@ fab api -A powerbi -X post "gateways/<gw-id>/datasources/<ds-id>/users" -i '{
 ### Remove a Datasource User
 
 ```bash
-fab api -A powerbi -X delete "gateways/<gw-id>/datasources/<ds-id>/users/john@contoso.com"
+fab api -A powerbi -X delete "gateways/<gw-id>/datasources/<ds-id>/users/user@contoso.com"
 ```
 
 ### Native Alternative: fab acl

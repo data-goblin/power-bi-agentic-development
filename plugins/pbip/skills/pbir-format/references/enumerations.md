@@ -13,7 +13,11 @@ Note that this is not an exhaustive list. Please pull the schema files directly 
 
 Valid `visualType` values. **[K201]** = confirmed in K201 example; **[theme]** = confirmed from bundled theme files.
 
-The authoritative enumeration of built-in `visualType` ids (and the `objects` names valid per type) is Microsoft's core visual schema catalog, bundled and pinned by the pbir CLI. Query it with `pbir visuals list` and `pbir visuals capabilities <type>`; the list below is a convenience subset. The catalog is preview, so unknown but plausible ids and custom visuals can still be valid.
+The authoritative enumeration of built-in `visualType` ids and valid objects is the core visual
+catalog bundled by `pbir`. Run `pbir add visual --list` for type ids,
+`pbir visuals properties --registry` for the registry, and
+`pbir schema describe <type> [object]` for properties and allowed values. The list below is only a
+convenience subset; custom visuals can use other ids.
 
 ```
 --- Charts ---

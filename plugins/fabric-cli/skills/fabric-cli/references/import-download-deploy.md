@@ -74,14 +74,19 @@ python3 scripts/download_workspace.py "Production.Workspace" ./backup
 
 ### Semantic model as PBIP project
 
-`fab export` on a `.SemanticModel` produces a TMDL folder. For a full PBIP project (TMDL + blank report, openable directly in Power BI Desktop and ready for git), use [`export_semantic_model_as_pbip.py`](../scripts/export_semantic_model_as_pbip.py):
+`fab export` on a `.SemanticModel` produces a TMDL folder. Build a complete PBIP project with
+`fab` for the model and `pbir` for the report:
 
 ```bash
-python3 scripts/export_semantic_model_as_pbip.py \
-  "Production.Workspace/Sales.SemanticModel" -o ./sales-pbip
+fab export "Production.Workspace/Sales.SemanticModel" -o ./sales-pbip -f
+pbir new report "./sales-pbip/Sales.Report" \
+  --connection "Production.Workspace/Sales.SemanticModel" --format pbir
+pbir report merge-to-thick "./sales-pbip/Sales.Report" \
+  "./sales-pbip/Sales.SemanticModel" --output ./sales-project
 ```
 
-The resulting project layout matches what Power BI Desktop creates when you save as PBIP. See the [pbip](../../../../pbip/skills/pbip/SKILL.md) skill for structure, rename workflows, and the pbir / tmdl companion skills for editing reports and models inside a PBIP project.
+This keeps report creation inside `pbir`; do not scaffold PBIR JSON manually. See the
+[pbip](../../../../pbip/skills/pbip/SKILL.md) skill for project structure.
 
 ## Upload back to Fabric (import)
 
@@ -216,8 +221,9 @@ PBIP is the local source-control format for semantic models and reports. Use PBI
 
 Typical flow:
 
-1. **Export or convert** ; `fab export` a semantic model and its reports into a PBIP folder, or use the `export_semantic_model_as_pbip.py` script for a complete project.
-2. **Edit locally** ; use the pbip / pbir-cli / tmdl skills to manipulate TMDL tables, measures, and PBIR visuals. Report renames cascade through `definition.pbir` and all visual bindings ; the pbip skill handles that.
+1. **Export or convert** ; use `fab export` for service items and `pbir download` or
+   `pbir report convert` for reports.
+2. **Work locally** ; use `te` for semantic models and `pbir` for reports. Never patch report JSON.
 3. **Commit to git** ; PBIP text files are diff-friendly and merge well.
 4. **Publish back** ; either `fab import` each item or, for workspaces connected to git, let the Fabric git integration sync the changes (see [workspaces.md](./workspaces.md#git-integration)).
 
@@ -230,4 +236,3 @@ The pbip, pbir-cli, tmdl, and pbir-format skills are the authoritative reference
 - [semantic-models.md](./semantic-models.md) ; TMDL round-trips, Direct Lake / Import / DirectQuery migration
 - [workspaces.md](./workspaces.md) ; git integration, workspace-level operations
 - [`scripts/download_workspace.py`](../scripts/download_workspace.py) ; full workspace backup including lakehouse files
-- [`scripts/export_semantic_model_as_pbip.py`](../scripts/export_semantic_model_as_pbip.py) ; PBIP project export

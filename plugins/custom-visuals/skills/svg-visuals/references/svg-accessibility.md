@@ -12,49 +12,20 @@ For an SVG sparkline column, also bind the numeric measures the SVG encodes (min
 
 Decide per project which columns to expose vs hide at the visual level (they can be hidden from the visual but still present in the query so Show-data picks them up).
 
-### 2. Set dynamic alt text on the host container
+### 2. Set alt text on the host container
 
-Author a sibling `_Alt` measure returning a spoken sentence (under ~250 characters) that narrates the SVG's content for the current filter context:
-
-```dax
-KPI Sparkline Alt =
-VAR _Last = [Sales Amount]
-VAR _Trend = IF([Sales Amount] > [Sales Amount PY], "up", "down")
-RETURN
-    "Sales: " & FORMAT(_Last, "$#,0,, M") & ", trending " & _Trend & " vs prior year"
-```
-
-Bind via `pbir set`:
+Write a concise spoken sentence (under ~250 characters) that narrates the SVG's content and
+set it through `pbir`:
 
 ```bash
-pbir set "MyPage/MyTable.Visual" "general.altText" --measure "_Report.KPI Sparkline Alt"
+pbir visuals general "Report.Report/MyPage.Page/MyTable.Visual" \
+  --altText "Sales trend and current value; use Show data for exact numbers."
 ```
 
-Or set directly in `visual.json` under `visualContainerObjects.general[0].properties.altText`:
-
-```json
-"general": [{
-  "properties": {
-    "altText": {
-      "expr": {
-        "Measure": {
-          "Expression": { "SourceRef": { "Schema": "extension", "Entity": "Sales" } },
-          "Property": "KPI Sparkline Alt"
-        }
-      }
-    }
-  }
-}]
-```
-
-The measure must guard `BLANK()` (a blank alt text is no better than none):
-
-```dax
-IF(COUNTROWS(VALUES('Date'[Month])) > 0,
-    "Sales: " & FORMAT(_Last, "$#,0,, M") & "...",
-    "No data for the current selection."
-)
-```
+The current `pbir` command surface does not create a measure-backed dynamic alt-text
+expression. If filter-sensitive narration is mandatory, report that capability gap instead of
+editing `visual.json`. Keep the encoded numbers in adjacent readable fields so Show data remains
+useful.
 
 For an `image` visual rendering a single SVG, the container has a `general.altText` slot; always set it. The static literal form is acceptable when the SVG is not filter-sensitive.
 
@@ -63,7 +34,7 @@ For an `image` visual rendering a single SVG, the container has a `general.altTe
 For purely decorative SVGs (dividers, brand backgrounds), mark the host hidden in tab order so screen readers skip it entirely:
 
 ```bash
-pbir set "MyPage/MyDecorativeSVG.Visual" "position.tabOrder" -1
+pbir set "Report.Report/MyPage.Page/MyDecorativeSVG.Visual.position.tabOrder" --value -1
 ```
 
 ## Color-only encoding
@@ -91,7 +62,8 @@ The Bridge screenshot is useful for layout verification; it does not confirm:
 - Adjacent readable columns are present in Show-data
 - Tab order positions the visual correctly for keyboard users
 
-Confirm accessibility by reading back the bound measure expression and auditing `visual.json` for `general.altText` and the presence of non-SVG bound columns.
+Confirm accessibility with `pbir get "...Visual.general.altText"` and
+`pbir visuals bind "...Visual" --show`.
 
 ## Severity guidance for audit findings
 

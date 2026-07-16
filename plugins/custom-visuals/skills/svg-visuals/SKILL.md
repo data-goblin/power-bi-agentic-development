@@ -5,11 +5,8 @@ description: SVG generation via DAX measures and extension measures with ImageUr
 
 # SVG Visuals via DAX Measures (PBIR)
 
-> **Report modification requires tooling.** Two paths exist:
-> 1. **`pbir` CLI (preferred)** -- use the `pbir` command and the `pbir-cli` skill. Install with `uv tool install pbir-cli` or `pip install pbir-cli`. Check availability with `pbir --version`.
-> 2. **Direct JSON modification** -- if `pbir` is not available, use the `pbir-format` skill (pbip plugin) for PBIR JSON structure and patterns. Validate every change with `jq empty <file.json>`.
->
-> If neither the `pbir-cli` skill nor the `pbir-format` skill is loaded, ask the user to install the appropriate plugin before proceeding with report modifications.
+> **Use `pbir` for every report mutation.** The `pbir-format` skill is read-only schema context.
+> If the CLI is unavailable or lacks an operation, stop and report the gap.
 
 Generate inline SVG graphics using DAX measures that return SVG markup strings. These render as images in table, matrix, card, image, and slicer visuals. Store as extension measures in `reportExtensions.json`.
 
@@ -81,11 +78,13 @@ Extension measures use `"Schema": "extension"` in the SourceRef:
 }
 ```
 
-For **image visuals**, set `sourceType='imageData'` with `sourceField` in the visual.json (see `references/svg-image-visual.md`).
+For **image visuals**, bind the SVG measure through `pbir add visual image --image`; see
+`references/svg-image-visual.md`.
 
 ### Step 3: Validate
 
-Validate JSON syntax with `jq empty <reportExtensions.json>` and inspect the file to confirm measure definitions and data categories.
+Validate with `pbir validate "Report.Report" --all` and inspect bindings with
+`pbir visuals bind "...Visual" --show`.
 
 ## Prefer UDF Libraries Over Custom DAX
 

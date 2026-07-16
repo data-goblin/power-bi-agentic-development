@@ -1,6 +1,6 @@
 ---
 name: te-cli
-description: Expert guidance for the cross-platform Tabular Editor CLI (the `te` binary, currently in preview) that manages Power BI / Analysis Services semantic models from the terminal on macOS, Linux, and Windows. Use when the user mentions the `te` CLI or "Tabular Editor CLI" (not the "2"), or runs a `te <command>` to scaffold, inspect, edit, validate, run BPA on, query, deploy, refresh, test, or migrate a semantic model. Not for the legacy Windows-only `TabularEditor.exe` (TE2).
+description: Expert guidance for the cross-platform Tabular Editor CLI (the `te` binary, currently in preview) that manages Power BI / Analysis Services semantic models from the terminal on macOS, Linux, and Windows. Use when the user mentions the `te` CLI or "Tabular Editor CLI" (not the "2"), or runs a `te` command to scaffold, inspect, edit, validate, run BPA on, query, deploy, refresh, test, or migrate a semantic model. Not for the legacy Windows-only `TabularEditor.exe` (TE2).
 ---
 
 # Tabular Editor CLI (`te`)
@@ -64,7 +64,7 @@ te get Sales/Revenue -q expression -m ./model      # 5. read a measure's DAX
 te bpa run --fail-on error --ci github -m ./model   # 6. BPA gate
 te format --save -m ./model             # 7. format all DAX
 te query -q "EVALUATE TOPN(5, 'Sales')" -s ws -d model    # 8. query
-te save -o ./out --serialization tmdl -m ./model    # 9. save / convert (tmdl|bim|pbip|te-folder)
+te save -o ./out --serialization tmdl -m ./model    # 9. save / convert (tmdl|bim|database.json|pbip)
 te deploy ./model -s ws -d model --force --ci github      # 10. deploy
 te refresh --type full -s ws -d model   # 11. refresh
 ```
@@ -120,7 +120,7 @@ Driving the CLI correctly is not the same as building a good model. After `te ad
 | Format string on every measure | unformatted measures render raw floats | `te set "_Measures/Revenue" -q formatString -i "#,0.00" --save` |
 | Display folder + description on measures | a flat field pane is unusable past a few dozen measures; descriptions feed tooltips and Copilot | `te set "_Measures/Revenue" -q displayFolder -i "Revenue" --save` |
 | Minimal correct data types; integer surrogate keys | high-cardinality and oversized types bloat VertiPaq | `te set Sales/CustomerKey -q dataType -i int64 --save` |
-| Prefer measures over calculated columns | calculated columns cost storage and break some DirectQuery/DirectLake paths | `te add "_Measures/Margin" -t Measure -i "[Revenue]-[COGS]" --save` |
+| Prefer measures over calculated columns | calculated columns add storage or query cost and have mode-specific limits in DirectQuery and Direct Lake | `te add "_Measures/Margin" -t Measure -i "[Revenue]-[COGS]" --save` |
 | Calculation groups over measure sprawl | turns N measures x K variants into N + K objects | see `references/semantic-modeling-practices.md` |
 | Gate every batch with validate + BPA | catches broken references and antipatterns while the change is fresh | `te validate -m ./model && te bpa run --fail-on warning -m ./model` |
 
@@ -157,7 +157,7 @@ For build scripts that issue many `te` calls, set `te config set bpa.onSave fals
 
 `te` owns the semantic model. Two sibling CLIs own the layers around it, and the highest-value workflows cross the boundary:
 
-- `pbir` (the Power BI report layer): renaming or moving a model object leaves the report bound to the old `Table.Field`. Rename in the model (`te mv`, then `te replace --in expressions --save`), then repair the report bindings (`pbir fields replace`, `pbir validate --fields`). See `references/pbir-cli-tandem.md`.
+- `pbir` (the Power BI report layer): modern `te mv` cascades model-internal references, but reports remain bound to the old `Table.Field`. Rename or move with `te mv --save`, gate the model, then repair report bindings with `pbir fields replace` (or `replace-table`) and `pbir validate --fields`. Use `te replace` only for reviewed text the cascade did not cover. See `references/pbir-cli-tandem.md`.
 - `fab` (the Fabric / Power BI service): export a model from a workspace, edit and gate it locally with `te`, then deploy over XMLA (`te deploy`) or import it back (`fab import`). See `references/fabric-cli-tandem.md`.
 
 Gate any cross-tool refactor with `te validate` before touching the report or the service, and remember every `te` mutation stages in memory until `--save`.

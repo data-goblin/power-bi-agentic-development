@@ -6,9 +6,9 @@ The "Query reduction" preset bundles three settings that collapse unnecessary vi
 
 The three components set directly in PBIR:
 
-- **Cross-interaction default**: add `NoFilter` pairs in `page.json` `visualInteractions[]` from each slicer to heavy visuals (matrices, maps, high-cardinality tables). There is no single report-wide off key; write per-pair overrides.
+- **Cross-interaction default**: add `NoFilter` pairs with `pbir pages interactions` from each slicer to heavy visuals (matrices, maps, high-cardinality tables). There is no single report-wide off key; write per-pair overrides.
 - **Filter-pane Apply button**: set via `pbir filters pane-set`; validate with `--qa` after.
-- **Slicer Apply button**: set per-slicer via `pbir visuals format`. The `slicer` and `advancedSlicerVisual` object models differ; confirm the container key with `pbir schema describe` first.
+- **Slicer Apply button**: set per slicer with `pbir set`. The `slicer` and `advancedSlicerVisual` object models differ; confirm the property with `pbir schema describe` first.
 
 Microsoft's optimization guidance shows these three changes cutting a page's visual queries by a large factor, which is why the "fewer visuals / apply buttons" audit rules exist.
 
@@ -22,14 +22,14 @@ Pitfalls:
 
 After placing and formatting visuals, set interaction overrides and build navigation before final validation. A page of correctly bound visuals still ships poorly if every selection cross-filters everything or if a multi-page report has no way to move between pages.
 
-1. Decide the cross-filter graph per page before touching JSON. Default is everything cross-filters everything, so author only the exceptions: KPI cards that should stay stable when a detail chart is clicked; charts that should not filter a slicer back.
-2. Write overrides as page-level `visualInteractions` entries (`{source, target, type}`) using the visual `name`, not the title. Use `Highlight`/`Filter` only when overriding a default (charts default to Highlight, line/scatter/map to Filter).
+1. Decide the cross-filter graph per page before changing it. Default is everything cross-filters everything, so author only the exceptions: KPI cards that should stay stable when a detail chart is clicked; charts that should not filter a slicer back.
+2. Write overrides with `pbir pages interactions`, using the visual `name`, not the title. Use `Highlight`/`Filter` only when overriding a default (charts default to Highlight, line/scatter/map to Filter).
 3. For multi-page reports, prefer a native `pageNavigator` visual over hand-built buttons. One navigator auto-syncs to the page list; N buttons are N blobs to re-point on every page add or rename.
 4. Validate, then reload+screenshot to confirm a slicer click filters the intended visuals and leaves the cards alone.
 
 ```bash
 # Example: set KPI card to NoFilter from bar chart clicks
-pbir visuals interactions "Sales.Report/Overview.Page" \
+pbir pages interactions "Sales.Report/Overview.Page" \
   --source "Bar Chart.Visual" --target "Revenue KPI.Visual" --type NoFilter
 
 # Add a page navigator
@@ -58,8 +58,8 @@ date window                    -> slicer (data.mode=Between) or relative-date mo
 Force single-select where the analysis assumes one value:
 
 ```bash
-pbir set <page>/<slicer> 'visual.objects.selection[0].properties.singleSelect' true
-pbir set <page>/<slicer> 'visual.objects.selection[0].properties.strictSingleSelect' true   # removes clear-to-all
+pbir set "<page>/<slicer>.Visual.selection.singleSelect" --value true
+pbir set "<page>/<slicer>.Visual.selection.strictSingleSelect" --value true
 ```
 
 Default to `strictSingleSelect` for metric-swap slicers (field parameter pickers) and single-entity slicers. Multi-select on those is the most common silent break.
@@ -70,15 +70,20 @@ Sync is not a slicer property; it lives in `report.json` as a sync group keyed b
 - sync filter state: selection follows the reader page to page
 - sync visibility: whether the slicer is drawn on each page
 
-The common pattern is sync-state everywhere, show-on-one-page. After hand-editing sync groups, validate and reload (a silent group-name typo de-syncs with no error). Sync supports one field per slicer only; a two-field slicer opts out.
+The common pattern is sync-state everywhere, show-on-one-page. Manage sync groups only through a
+supported `pbir` command. If the installed version does not expose one, report the capability gap
+instead of editing `report.json`. Sync supports one field per slicer only; a two-field slicer opts
+out.
 
 ### Reset and persist filters
 
 Power BI has no native reset button; build it from a bookmark:
 
 1. Set every slicer/filter to its intended default state
-2. Capture a **Data-scoped** (not Display) bookmark: `pbir bookmark add "Default View"`
-3. Bind a button to it via `pbir visuals action`
+2. Capture a **Data-scoped** (not Display) bookmark:
+   `pbir add bookmark "Report.Report" "Default View" --no-display`
+3. Bind a button to it with
+   `pbir visuals action "Report.Report/Page.Page/Reset.Visual" --type Bookmark --target "Default View"`
 
 Use the same bookmark as the page launch bookmark so the report opens at the baseline regardless of persisted state.
 
@@ -111,7 +116,7 @@ pbir add visual slicer "Sales.Report/Overview.Page" \
 
 # Force single-select so the report never opens showing every measure at once
 pbir set "Sales.Report/Overview.Page/<slicer-name>.Visual" \
-  'visual.objects.selection[0].properties.singleSelect' true
+  --property "selection.singleSelect" --value true
 
 # Validate that the parameter field binding resolves
 pbir validate "Sales.Report" --fields

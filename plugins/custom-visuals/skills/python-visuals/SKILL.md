@@ -5,11 +5,8 @@ description: Python visual creation and matplotlib/seaborn patterns for PBIR rep
 
 # Python Visuals in Power BI (PBIR)
 
-> **Report modification requires tooling.** Two paths exist:
-> 1. **`pbir` CLI (preferred)** -- use the `pbir` command and the `pbir-cli` skill. Install with `uv tool install pbir-cli` or `pip install pbir-cli`. Check availability with `pbir --version`.
-> 2. **Direct JSON modification** -- if `pbir` is not available, use the `pbir-format` skill (pbip plugin) for PBIR JSON structure and patterns. Validate every change with `jq empty <file.json>`.
->
-> If neither the `pbir-cli` skill nor the `pbir-format` skill is loaded, ask the user to install the appropriate plugin before proceeding with report modifications.
+> **Use `pbir` for every report mutation.** Read PBIR metadata only for diagnosis. If `pbir` is
+> unavailable or lacks an operation, stop and report the gap; never edit report JSON directly.
 
 Python visuals execute matplotlib/seaborn scripts to render static PNG images on the Power BI canvas. **Prefer seaborn** over raw matplotlib for cleaner syntax and better defaults -- it handles most chart types with less code.
 
@@ -25,7 +22,10 @@ Python visuals execute matplotlib/seaborn scripts to render static PNG images on
 
 ### Step 1: Add the Visual
 
-Create the visual.json file manually (see `pbir-format` skill in the pbip plugin for JSON structure) with `visualType: pythonVisual`, field bindings for the columns and measures you need (use `Values:Table.Column` or `Values:Table.Measure` format), and position/size as required.
+```bash
+pbir add visual pythonVisual "Report.Report/Page.Page" --name PythonChart \
+  --data "Values:Sales.Date" --data "Values:Sales.Revenue"
+```
 
 ### Step 2: Write the Script
 
@@ -52,24 +52,23 @@ Before presenting the script to the user, dispatch the `python-reviewer` agent t
 
 ### Step 3: Inject the Script
 
-Set the script content in the visual's `objects.script[0].properties.source` literal value (see PBIR Format section below).
+```bash
+pbir visuals python "Report.Report/Page.Page/PythonChart.Visual" \
+  --script-file chart.py
+```
 
-**Escaping rules for visual.json injection:**
-
-The script must be encoded as a single-quoted DAX literal string inside `expr.Literal.Value`:
-
-- Newlines in the script become `\n` in the JSON string
-- Double quotes inside the script (e.g., `"#5B8DBE"`) become `\"` in the JSON string
-- The entire script is wrapped in single quotes: `'import matplotlib...\nplt.show()'`
-- See `examples/visual/` for a complete real-world visual.json showing this encoding
+The CLI handles PBIR string escaping.
 
 ### Step 4: Validate
 
-Validate JSON syntax with `jq empty <visual.json>` and inspect the visual.json to confirm script content and field bindings.
+```bash
+pbir visuals bind "Report.Report/Page.Page/PythonChart.Visual" --show
+pbir validate "Report.Report" --all
+```
 
 ## PBIR Format
 
-Scripts are stored in `visual.objects.script[0].properties`:
+For read-only diagnosis, scripts are stored in `visual.objects.script[0].properties`:
 
 ```json
 {

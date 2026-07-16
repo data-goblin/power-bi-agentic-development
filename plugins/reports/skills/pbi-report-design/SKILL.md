@@ -5,11 +5,8 @@ description: The Power BI report design canon covering design identity, visual h
 
 # Power BI Report Design
 
-> **Report modification requires tooling.** Two paths exist:
-> 1. **`pbir` CLI (preferred)** -- use the `pbir` command and the `pbir-cli` skill. Install with `uv tool install pbir-cli` or `pip install pbir-cli`. Check availability with `pbir --version`.
-> 2. **Direct JSON modification** -- if `pbir` is not available, use the `pbir-format` skill (pbip plugin) for PBIR JSON structure and patterns. Validate every change with `jq empty <file.json>`.
->
-> If neither the `pbir-cli` skill nor the `pbir-format` skill is loaded, ask the user to install the appropriate plugin before proceeding with report modifications.
+> **Use `pbir` for every report mutation.** The `pbir-format` skill is read-only schema context.
+> If the CLI is unavailable or lacks an operation, stop and report the gap.
 
 Best practices and guidelines for Power BI report design. Follow these guidelines strictly to avoid generic, poorly formatted reports ("Power BI Slop").
 
@@ -90,23 +87,16 @@ Arrange content following the "detail gradient":
 
 ## Page Titles
 
-Every page should have a title. Create a `textbox` visual.json file manually (see `pbir-format` skill in the pbip plugin for JSON structure) with position x=20, y=20, width=400, height=60. Set the paragraph content in the visual's config:
+Every page should have a title. Create it through `pbir`:
 
-```json
-{
-  "singleVisual": {
-    "visualType": "textbox",
-    "paragraphs": [
-      {"textRuns": [{"value": "Page Title"}]}
-    ]
-  }
-}
+```bash
+pbir add title "Report.Report/Page.Page" "Page Title" --width 500
 ```
 
 **Title positioning:**
 
-- Top-left corner: x=24, y=24
-- Height: 48-64px
+- Top-left corner, inside the page margin
+- Enough height for the chosen font without clipping
 - Width: 400-600px (or page width minus margins)
 
 ## Theme Guidelines

@@ -24,7 +24,7 @@ Not supported on: `areaChart` and its stacked variants, `scatterChart`, `waterfa
 The CLI splits the work across two commands with clear boundaries:
 
 - **`pbir visuals error-bars add|list|remove`** creates, enumerates, and deletes the two-entry pair per series. It owns queryRef resolution (looking up the projection that binds the series on the visual), the `errorRange` struct, and the upsert-by-series semantics.
-- **`pbir set "error.field(<queryRef>).<property>" <value>`** sets every styling property on the styling entry after it exists. The `field(<queryRef>)` selector form maps to `{metadata: "<queryRef>"}` and merges into the styling entry, leaving the range-binding entry untouched.
+- **`pbir set "error.field(<queryRef>).<property>" --value <value>`** sets every styling property on the styling entry after it exists. The `field(<queryRef>)` selector form maps to `{metadata: "<queryRef>"}` and merges into the styling entry, leaving the range-binding entry untouched.
 
 This split exists because `pbir set` cannot array-append into a container, cannot build the `errorRange` struct from CLI args, and cannot emit the compound selector used on the range-binding entry. Once both entries exist, all styling is just `pbir set`.
 
@@ -70,9 +70,9 @@ Chaining example:
 ```bash
 QR=$(pbir visuals error-bars add "V.Visual" \
   --series "Sales.Revenue" --upper "Sales.Target" --lower "Sales.Target")
-pbir set "V.Visual.error.field($QR).markerShape" "diamond"
-pbir set "V.Visual.error.field($QR).markerSize" 10
-pbir set "V.Visual.error.field($QR).barShow" false
+pbir set "V.Visual.error.field($QR).markerShape" --value "diamond"
+pbir set "V.Visual.error.field($QR).markerSize" --value 10
+pbir set "V.Visual.error.field($QR).barShow" --value false
 ```
 
 ## Style error bars with `pbir set`
@@ -81,22 +81,22 @@ All styling lives on the second (styling) entry and is reachable via the `field(
 
 ```bash
 # Whisker width and color
-pbir set "V.Visual.error.field(Sales.Revenue).barWidth" 1
-pbir set "V.Visual.error.field(Sales.Revenue).barShow" true
+pbir set "V.Visual.error.field(Sales.Revenue).barWidth" --value 1
+pbir set "V.Visual.error.field(Sales.Revenue).barShow" --value true
 
 # Marker shape and size at the endpoints
-pbir set "V.Visual.error.field(Sales.Revenue).markerShape" "diamond"
-pbir set "V.Visual.error.field(Sales.Revenue).markerSize" 10
-pbir set "V.Visual.error.field(Sales.Revenue).markerShow" true
+pbir set "V.Visual.error.field(Sales.Revenue).markerShape" --value "diamond"
+pbir set "V.Visual.error.field(Sales.Revenue).markerSize" --value 10
+pbir set "V.Visual.error.field(Sales.Revenue).markerShow" --value true
 
 # Data labels on the error bar itself
-pbir set "V.Visual.error.field(Sales.Revenue).labelShow" true
-pbir set "V.Visual.error.field(Sales.Revenue).labelFormat" "range"
-pbir set "V.Visual.error.field(Sales.Revenue).labelFontSize" 10
+pbir set "V.Visual.error.field(Sales.Revenue).labelShow" --value true
+pbir set "V.Visual.error.field(Sales.Revenue).labelFormat" --value "range"
+pbir set "V.Visual.error.field(Sales.Revenue).labelFontSize" --value 10
 
 # Tooltip integration
-pbir set "V.Visual.error.field(Sales.Revenue).tooltipShow" true
-pbir set "V.Visual.error.field(Sales.Revenue).tooltipFormat" "range"
+pbir set "V.Visual.error.field(Sales.Revenue).tooltipShow" --value true
+pbir set "V.Visual.error.field(Sales.Revenue).tooltipFormat" --value "range"
 ```
 
 Discover all available properties with:
@@ -145,9 +145,9 @@ QR=$(pbir visuals error-bars add "V.Visual" \
   --series "Sales.Revenue" \
   --upper "Sales.Target" \
   --lower "Sales.Target")
-pbir set "V.Visual.error.field($QR).markerShape" "longDash"
-pbir set "V.Visual.error.field($QR).markerSize" 12
-pbir set "V.Visual.error.field($QR).barShow" false
+pbir set "V.Visual.error.field($QR).markerShape" --value "longDash"
+pbir set "V.Visual.error.field($QR).markerSize" --value 12
+pbir set "V.Visual.error.field($QR).barShow" --value false
 ```
 
 **Forecast confidence band** with colored whiskers:
@@ -157,8 +157,8 @@ QR=$(pbir visuals error-bars add "V.Visual" \
   --series "Sales.Forecast" \
   --upper "Sales.Forecast High" \
   --lower "Sales.Forecast Low")
-pbir set "V.Visual.error.field($QR).barWidth" 2
-pbir set "V.Visual.error.field($QR).markerSize" 0
+pbir set "V.Visual.error.field($QR).barWidth" --value 2
+pbir set "V.Visual.error.field($QR).markerSize" --value 0
 ```
 
 **Range labels on every bar:**
@@ -168,8 +168,8 @@ QR=$(pbir visuals error-bars add "V.Visual" \
   --series "Sales.Revenue" \
   --upper "Sales.Max" \
   --lower "Sales.Min")
-pbir set "V.Visual.error.field($QR).labelShow" true
-pbir set "V.Visual.error.field($QR).labelFormat" "range"
+pbir set "V.Visual.error.field($QR).labelShow" --value true
+pbir set "V.Visual.error.field($QR).labelFormat" --value "range"
 ```
 
 ## Notes and caveats

@@ -26,13 +26,13 @@ Scripts for managing tables in Tabular models.
 
 ### Execute Inline
 ```bash
-te "model.bim" 'var t = Model.AddTable("NewTable"); t.AddDataColumn("ID"); t.Partitions[0].Expression = "Source";'
+te script "model.bim" -e 'var t = Model.AddTable("NewTable"); t.AddDataColumn("ID"); t.Partitions[0].Expression = "Source";' --save
 ```
 
 ### Execute Script File
 ```bash
-te "model.bim" samples/tables/add-date-table.csx --file
-te "Production/Sales" samples/tables/add-measure-table.csx --file
+te script "model.bim" -S samples/tables/add-date-table.csx --save
+te script -s "Production" -d "Sales" -S samples/tables/add-measure-table.csx --save
 ```
 
 ### With Fabric CLI Workflow
@@ -41,7 +41,7 @@ te "Production/Sales" samples/tables/add-measure-table.csx --file
 fab export "Workspace/Model.SemanticModel" -o ./model -f
 
 # Create/modify tables
-te "./model/Model.SemanticModel/model.bim" samples/tables/add-date-table.csx --file
+te script "./model/Model.SemanticModel/definition" -S samples/tables/add-date-table.csx --save
 
 # Import back
 fab import "Workspace/Model.SemanticModel" -i ./model/Model.SemanticModel -f

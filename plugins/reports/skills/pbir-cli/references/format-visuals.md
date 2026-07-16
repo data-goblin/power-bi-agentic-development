@@ -186,8 +186,8 @@ pbir visuals divider "Visual.Visual" --show
 
 ```bash
 pbir visuals legend "Visual.Visual" --show --position Right
-pbir visuals axis "Visual.Visual" --axis category --show --title "Month"
-pbir visuals axis "Visual.Visual" --axis value --show --title "Revenue ($)"
+pbir visuals axis "Visual.Visual" category --show --title "Month"
+pbir visuals axis "Visual.Visual" value --show --title "Revenue ($)"
 pbir visuals labels "Visual.Visual" --show --fontSize 10
 pbir visuals sort "Visual.Visual" -f "Sales.Revenue" -d Descending
 ```
@@ -198,7 +198,7 @@ pbir visuals sort "Visual.Visual" -f "Sales.Revenue" -d Descending
 pbir visuals header "Visual.Visual" --show
 pbir visuals tooltip "Visual.Visual"
 pbir visuals hide "Visual.Visual"                # Hide in view mode
-pbir visuals hide "Visual.Visual" --off          # Show again
+pbir visuals hide "Visual.Visual" --show         # Show again
 ```
 
 ## Conditional Formatting

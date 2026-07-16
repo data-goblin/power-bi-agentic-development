@@ -60,26 +60,17 @@ fab get "Production.Workspace/Sales.SemanticModel" -q "definition.parts[].path"
 
 ## Exporting Models
 
-### Export as PBIP (Power BI Project)
+### Export as TMDL or PBIP
 
-PBIP format is best for local development in Power BI Desktop or Tabular Editor:
-
-```bash
-# Export using the export script
-python3 scripts/export_semantic_model_as_pbip.py \
-  "Production.Workspace/Sales.SemanticModel" -o /tmp/exports
-```
-
-### Export as TMDL
-
-The export script creates PBIP format which includes TMDL in the definition folder:
+Export the model definition with `fab`:
 
 ```bash
-python3 scripts/export_semantic_model_as_pbip.py \
-  "Production.Workspace/Sales.SemanticModel" -o /tmp/exports
-
-# TMDL files will be in: /tmp/exports/Sales.SemanticModel/definition/
+fab export "Production.Workspace/Sales.SemanticModel" -o /tmp/exports -f
 ```
+
+For a full PBIP project, add a report with `pbir new report`, then use
+`pbir report merge-to-thick`; see `import-download-deploy.md`. Do not generate report JSON in a
+custom script.
 
 ### Export Specific Parts Only
 
@@ -387,9 +378,8 @@ mkdir -p "$BACKUP_DIR"
 # Export as multiple formats for redundancy
 fab get "$WORKSPACE/$MODEL" -q "definition" -o "$BACKUP_DIR/definition.json"
 
-# Export as PBIP
-python3 scripts/export_semantic_model_as_pbip.py \
-  "$WORKSPACE/$MODEL" -o "$BACKUP_DIR/pbip"
+# Export the local TMDL definition
+fab export "$WORKSPACE/$MODEL" -o "$BACKUP_DIR/model" -f
 
 # Save metadata
 fab get "$WORKSPACE/$MODEL" -o "$BACKUP_DIR/metadata.json"
@@ -612,5 +602,4 @@ For full DuckDB querying patterns, see [querying-data.md](./querying-data.md).
 ## Related Scripts
 
 - `scripts/create_direct_lake_model.py` - Create Direct Lake model from lakehouse table
-- `scripts/export_semantic_model_as_pbip.py` - Export model as PBIP
 - `scripts/execute_dax.py` - Execute DAX queries

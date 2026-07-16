@@ -54,7 +54,7 @@ Audit against the categories below and produce prioritized findings with file lo
 - **Measure hygiene**: implicit measures, report-scoped measures that belong in the model, ambiguous duplicates
 - **Documentation & AI**: missing descriptions (Copilot truncates after 200 characters), missing display folders, missing synonyms, inconsistent naming (use `standardize-naming-conventions`)
 - **Design**: star-schema violations, mis-marked date table, many-to-many without a bridge, dead inactive relationships
-- **Direct Lake**: non-unique one-side keys (queries fail at runtime), DirectQuery fallback, calc columns on Direct Lake, Delta guardrail breaches
+- **Direct Lake**: non-unique one-side keys (queries fail at runtime), DirectQuery fallback, calculated-column support by Direct Lake flavor, Delta guardrail breaches
 
 ## Related skills
 

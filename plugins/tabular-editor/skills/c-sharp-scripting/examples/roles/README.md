@@ -16,13 +16,13 @@ Scripts for managing security roles and row-level security (RLS) in Tabular mode
 
 ### Execute Inline
 ```bash
-te "model.bim" 'var role = Model.AddRole("Sales Team"); role.ModelPermission = ModelPermission.Read;'
+te script "model.bim" -e 'var role = Model.AddRole("Sales Team"); role.ModelPermission = ModelPermission.Read;' --save
 ```
 
 ### Execute Script File
 ```bash
-te "model.bim" samples/roles/add-role.csx --file
-te "Production/Sales" samples/roles/configure-rls.csx --file
+te script "model.bim" -S samples/roles/add-role.csx --save
+te script -s "Production" -d "Sales" -S samples/roles/configure-rls.csx --save
 ```
 
 ### With Fabric CLI Workflow
@@ -31,8 +31,8 @@ te "Production/Sales" samples/roles/configure-rls.csx --file
 fab export "Workspace/Model.SemanticModel" -o ./model -f
 
 # Configure roles
-te "./model/Model.SemanticModel/model.bim" samples/roles/add-role.csx --file
-te "./model/Model.SemanticModel/model.bim" samples/roles/configure-rls.csx --file
+te script "./model/Model.SemanticModel/definition" -S samples/roles/add-role.csx --save
+te script "./model/Model.SemanticModel/definition" -S samples/roles/configure-rls.csx --save
 
 # Import back
 fab import "Workspace/Model.SemanticModel" -i ./model/Model.SemanticModel -f

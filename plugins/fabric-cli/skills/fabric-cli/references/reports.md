@@ -244,18 +244,25 @@ fab exists "prod.Workspace/Report.Report"
 
 ## Clone Report with Different Model
 
-1. Export source:
+1. Download and copy the source:
 
 ```bash
-fab export "ws.Workspace/Template.Report" -o /tmp/clone -f
+pbir download "ws.Workspace/Template.Report" -o /tmp/clone --format pbir
+pbir cp "/tmp/clone/Template.Report" "/tmp/clone/NewReport.Report"
 ```
 
-2. Edit `/tmp/clone/Template.Report/definition.pbir` to update `semanticmodelid`
-
-3. Import as new report:
+2. Rebind the copy:
 
 ```bash
-fab import "ws.Workspace/NewReport.Report" -i /tmp/clone/Template.Report -f
+pbir report rebind "/tmp/clone/NewReport.Report" \
+  "ws.Workspace/NewModel.SemanticModel"
+pbir validate "/tmp/clone/NewReport.Report" --all
+```
+
+3. Publish as a new report:
+
+```bash
+pbir publish "/tmp/clone/NewReport.Report" "ws.Workspace/NewReport.Report"
 ```
 
 ## Troubleshooting

@@ -20,13 +20,13 @@ Scripts for performing batch operations across multiple model objects.
 
 ### Execute Inline
 ```bash
-te "model.bim" 'foreach(var m in Model.AllMeasures) { m.Description = m.Expression; }'
+te script "model.bim" -e 'foreach(var m in Model.AllMeasures) { m.Description = m.Expression; }' --save
 ```
 
 ### Execute Script File
 ```bash
-te "model.bim" samples/bulk-operations/clean_object_names.csx --file
-te "Production/Sales" samples/bulk-operations/initialize_model.csx --file
+te script "model.bim" -S samples/bulk-operations/clean_object_names.csx --save
+te script -s "Production" -d "Sales" -S samples/bulk-operations/initialize_model.csx --save
 ```
 
 ### With Fabric CLI Workflow
@@ -35,8 +35,8 @@ te "Production/Sales" samples/bulk-operations/initialize_model.csx --file
 fab export "Workspace/Model.SemanticModel" -o ./model -f
 
 # Run bulk operations
-te "./model/Model.SemanticModel/model.bim" samples/bulk-operations/clean_object_names.csx --file
-te "./model/Model.SemanticModel/model.bim" samples/bulk-operations/add_descriptions_to_all.csx --file
+te script "./model/Model.SemanticModel/definition" -S samples/bulk-operations/clean_object_names.csx --save
+te script "./model/Model.SemanticModel/definition" -S samples/bulk-operations/add_descriptions_to_all.csx --save
 
 # Import back
 fab import "Workspace/Model.SemanticModel" -i ./model/Model.SemanticModel -f

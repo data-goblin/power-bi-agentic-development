@@ -13,13 +13,13 @@ Scripts for managing perspectives (simplified views) in Tabular models.
 
 ### Execute Inline
 ```bash
-te "model.bim" 'var p = Model.AddPerspective("Sales View"); p.SetActive(Model.Tables["Sales"], true);'
+te script "model.bim" -e 'var p = Model.AddPerspective("Sales View"); p.SetActive(Model.Tables["Sales"], true);' --save
 ```
 
 ### Execute Script File
 ```bash
-te "model.bim" samples/perspectives/add-perspective.csx --file
-te "Production/Sales" samples/perspectives/list-perspectives.csx --file
+te script "model.bim" -S samples/perspectives/add-perspective.csx --save
+te script -s "Production" -d "Sales" -S samples/perspectives/list-perspectives.csx
 ```
 
 ### With Fabric CLI Workflow
@@ -28,7 +28,7 @@ te "Production/Sales" samples/perspectives/list-perspectives.csx --file
 fab export "Workspace/Model.SemanticModel" -o ./model -f
 
 # Create perspectives
-te "./model/Model.SemanticModel/model.bim" samples/perspectives/add-perspective.csx --file
+te script "./model/Model.SemanticModel/definition" -S samples/perspectives/add-perspective.csx --save
 
 # Import back
 fab import "Workspace/Model.SemanticModel" -i ./model/Model.SemanticModel -f

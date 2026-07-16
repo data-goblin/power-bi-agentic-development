@@ -17,13 +17,13 @@ single value vs target      -> position vs marker      -> kpi / card + reference
 
 Read the actual type and roles before judging:
 ```bash
-pbir get "Page/MyVisual.Visual" .visual.visualType
+pbir get "Page.Page/MyVisual.Visual.visualType"
 pbir visuals bind "Page/MyVisual.Visual" --list-roles
 ```
 
 Repair is usually a type swap preserving bindings (pie, donut, and stackedBarChart share Category/Y roles):
 ```bash
-pbir set "Page/MyVisual.Visual" .visual.visualType '"clusteredBarChart"'
+pbir set "Page.Page/MyVisual.Visual.visualType" --value clusteredBarChart
 ```
 Then sort and validate.
 
@@ -44,9 +44,8 @@ A type can be schema-valid and role-correct yet wrong because the data shape def
 Labels earn their place only when the exact value matters and cannot be read off the axis: line endpoints, a single highlighted bar, KPI deltas. Per-segment labels and stacked totals are two different objects:
 
 ```bash
-pbir visuals format "Page.Page/Visual.Visual" labels --on       # per-data-point labels
-pbir set "Page.Page/Visual.Visual" \
-  '.visual.objects.totals[0].properties.show.expr.Literal.Value' "true"  # stacked totals
+pbir visuals labels "Page.Page/Visual.Visual" --show            # per-data-point labels
+pbir set "Page.Page/Visual.Visual.totals.show" --value true     # stacked totals
 ```
 
 ### The stacked-total "incorrect number" trap

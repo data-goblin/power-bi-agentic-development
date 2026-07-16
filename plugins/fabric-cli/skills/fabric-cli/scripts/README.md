@@ -108,17 +108,6 @@ Options:
 
 Requires `sqlcmd` (go-sqlcmd >= 1.9; `brew install sqlcmd` or `winget install --id Microsoft.Sqlcmd`) and `az login`.
 
-### export_semantic_model_as_pbip.py
-
-Export semantic model as PBIP (Power BI Project) format.
-
-```bash
-python3 export_semantic_model_as_pbip.py "ws.Workspace/Model.SemanticModel" -o ./output
-python3 export_semantic_model_as_pbip.py "Sales.Workspace/Sales Model.SemanticModel" -o /tmp/exports
-```
-
-Creates complete PBIP structure with TMDL definition and blank report.
-
 ### get_semantic_model_ai_metadata.py
 
 Retrieve semantic model AI instructions and AI schema using `fab get -q definition -f`. The parser understands both documented Copilot sidecars and TMDL culture `linguisticMetadata`.

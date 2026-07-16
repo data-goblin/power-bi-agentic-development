@@ -128,7 +128,8 @@ Quick-reference checklist for the most common issues:
 
 1. Identify all connected reports (`.pbir` files or Power BI Service reports)
 2. Rebind visuals to use the new field names
-3. This can be done manually in Power BI Desktop, or programmatically by editing the `visual.json` files in PBIR format
+3. Repair each report with `pbir fields replace` or `pbir fields replace-table`; never edit
+   report JSON directly
 
 Always warn the user about this before applying renames. If downstream reports exist, consider:
 - Making a backup of the model before changes

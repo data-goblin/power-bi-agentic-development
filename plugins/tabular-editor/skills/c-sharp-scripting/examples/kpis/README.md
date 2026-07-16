@@ -14,13 +14,13 @@ Scripts for managing Key Performance Indicators (KPIs) in Tabular models.
 
 ### Execute Inline
 ```bash
-te "model.bim" 'var m = Model.Tables["Sales"].Measures["Total Sales"]; m.KPI.TargetExpression = "[Sales Target]"; m.KPI.StatusGraphic = "Traffic Light";'
+te script "model.bim" -e 'var m = Model.Tables["Sales"].Measures["Total Sales"]; m.KPI.TargetExpression = "[Sales Target]"; m.KPI.StatusGraphic = "Traffic Light";' --save
 ```
 
 ### Execute Script File
 ```bash
-te "model.bim" samples/kpis/add-kpi.csx --file
-te "Production/Sales" samples/kpis/list-kpis.csx --file
+te script "model.bim" -S samples/kpis/add-kpi.csx --save
+te script -s "Production" -d "Sales" -S samples/kpis/list-kpis.csx
 ```
 
 ### With Fabric CLI Workflow
@@ -29,7 +29,7 @@ te "Production/Sales" samples/kpis/list-kpis.csx --file
 fab export "Workspace/Model.SemanticModel" -o ./model -f
 
 # Create KPIs
-te "./model/Model.SemanticModel/model.bim" samples/kpis/add-kpi.csx --file
+te script "./model/Model.SemanticModel/definition" -S samples/kpis/add-kpi.csx --save
 
 # Import back
 fab import "Workspace/Model.SemanticModel" -i ./model/Model.SemanticModel -f

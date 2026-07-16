@@ -172,8 +172,8 @@ If the user has a .pbix file but no .bim or TMDL files, guide them to save as PB
 ### Export from Fabric (via CLI)
 
 ```bash
-# Export entire model definition as TMDL
-python scripts/export_semantic_model_as_pbip.py "WorkspaceName.Workspace/ModelName.SemanticModel" /output/path
+# Export the model definition as TMDL
+fab export "WorkspaceName.Workspace/ModelName.SemanticModel" -o /output/path -f
 ```
 
 ## Model Analysis Checklist

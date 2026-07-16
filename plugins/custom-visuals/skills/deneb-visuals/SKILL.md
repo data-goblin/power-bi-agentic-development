@@ -5,11 +5,8 @@ description: Deneb visual creation, Vega/Vega-Lite spec authoring, and Deneb bes
 
 # Deneb Visuals in Power BI (PBIR)
 
-> **Report modification requires tooling.** Two paths exist:
-> 1. **`pbir` CLI (preferred)** -- use the `pbir` command and the `pbir-cli` skill. Install with `uv tool install pbir-cli` or `pip install pbir-cli`. Check availability with `pbir --version`.
-> 2. **Direct JSON modification** -- if `pbir` is not available, use the `pbir-format` skill (pbip plugin) for PBIR JSON structure and patterns. Validate every change with `jq empty <file.json>`.
->
-> If neither the `pbir-cli` skill nor the `pbir-format` skill is loaded, ask the user to install the appropriate plugin before proceeding with report modifications.
+> **Use `pbir` for every report mutation.** Read PBIR metadata only for diagnosis. If `pbir` is
+> unavailable or lacks an operation, stop and report the gap; never edit report JSON directly.
 
 Deneb is a certified custom visual for Power BI that enables Vega and Vega-Lite declarative visualization specs directly inside reports. Author specs using this skill.
 
@@ -28,21 +25,24 @@ Deneb is a certified custom visual for Power BI that enables Vega and Vega-Lite 
 
 ## Custom Visual Registration (Required)
 
-Register `deneb7E15AEF80B9E4D4F8E12924291ECE89A` in `report.json` `publicCustomVisuals` array manually. Without this, the visual shows "Can't display this visual."
-
-For more information, use the `pbir-format` skill and check the `report.md` reference.
-
-```json
-{
-  "publicCustomVisuals": ["deneb7E15AEF80B9E4D4F8E12924291ECE89A"]
-}
-```
+Copying a working Deneb visual with `pbir cp` carries its registration. For a new visual, inspect
+`publicCustomVisuals` with `pbir get` and update the complete list through `pbir set --json`,
+preserving any existing ids. Never edit `report.json` directly.
 
 ## Workflow: Creating a Deneb Visual
 
 ### Step 1: Add the Visual
 
-Create the visual.json file manually (see `pbir-format` skill in the pbip plugin for JSON structure) with `visualType: deneb7E15AEF80B9E4D4F8E12924291ECE89A`, field bindings for the columns and measures you need, and position/size as required.
+Create the visual and bindings through `pbir`:
+
+```bash
+pbir add visual deneb7E15AEF80B9E4D4F8E12924291ECE89A \
+  "Report.Report/Page.Page" --name RevenueByCategoryDeneb
+pbir visuals bind "Report.Report/Page.Page/RevenueByCategoryDeneb.Visual" \
+  --add "dataset:Sales.Category" --type Column
+pbir visuals bind "Report.Report/Page.Page/RevenueByCategoryDeneb.Visual" \
+  --add "dataset:Sales.Revenue" --type Measure
+```
 
 All fields bind to the single `dataset` role. Use `Table.Column` for columns and `Table.Measure` for measures. Field names in bindings must match those used in the Vega/Vega-Lite spec.
 
@@ -69,21 +69,12 @@ See `examples/spec/` for complete spec files (Vega and Vega-Lite) and `examples/
 
 ### Step 3: Inject the Spec
 
-Set the spec and config in the visual's `objects.vega[0].properties` as single-quoted DAX literal strings. The `jsonSpec` property holds the Vega spec (stringified JSON), `jsonConfig` holds the config, and `provider` is set to `'vega'` or `'vegaLite'`. See the PBIR structure reference (`references/pbir-structure.md`) for the full encoding pattern.
-
-**Escaping rules for visual.json injection:**
-
-The spec JSON must be stringified into a single line and wrapped in single quotes inside the `expr.Literal.Value`:
-
-```json
-"jsonSpec": {"expr": {"Literal": {"Value": "'{\"$schema\":\"...\",\"data\":{\"name\":\"dataset\"},\"marks\":[...]}'" }}}
+```bash
+pbir visuals deneb "Report.Report/Page.Page/RevenueByCategoryDeneb.Visual" \
+  --spec-file chart.vl.json --provider vegaLite
 ```
 
-- The entire JSON spec is flattened to one line
-- All inner double quotes (`"`) become `\"` (standard JSON string escaping)
-- The stringified JSON is wrapped in single quotes: `'...'`
-- Field names with spaces inside Vega expressions use doubled single quotes: `datum[''Sales Amount'']`
-- See `examples/visual/` for complete real-world visual.json files showing this encoding
+The CLI handles PBIR encoding. Keep ordinary Vega or Vega-Lite JSON in the spec file.
 
 ### Step 3b: Review
 
@@ -91,7 +82,10 @@ Before presenting the spec to the user, dispatch the `deneb-reviewer` agent to v
 
 ### Step 4: Validate
 
-Validate JSON syntax with `jq empty <visual.json>` and inspect the visual.json to confirm spec content and field bindings.
+```bash
+pbir visuals bind "Report.Report/Page.Page/RevenueByCategoryDeneb.Visual" --show
+pbir validate "Report.Report" --all
+```
 
 ## Spec Authoring Rules
 

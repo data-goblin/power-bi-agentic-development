@@ -38,7 +38,7 @@ te migrate --output-format json           # machine-readable for codemods
 | `-T <file>` | `--trx <file>` |
 | `-B <file>` | `te save -o <file> --serialization bim` |
 | `-TMDL <dir>` | `te save -o <dir> --serialization tmdl` (default format) |
-| `-F <dir>` | `te save -o <dir> --serialization te-folder` (or `--deploy-full` after `-D`) |
+| `-F <dir>` | No exact TE-folder serializer. Use `te save -o <dir> --serialization tmdl`, or `--deploy-full` after `-D`. |
 | `-Y` | `--deploy-partitions --skip-refresh-policy` |
 | `-W` / `-E` | (default) |
 | `-L <user> <pass>` (after `-D`) | `te auth login -u <id> -p <secret> -t <tenant>` (prefer env vars) |
@@ -49,4 +49,3 @@ te migrate --output-format json           # machine-readable for codemods
 - `te deploy` prompts for confirmation. CI must pass `--force`.
 - All commands support `--output-format json` for machine-readable output.
 - No `start /wait` wrapper needed on Windows; it's a normal console binary.
-

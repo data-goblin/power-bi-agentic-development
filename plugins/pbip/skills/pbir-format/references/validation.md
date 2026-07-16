@@ -1,8 +1,7 @@
 # Validating PBIR conformance
 
-PBIR is conformant when it passes every dimension below, not just JSON schema. Prefer
-`pbir validate` (it checks all of these at once); when editing JSON directly, hand-author
-to these rules.
+PBIR is conformant when it passes every dimension below, not just JSON schema. Use
+`pbir validate`; do not hand-edit report JSON to chase individual checks.
 
 ## Validate with the CLI
 
@@ -16,10 +15,8 @@ pbir validate "Report.Report" --strict   # promote field/QA/semantic warnings to
 pbir validate "Report.Report" --json     # machine-readable
 ```
 
-The same checks run implicitly on every `pbir` mutation. To bypass a check deliberately,
-use the global flag before the subcommand: `--skip <category>` (repeatable,
-comma-separated) or `--rawdog` (skip all). Categories: `structure`, `schema`,
-`schema-version`, `fields`, `enums`, `qa`, `roles`, `layout`, `theme`.
+The same checks run implicitly on `pbir` mutations. Keep them enabled. Validation bypasses are
+diagnostic escape hatches, not normal authoring guidance.
 
 ## The conformance dimensions
 
@@ -51,5 +48,5 @@ comma-separated) or `--rawdog` (skip all). Categories: `structure`, `schema`,
 
 ## Verify rendering
 
-JSON conformance does not guarantee a visual renders. After editing, reload and screenshot
+JSON conformance does not guarantee a visual renders. After a CLI change, reload and screenshot
 the open Desktop instance and inspect the PNG; see `desktop-bridge.md`.

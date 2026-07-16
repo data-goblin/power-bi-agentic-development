@@ -56,7 +56,9 @@ Produce a markdown report: a count-by-severity summary, detailed findings with o
 
 ### Direct Lake, if applicable (`direct-lake.md`)
 - Non-unique one-side relationship keys (queries fail at runtime, not refresh); DirectQuery fallback risk (RLS, SQL views)
-- Calculated columns on Direct Lake tables; Delta health (Parquet file count, V-Order, guardrails)
+- Calculated columns on Direct Lake tables: unsupported when they reference Direct Lake on SQL;
+  preview and unmaterialized on Direct Lake on OneLake. Also check Delta health (Parquet file count,
+  V-Order, guardrails)
 
 ## Notes
 - The structural audit reads metadata; it does not execute report DAX or check data quality

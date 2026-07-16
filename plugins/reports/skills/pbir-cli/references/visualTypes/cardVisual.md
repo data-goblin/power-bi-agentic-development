@@ -25,7 +25,6 @@ The `kpi` visual is a specialized indicator that shows a value against a goal wi
 | Indicator | Yes | Measure | The primary KPI value |
 | TrendLine | No | Column | Time/period field for the sparkline trend (render-required) |
 | Goal | No | Measure | Target value for comparison |
-| Goals | No | Measure | Additional goal measures |
 
 ```bash
 # New card visual
@@ -64,17 +63,17 @@ pbir set "Visual.Visual.categoryLabels.show" --value false
 3. **Use display units and appropriate precision.** Large numbers should use K/M/B display units; avoid showing unnecessary decimals. Set this at the measure level (format string) or via visual override
 
 ```bash
-# KPI: set display units to millions with 0 decimals
+# KPI only: set display units to millions with 0 decimals
 pbir set "Visual.Visual.indicator.indicatorDisplayUnits" --value 1000000
 pbir set "Visual.Visual.indicator.indicatorPrecision" --value 0
 ```
 
-4. **Theme the KPI status colors.** KPI good/bad colors should come from the theme's sentiment palette, not hard-coded hex values
+4. **Theme the KPI status colors.** KPI good/bad colors should come from the report theme's sentiment palette, not one-off visual overrides. Set distinct semantic colors on the theme and remove any existing KPI-level overrides
 
 ```bash
-# Set KPI status colors to theme palette
-pbir set "Visual.Visual.status.goodColor" --theme-color 5 -0.25
-pbir set "Visual.Visual.status.badColor" --theme-color 5 -0.25
+pbir theme set-colors "Report.Report" --good "#2E7D32" --bad "#C62828"
+pbir set "KPI.Visual.status.goodColor" --remove
+pbir set "KPI.Visual.status.badColor" --remove
 ```
 
 5. **Use SVG image measures for rich KPI cards.** The new `cardVisual` supports data-driven images; bind an SVG-producing DAX measure to create inline sparklines, progress bars, or status indicators directly inside the card
@@ -95,7 +94,7 @@ pbir set "Visual.Visual.goals.goalText" --value "Plan MTD"
 
 ## Examples
 
-Working `visual.json` files demonstrating these patterns:
+Read-only `visual.json` examples demonstrating these patterns. Reproduce them with CLI commands; never copy them into a report:
 
 - **`examples/visuals/default/card.json`** -- minimal legacy card; theme defaults only
 - **`examples/visuals/default/cardVisual.json`** -- minimal new card; theme defaults only

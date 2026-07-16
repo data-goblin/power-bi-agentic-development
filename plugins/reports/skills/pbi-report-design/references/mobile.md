@@ -18,21 +18,26 @@ The phone layout is stored per-visual, not per-page. Each visual folder may hold
 
 Inspect and set via the CLI:
 ```bash
-pbir visuals mobile "Report.Report/Page.Page/Visual.Visual"
+pbir visuals mobile "Report.Report/Page.Page/Visual.Visual" --show
+pbir visuals mobile "Report.Report/Page.Page/Visual.Visual" \
+  --x 10 --y 5 --width 80 --height 20 --tab-order 1
 ```
 
-When hand-writing a `mobile.json`, copy the `$schema` URL from another `mobile.json` in the same report; a stale schema version is the most common validation failure.
+Never hand-write `mobile.json`; let `pbir` preserve its schema and coordinate semantics.
 
 ## What to Include and Exclude
 
 Rank visuals by their value for the mobile reader's primary question, then place the top 4-8 in a single column. Record which visuals you intentionally excluded. The over-faithful miniature anti-pattern (placing everything) produces a portrait page that scrolls forever and is harder to read than the rotated landscape fallback.
 
-Strip non-essential chrome for the mobile copy via mobile-only formatting overrides in `mobile.json`: smaller axis titles, drop legends, remove gridlines. These overrides are deltas; list only properties that must differ from the desktop visual. The theme-first cascade still applies: a formatting change that should apply on all surfaces belongs in the theme, not in `mobile.json`.
+Keep mobile visuals simple enough that the report theme and ordinary visual formatting work on both
+surfaces. If a mobile-only formatting operation is not exposed by `pbir`, report the gap instead
+of editing `mobile.json`.
 
 ## Pitfalls
 
 - A page that looks mobile-ready in the editor but has zero `mobile.json` files silently falls back to rotated landscape
 - Mobile-optimized views render only in native iOS/Android apps; a browser (Service, Playwright, Chrome) always shows the landscape layout, so you cannot verify the portrait layout by browser screenshot
-- Editing `visual.json` position does nothing to the phone layout and vice versa; they are independent coordinate records
-- Deleting a visual's folder must also drop its `mobile.json`
+- Desktop and phone positions are independent; use `pbir visuals position` and
+  `pbir visuals mobile` respectively
+- Delete a visual with `pbir rm` so its mobile state is removed with it
 - Absence of `mobile.json` is not automatically a defect; tie severity to intent (a headline KPI page with no mobile layout is high severity; a back-of-house detail page is usually fine)

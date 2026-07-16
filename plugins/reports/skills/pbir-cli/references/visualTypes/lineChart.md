@@ -107,7 +107,7 @@ pbir visuals cf "Visual.Visual" --measure "valueAxis.end _Fmt.AxisCeiling"
 
 ## Examples
 
-Working `visual.json` files demonstrating these patterns:
+Read-only `visual.json` examples demonstrating these patterns. Reproduce them with CLI commands; never copy them into a report:
 
 - **`examples/visuals/default/lineChart.json`** -- minimal lineChart; theme defaults only
 - **`examples/visuals/formatted/lineChart.json`** -- actuals vs target with visual calculations for latest-point labels, series labels with leader lines, per-series stroke/color differentiation

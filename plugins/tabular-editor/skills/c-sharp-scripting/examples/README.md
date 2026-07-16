@@ -9,13 +9,13 @@ All scripts in this directory are **non-interactive** and can be run from the CL
 ### From Claude Code Plugin
 
 ```bash
-te "workspace/model" samples/measures/create_sum_measures.csx --file
+te script -s "workspace" -d "model" -S samples/measures/create_sum_measures.csx --save
 ```
 
 ### From Command Line
 
 ```bash
-python scripts/te_helper.py "workspace/model" samples/columns/hide_key_columns.csx --file
+te script -s "workspace" -d "model" -S samples/columns/hide_key_columns.csx --save
 ```
 
 ## Script Categories

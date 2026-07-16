@@ -15,9 +15,9 @@ This is a property of the field bindings, not the script. Consequences:
 To force per-row input, bind a guaranteed-unique column to the `Values` role alongside your other fields:
 
 ```bash
-pbir visuals bind Page/StripPlot -t Column -d "Values:Sales.Region"
-pbir visuals bind Page/StripPlot -t Column -d "Values:Sales.Amount"
-pbir visuals bind Page/StripPlot -t Column -d "Values:Sales.TransactionKey"
+pbir visuals bind "Page.Page/StripPlot.Visual" --add "Values:Sales.Region" --type Column
+pbir visuals bind "Page.Page/StripPlot.Visual" --add "Values:Sales.Amount" --type Column
+pbir visuals bind "Page.Page/StripPlot.Visual" --add "Values:Sales.TransactionKey" --type Column
 ```
 
 Do not use a measure as the unique key; a measure changes the projection kind and does not produce distinct-row expansion. If the model has no natural key, add an index column in Power Query or accept grouped input by design. Verify the effective row count with `nrow(dataset)` during development.

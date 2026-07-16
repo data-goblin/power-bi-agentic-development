@@ -18,7 +18,7 @@ A report-page tooltip is a designed mini-canvas, not a bigger hover list. Three 
 Keep the page small and `ActualSize` (320x240 default; 240x180 for a single chart); design at final pixels since `ActualSize` does not scale. Strip chrome harder than a normal page:
 
 ```bash
-pbir visuals format "TooltipPage/*" background --show false
+pbir visuals background "TooltipPage.Page/*.Visual" --no-show
 ```
 
 Titles off, one focal visual plus at most a card or two. One tooltip page can serve many source visuals; reuse rather than clone.
@@ -39,9 +39,11 @@ Annotation-as-design is the chrome that carries the analytical argument. This de
 
 ### Building blocks
 
-**Shaded "what happened here" band:** a reference line with `shade*` properties spanning a date range behind the hero series:
+**Target or threshold:** add a reference line using a numeric literal or model measure, then
+style the returned entry through `pbir set`:
 ```bash
-pbir reference-line add "Page/Hero.Visual" --type constant --value "2024-01-01" --shade-to "2024-03-31"
+ID=$(pbir visuals reference-line add "Page.Page/Hero.Visual" --value "Targets.Revenue")
+pbir set "Page.Page/Hero.Visual.y1AxisReferenceLine.id($ID).lineColor" --value "#C62828"
 # reference-line adds are not idempotent; capture the returned id
 ```
 

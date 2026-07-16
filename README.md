@@ -20,7 +20,10 @@
 > [!WARNING]
 > These skills are under active development with a weekly release cadence, so expect regular renaming and restructuring.
 >
-> **26.26 (out next week) is a large, breaking re-organization:** many skills will be consolidated or disappear, and skills will activate less automatically, so they will be less suited to fully autonomous tasks unless you invoke them with an explicit argument. Pin to **26.25** if you want stability. More info to come on the 26.26 release.
+> **Versions 26.26 through 26.38 are a deliberate breaking transition.** Skills may be
+> consolidated, renamed, removed, or made less automatic between weekly releases in this range.
+> Pin **26.25 or earlier** if you need the pre-transition skill structure and behavior; do not
+> assume compatibility from one transition release to the next.
 
 ---
 

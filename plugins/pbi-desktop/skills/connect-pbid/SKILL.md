@@ -7,7 +7,9 @@ description: TOM and ADOMD.NET guidance via PowerShell for connecting to Power B
 
 > **CRITICAL:** Record mistakes, surprises, and model-specific nuances encountered while using this skill in `.claude/rules/connect-pbid.md`. This file must begin with "Learnings from Claude about connecting to semantic models via the connect-pbid skill". Write only active reference notes (e.g. "QueryGroup property returns an object; access .Folder for the name string"); do not log a changelog or history of events. Omit anything already documented in the skill or its references. Keep the file under 1500 characters at all times; prune stale entries when adding new ones. Do not over-attend to this file; update it only when something genuinely unexpected is discovered.
 
-> **Note:** No MCP server required; do not use this skill with MCP servers or CLI tools. Use this skill to execute PowerShell commands directly via Bash to connect to Power BI Desktop's local Analysis Services instance.
+> **Note:** No MCP server is required. Use PowerShell with TOM/ADOMD.NET for the local model.
+> When the report canvas is also in scope, pair it with `pbir` for report operations; never patch
+> report JSON directly.
 
 Expert guidance for connecting to Power BI Desktop's local tabular model via the Tabular Object Model (TOM) and ADOMD.NET in PowerShell. Covers connection, enumeration, DAX queries, query traces, and full model modification.
 
@@ -615,12 +617,13 @@ When the `pbir` CLI is installed, it wraps this same pipe; prefer it over drivin
 
 ```powershell
 pbir desktop list                                                             # PID + open file per instance
-pbir model --% "Report.Report" -q "EVALUATE ROW(""Check"", [New Measure])"   # engine-level check
+pbir model "Report.Report" -q 'EVALUATE ROW("Check", [New Measure])'           # engine-level check
 pbir desktop refresh "Report.Report"                                          # reload on-disk PBIR into the canvas
 pbir desktop screenshot "Report.Report/Page Name.Page" -o verify.png          # inspect rendering
 ```
 
-The `--%` stop-parsing token prevents Windows PowerShell 5.1 from stripping the embedded quotes; omit it in bash or PowerShell 7+.
+The single-quoted PowerShell argument preserves the embedded DAX quotes without a shell-specific
+stop-parsing token.
 
 Without `pbir`, drive the pipe raw from PowerShell, the same way this skill drives TOM/ADOMD. It requires the Desktop bridge **preview setting** enabled (File > Options and settings > Options > Preview features, then restart). Auto-discover the PID by enumerating the pipe directory; then over JSON-RPC: `application.state.get/v1` returns the open file path (`currentFilePath`, so the bridge can locate the PBIP on disk), `file.reload/v1` reloads the on-disk PBIR into the canvas, and `report.snapshot.capture/v1` returns a page PNG.
 

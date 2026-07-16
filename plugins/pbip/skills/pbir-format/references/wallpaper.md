@@ -457,7 +457,8 @@ Result: Dark blue wallpaper with tiled pattern shows through 80% transparent whi
 
 1. **outspace = wallpaper** - Behind/around the canvas area
 2. **background = canvas** - Where visuals sit (separate object)
-3. **Image must be registered** - Add to RegisteredResources and register in `definition/report.json`
+3. **Use the CLI for registration** - `pbir pages background --image` copies and registers a
+   canvas image; `pbir pages wallpaper --image` sets a wallpaper URL
 4. **PackageType: 1** - Always use 1 for RegisteredResources
 5. **Scaling quoted strings** - `'Fit'`, `'Fill'`, `'Tile'`, `'Normal'` (with single quotes)
 6. **Name vs ItemName** - name is display name, ItemName is file name

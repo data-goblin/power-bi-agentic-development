@@ -1,159 +1,95 @@
-# Fix Broken Field References in PBIR Reports
+# Fix Broken Field References
 
-Workflow for diagnosing and repairing reports with broken field references caused by semantic model changes (renamed tables, renamed columns/measures, moved measures between tables, or removed fields).
+Use this workflow after a table, column, measure, or hierarchy changes in the semantic model.
+All report mutations go through `pbir`; never text-replace or hand-edit report JSON.
 
-## Symptoms
-
-- Visual error icons (X) with "Something's wrong with one or more fields"
-- "Fields that need to be fixed" dialog showing `Missing_References`
-- Filter pane showing warning icons on filters
-- Visuals rendering with blank/zero data despite valid filters
-- `pbir validate --fields` reporting missing fields (when model is accessible)
-
-## Diagnosis Workflow
-
-### 1. Identify broken references
-
-Extract all unique field references from the report and compare against the semantic model.
+## 1. Find the damage
 
 ```bash
-# List all fields referenced by the report
+pbir backup "Report.Report" -m "Before field repair"
 pbir fields list "Report.Report"
-
-# If model is remote, query it via DAX to check field existence
-fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/executeQueries" \
-  -X post -i '{"queries":[{"query":"EVALUATE TOPN(1, '\''TableName'\'')"}]}'
+pbir fields find "OldTable.OldField" "Report.Report" --threshold 1.0
+pbir validate "Report.Report" --fields
 ```
 
-For each table referenced by the report, verify:
-1. The table exists in the model
-2. The columns/measures exist within that table
+Use `pbir model "Report.Report" -d` to inspect the connected model. For a local or live
+semantic model, use `te ls`, `te find`, and `te get` when you need richer model detail.
 
-### 2. Categorize each broken reference
+Classify each missing reference:
 
-Each broken reference falls into one of four categories:
+| Change | Report repair |
+|---|---|
+| Table renamed | `pbir fields replace-table` |
+| Field renamed | `pbir fields replace` |
+| Measure moved | `pbir fields replace` with the new table |
+| Field removed | Bind a valid substitute or remove the binding |
 
-| Category | Example | Fix strategy |
-|----------|---------|--------------|
-| **Table renamed** | `1. Measures: Actuals` -> `Actuals` | Replace Entity everywhere |
-| **Field renamed** | `Gross Sales MTD` -> `Turnover MTD` | Replace Property + queryRef + metadata |
-| **Field moved** | `Invoices.Revenue` -> `Actuals.Revenue` | Replace Entity only (Property unchanged) |
-| **Field removed** | `Gross Sales YTD` no longer exists | Find substitute or remove from visuals |
+## 2. Preview, then apply
 
-### 3. Build a replacement map
-
-Create a mapping of old references to new ones. Probe the model to find where fields moved:
+For a table rename:
 
 ```bash
-# Check if a measure exists (unqualified -- finds it in any table)
-fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/executeQueries" \
-  -X post -i '{"queries":[{"query":"EVALUATE ROW(\"v\", [MeasureName])"}]}'
-
-# Check if a measure exists in a specific table
-fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/executeQueries" \
-  -X post -i '{"queries":[{"query":"EVALUATE ROW(\"v\", '\''TableName'\''[MeasureName])"}]}'
-
-# Get measure DAX expression -- inspect the model definition
-# Either use fab export and read the TMDL, or query via executeQueries:
-fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/executeQueries" \
-  -X post -i '{"queries":[{"query":"EVALUATE ROW(\"expr\", INFO.EXPRESSION(\"TableName\", \"MeasureName\"))"}]}'
+pbir fields replace-table "Report.Report" \
+  --from "OldTable" --to "NewTable" --dry-run
+pbir fields replace-table "Report.Report" \
+  --from "OldTable" --to "NewTable"
 ```
 
-## Repair Workflow
-
-### Step 1: Use `pbir fields replace` for structured field references
+For a field rename or move:
 
 ```bash
 pbir fields replace "Report.Report" \
-  --from "OldTable.OldField" --to "NewTable.NewField" --skip-validation
+  --from "OldTable.OldField" --to "NewTable.NewField" --dry-run
+pbir fields replace "Report.Report" \
+  --from "OldTable.OldField" --to "NewTable.NewField"
 ```
 
-This handles `Entity`, `Property`, and `queryRef` in query projections and sort definitions. Run once per renamed field.
+The resolver updates the report surfaces that carry field identity, including visual query
+projections, `queryRef`/`nativeQueryRef`, sort definitions, selectors, conditional formatting,
+and report/page/visual filters. Keep validation enabled when the model is reachable.
 
-### Step 2: Bulk-replace remaining references
+If the model rename is happening now, rename it first with `te mv ... --save`, then repair the
+report with `pbir fields replace` or `replace-table`. `te mv` cascades references inside the
+semantic model; it does not rewrite report bindings.
 
-`pbir fields replace` does not currently catch all locations. Perform a bulk text replacement for:
+## 3. Handle a removed field
 
-- **queryRef strings**: `"OldTable.FieldName"` -> `"NewTable.FieldName"`
-- **nativeQueryRef strings**: if the table prefix changed
-- **metadata selectors**: `"metadata": "OldTable.FieldName"` in `objects`
-- **filter Entity references**: `"Entity": "OldTable"` in `From` arrays
-- **FillRule/Conditional expressions**: deeply nested `SourceRef.Entity`
-- **SparklineData metadata**: compact selector strings
-
-```python
-import os, json
-
-replacements = {
-    '"OldTableName"': '"NewTableName"',
-    'OldTable.FieldName': 'NewTable.FieldName',
-}
-
-for root, dirs, files in os.walk('Report.Report/definition'):
-    for f in files:
-        if not f.endswith('.json'):
-            continue
-        path = os.path.join(root, f)
-        with open(path) as fh:
-            content = fh.read()
-        original = content
-        for old, new in sorted(replacements.items(), key=lambda x: -len(x[0])):
-            content = content.replace(old, new)
-        if content != original:
-            json.loads(content)  # validate before writing
-            with open(path, 'w') as fh:
-                fh.write(content)
-```
-
-See `references/rename-patterns.md` for the complete list of locations where Entity references appear.
-
-### Step 3: Handle slicer filter values carefully
-
-**Critical distinction**: filter **field references** vs filter **literal values**.
-
-- `"Entity": "TableName"` and `"Property": "FieldName"` are field references -- replace them
-- `"Value": "'Gross Sales MTD vs. Budget'"` is a **data value** from the model -- do NOT replace unless the model data actually changed
-
-Slicer default selections (in `objects.general[0].properties.filter`) contain literal values from the model's data. Only change these if the underlying data values in the model actually changed. Renaming a measure does not change slicer data values.
-
-### Step 4: Handle removed fields
-
-For fields that no longer exist in the model:
-
-1. **Find a substitute**: Query the model for similar measures. Inspect the model definition (via `fab export` or TMDL files) for related DAX expressions.
-2. **Add the missing measure**: If the measure was simply deleted, recreate it via Tabular Editor or by adding it to the TMDL file:
-   ```
-   # In the relevant table's .tmdl file, add:
-   measure 'MeasureName' = [Related Measure Expression]
-   # Then deploy:
-   fab import "workspace.Workspace/model.SemanticModel" -i ./model.SemanticModel -f
-   ```
-3. **Remove from visual**: If no substitute exists, remove the projection from the visual's `queryState`.
-
-### Step 5: Validate and deploy
+Prefer a valid substitute:
 
 ```bash
-# Validate structure
-pbir validate "Report.Report" --allow-download-schemas
-
-# Deploy
-fab import "Workspace.Workspace/Report.Report" -i "Report.Report" -f
+pbir visuals bind "Report.Report/Page.Page/Visual.Visual" --show
+pbir visuals bind "Report.Report/Page.Page/Visual.Visual" \
+  --remove "Y:OldTable.OldField" \
+  --add "Y:NewTable.NewField" --type Measure --dry-run
+pbir visuals bind "Report.Report/Page.Page/Visual.Visual" \
+  --remove "Y:OldTable.OldField" \
+  --add "Y:NewTable.NewField" --type Measure
 ```
 
-## Common Pitfalls
+If there is no substitute, remove the field with `pbir visuals bind --remove` or clear the role
+with `--clear`. Use `pbir filters list`, `pbir filters clear`, or `pbir rm` for broken filters.
+If the required mutation is not supported by `pbir`, report the capability gap instead of
+editing `queryState`, selectors, filters, or any other JSON directly.
 
-### queryRef mismatch causes blank visuals
+If a model measure should exist, recreate it through `te` and save/deploy the semantic model.
+Do not patch TMDL or report JSON as a shortcut.
 
-Visuals may pass schema validation but render with no data if `queryRef` strings reference old table names. Power BI uses `queryRef` internally to match data to visual slots. Always update `queryRef` when renaming tables.
+## 4. Validate the result
 
-### Visual interactions lost during conversion
+```bash
+pbir fields find "OldTable.OldField" "Report.Report" --threshold 1.0
+pbir validate "Report.Report" --all
+pbir desktop refresh "Report.Report"
+```
 
-Legacy reports store visual interactions as `relationships` in the page config. These must be converted to `visualInteractions` in `page.json`. Only `NoFilter` interactions need to be stored (Filter is the default).
+For tandem model/report changes, also run the relevant `te validate` and BPA checks before
+deployment. Desktop reload does not apply theme edits; close and reopen the report to verify a
+theme change.
 
-### Combo chart roles
+## Watch-outs
 
-`lineStackedColumnComboChart` and `lineClusteredColumnComboChart` use `Y` (column bars) and `Y2` (lines), NOT `ColumnY`/`LineY`.
-
-### Report-level filters vs slicer-controlled filters
-
-Avoid duplicating filter logic. If a slicer controls a field (e.g. Calendar Month), do not also add a report-level filter on the same field -- they will conflict and may narrow results unexpectedly.
+- Filter field references and filter literal values are different. A field rename does not imply
+  that slicer data values changed.
+- Combo charts use `Y` for columns and `Y2` for lines.
+- A schema-valid visual can still render blank if its model field no longer exists. Always include
+  `--fields` or `--all` in the final validation.

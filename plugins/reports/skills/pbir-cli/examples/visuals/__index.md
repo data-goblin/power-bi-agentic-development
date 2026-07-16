@@ -1,6 +1,6 @@
 # Visual Examples
 
-Standalone `visual.json` examples for common Power BI visual types. Each file is a complete, valid visual container that can be dropped into a PBIR report's `visuals/` directory.
+Read-only `visual.json` examples for recognizing common Power BI visual structures. Use them to understand patterns, then reproduce the intended result with `pbir` commands. Never copy, drop, or patch these files into a report directly.
 
 ## default/
 

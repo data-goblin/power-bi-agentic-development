@@ -47,7 +47,10 @@ Order columns by importance, left to right:
 
 **Always sort by the most important measure, descending.** Alphabetical sorting rarely answers useful questions. The top rows should show the largest/most significant items -- often the variance or gap column rather than the absolute value. This aligns with how business users read tables: they care about top contributors or biggest deviations first.
 
-Set the sort configuration in the visual.json `query` block by specifying the sort field and direction (Descending).
+```bash
+pbir visuals sort "Report.Report/Page.Page/Table.Visual" \
+  --field "Orders.Net Orders" --direction Descending
+```
 
 For time-based detail tables (e.g., daily breakdown), sort ascending by date instead.
 
@@ -98,7 +101,10 @@ Conditional formatting is the primary tool for offloading cognitive work from th
 
 Apply data bars to the **primary measure column** (orders, revenue, volume). Data bars let readers compare magnitudes at a glance without reading numbers. They transform a column of numbers into a scannable visual pattern.
 
-Configure data bars in the visual.json `objects` by setting the `dataBar` property on the relevant measure column.
+```bash
+pbir visuals cf "Report.Report/Page.Page/Table.Visual" \
+  --data-bars --field "Orders.Net Orders"
+```
 
 ### Color Scales on Variance Columns
 
@@ -113,7 +119,7 @@ Create an extension measure for color (e.g., in `reportExtensions.json`):
 OTD Color = IF([OTD % (Lines)] >= 0.9, "good", IF([OTD % (Lines)] >= 0.8, "neutral", "bad"))
 ```
 
-Then bind it as a conditional formatting rule for `values.fontColor` in the visual.json objects.
+Then bind it through `pbir visuals cf --measure`, targeting the supported values color property.
 
 ### Directional Indicators
 
@@ -133,7 +139,8 @@ Triangle or arrow symbols with color coding can indicate direction (up/down) alo
 
 Sparklines add temporal context that answers "is this improving or declining?" -- information that a single number cannot convey. They distinguish between a product that is currently behind target but improving vs. one that is declining.
 
-Add a native Power BI sparkline by binding a measure to the `Values` role with a sparkline date field in the visual.json query block.
+Add the measure through `pbir visuals bind`. If the installed `pbir` version cannot author the
+sparkline date projection, report that capability gap instead of patching the query block.
 
 For richer inline visuals (dumbbell charts, bullet charts, progress bars), use SVG extension measures via the `svg-visuals` skill (custom-visuals plugin). The trade-off: higher development and maintenance overhead vs. richer context. Use only when benefits justify added complexity.
 
@@ -143,7 +150,16 @@ For richer inline visuals (dumbbell charts, bullet charts, progress bars), use S
 
 Bind categories in order from broadest to most granular:
 
-Create a matrix visual.json file manually (see `pbir-format` skill in the pbip plugin for JSON structure) with title "Detail" and field bindings: `Rows: Customers.Key Account Name`, `Rows: Customers.Account Name`, `Rows: Products.Product Name`, `Values: Orders.Order Lines`, `Values: Orders.Net Orders`.
+Create the matrix through `pbir`:
+
+```bash
+pbir add visual pivotTable "Report.Report/Page.Page" --name DetailMatrix --title "Detail" \
+  --data "Rows:Customers.Key Account Name" \
+  --data "Rows:Customers.Account Name" \
+  --data "Rows:Products.Product Name" \
+  --data "Values:Orders.Order Lines" \
+  --data "Values:Orders.Net Orders"
+```
 
 ### Subtotals
 
@@ -157,7 +173,10 @@ By default, matrices start collapsed to the top level. This is the preferred beh
 
 Use column headers for time periods or categorical pivots:
 
-Add a column hierarchy binding for `Columns: Date.Calendar Quarter (ie Q1)` in the visual.json query block.
+```bash
+pbir visuals bind "Report.Report/Page.Page/DetailMatrix.Visual" \
+  --add "Columns:Date.Calendar Quarter (ie Q1)" --type Column
+```
 
 ## Sizing
 
@@ -171,7 +190,14 @@ Add a column hierarchy binding for `Columns: Date.Calendar Quarter (ie Q1)` in t
 
 When auto-size is off, columns distribute proportionally within the visual's width. This may truncate long text values, but truncation with a tooltip is better than a scrollbar that hides entire columns off-screen.
 
-Set `columnHeaders.autoSizeColumnWidth` to `false` in the visual.json objects:
+Set the discovered property through `pbir`:
+
+```bash
+pbir set "Report.Report/Page.Page/DetailMatrix.Visual.columnHeaders.autoSizeColumnWidth" \
+  --value false
+```
+
+Effect:
 
 ```
 columnHeaders.autoSizeColumnWidth = false  -> columns fit container proportionally

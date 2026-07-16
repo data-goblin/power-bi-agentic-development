@@ -357,7 +357,12 @@ detect_parallels_vm() {
 macos_to_unc() {
     # Converts a macOS path to a Parallels shared folder UNC path.
     local path="$1"
-    local home="${HOME:-/Users/unknown}"
+    local home="${HOME:-}"
+
+    if [[ -z "$home" ]]; then
+        echo "HOME is not set; cannot map the path to a Parallels shared folder." >&2
+        exit 1
+    fi
 
     if [[ "$path" == "$home"* ]]; then
         local relative="${path#$home}"

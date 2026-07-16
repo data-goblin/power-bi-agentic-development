@@ -10,12 +10,12 @@ The most common source for new paginated reports. Connects live to a published s
 <DataSource Name="PowerBiDataset">
   <ConnectionProperties>
     <DataProvider>PBIDATASET</DataProvider>
-    <ConnectString>Data Source=pbiazure://api.powerbi.com/;Identity Provider="https://login.microsoftonline.com/organizations, https://analysis.windows.net/powerbi/api, f0b72488-7082-488a-a7e8-eada97bd842d";Initial Catalog=sobe_wowvirtualserver-29299120-4ce3-4bd2-b1df-c0295031f31f;Integrated Security=ClaimsToken</ConnectString>
+    <ConnectString>Data Source=pbiazure://api.powerbi.com/;Identity Provider="https://login.microsoftonline.com/organizations, https://analysis.windows.net/powerbi/api, f0b72488-7082-488a-a7e8-eada97bd842d";Initial Catalog=sobe_wowvirtualserver-REPLACE_WITH_DATASET_GUID;Integrated Security=ClaimsToken</ConnectString>
   </ConnectionProperties>
   <rd:SecurityType>None</rd:SecurityType>
   <rd:DataSourceID>3e55b9bf-61f0-43eb-ab21-db8881352d00</rd:DataSourceID>
-  <rd:PowerBIWorkspaceName>Paginated Reports</rd:PowerBIWorkspaceName>
-  <rd:PowerBIDatasetName>FPDS_IBM</rd:PowerBIDatasetName>
+  <rd:PowerBIWorkspaceName>REPLACE_WITH_WORKSPACE_NAME</rd:PowerBIWorkspaceName>
+  <rd:PowerBIDatasetName>REPLACE_WITH_DATASET_NAME</rd:PowerBIDatasetName>
 </DataSource>
 ```
 

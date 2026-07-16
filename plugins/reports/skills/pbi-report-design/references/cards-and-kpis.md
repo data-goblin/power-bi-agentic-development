@@ -32,7 +32,8 @@ Every KPI needs a target. Where the target comes from depends on the model and c
 
 **Preferred: add targets to the semantic model** using Tabular Editor CLI or the `tmdl` skill. Model-level measures are reusable across reports and benefit from server-side evaluation.
 
-**Fallback: extension measures** in the report via `reportExtensions.json`. Use only when the target is report-specific (e.g., a custom threshold unique to one dashboard).
+**Fallback: extension measures** created with `pbir dax measures add`. Use them only when the
+target is genuinely report-specific.
 
 **If no clear target exists, use `AskUserQuestion`** to discuss options with the user. Do not leave KPIs bare -- a number without context is not actionable.
 
@@ -50,13 +51,26 @@ Without gaps, readers must perform mental arithmetic while processing other KPIs
 
 **Always label the target** -- "Target: 483M" is ambiguous. Set `goals.goalText` to describe what the comparison actually is: "1YP", "Budget", "3M Avg", etc. This tells the reader *what* they're comparing against without requiring them to look it up.
 
-Set `goals.goalText` to the comparison label in the visual.json objects (e.g., `"1YP"`, `"Budget"`, `"3M Avg"`).
+Set the comparison label through `pbir`, after discovering the property for the visual type:
+
+```bash
+pbir set "Report.Report/Page.Page/KPI.Visual.goals.goalText" --value "Budget"
+```
 
 ### Implementation
 
-To build a contextualized KPI card, create a `kpi` visual.json file manually (see `pbir-format` skill in the pbip plugin for JSON structure) with title "Revenue MTD", positioned at x=20, y=100, width=300, height=160. Bind field roles: `Indicator: __Measures.Actuals MTD`, `Goal: __Measures.Sales Target MTD`, `TrendLine: Date.Date`.
+Build the visual through `pbir`:
 
-Alternatively, use a `card` visual with extension measures that compute the gap. Add these to `reportExtensions.json`:
+```bash
+pbir add visual kpi "Report.Report/Page.Page" --name RevenueKPI \
+  --title "Revenue MTD" --x 20 --y 100 --width 300 --height 160 \
+  --data "Indicator:__Measures.Actuals MTD" \
+  --data "Goal:__Measures.Sales Target MTD" \
+  --data "TrendLine:Date.Date"
+```
+
+Alternatively, use a card with model measures or report-specific measures created through
+`pbir dax measures add`. The DAX can follow this pattern:
 
 ```dax
 // Variance measure
@@ -96,11 +110,20 @@ Primary values should be the **largest element**. Targets and gaps are smaller. 
 
 Color signals above/below target instantaneously. **Apply conditional formatting to the gap -- the judgment indicator -- not the primary value.** Pairing color with directional symbols (arrows) ensures the message doesn't depend on color perception alone.
 
-Apply conditional color to the card's `labels.color` property in visual.json by binding it to the `Revenue vs Target Color` extension measure.
+Apply conditional color through the structural CF command:
+
+```bash
+pbir visuals cf "Report.Report/Page.Page/Card.Visual" \
+  --measure "labels.color _Formatting.Revenue vs Target Color"
+```
 
 **Accessible palettes**: Some users struggle distinguishing green from red. Blue/orange is a more accessible alternative. Always pair color with a secondary cue (arrow, icon). Configure accessible colors in the theme:
 
-Set accessible sentiment colors in the theme.json file: `good: "#2B7A78"`, `bad: "#D4602E"`.
+Set accessible sentiment colors through the theme command:
+
+```bash
+pbir theme set-colors "Report.Report" --good "#2B7A78" --bad "#D4602E"
+```
 
 ### Display Units and Number Formatting
 
@@ -134,9 +157,12 @@ Then set precision based on digit count of `value / unit`:
    - 3,768,335 -> >= 1M -> Millions, 3.8 -> 1 digit -> precision 1 -> "3.8M"
    - 35,312,992,122 -> >= 1B -> Billions, 35.3 -> 2 digits -> precision 0 -> "35bn"
    - 0.719 (%) -> None, precision 1 -> "71.9%"
-3. **Set per-visual** in visual.json objects (overrides theme default):
-   - `indicator.indicatorDisplayUnits` = 1000000
-   - `indicator.indicatorPrecision` = 1
+3. **Set per visual** through `pbir` after discovering the property:
+
+   ```bash
+   pbir set "Report.Report/Page.Page/KPI.Visual.indicator.indicatorDisplayUnits" --value 1000000
+   pbir set "Report.Report/Page.Page/KPI.Visual.indicator.indicatorPrecision" --value 1
+   ```
 
 #### KPI `indicatorDisplayUnits` Enum
 
@@ -156,15 +182,19 @@ Keep descriptors concise: **"Orders MTD"** is superior to "Month-to-Date Order V
 **Title vs. callout/category label -- show one, not both.** Card visuals have two places where the metric name appears: the visual *title* (top of the card) and the *category label* / *callout label* (below the value). Showing both is redundant and wastes vertical space. Choose one:
 
 - **Category label only (preferred)**: Hide the visual title (`--no-show`). The category label sits below the large number and naturally reads as "3.8M Order Lines". This is cleaner and leaves more room for the value to render at a large font size.
-- **Title only**: Hide the category label by setting `categoryLabels.show` to `false` in the visual.json objects. Use when the page title textbox already establishes context and the card just needs a small header.
+- **Title only**: Hide the category label with `pbir set "...Visual.categoryLabels.show"
+  --value false`. Use when the page title already establishes context.
 
-To hide the title, set `title.show` to `false` in the visual.json `visualContainerObjects`. To hide the category label, set `categoryLabels.show` to `false` in the visual.json objects.
+Hide the title with `pbir visuals title "...Visual" --no-show`; hide the category label with
+`pbir set "...Visual.categoryLabels.show" --value false`.
 
 **Card sizing**: Ensure cards have sufficient height to render the value, label, and any gap/target text without clipping. Minimum recommended height: **130-150px** for a card with value + category label. If the value or label is clipped, increase height before reducing font size.
 
 Hide auto-generated subtitles -- they repeat field binding names and add no information:
 
-Set `subtitle.show` to `false` in the visual.json `visualContainerObjects`.
+```bash
+pbir visuals subtitle "Report.Report/Page.Page/Card.Visual" --no-show
+```
 
 ## Icons in KPI Cards
 
@@ -176,7 +206,8 @@ Refer to the **`svg-visuals`** skill (custom-visuals plugin) for the proper logi
 2. Set the measure's data category to `ImageUrl`
 3. Bind the measure to a visual role that supports images
 
-Add an extension measure to `reportExtensions.json` with `dataCategory: ImageUrl`:
+Create the measure through the model tooling (`te`) or the supported `pbir dax measures` workflow;
+do not edit `reportExtensions.json`. The DAX can follow this pattern:
 
 ```dax
 Trend Arrow SVG =

@@ -55,7 +55,7 @@ COMMON PATTERNS:
   python3 datahub_search.py --type PowerBIReport --updated-since 2024-11-01
 
   # Find items by owner
-  python3 datahub_search.py --type PowerBIReport --owner "kurt"
+  python3 datahub_search.py --type PowerBIReport --owner "data-team"
 
   # Find Direct Lake models
   python3 datahub_search.py --type Model --storage-mode directlake
@@ -89,7 +89,7 @@ These fields are NOT available via fab api or admin APIs.
 Usage:
     python3 datahub_search.py --type Model --filter "Sales"
     python3 datahub_search.py --type PowerBIReport --workspace "Production"
-    python3 datahub_search.py --type Lakehouse --owner "kurt" --output json
+    python3 datahub_search.py --type Lakehouse --owner "data-team" --output json
     python3 datahub_search.py --list-types
     python3 datahub_search.py --list-regions
 """
@@ -767,7 +767,7 @@ Examples:
   %(prog)s --type Model --not-refreshed-since 2024-11-01
 
   # Find items by owner
-  %(prog)s --type PowerBIReport --owner "kurt"
+  %(prog)s --type PowerBIReport --owner "data-team"
 
   # Find Direct Lake models only
   %(prog)s --type Model --storage-mode directlake

@@ -25,7 +25,6 @@ When the bridge is unreachable, the CLI prints the preview-feature hint; when no
 ```bash
 pbir desktop list                                    # Running Desktop instances (PID, open file, unsaved state, page count)
 pbir desktop status                                  # Alias of `list`
-pbir desktop manifest --pid 1234                     # Bridge methods one instance exposes (capability probe)
 pbir desktop refresh "Report.Report"                 # Reload on-disk definition into the canvas
 pbir desktop reload "Report.Report"                  # Alias of `refresh`
 pbir desktop refresh "Report.Report" -m              # --model: also re-apply the model (TMDL) definition
@@ -45,7 +44,7 @@ pbir desktop refresh "C:\Temp\Sales.Report"          # Absolute path to a .Repor
 pbir desktop screenshot "C:\Reports\Flash.pbix"      # Absolute path to an open .pbix
 ```
 
-Default screenshot file name derives from the page display name (forbidden characters replaced); default scale is 2, clamped to 1-3 (values outside the range are pinned, not rejected). `--all` captures every page; pages land in `./screenshots` unless `--output-dir` overrides it, and `--settle <ms>` delays the first capture so the canvas finishes rendering before shooting. Captures follow Desktop's current canvas zoom, which reloads can change; for pixel-level checks, capture at `--scale 3` and crop, or move the visual under test to the page's top-left first. `refresh -m` (`--model`) re-applies the model definition alongside the report, useful after editing TMDL in a thick report. `pbir desktop manifest` reports which bridge methods the running build exposes; use it when a desktop subcommand returns "not supported" to confirm the installed Desktop's capabilities.
+Default screenshot file name derives from the page display name (forbidden characters replaced); default scale is 2, clamped to 1-3 (values outside the range are pinned, not rejected). `--all` captures every page; pages land in `./screenshots` unless `--output-dir` overrides it, and `--settle <ms>` delays the first capture so the canvas finishes rendering before shooting. Captures follow Desktop's current canvas zoom, which reloads can change; for pixel-level checks, capture at `--scale 3` and crop, or move the visual under test to the page's top-left first. `refresh -m` (`--model`) re-applies the model definition alongside the report, useful after editing TMDL in a thick report. Use `pbir desktop list` to confirm bridge availability and inspect the target instance.
 
 ## The Edit-Verify Loop
 
@@ -100,7 +99,7 @@ Each open report is a separate Desktop process with its own bridge endpoint and 
 
 ## Caveats and Troubleshooting
 
-- **Refresh reloads the definition, not themes.** `file.reload` re-reads pages and visuals from disk but not StaticResources: edits to theme JSON files (custom or base) only render after closing and reopening the file in Desktop. Desktop also resolves base themes by name from its internal store; the materialized `BaseThemes/*.json` is a snapshot it writes, not a file it reads (verified empirically; custom themes in `RegisteredResources` are read at open).
+- **Refresh reloads the definition, not themes.** `file.reload` re-reads pages and visuals from disk but not StaticResources: theme changes made through `pbir` only render after closing and reopening the file in Desktop. Desktop also resolves base themes by name from its internal store; the materialized `BaseThemes/*.json` is a snapshot it writes, not a file it reads (verified empirically; custom themes in `RegisteredResources` are read at open).
 - **Refresh on a dirty instance saves first.** If the report has unsaved changes in Desktop, `file.reload` makes Desktop save before reloading; the whole definition is rewritten (re-indented, schema versions bumped, active page recorded). Expect git churn; commit or stash before iterating on a report a user has open with edits.
 - **"Report view is not active"**: switch the Desktop window to the Report view and retry the screenshot.
 - **Transient errors right after a refresh** (HostNotReady): handled automatically; the CLI honors the bridge's retry protocol.

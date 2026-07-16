@@ -11,13 +11,13 @@ Scripts for creating and managing calculation groups in Tabular models.
 
 ### Execute Script File
 ```bash
-te "model.bim" samples/calculation-groups/time_intelligence.csx --file
-te "Production/Sales" samples/calculation-groups/currency_conversion.csx --file
+te script "model.bim" -S samples/calculation-groups/time_intelligence.csx --save
+te script -s "Production" -d "Sales" -S samples/calculation-groups/currency_conversion.csx --save
 ```
 
 ### Execute Inline
 ```bash
-te "model.bim" 'var cg = Model.AddCalculationGroup("Time Intelligence"); cg.AddCalculationItem("YTD", "CALCULATE(SELECTEDMEASURE(), DATESYTD(Date[Date]))");'
+te script "model.bim" -e 'var cg = Model.AddCalculationGroup("Time Intelligence"); cg.AddCalculationItem("YTD", "CALCULATE(SELECTEDMEASURE(), DATESYTD(Date[Date]))");' --save
 ```
 
 ### With Fabric CLI Workflow
@@ -26,7 +26,7 @@ te "model.bim" 'var cg = Model.AddCalculationGroup("Time Intelligence"); cg.AddC
 fab export "Workspace/Model.SemanticModel" -o ./model -f
 
 # Create calculation groups
-te "./model/Model.SemanticModel/model.bim" samples/calculation-groups/time_intelligence.csx --file
+te script "./model/Model.SemanticModel/definition" -S samples/calculation-groups/time_intelligence.csx --save
 
 # Import back
 fab import "Workspace/Model.SemanticModel" -i ./model/Model.SemanticModel -f

@@ -36,7 +36,7 @@ For a brush, bind a Vega `interval` selection and pass its extent into the `filt
 Enable via:
 
 ```bash
-pbir set "<path>" objects.vega[0].properties.selectionMode '"advanced"'
+pbir set "<path>.vega.selectionMode" --value advanced --no-validate
 ```
 
 Pitfalls:
@@ -56,8 +56,8 @@ A Deneb visual re-runs the whole Vega dataflow on every interaction. Cost scales
 5. **`dataLimit.override` as a last resort** -- paired with canvas; removes the soft 10K guard but the model's own row cap still applies and can truncate silently
 
 ```bash
-pbir set "<path>" objects.vega[0].properties.renderMode '"canvas"'
-pbir set "<path>" objects.dataLimit[0].properties.override true
+pbir set "<path>.vega.renderMode" --value canvas --no-validate
+pbir set "<path>.dataLimit.override" --value true --no-validate
 ```
 
 Keep the cross-filter `limit` as low as the interaction allows (simple mode caps at 250 for this reason).
@@ -80,8 +80,8 @@ Steps:
 4. Add the visual, inject the rewritten spec into `jsonSpec`, create the `dataset` role bindings:
 
 ```bash
-pbir visuals bind "<path>" -r dataset -d "Sales.OrderDate" -t Column
-pbir visuals bind "<path>" -r dataset -d "Sales.Total"     -t Measure
+pbir visuals bind "<path>" --add "dataset:Sales.OrderDate" --type Column
+pbir visuals bind "<path>" --add "dataset:Sales.Total" --type Measure
 ```
 
 5. Set `provider` to match (`vega` / `vegaLite`); if the template shipped a `config` block, inject it into `jsonConfig`, not `jsonSpec`; validate

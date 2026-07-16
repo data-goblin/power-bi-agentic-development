@@ -493,7 +493,8 @@ Every Fabric item has a serializable definition. Move definitions between enviro
   - Round-trip locally: `fab export` then `fab import` (always `mkdir -p` the output directory first; `fab export` does not create intermediate directories and fails with `[InvalidPath]`)
   - Same-tenant shortcut, no local hop: `fab cp "dev/Item" "prod.Workspace"`
 - Semantic model as PBIP (TMDL + blank report):
-  - Power BI Desktop and git-ready format: [`scripts/export_semantic_model_as_pbip.py`](./scripts/export_semantic_model_as_pbip.py)
+  - Export the model with `fab export`, create the report with `pbir new report`, then combine
+    them with `pbir report merge-to-thick`; see [import-download-deploy.md](./references/import-download-deploy.md)
 - Full workspace snapshot (items + lakehouse files):
   - Backups, offline analysis, cross-tenant forks: [`scripts/download_workspace.py`](./scripts/download_workspace.py)
 - Promotion between Dev, Test, Prod:
@@ -561,7 +562,6 @@ Check references before deploying:
 - [query_lakehouse_duckdb.py](./scripts/query_lakehouse_duckdb.py) ; query lakehouse or warehouse Delta tables via DuckDB against OneLake (reuses `az login`); output as table, csv, or json
 - [query_sql_endpoint.py](./scripts/query_sql_endpoint.py) ; query lakehouse SQL endpoint, warehouse, or SQL database via `sqlcmd` (reuses `az login` through `ActiveDirectoryAzCli`); output as table, csv, or json
 - [create_direct_lake_model.py](./scripts/create_direct_lake_model.py) ; create a Direct Lake semantic model from lakehouse tables
-- [export_semantic_model_as_pbip.py](./scripts/export_semantic_model_as_pbip.py) ; export a semantic model as a PBIP project (TMDL definition + blank report)
 - [download_workspace.py](./scripts/download_workspace.py) ; download a full workspace with all item definitions and lakehouse files
 
 See [scripts/README.md](./scripts/README.md) for detailed usage, arguments, and examples. Always search the `scripts/` folder before writing a new helper; a script may already exist for the task.

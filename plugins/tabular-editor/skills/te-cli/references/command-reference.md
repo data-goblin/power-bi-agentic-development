@@ -64,7 +64,7 @@ te connect --clear                       # reset
 ```bash
 te connect Finance "Revenue Model" -w ./revenue-model   # remote primary, mirror to local
 te connect ./revenue-model -w Finance "Revenue Model"   # local primary, mirror to remote
-# --workspace-format <bim|tmdl|te-folder>  # on-disk format for the mirror
+# --workspace-format <bim|tmdl|database.json>  # on-disk format for the mirror
 # --workspace-auth <method>                # auth for the remote side when primary is local
 ```
 
@@ -149,9 +149,9 @@ Work with every command:
 | Command | Purpose | Key flags |
 |---|---|---|
 | `te load <path>` | Load model and show summary | global `-m/-s/-d` |
-| `te save` | Save / convert / persist edits | `-o, --output-path <path>`, `--serialization tmdl\|bim\|te-folder\|pbip\|database.json`, `--force`, `--skip-bpa`, `--fix-bpa`, `--bpa-rules <file>` (repeatable, overrides config), `--skip-validation`, `--supporting-files` |
+| `te save` | Save / convert / persist edits | `-o, --output-path <path>`, `--serialization tmdl\|bim\|database.json\|pbip`, `--force`, `--skip-bpa`, `--fix-bpa`, `--bpa-rules <file>` (repeatable, overrides config), `--skip-validation`, `--supporting-files` |
 | `te open <path>` | Open in TE3 Desktop (TE3 must be installed) | n/a |
-| `te init [path]` | Create new empty model. Path is optional; falls back to global `--model` when omitted | `--compatibility-mode PowerBI\|AnalysisServices` (default `PowerBI`), `--compatibility-level <int>` (alias `--compat`; defaults to 1702 for PowerBI, 1500 for AnalysisServices), `--name <model-name>`, `--serialization tmdl\|bim\|te-folder\|pbip` (default `tmdl`), `--force` |
+| `te init [path]` | Create new empty model. Path is optional; falls back to global `--model` when omitted | `--compatibility-mode PowerBI\|AnalysisServices` (default `PowerBI`), `--compatibility-level <int>` (alias `--compat`; defaults to 1702 for PowerBI, 1500 for AnalysisServices), `--name <model-name>`, `--serialization tmdl\|bim\|database.json\|pbip` (default `tmdl`), `--force` |
 
 ```bash
 te load ./model                                                  # local TMDL folder
@@ -341,7 +341,7 @@ te test compare
 (Covered above under [Authentication](#authentication) and [Connections and profiles](#connections-and-profiles).) Full subcommands:
 
 ```
-te connect [<server> <database>] [--local | -w/--workspace <path-or-server-db> | --workspace-format bim|tmdl|te-folder | --workspace-auth <method> | --force | -p/--profile <name> | --clear]
+te connect [<server> <database>] [--local | -w/--workspace <path-or-server-db> | --workspace-format bim|tmdl|database.json | --workspace-auth <method> | --force | -p/--profile <name> | --clear]
 te auth login [-u <appId>] [-p <secret>|-] [-t <tenant>] [--identity|-I] [--certificate <path>] [--certificate-password <pw>] [--save] [--auth interactive|spn|env|managed-identity]
 te auth status
 te auth logout
@@ -391,4 +391,3 @@ te> add Perspectives/Default/Sales      # add Sales table to the Default perspec
 te> bpa run --fail-on error
 te> exit
 ```
-

@@ -2,7 +2,9 @@
 
 Power BI reports in PBIR format use a directory structure for version control and programmatic manipulation.
 
-**Preferred tooling:** Use the `pbir` CLI to create and modify PBIR files when available. If it is not installed, the agent can directly read and write the JSON files.
+**Tooling rule:** Use `pbir` for every PBIR mutation. This reference explains the structure for
+inspection and review; it does not authorize direct JSON writes. If the CLI cannot express a
+change, report the gap.
 
 **Deployment:** Use the `fabric-cli` skill for deploying reports to Fabric workspaces. Key commands:
 - `fab export "ws.Workspace/Report.Report" -o ./backup -f` -- export report to local PBIR
@@ -269,7 +271,9 @@ definition/pages/
 
 The phone layout is stored per-visual, not per-page. Each visual folder may contain a `mobile.json` beside its `visual.json`, validated by the `visualContainerMobileState` schema (current 2.4.0). "The page has a phone layout" is emergent: it is true if and only if at least one visual has a `mobile.json`.
 
-**Correction:** `mobileState.json` at the report root was the old PBIR-Legacy name; current PBIR has no page-level mobile file. The per-visual `mobile.json` is a normal, hand-editable, diffable JSON file.
+**Correction:** `mobileState.json` at the report root was the old PBIR-Legacy name; current PBIR
+has no page-level mobile file. Manage per-visual `mobile.json` through
+`pbir visuals mobile`; the file remains useful for review and diffs.
 
 Required keys: `$schema` and `position`. `position` reuses the same field names as desktop (`x, y, z, height, width, tabOrder, angle`) but in the phone-canvas coordinate space, independent of the desktop position. Optional `objects`/`visualContainerObjects` allow mobile-only formatting overrides (deltas only; omit properties that should inherit from the desktop visual).
 
@@ -281,9 +285,9 @@ Required keys: `$schema` and `position`. `position` reuses the same field names 
 ```
 
 Pitfalls:
-- Editing `visual.json` position has no effect on the phone layout and vice versa; they are independent records
-- Deleting a visual's folder must also drop its `mobile.json`
-- Copy the `$schema` URL from an existing `mobile.json` in the same report; a stale schema version is the most common validation failure
+- Desktop and phone positions are independent; set phone coordinates with `pbir visuals mobile`
+- Delete visuals with `pbir rm` so their mobile state is removed with them
+- Let `pbir` preserve the matching mobile schema version
 - `mobile.json` is in scope for the `validate-pbir.sh` hook
 
 ## Git Hygiene for a PBIR Project
@@ -316,7 +320,7 @@ Pitfalls:
 
 1. **Version Control** -- commit PBIR directories to Git; use meaningful visual/page folder names
 2. **Folder Naming** -- use descriptive names: `sales_line_chart` not `a1b2c3d4`; group related visuals with prefixes
-3. **Validation** -- always validate JSON (`jq empty visual.json`); test in Power BI Desktop after programmatic changes
+3. **Validation** -- run `pbir validate --all`; test in Power BI Desktop after CLI changes
 4. **Extension Measures** -- keep formatting logic in extension measures; use the `description` property to document purpose
 5. **Themes** -- `SharedResources` for base themes; `RegisteredResources` for custom themes and images
 
@@ -339,8 +343,8 @@ find ./Report.Report/definition/pages -name "visual.json" -exec jq -r '.. | .Mea
 
 ## Troubleshooting
 
-**Report won't open after edits:**
-- Validate all JSON files (`jq empty <file>`)
+**Report won't open after a change:**
+- Run `pbir validate "Report.Report" --all`
 - Check `$schema` versions match what the report was using
 - Verify the `name` property inside JSON files wasn't accidentally changed
 - Test with minimal changes first

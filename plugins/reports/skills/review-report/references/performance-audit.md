@@ -17,7 +17,7 @@ Visuals that emit more than one query (multipliers):
 
 Review without Desktop:
 ```bash
-pbir visuals query   # read queryState per visual; flag measure-filters, TopN, totals, field params
+pbir visuals query "Report.Report/Page.Page/Visual.Visual"
 ```
 
 Hidden and off-canvas visuals still query on load; include them in counts. Do not clear a flag based on visual count alone; a low-count page can be slow from one expensive visual.
@@ -52,7 +52,7 @@ Detect DirectQuery from the report side via the Performance Analyzer "Direct que
 
 **Turn off unused totals/subtotals:**
 ```bash
-pbir visuals format <path> --property totals.show false
+pbir set "<path>.totals.show" --value false
 ```
 These generate extra source queries; always extra cost for DistinctCount/Median.
 
@@ -62,9 +62,10 @@ These generate extra source queries; always extra cost for DistinctCount/Median.
 
 **Disable cross-highlight from slicers to expensive visuals:**
 ```bash
-# set a NoFilter pair from slicer to matrix visual
+pbir pages interactions "Report.Report/Page.Page" \
+  --source "Slicer.Visual" --target "Matrix.Visual" --type NoFilter
 ```
-Use `visualInteractions[]` with type `NoFilter` for slicer-to-expensive-visual pairs.
+Use `pbir pages interactions` with type `NoFilter` for slicer-to-expensive-visual pairs.
 
 **Keep visuals-per-page low:** past the parallel-connection cap, visuals serialize and can show time-inconsistent results; this is a correctness argument, not just a speed one.
 

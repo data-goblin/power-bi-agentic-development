@@ -135,7 +135,7 @@ Key types and their primary data roles:
 
 ## Bulk Creation from JSON (CI/Pipeline Use)
 
-The `--from-json` flag exists for non-interactive use (CI pipelines, pre-generated specs):
+The `--from-json` flag imports a pre-existing machine-generated creation spec in CI. It is not a license to edit or copy report JSON directly:
 
 ```bash
 pbir add visual "Report.Report/Page.Page" --from-json visuals.json

@@ -9,13 +9,19 @@ Skill that teaches Claude about the Power BI Enhanced Report (PBIR) JSON format 
 
 Follow within reason the [mental model](./important/MENTAL-MODEL.md) when working with reports.
 
-**WARNING:** The PBIR format is brittle and easily corrupted. Direct JSON file modification can lead to corruption. Prefer using the `pbir` CLI tool if available (`uv tool install pbir-cli` or `pip install pbir-cli`), as it has built-in safeguards against breaking report files. Only fall back to direct JSON modification if the user explicitly requests it or if `pbir` is not available.
+**Hard rule:** Treat PBIR JSON as an implementation detail. Read it when schema context is
+useful, but make every report, visual, page, bookmark, filter, mobile-layout, and theme change
+through `pbir`. Never hand-edit, text-replace, or script writes to report JSON. If `pbir` cannot
+express a requested mutation, stop and report the capability gap instead of inventing a raw-JSON
+fallback.
 
 ## General, critical guidance
 
 - **Check examples:** Check [examples](./examples/) for a valid report
 - **Take a backup:** Make a copy of the report before modifying it
-- **PBIX vs PBIP vs PBIR:** So long as report metadata is in PBIR format, any of these formats works. PBIX is just a zip file; unzip and rezip to work with it. Do not work with PBIT (Power BI Template) file types. Note that PBIP and PBIX contain PBIR, but a "thin" report can be PBIR only.
+- **PBIX vs PBIP vs PBIR:** Work on a local `.Report` folder in PBIR format. Use Power BI
+  Desktop or `pbir report convert` for supported conversions; do not unzip, rezip, or patch PBIX
+  internals. Do not work directly on PBIT files.
 - **Valid JSON vs. Rendering JSON:** Valid JSON does not guarantee rendering. A visual might not render if the bound field is invalid (missing, wrong table, or misspelled) in the visual.json, if the visual elements are cropped by their container, if a model performance issue causes the dax query to time out, if a model data quality issue results in (Blank) or empty values, etc. Check whether a visual rendered using tools like the chrome or chrome devTools MCP server if the report was published to Power BI, but it's often faster to just ask the user to check in Power BI Desktop or the browser.
 - **Hierarchical formatting cascade:** In Power BI reports, formatting is determined by the following order of operations: defaults --> Theme wildcards (*) --> Theme visualTypes --> bespoke visual.json configuration. Theme overwrites defaults, visualType overrides wildcards in themes, and visual.json overrides all theme formatting. Prefer putting as much of the formatting in the theme as possible over bespoke visual.json formatting because then changes only need to happen in one place
 - **PBIR files are strict JSON:** No comments allowed
@@ -67,10 +73,11 @@ Follow within reason the [mental model](./important/MENTAL-MODEL.md) when review
 
 ### Creating a report
 
-1. Same workflow as modifying, except files are generated from scratch. Use `pbir new` if the `pbir` CLI is available; otherwise, check the example reports thoroughly
+1. Same workflow as modifying, except the report is generated with `pbir new`. Do not scaffold
+   report JSON by hand
 2. Ensure `definition.pbir` is configured properly (byPath or byConnection)
 3. Use a theme.json file. Recommended: [the SQLBI/Data Goblins theme](./examples/K201-MonthSlicer.Report/StaticResources/RegisteredResources/SqlbiDataGoblinTheme.json)
-4. Add appropriate filters to `report.json` or `page.json`; see [filter pane reference](references/filter-pane.md)
+4. Add filters with `pbir add filter`; see [filter pane reference](references/filter-pane.md)
 
 ### Additional validation
 
@@ -99,7 +106,7 @@ For detailed report design guidance (layout, spacing, visual hierarchy, color, a
 | Add conditional formatting | **`references/schema-patterns/conditional-formatting.md`** + **`references/measures.md`** (extension measures for CF) |
 | Add or configure filters | **`references/filter-pane.md`** -- all 7 filter types, default values, filter discovery |
 | Work with the theme | **`references/theme.md`** -- inheritance, wildcards, visual-type overrides, filter pane styling, inspecting and modifying with jq |
-| Push visual formatting to theme | **`references/theme.md`** -- promote bespoke visual formatting into theme defaults for that visual type (copy from visual.json `objects`/`visualContainerObjects` into theme `visualStyles`) |
+| Push visual formatting to theme | **`references/theme.md`** -- preview and promote reusable formatting with `pbir theme push-visual` |
 | Change page layout/background | **`references/page.md`** -- dimensions, background, wallpaper, visualInteractions |
 | Create a tooltip page | **`references/page.md`** -- tooltip page setup (type, size, visibility) + visualTooltip opt-in on visuals |
 | Create a drillthrough page | **`references/page.md`** -- drillthrough filter in page filterConfig |
@@ -123,7 +130,7 @@ For detailed report design guidance (layout, spacing, visual hierarchy, color, a
 | Validate or check conformance | **`references/validation.md`** -- conformance dimensions, `pbir validate` categories, name and required-field rules, audit and discovery commands |
 | Understand how visuals generate DAX queries | **`references/semantic-model/inferring-queries-from-visuals.md`** -- visual metadata → SUMMARIZECOLUMNS mapping, data roles, IGNORE() context |
 | Build or verify DAX query patterns | **`references/semantic-model/model-queries.md`** -- SUMMARIZECOLUMNS patterns, ROW(), query execution methods |
-| Rename a table or field across visual JSON | **`references/rename-patterns.md`** -- Entity/Property/queryRef patterns in visual.json, filterConfig, reportExtensions |
+| Rename a table or field across a report | **`references/how-to/fix-broken-field-references.md`** -- complete `pbir fields replace` / `replace-table` workflow |
 | Fix broken field references after model changes | **`references/how-to/fix-broken-field-references.md`** -- diagnosis, repair workflow for renamed/moved/removed fields, slicer value pitfalls |
 | Convert legacy report.json to PBIR format | **`references/how-to/convert-legacy-to-pbir.md`** -- format differences, step-by-step conversion, projections-to-queryState mapping, validation |
 | Understand reportExtensions.json schema | **`references/report-extensions.md`** -- file schema structure, entities, visual calculations; see `references/measures.md` for DAX authoring patterns |
@@ -167,7 +174,8 @@ A report must be connected to a semantic model. There are two ways to do this:
 - **`references/bookmarks.md`** -- Bookmark structure and state snapshots
 
 **Formatting & expressions:**
-- **`references/theme.md`** -- Theme wildcards, inheritance, color system, filter pane styling, visual-type overrides. Includes jq patterns for inspecting and modifying theme JSON directly
+- **`references/theme.md`** -- Theme wildcards, inheritance, color system, filter pane styling,
+  visual-type overrides, and the corresponding `pbir theme` commands
 - **`references/schema-patterns/`** -- Expressions, selectors, conditional formatting, visual calculations
 - **`references/visual-container-formatting.md`** -- objects vs visualContainerObjects deep-dive; dynamic (measure-driven) altText
 - **`references/measures-vs-literals.md`** -- When to use measure expressions vs literal values

@@ -7,7 +7,7 @@
 - The filter pane is the preferred place to set filters for Power BI reports.
 - Slicers should only be used when a filter is so important that the user must see it on the page, or when the UX mandates it (button slicers, conditional formatting, specific designs).
 - The filter pane is generally preferred because it's a more effective use of space and provides a clear UX.
-- If the report is not using the filter pane, hide it by setting `visible: false` in report.json.
+- If the report is not using the filter pane, run `pbir filters pane-hide "Report.Report"`.
 - Filter pane styling must be done in the theme JSON -- see [theme.md](./theme.md) "Filter Pane and Filter Card Formatting in Themes".
 
 ## Filter Types
