@@ -1,5 +1,6 @@
 ---
 name: dax
+version: 26.28.0
 description: DAX performance optimization for semantic models. Automatically invoke when the user asks to "optimize DAX", "fix slow DAX", "DAX performance", "tune a measure", "debug a measure", "DAX anti-patterns", or mentions slow queries, server timings, or DAX authoring.
 ---
 

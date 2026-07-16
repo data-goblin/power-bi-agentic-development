@@ -1,5 +1,6 @@
 ---
 name: semantic-model
+version: 26.28.0
 description: This skill should be used whenever the user mentions a "semantic model", "data model", or "dataset", or asks to "build", "model", "design", "optimize", "review", or "audit" one, or to "add a measure", "add a relationship", "create a role" / "set up RLS", "add a calculation group", "set up incremental refresh", "fix a star schema", "reduce model size", "prepare a model for Copilot / AI", or "check model quality". Covers the full lifecycle (design, build, refresh, review) and drives every operation through the `te` CLI first, then TOM (connect-pbid) or a model MCP, then TMDL authoring (the tmdl skill). Not for report visuals (use pbir-cli) or isolated DAX query tuning (use the dax skill).
 ---
 
@@ -93,8 +94,8 @@ references/refactoring-renaming.md:    safe rename workflow (lineage check first
 references/review-checklist.md:        full audit checklist with remediation
 references/performance.md:             performance testing, unused-column detection, memory analysis
 scripts/get_model_info.py:             model metadata overview (mode, size, reports, endorsement, sources, refresh)
-scripts/get_semantic_model_ai_metadata.py:
-                                      read AI instructions and Copilot schema from Fabric definitions
+scripts/manage-ai-metadata.csx:        read/write AI instructions and AI schema through TOM culture linguistic metadata
+scripts/get_semantic_model_ai_metadata.py: Fabric CLI service-definition readback for AI instructions and AI schema
 ```
 
 ## What this skill deliberately leaves out

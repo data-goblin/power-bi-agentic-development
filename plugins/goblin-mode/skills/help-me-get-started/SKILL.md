@@ -1,5 +1,6 @@
 ---
 name: help-me-get-started
+version: 26.28.0
 description: Friendly, jargon-free onboarding for people new to coding agents and Power BI agentic development. Invoke for setup, prerequisites, tool installation, terminal guidance, safety questions, or explanations of models, context, prompts, tools, and environments. Use setup mode for concise installation help, explain mode for guided learning, and improve-my-agent-setup for an existing setup audit.
 ---
 

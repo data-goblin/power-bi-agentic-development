@@ -1,5 +1,6 @@
 ---
 name: te-cli
+version: 26.28.0
 description: Expert guidance for the cross-platform Tabular Editor CLI (the `te` binary, currently in preview) that manages Power BI / Analysis Services semantic models from the terminal on macOS, Linux, and Windows. Use when the user mentions the `te` CLI or "Tabular Editor CLI" (not the "2"), or runs a `te` command to scaffold, inspect, edit, validate, run BPA on, query, deploy, refresh, test, or migrate a semantic model. Not for the legacy Windows-only `TabularEditor.exe` (TE2).
 ---
 
@@ -161,6 +162,18 @@ For build scripts that issue many `te` calls, set `te config set bpa.onSave fals
 - `fab` (the Fabric / Power BI service): export a model from a workspace, edit and gate it locally with `te`, then deploy over XMLA (`te deploy`) or import it back (`fab import`). See `references/fabric-cli-tandem.md`.
 
 Gate any cross-tool refactor with `te validate` before touching the report or the service, and remember every `te` mutation stages in memory until `--save`.
+
+## Bundled scripts
+
+- `scripts/manage-ai-metadata.csx` - non-interactive `te script` CRUD for
+  semantic model AI instructions (`CustomInstructions`) and AI schema
+  (`Entities`) stored in culture linguistic metadata.
+- `scripts/edit-ai-instructions-interactive.csx` - TE3 Desktop GUI editor for
+  semantic model AI instructions.
+- `scripts/edit-ai-schema-interactive.csx` - TE3 Desktop GUI editor for
+  semantic model AI schema.
+- `scripts/manage-ai-metadata-interactive.csx` - original combined TE3 Desktop
+  editor prototype.
 
 ## References
 

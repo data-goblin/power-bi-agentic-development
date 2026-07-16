@@ -1,5 +1,6 @@
 ---
 name: pbip
+version: 26.28.0
 description: Guidance for Power BI Project (PBIP) structure, thick and thin reports, project renames, forks, and validation. Use for .pbip, .pbism, .platform, definition.pbir, PBIP vs PBIX, or cross-cutting project operations.
 ---
 

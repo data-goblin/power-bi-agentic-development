@@ -1,5 +1,6 @@
 ---
 name: refresh-semantic-model
+version: 26.28.0
 description: Automatically invoke this skill whenever the user asks to refresh a semantic model or a dataset. Can also be used to manage, optimize, troubleshoot, or configure a refresh or a refresh schedule.
 ---
 
