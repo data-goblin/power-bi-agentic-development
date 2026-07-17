@@ -51,9 +51,10 @@ te add _Measures -t Table --columns "_Measures:String" \
 
 **Pre-validation errors** (fail before mutation):
 - `--source-type calculated` paired with `-t Table` → use `-t CalculatedTable`
-- `--source-type m` on a model with a provider data source → remove the DS, or use `--source-type query`
 - `--source-type m` on Compatibility Level < 1400 → upgrade the model
 - `--source-type` combined with `--mode directlake` → DL/Entity partitions are picked automatically
+
+**Note:** `--source-type m` on a model that already has a provider data source is now supported (matches TE3 desktop's mixed-partition support); the CLI no longer rejects that combination.
 
 **Updating an existing partition's M** after creation: `te set Sales/Partitions/Sales -q MExpression -i "<M>" --save` (note `MExpression`, not `expression`, despite `te get` displaying the property as `expression`).
 
@@ -93,8 +94,8 @@ te refresh --table Sales --partition "Sales.2024" --type full --dry-run > refres
 
 ```bash
 te deps --unused --hidden                                               # discover candidates
-te rm Sales/UnusedMeasure --dry-run                                     # confirm impact
-te rm Sales/UnusedMeasure --if-exists --save                            # idempotent removal
+te remove Sales/UnusedMeasure --dry-run                                 # confirm impact
+te remove Sales/UnusedMeasure --if-exists --save                        # idempotent removal
 ```
 
 ### Mirror remote workspace for local editing
@@ -118,18 +119,20 @@ te script -S ./scripts/format-all-dax.csx -s ws -d model --save
 echo "foreach (var t in Model.Tables) t.Name = t.Name.Replace(\"_\", \" \");" | te script -e - --save
 ```
 
-### Snapshot + compare for regression testing
+### Snapshot + diff for regression testing
 
 ```bash
-te test snapshot                                                        # capture baseline
-# … make changes …
-te test compare                                                         # detect drift
+te test snapshot --save baseline.snapshot.json -s ws -d model           # capture baseline
+# … make changes, redeploy …
+te test snapshot --diff baseline.snapshot.json --tolerance 0.001 -s ws -d model   # detect drift
 ```
+
+For A/B across two deployed models (e.g. candidate vs prod): `te test compare --source-a prod-ws/model --source-b test-ws/model`. Suite authoring and assertion types: `testing.md`.
 
 
 ## Additional authoring workflows
 
-Modeling-driven recipes (mark a date table, calculation groups, RLS roles) live in semantic-modeling-practices.md, paired with the rationale for each. The recipes below are the remaining structural-object workflows. The `te` CLI is in preview; confirm any flag or path shape below with `te <command> --help` (or `te ls <container>` to see the exact child-path form) before scripting it in a pipeline.
+Modeling-driven recipes (mark a date table, calculation groups, RLS roles) live in semantic-modeling-practices.md, paired with the rationale for each. The recipes below are the remaining structural-object workflows. The `te` CLI is in preview; confirm any flag or path shape below with `te <command> --help` (or `te list <container>` to see the exact child-path form) before scripting it in a pipeline.
 
 ### Perspectives
 
@@ -139,7 +142,7 @@ Perspectives are saved field-list views. Create the perspective, then add tables
 te add "Perspectives/Sales View" -t Perspective -m ./model --save
 te add "Perspectives/Sales View/Sales" -m ./model --save                 # add the Sales table to the perspective
 te add "Perspectives/Sales View/_Measures/Revenue" -m ./model --save     # add a single measure
-te ls "Perspectives/Sales View"                                          # confirm membership
+te list "Perspectives/Sales View"                                        # confirm membership
 ```
 
 ### Translations and cultures
@@ -154,12 +157,18 @@ te set "_Measures/Revenue" -q "TranslatedDescriptions[fr-FR]" -i "Revenu net" -m
 
 ### Incremental refresh setup
 
-`te incremental-refresh` manages the policy on a table (`show`, `set`, `remove`, `apply`). A policy requires the `RangeStart` and `RangeEnd` `NamedExpression` parameters in the model first; the partition M must filter on them. The exact flags for `set` (granularity, rolling/archive window, detect-data-changes) are not pinned in this skill, so read them from the binary before use:
+`te incremental-refresh` manages the policy on a table (`show`, `set`, `remove`, `apply`). A policy requires the `RangeStart` and `RangeEnd` `NamedExpression` parameters in the model first; the partition M (or `--source-expression`) must filter on them.
 
 ```bash
-te incremental-refresh set --help          # confirm the granularity / window / detect-changes flag names
+te incremental-refresh set Sales \
+  --rolling-window-periods 5 --rolling-window-granularity year \
+  --incremental-periods 10 --incremental-granularity day \
+  -m ./model --save
+# other flags: --incremental-offset <N>, --mode import|hybrid,
+#   --source-expression "<M>" / --source-expression-file <file.m>,
+#   --polling-expression "<M>" / --polling-expression-file <file.m>  (detect data changes)
 te incremental-refresh show Sales -m ./model
-te incremental-refresh apply Sales -m ./model      # re-evaluate the policy, create/expand partitions
+te incremental-refresh apply Sales -s ws -d model    # re-evaluate the policy, create/expand partitions on the server
 ```
 
 ### Field parameters

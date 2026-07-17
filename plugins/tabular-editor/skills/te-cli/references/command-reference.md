@@ -4,15 +4,20 @@ Full command surface for the `te` CLI. Companion to the te-cli skill (SKILL.md).
 
 ## Installation
 
-Download from https://tabulareditor.com (signed in with a TE account). Single self-contained binary; no .NET / runtime install needed.
+Download from https://tabulareditor.com (signed in with a TE account), or pull the archive from the public CDN (no auth; useful for scripted installs and CI): `https://cdn.tabulareditor.com/files/cli/latest/<archive>`. The CDN serves GET only; HEAD requests return 404, so probe with a ranged GET if you must check availability. Single self-contained binary; no .NET / runtime install needed.
 
 | Platform | Archive | Install location (suggested) |
 |---|---|---|
 | Windows x64 / ARM64 | `te-win-x64.zip` / `te-win-arm64.zip` | `%LOCALAPPDATA%\Programs\te` |
-| macOS Intel / Apple Silicon | `te-osx-x64.zip` / `te-osx-arm64.zip` | `~/.local/bin` |
-| Linux x64 / ARM64 | `te-linux-x64.zip` / `te-linux-arm64.zip` | `~/.local/bin` |
+| macOS Intel / Apple Silicon | `te-osx-x64.tar.gz` / `te-osx-arm64.tar.gz` | `~/.local/bin` |
+| Linux x64 / ARM64 | `te-linux-x64.tar.gz` / `te-linux-arm64.tar.gz` | `~/.local/bin` |
 
-Add the install dir to `PATH`. On macOS, allow first-run network access for Gatekeeper notarization check. Update by overwriting the binary; config and credentials persist.
+```bash
+curl -fsSL "https://cdn.tabulareditor.com/files/cli/latest/te-linux-x64.tar.gz" | tar xz -C ~/.local/bin te
+chmod +x ~/.local/bin/te
+```
+
+Add the install dir to `PATH`. On macOS, allow first-run network access for Gatekeeper notarization check. Update by overwriting the binary; config and credentials persist. `latest` is the only published channel during preview; there is no version-pinned URL, so cache or commit the binary if a pipeline needs reproducible builds.
 
 **Shell completion**:
 ```bash
@@ -64,7 +69,7 @@ te connect --clear                       # reset
 ```bash
 te connect Finance "Revenue Model" -w ./revenue-model   # remote primary, mirror to local
 te connect ./revenue-model -w Finance "Revenue Model"   # local primary, mirror to remote
-# --workspace-format <bim|tmdl|database.json>  # on-disk format for the mirror
+# --workspace-format <bim|tmdl|database.json>  # on-disk format for the mirror (bim accepts tmsl alias)
 # --workspace-auth <method>                # auth for the remote side when primary is local
 ```
 
@@ -82,9 +87,9 @@ te connect --profile prod
 
 Backed by a formal grammar (`PathParser`); paths come in two flavors with subtly different rules:
 
-**Object paths**; used by `te get`, `te set`, `te add`, `te rm`, `te mv`. Resolve to **one** object. Wildcards rejected.
+**Object paths**; used by `te get`, `te set`, `te add`, `te remove`, `te move`. Resolve to **one** object. Wildcards rejected.
 
-**Filter paths**; used by `te ls`, `te find`, `te deps`, `te bpa run --path`. Resolve to a **set** of objects. Wildcards allowed.
+**Filter paths**; used by `te list`, `te find`, `te deps`, `te bpa run --path`. Resolve to a **set** of objects. Wildcards allowed.
 
 ### Slash-form (works on both)
 
@@ -95,8 +100,8 @@ Backed by a formal grammar (`PathParser`); paths come in two flavors with subtly
 - `Measures/<name>/KPI`; KPI sub-object on a measure (resolves through the KPI wrapper)
 - `Roles/<role>/Members`, `Roles/<role>/TablePermissions`; role children
 - `Perspectives/<persp>/<table>`; perspective membership (use `te add Perspectives/Default/Sales` to add a table)
-- `Tables`, `Measures`, `Roles`, `Perspectives`, `Cultures`, `Hierarchies`, `Annotations`; model-level containers (pivot via `te ls Measures` for cross-table view)
-- `Relationships` is **not** enumerable via `te ls`, despite `relationship` appearing in `te ls --type`'s help. The keyword falls through to a literal path match and errors with `No objects match path 'Relationships'`, even when relationships exist (recognized-but-empty containers say `No objects match 'X'` without the word `path`). List relationships with DAX `EVALUATE INFO.VIEW.RELATIONSHIPS()` (or `INFO.RELATIONSHIPS()` on older compat), or `te save` to TMDL and read `relationships.tmdl`. A single relationship is still addressable once you know its name: `te get Relationships/<name>`.
+- `Tables`, `Measures`, `Roles`, `Perspectives`, `Cultures`, `Hierarchies`, `Annotations`, `Relationships`; model-level containers (pivot via `te list Measures` for cross-table view, `te list Relationships` for every relationship in the model)
+- A single relationship is addressable by name: `te get Relationships/<name>`. For the friendly cross-filter-direction and active-flag view, DAX `EVALUATE INFO.VIEW.RELATIONSHIPS()` remains the richer read.
 
 Container-keyword table names (a table called `Tables`, `Roles`, etc.) resolve correctly via the path parser; the parser disambiguates by position.
 
@@ -115,10 +120,10 @@ DAX-style quoting and bracket-suffix follow DAX conventions; doubled quote char 
 Single `*` matches any run of characters within one segment (case-insensitive). Multi-segment globs and `?` are not supported.
 
 ```bash
-te ls Sa*                       # tables starting with "Sa"
-te ls Sales/*Amount             # any child of Sales ending in "Amount"
-te ls */Amount                  # an "Amount" column/measure across every table
-te ls Roles/Re*/Members         # members of every role matching Re*
+te list Sa*                     # tables starting with "Sa"
+te list Sales/*Amount           # any child of Sales ending in "Amount"
+te list */Amount                # an "Amount" column/measure across every table
+te list Roles/Re*/Members       # members of every role matching Re*
 te bpa run --path "Sales/*"     # run BPA only on objects under Sales
 ```
 
@@ -138,6 +143,7 @@ Work with every command:
 | `--output-format <fmt>` | `auto` \| `text` \| `json` \| `csv` \| `tmsl` (alias `bim`) \| `tmdl` (default `auto`: text on TTY, JSON when piped). Controls how stdout is rendered; distinct from `--serialization` which picks the on-disk model format |
 | `--recent [N]` | Use recently-used model (no value = picker, `N` = Nth most recent) |
 | `--non-interactive` | Disable prompts; fail if input missing; **set in CI** |
+| `--error-format <fmt>` | `text` (default) \| `json`; stderr format for errors/warnings/hints |
 | `--debug` | Debug logs to stderr |
 
 **Note:** `--output-format` (how stdout is rendered) and `--serialization` (how models are written to disk on `init`/`save`/etc.) are **two different flags**. Don't conflate them; passing one when the other was meant gives a confusing error or silent wrong output.
@@ -149,9 +155,9 @@ Work with every command:
 | Command | Purpose | Key flags |
 |---|---|---|
 | `te load <path>` | Load model and show summary | global `-m/-s/-d` |
-| `te save` | Save / convert / persist edits | `-o, --output-path <path>`, `--serialization tmdl\|bim\|database.json\|pbip`, `--force`, `--skip-bpa`, `--fix-bpa`, `--bpa-rules <file>` (repeatable, overrides config), `--skip-validation`, `--supporting-files` |
+| `te save` | Save / convert / persist edits | `-o, --output-path <path>`, `--serialization tmdl\|bim\|database.json\|pbip` (`bim` accepts `tmsl` as alias), `--force`, `--skip-bpa`, `--fix-bpa`, `--bpa-rules <file>` (repeatable, overrides config), `--skip-validation`, `--supporting-files` |
 | `te open <path>` | Open in TE3 Desktop (TE3 must be installed) | n/a |
-| `te init [path]` | Create new empty model. Path is optional; falls back to global `--model` when omitted | `--compatibility-mode PowerBI\|AnalysisServices` (default `PowerBI`), `--compatibility-level <int>` (alias `--compat`; defaults to 1702 for PowerBI, 1500 for AnalysisServices), `--name <model-name>`, `--serialization tmdl\|bim\|database.json\|pbip` (default `tmdl`), `--force` |
+| `te init [path]` | Create new empty model. Path is optional; falls back to global `--model` when omitted | `--compatibility-mode PowerBI\|AnalysisServices` (default `PowerBI`), `--compatibility-level <int>` (alias `--compat`; defaults to 1702 for PowerBI, 1500 for AnalysisServices), `--name <model-name>`, `--serialization tmdl\|bim\|database.json\|pbip` (`bim` accepts `tmsl` as alias; default `tmdl`), `--force` |
 
 ```bash
 te load ./model                                                  # local TMDL folder
@@ -176,9 +182,9 @@ te --model ./new.bim init                                        # path via glob
 | Command | Purpose | Key flags |
 |---|---|---|
 | `te set <obj>` | Set property | `-q <prop>` (e.g. `expression`, `formatString`, `description`, `isHidden`), `-i <value>` (or `-` for stdin), `--save`, `--save-to <path>` |
-| `te add <obj>` | Add object | `-t <type>` (`Table`, `Measure`, `Column`, `CalculatedColumn`, `CalculatedTable`, `Hierarchy`, `Role`, `Perspective`, `Culture`, `CalculationGroup`, `CalculationItem`, `MPartition`, `Partition`, `EntityPartition`, `PolicyRangePartition`, `KPI`, `NamedExpression`, ...), `-i <value>`, `--if-not-exists` (idempotent), `--save`. Data-bound tables: `--mode import\|directquery\|directlake`, `--source sql\|lakehouse\|warehouse`, `--endpoint`, `--source-table`, `--source-database`, `--columns "Col1:Type,Col2:Type,..."`, `--partition-expression "<M>"`, `--source-type m\|query\|calculated` |
-| `te rm <obj>` | Remove object | `--force`, `--if-exists`, `--dry-run`, `--save` |
-| `te mv <src> <dst>` | Move/rename | `--save` |
+| `te add <obj>` | Add object | `-t <type>` (`Table`, `Measure`, `CalculatedColumn`/`CalcColumn`, `CalculatedTable`/`CalcTable`, `Hierarchy`, `Level`, `Role`, `TablePermission`, `Member`, `Perspective`, `Culture`, `CalculationGroup`/`CalcGroup`, `CalculationItem`/`CalcItem`, `MPartition`, `Partition`, `EntityPartition`, `PolicyRangePartition`, `KPI`, `Expression`, `Function`, ...; long and short type names both accepted), `-i <value>` (or `--file <path>`), repeatable `-q <prop> -i <value>` pairs set extra properties on the new object in one call, `--if-not-exists` (idempotent), `--save`. Data-bound tables: `--mode import\|directquery\|dual\|directlake`, `--source sql\|lakehouse\|warehouse`, `--endpoint`, `--connection-string`, `--source-table`, `--source-database`, `--columns "Col1:Type,Col2:Type,..."`, `--partition-expression "<M>"`, `--source-type m\|query\|calculated` |
+| `te remove <obj>` (alias: `rm`) | Remove object | `--force`, `--if-exists`, `--dry-run`, `--save` |
+| `te move <src> <dst>` (aliases: `mv`, `rename`) | Move/rename | `--save` |
 | `te replace <find> <repl>` | Find+replace text | `--in names\|expressions\|descriptions\|displayFolders\|formatStrings\|annotations\|all`, `--regex`, `--case-sensitive`, `--save` (dry-run by default) |
 
 ```bash
@@ -188,9 +194,10 @@ te add Sales/Revenue -t Measure -i "SUM(Sales[Amount])" --save
 te add Sales -t Table --save                                              # empty M partition (PowerBI default)
 te add "Sales[ProdKey]->Product[ProdKey]" --save                          # relationship shorthand
 te add Sales/MarketingFlag -t CalculatedColumn -i "..." --if-not-exists --save
-te rm Sales/OldMeasure --if-exists --save
-te rm Sales/Revenue --dry-run                                             # preview impact
-te mv Sales/Revenue Finance/Revenue --save                                # cross-table move
+te add "_Measures/Margin" -t Measure -i "[Revenue]-[COGS]" -q formatString -i "0.0%" -q description -i "Gross margin" --save   # extra -q/-i pairs at creation
+te remove Sales/OldMeasure --if-exists --save
+te remove Sales/Revenue --dry-run                                         # preview impact
+te move Sales/Revenue Finance/Revenue --save                              # cross-table move
 te replace "OldTable" "NewTable" --in expressions --save
 te replace "SUM" "SUMX" --regex --in expressions --save
 ```
@@ -219,18 +226,20 @@ Properties not in the list are still usable; these are the most error-prone and 
 
 | Command | Purpose | Key flags |
 |---|---|---|
-| `te ls [filter-path]` | List objects, FS-style (filter-path: wildcards allowed) | `--type <type>`, `--paths-only`, `--no-multiline` (collapse multi-line cells; text output only) |
+| `te list [filter-path]` (alias: `ls`) | List objects, FS-style (filter-path: wildcards allowed) | `--type <type>` (`table`, `measure`, `column`, `partition`, `role`, `relationship`, ...), `--paths-only`, `--no-multiline` (collapse multi-line cells; text output only) |
 | `te get <obj>` | Get properties (object-path: no wildcards) | `-q <prop>` (single property), `--output-format tmdl\|tmsl\|bim` (emit object as TMDL/TMSL) |
 | `te find <text>` | Search across model | `--in names\|expressions\|descriptions\|displayFolders\|formatStrings\|annotations\|all`, `--regex`, `--case-sensitive`, `--paths-only`, `--no-multiline`. **`--in expressions` walks every `IExpressionObject`**; measure DAX, calculated columns, KPI status/trend/target expressions, measure detail-rows, partition M, table-permission filters, calculation-group selection expressions |
-| `te diff <m1> <m2>` | Structural diff | exit 0 identical, 2 models differ, 1 error |
+| `te diff <m1> <m2>` | Structural diff | exit 0 identical, 1 models differ, 2 error |
 | `te deps [obj]` | Dependency analysis | `--unused` (no DAX refs, not in relationships/hierarchies/sort-by/variations/time roles), `--hidden` (narrow to hidden), `--deep`, `--upstream`, `--downstream`, `--max-depth <N>` |
 
 ```bash
-te ls                                # tables
-te ls Sales                          # columns + measures in Sales
-te ls Sales/Measures                 # measures only
-te ls Measures                       # all measures across model
-te ls --type measure --paths-only    # pipeable
+te list                              # tables
+te list Sales                        # columns + measures in Sales
+te list Sales/Measures               # measures only
+te list Measures                     # all measures across model
+te list Relationships                # all relationships across model
+te list --type measure --paths-only  # pipeable
+te list --type relationship          # only relationships
 te get Sales/Revenue -q expression
 te get Model -q description
 te find "CALCULATE" --in expressions                # covers DAX, calc-columns, KPI exprs, partition M, role filters, calc-group selection
@@ -247,10 +256,10 @@ te deps --unused --hidden                           # hidden + unused
 
 | Command | Purpose | Key flags |
 |---|---|---|
-| `te validate` | Expressions + schema + TOM errors | `--ci <fmt>` (see below), `--trx <file>`, `--no-multiline`, `--no-warnings`, `--no-antipatterns`, `--errors-only` |
-| `te bpa run [model]` | Run BPA (optional positional model path) | `-r/--rules <file-or-url>` (repeatable; URLs supported), `--fix`, `--save`, `--save-to <path>`, `--serialization`, `--fail-on error\|warning`, `--ci`, `--trx`, `--no-defaults`, `--no-model-rules`, `--rule <id>` (repeatable), `--path <filter>` (wildcards OK: `--path "Sales/*"`), `--vpax <file>`, `--vpa-rules`, `--allow-external-rules` (allow URL rules from model annotations), `--no-multiline` |
+| `te validate` | Expressions + schema + TOM errors | `--ci <fmt>` (see below), `--trx <file>`, `--no-multiline`, `--no-warnings`, `--no-antipatterns`, `--errors-only`, `--server-only` (only server-reported errors; skip local semantic analysis) |
+| `te bpa run [model]` | Run BPA (optional positional model path). Text output includes a `Rule ID` column, so IDs can be copied straight into `--fix --rule <id>` without a `te bpa rules list` lookup | `-r/--rules <file-or-url>` (repeatable; URLs supported), `--fix`, `--save`, `--save-to <path>`, `--serialization`, `--fail-on error\|warning`, `--ci`, `--trx`, `--no-defaults`, `--no-model-rules`, `--rule <id>` (repeatable), `--path <filter>` (wildcards OK: `--path "Sales/*"`), `--vpax <file>`, `--vpa-rules`, `--allow-external-rules` (allow URL rules from model annotations), `--no-multiline` |
 | `te bpa rules list` | Inspect active rules | `--all` (incl. disabled+ignored), `--ignored`, `--no-multiline` |
-| `te vertipaq [path]` | VertiPaq stats (optional positional object path, e.g. `Sales` or `Sales/Amount`) | `--columns`, `--relationships`, `--partitions`, `--all`, `--detail` (encoding/segments breakdown), `--fields <csv>` (custom column set), `--export <vpax>`, `--import <vpax>` (offline), `--obfuscate` (writes `.vpax.dict` sidecar), `--top <N>`, `--stats` (DAX-queried details), `--annotate`, `--save` |
+| `te vertipaq [path]` | VertiPaq stats (optional positional object path, e.g. `Sales` or `Sales/Amount`). Unknown table/column filter now exits with a clear error listing up to 10 candidates and pointing at `te list Tables`, instead of silently emitting empty results. Output is pipe-safe (`te vertipaq > report.txt`, `te vertipaq \| less`) | `--columns`, `--relationships`, `--partitions`, `--all`, `--detail` (encoding/segments breakdown), `--fields <csv>` (custom column set), `--export <vpax>`, `--import <vpax>` (offline), `--obfuscate` (writes `.vpax.dict` sidecar), `--top <N>`, `--stats` (DAX-queried details), `--annotate`, `--save` |
 | `te format` | Format DAX or M | `-e <text>` (inline), `-p <obj>` (single), `--lang dax\|m`, `--semicolons` (Euro), `--long` (more line breaks; default is short), `--no-space-after-function`, `-t/--type <kind>` (disambiguate `-p` when path matches multiple), `--save`, `--save-to <path>` |
 
 ```bash
@@ -276,21 +285,23 @@ te format -e "SUM ( Sales[Amount] )"                 # inline preview
 
 | Command | Purpose | Key flags |
 |---|---|---|
-| `te query` | DAX query | `-q <dax>` or `-f <file.dax>`, `--limit <N>` (default 100), `-o, --output-file <file>` (extension picks format: `.csv\|.tsv\|.json\|.dax`), `--trace`, `--cold`, `--plan`, `--runs <N>` (benchmark), `--no-validate` |
-| `te script` | Run C# script (TOM) | `-S <file>` (repeatable, `.cs`/`.csx`), `-e <code>` (inline, `-` = stdin), `--save`, `--save-to`, `--serialization`, `--dry-run`, `--timeout <s>` |
-| `te macro <sub>` | TE3 macros | `list`, `run <name-or-id>` (with `--on <obj-paths>`, `--save`), `add`, `set`, `rm`, `sort` |
+| `te query` | DAX query (needs a deployed model: `-s`/`-d` or active connection) | Positional `"<dax>"` or `-q <dax>` or `--file <file.dax>` (explicit `-q` wins if both are supplied), `--limit <N>` (default 100), `-o, --output-file <file>` (extension picks format: `.csv\|.tsv\|.json\|.dax`), `--trace`, `--cold`, `--plan` (requires `--trace`), `--runs <N>` (benchmark), `--no-validate` |
+| `te script` | Run C# script (TOM) | `-S, --script <file>` (repeatable, `.cs`/`.csx`), `-e <code>` (inline, `-` = stdin), `--save`, `--save-to`, `--serialization`, `--dry-run` (compile only), `--force` |
+| `te macro <sub>` | TE3 macros | `list`, `run <name-or-id>` (with `--on <obj-paths>`, `--save`), `add <name>` (`-e <code>` or `-s <script-file>`, `--tooltip`, `--contexts`, `--enabled`), `init`, `set` (repeated `-q <prop> -i <value>` pairs in one call; settable properties: `name`, `execute`, `enabled`, `tooltip`, `validContexts`), `remove` (alias `rm`), `sort`. `--macros <file>` overrides the macros file per call |
 
 ```bash
-te query -q "EVALUATE TOPN(5, 'Sales')" -s ws -d model
-te query -f query.dax --output-format json                       # global --output-format controls stdout format
-te query -q "EVALUATE Sales" --output-file results.csv           # writes CSV/TSV/JSON/DAX based on extension
-te query -q "EVALUATE Sales" --runs 5 --cold --plan
+te query "EVALUATE TOPN(5, 'Sales')" -s ws -d model              # positional DAX shorthand
+te query -q "EVALUATE TOPN(5, 'Sales')" -s ws -d model           # explicit -q form (still supported)
+te query --file query.dax -s ws -d model --output-format json    # global --output-format controls stdout format
+te query "EVALUATE Sales" -s ws -d model --output-file results.csv   # writes CSV/TSV/JSON/DAX based on extension
+te query "EVALUATE Sales" -s ws -d model --runs 5 --cold --plan
 te script -S fix.cs --save
 te script -e "Info(Model.Tables.Count)"
 echo "Info(Model.Name);" | te script -e -
 te macro list
 te macro run "Hide all measures"
 te macro run "Format DAX" --on "Sales/Revenue,Sales/Margin" --save
+te macro set "Format DAX" -q tooltip -i "Formats all DAX" -q enabled -i "Selected.Measures.Any()"   # multi-pair
 ```
 
 ### Deployment & Refresh
@@ -317,23 +328,26 @@ te incremental-refresh apply Sales                  # re-evaluate policy, create
 
 ### Testing
 
+Suite authoring (the `.test.yaml` format, assertion types, tolerance, matrix expansion) is in `testing.md`. Tests execute DAX, so `run`, `snapshot`, and `compare` need a deployed model.
+
 | Command | Purpose | Key flags |
 |---|---|---|
-| `te test run` | Run DAX assertion tests | `--suite <path>` (default `.te-tests/`), `--tag <tag>`, `--fail-on error\|warning`, `--ci`, `--trx <file>` |
-| `te test init` | Scaffold suite | `--example`, `--from-model --model <path>` |
-| `te test spec` | Print assertion format | n/a |
-| `te test use <suite>` | Activate suite (session-scoped) | n/a |
-| `te test list` | List test cases | n/a |
-| `te test snapshot` | Capture model snapshot | n/a |
-| `te test compare` | Compare snapshots | n/a |
+| `te test run` | Run DAX assertion tests | `--suite <path>` (default `.te-tests/`), `--tag <tag>`, `--fail-on error\|warning` (default `error`), `--ci`, `--trx <file>` |
+| `te test init` | Scaffold suite | `--path <dir>` (default `.te-tests`), `--example` (all assertion types, commented), `--from-model` (stubs from model measures) |
+| `te test spec` | Print the test file format reference | n/a |
+| `te test use [suite]` | Activate suite (session-scoped); no arg clears | n/a |
+| `te test list` | List test cases without running | `--suite <path>` |
+| `te test snapshot` | Capture measure-value snapshots / diff against a baseline | `--save <file>`, `--diff <baseline-file>`, `--tolerance <rel>`, `--measures <glob>`, `--table <name>`, `--suite <path>` |
+| `te test compare` | A/B-compare test results between two deployed models | `--source-a <ws/model>`, `--source-b <ws/model>`, `--auth-a`, `--auth-b`, `--suite <path>`, `--tolerance <rel>` |
 
 ```bash
 te test init --example
-te test init --from-model --model ./my-model        # generate stubs from model
+te test init --from-model --model ./my-model        # generate stubs from model measures
 te test run --ci github --trx results.trx
 te test run --tag revenue
-te test snapshot
-te test compare
+te test snapshot --save baseline.snapshot.json -s ws -d model
+te test snapshot --diff baseline.snapshot.json --tolerance 0.01 -s ws -d model
+te test compare --source-a prod-ws/model --source-b dev-ws/model --suite .te-tests
 ```
 
 ### Connection & Auth
@@ -372,7 +386,7 @@ Why it matters: `te connect`, `te test use`, and `--profile` all mutate the sess
 
 | Command | Purpose |
 |---|---|
-| `te interactive [model]` | Model-aware REPL; prompt is `te [MyModel]>` or `te>`. All subcommands work without `te` prefix. Built-ins: `help`/`?`, `status`/`pwd`, `clear`/`cls`, `exit`/`quit`/`q` |
+| `te interactive [model]` | Model-aware REPL; prompt is `te [MyModel]>` or `te>`. All subcommands work without `te` prefix. Built-ins: `help`/`?`, `status`/`pwd`, `clear`/`cls`, `exit`/`quit`/`q`. Flags: `--no-banner` (suppress the intro), `--echo` (print each command before running), `--batch` / `--no-batch` (force batch or interactive semantics regardless of stdin) |
 | `te completion <shell>` | Print completion script (`bash`, `zsh`, `pwsh`) |
 
 The REPL's argv splitter is bracket-aware, so DAX-style refs work without escaping the brackets; handy for paste-from-DAX-editor workflows:
@@ -381,13 +395,26 @@ The REPL's argv splitter is bracket-aware, so DAX-style refs work without escapi
 te interactive
 te interactive ./model
 te interactive -s MyWorkspace -d MyModel
-te> ls Sales
-te> ls Sa*                              # wildcard filter-paths
+te> list Sales
+te> list Sa*                            # wildcard filter-paths
 te> get "Sales/Revenue" -q expression
 te> get [Total Sales]                   # lone-bracket: model-wide measure/column lookup
 te> get 'Sales'[Amount]                 # DAX-quoted form
-te> ls Roles/Reader/Members             # role members
+te> list Roles/Reader/Members           # role members
 te> add Perspectives/Default/Sales      # add Sales table to the Default perspective
 te> bpa run --fail-on error
 te> exit
+```
+
+**Scripted / batch mode** (redirected stdin). Piping or redirecting into `te interactive` switches the session to batch mode: it reads commands line-by-line, treats lines starting with `#` as comments, exits non-zero on the first failing command, and drops the interactive prompt. Handy for CI pipelines and editor sidecars that already know exactly which commands to run:
+
+```bash
+te interactive ./model < script.te
+te interactive ./model --no-banner --echo < script.te      # cleaner logs, replay-able output
+cat <<'EOF' | te interactive ./model
+# add a measure, then verify
+add "_Measures/Revenue" -t Measure -i "SUM(Sales[Amount])" --save
+get "_Measures/Revenue" -q expression
+EOF
+te interactive ./model --batch < commands.te               # force batch semantics even if attached to a TTY
 ```

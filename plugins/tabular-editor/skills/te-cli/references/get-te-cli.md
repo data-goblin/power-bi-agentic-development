@@ -50,3 +50,6 @@ Expand-Archive -Force "$env:TEMP\te.zip" -DestinationPath $dir
 `te --version` prints the build. The CDN `latest` path is always the newest at
 download time; for a binary that keeps itself current, use the self-updating
 `te` wrapper instead (`te --update`, plus a daily check on `te --version`).
+
+The CDN serves GET only; HEAD requests return 404. Probe availability with a
+ranged GET (`curl -r 0-99 -o /dev/null -w "%{http_code}"`), never `curl -I`.

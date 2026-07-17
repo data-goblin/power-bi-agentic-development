@@ -2,7 +2,7 @@
 
 `te` owns semantic-model objects; `pbir` owns report objects. The contract between them is the `Table.Field` identity used by report bindings.
 
-Modern `te mv` cascades references inside the semantic model and reports how many it changed. It cannot see report bindings, filters, sort definitions, or conditional formatting. After a model rename or move, update the report separately with `pbir fields replace` or `pbir fields replace-table`. Do not run a blanket `te replace` after `te mv`; reserve it for reviewed text the cascade did not cover.
+Modern `te move` cascades references inside the semantic model and reports how many it changed. It cannot see report bindings, filters, sort definitions, or conditional formatting. After a model rename or move, update the report separately with `pbir fields replace` or `pbir fields replace-table`. Do not run a blanket `te replace` after `te move`; reserve it for reviewed text the cascade did not cover.
 
 Every `te` mutation needs `--save`. Use `te connect <workspace> <model>` in an interactive shell; in separate agent calls, pass `-s` and `-d` each time or use a named `TE_SESSION`.
 
@@ -12,7 +12,7 @@ Every `te` mutation needs `--save`. Use `te connect <workspace> <model>` in an i
 te deps "'Actuals'[Actuals MTD]" --downstream -s "Workspace" -d "Model"
 pbir fields find "Actuals.Actuals MTD" "Report.Report" --threshold 1.0
 
-te mv "'Actuals'[Actuals MTD]" "'Actuals'[Sales MTD]" --save -s "Workspace" -d "Model"
+te move "'Actuals'[Actuals MTD]" "'Actuals'[Sales MTD]" --save -s "Workspace" -d "Model"
 te validate --errors-only -s "Workspace" -d "Model"
 te bpa run --fail-on error -s "Workspace" -d "Model"
 
@@ -24,17 +24,18 @@ pbir validate "Report.Report" --fields
 For a table rename, use the table-level report operation:
 
 ```bash
-te mv OldSales Sales --save -s "Workspace" -d "Model"
+te move OldSales Sales --save -s "Workspace" -d "Model"
 te validate --errors-only -s "Workspace" -d "Model"
 pbir fields replace-table "Report.Report" --from OldSales --to Sales --dry-run
 pbir fields replace-table "Report.Report" --from OldSales --to Sales
 pbir validate "Report.Report" --fields
 ```
 
-Moving a measure between tables also changes its report identity:
+Moving a measure between tables also changes its report identity. Table-qualified DAX references (`Actuals[Margin]`) do NOT cascade on a cross-table move; the save gate rejects the move with `DAX0002` if one exists, so find and rewrite those first:
 
 ```bash
-te mv "'Actuals'[Margin]" "'_Measures'[Margin]" --save -s "Workspace" -d "Model"
+te find "Actuals[Margin]" --in expressions -s "Workspace" -d "Model"
+te move "'Actuals'[Margin]" "'_Measures'[Margin]" --save -s "Workspace" -d "Model"
 pbir fields replace "Report.Report" --from "Actuals.Margin" --to "_Measures.Margin"
 ```
 
@@ -69,7 +70,7 @@ pbir visuals bind "Report.Report/Page.Page/Chart.Visual" \
   --remove "Category:Sales.Legacy Region" --type Column
 pbir validate "Report.Report" --fields
 
-te rm "'Sales'[Legacy Region]" --save -s "Workspace" -d "Model"
+te remove "'Sales'[Legacy Region]" --save -s "Workspace" -d "Model"
 te validate --errors-only -s "Workspace" -d "Model"
 ```
 
