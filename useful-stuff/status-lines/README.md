@@ -65,18 +65,6 @@ for that repo. Path links are controlled by `STATUSLINE_CLICK_OPEN_PATHS`.
 
 ## Install
 
-With `pbiad`:
-
-```bash
-pbiad statusline setup
-```
-
-That copies this directory into Claude's user or project settings area, writes a
-`statusline.config.sh` file with the selected components, and points Claude Code
-at the copied script.
-
-Manual install:
-
 1. Drop the `status-lines/` directory anywhere on disk (commonly `~/.claude/statusline/` or kept under source control).
 2. Make the entrypoint executable:
    ```

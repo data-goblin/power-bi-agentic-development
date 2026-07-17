@@ -8,15 +8,12 @@ __pycache__/
 CLAUDE.md
 AGENTS.md
 *.tmuo
-/tools/*
-!/tools/pbiad/
-!/tools/pbiad/**
+tools/
 tmp/
 tests/
 .worktrees/
 node_modules/
 package-lock.json
 package.json
-tools/pbiad/target/
 plugins/pbi-desktop/hooks/bin/
 plugins/pbi-desktop/skills/connect-pbid/bin/
