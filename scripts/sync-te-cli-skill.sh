@@ -6,12 +6,16 @@
 # What it does, every run:
 #   1. Pull upstream SKILL.md + references/ (the skill is maintained upstream and
 #      vendored here; this stops the copy from drifting).
-#   2. Preserve the local `version:` frontmatter (keeps the marketplace lockstep,
-#      all plugins/skills on the same YY.WW, untouched).
-#   3. (Re)write references/get-te-cli.md -- a local-only reference telling the
+#   2. Strip the upstream `version:` frontmatter (unsupported in this
+#      marketplace; plugins version via plugin.json lockstep instead).
+#   3. Keep the local references/pbir-cli-tandem.md (this repo maintains its own,
+#      written against the pbir-cli plugin here; upstream's variant is ignored).
+#   4. (Re)write references/get-te-cli.md -- a local-only reference telling the
 #      agent how to download the `te` binary per platform and put it on PATH.
-#   4. Inject a one-line pointer to that reference into SKILL.md, just under the
-#      title. Both survive every sync because they are re-applied here.
+#   5. Re-inject the local-only SKILL.md content: the get-te-cli pointer under
+#      the title, its entry in the References list, the AI-metadata bullet in
+#      "Make bulk changes", and the "Bundled scripts" section. All survive every
+#      sync because they are re-applied here.
 #
 # Upstream CHANGELOG/LICENSE/README are distribution metadata and are not vendored.
 # Fail-open: no network / bad clone / missing upstream file leaves the current
@@ -103,6 +107,58 @@ inject_pointer() {
   ' "$DEST/SKILL.md" > "$t" && mv "$t" "$DEST/SKILL.md"
 }
 
+inject_local_sections() {
+  local skill="$DEST/SKILL.md" t
+
+  # 1. AI-metadata bullet at the end of the "Make bulk changes" list, keyed off
+  #    the macro-run bullet that closes it upstream.
+  if ! grep -qF 'manage-ai-metadata.csx' "$skill"; then
+    t="$(mktemp)" || return 0
+    awk '
+      { print }
+      /te macro run "<name>" --on/ && !done {
+        print "   - AI metadata CRUD: use `scripts/manage-ai-metadata.csx` for non-interactive `CustomInstructions` and Copilot schema `Entities` management; use `scripts/edit-ai-instructions-interactive.csx` or `scripts/edit-ai-schema-interactive.csx` inside TE3 Desktop."
+        done=1
+      }
+    ' "$skill" > "$t" && mv "$t" "$skill"
+  fi
+
+  # 2. Bundled scripts section immediately above "## References".
+  if ! grep -qF '## Bundled scripts' "$skill"; then
+    t="$(mktemp)" || return 0
+    awk '
+      /^## References$/ && !done {
+        print "## Bundled scripts"
+        print ""
+        print "- `scripts/manage-ai-metadata.csx` - non-interactive `te script` CRUD for"
+        print "  semantic model AI instructions (`CustomInstructions`) and AI schema"
+        print "  (`Entities`) stored in culture linguistic metadata."
+        print "- `scripts/edit-ai-instructions-interactive.csx` - TE3 Desktop GUI editor for"
+        print "  semantic model AI instructions."
+        print "- `scripts/edit-ai-schema-interactive.csx` - TE3 Desktop GUI editor for"
+        print "  semantic model AI schema."
+        print "- `scripts/manage-ai-metadata-interactive.csx` - original combined TE3 Desktop"
+        print "  editor prototype."
+        print ""
+        done=1
+      }
+      { print }
+    ' "$skill" > "$t" && mv "$t" "$skill"
+  fi
+
+  # 3. get-te-cli.md entry at the top of the bundled-references list.
+  if ! grep -qF '`references/get-te-cli.md`' "$skill"; then
+    t="$(mktemp)" || return 0
+    awk '
+      /^- `references\/command-reference\.md`/ && !done {
+        print "- `references/get-te-cli.md` - agent self-service install of the `te` binary from the public CDN"
+        done=1
+      }
+      { print }
+    ' "$skill" > "$t" && mv "$t" "$skill"
+  fi
+}
+
 install_hook() {
   local hook="$REPO_ROOT/.git/hooks/post-merge"
   mkdir -p "$(dirname "$hook")"
@@ -136,27 +192,27 @@ SRC="$tmp/$SUBDIR"
 { [ -f "$SRC/SKILL.md" ] && [ -d "$SRC/references" ] && ls "$SRC/references/"*.md >/dev/null 2>&1; } || {
   printf 'sync-te-cli: upstream %s incomplete; aborting\n' "$SUBDIR" >&2; exit 0; }
 
-# Preserve this repo's version frontmatter (the lockstep value).
-ver="$(awk -F': *' '/^version:/{print $2; exit}' "$DEST/SKILL.md")"
-ver="${ver:-0.0.0}"
-
 cp "$SRC/SKILL.md" "$DEST/SKILL.md"
 mkdir -p "$DEST/references"
-# Drop upstream-managed references (keep the local-only one), then copy upstream's.
-find "$DEST/references" -maxdepth 1 -name '*.md' ! -name 'get-te-cli.md' -delete 2>/dev/null
-cp "$SRC/references/"*.md "$DEST/references/"
+# Drop upstream-managed references (keep the local-only ones), then copy upstream's.
+find "$DEST/references" -maxdepth 1 -name '*.md' ! -name 'get-te-cli.md' ! -name 'pbir-cli-tandem.md' -delete 2>/dev/null
+for f in "$SRC/references/"*.md; do
+  case "$(basename "$f")" in pbir-cli-tandem.md) continue ;; esac
+  cp "$f" "$DEST/references/"
+done
 
-# Re-stamp the preserved version onto the first frontmatter `version:` line.
-VER="$ver" perl -pi -e 'if(!$d && s/^version:.*$/version: $ENV{VER}/){$d=1}' "$DEST/SKILL.md"
+# Strip the upstream version frontmatter (unsupported here; plugin.json versions instead).
+perl -ni -e 'print unless !$d && /^version:/ && ($d=1)' "$DEST/SKILL.md"
 
 # Re-apply the local-only augmentations (upstream does not carry these).
 write_get_ref
 inject_pointer
+inject_local_sections
 
 if git -C "$REPO_ROOT" diff --quiet -- plugins/tabular-editor/skills/te-cli 2>/dev/null; then
-  printf 'sync-te-cli: up to date with upstream (version kept at %s)\n' "$ver"
+  printf 'sync-te-cli: up to date with upstream\n'
 else
-  printf 'sync-te-cli: te-cli skill updated from upstream (version kept at %s); review and commit:\n' "$ver"
+  printf 'sync-te-cli: te-cli skill updated from upstream; review and commit:\n'
   git -C "$REPO_ROOT" --no-pager diff --stat -- plugins/tabular-editor/skills/te-cli
 fi
 exit 0

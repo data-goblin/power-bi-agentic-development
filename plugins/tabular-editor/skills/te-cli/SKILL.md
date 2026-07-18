@@ -1,13 +1,13 @@
 ---
 name: te-cli
-description: Expert guidance for the cross-platform Tabular Editor CLI (the `te` binary, currently in preview) that manages Power BI / Analysis Services semantic models from the terminal on macOS, Linux, and Windows. Use when the user mentions the `te` CLI or "Tabular Editor CLI" (not the "2"), or runs a `te` command to scaffold, inspect, edit, validate, run BPA on, query, deploy, refresh, test, or migrate a semantic model. Not for the legacy Windows-only `TabularEditor.exe` (TE2).
+description: Expert guidance for the cross-platform Tabular Editor CLI (the `te` binary, currently in preview) that manages Power BI / Analysis Services semantic models from the terminal on macOS, Linux, and Windows. Use when the user mentions the `te` CLI or "Tabular Editor CLI" (not the "2"), or runs a `te <command>` to scaffold, inspect, edit, validate, run BPA on, query, deploy, refresh, test, or migrate a semantic model. Not for the legacy Windows-only `TabularEditor.exe` (TE2).
 ---
 
 # Tabular Editor CLI (`te`)
 
-The `te` CLI is a single self-contained binary that loads, edits, validates, deploys, refreshes, and tests semantic models against TMDL/BIM files, Power BI Desktop, and cloud workspaces (Power BI, Fabric, Azure AS, SSAS). It is built on the same TOMWrapper that powers Tabular Editor 3, so model edits behave like the desktop app.
-
 To get the `te` CLI yourself (as the agent), see [references/get-te-cli.md](references/get-te-cli.md).
+
+The `te` CLI is a single self-contained binary that loads, edits, validates, deploys, refreshes, and tests semantic models against TMDL/BIM files, Power BI Desktop, and cloud workspaces (Power BI, Fabric, Azure AS, SSAS). It is built on the same TOMWrapper that powers Tabular Editor 3, so model edits behave like the desktop app.
 
 **Always pass `--output-format json`** when driving `te` programmatically. The default text/table output uses tables and ANSI styling that mangle in agent transcripts; JSON is parseable and avoids rendering issues.
 
@@ -165,7 +165,7 @@ For build scripts that issue many `te` calls, set `te config set bpa.onSave fals
 
 `te` owns the semantic model. Two sibling CLIs own the layers around it, and the highest-value workflows cross the boundary:
 
-- `pbir` (the Power BI report layer): renaming or moving a model object leaves the report bound to the old `Table.Field`. `te move` cascades DAX references inside the model, but it cannot see report JSON; repair the report bindings separately (`pbir fields replace` or `replace-table`, then `pbir validate --fields`). See `references/pbir-cli-tandem.md`.
+- `pbir` (the Power BI report layer): renaming or moving a model object leaves the report bound to the old `Table.Field`. `te move` cascades DAX references inside the model, but it cannot see report JSON; repair the report bindings separately (`pbir fields replace`, `pbir validate --fields`). See `references/pbir-cli-tandem.md`.
 - `fab` (the Fabric / Power BI service): export a model from a workspace, edit and gate it locally with `te`, then deploy over XMLA (`te deploy`) or import it back (`fab import`). See `references/fabric-cli-tandem.md`.
 
 Gate any cross-tool refactor with `te validate` before touching the report or the service, and remember every `te` mutation stages in memory until `--save`.
