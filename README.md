@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-26.28-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-26.29.1-blue" alt="Version">
   <img src="https://img.shields.io/badge/Power_BI-F2C811?logo=powerbi&logoColor=000" alt="Power BI">
   <img src="https://img.shields.io/badge/Microsoft_Fabric-008272" alt="Microsoft Fabric">
   <img src="https://img.shields.io/badge/Tabular_Editor-2E7D32" alt="Tabular Editor">
@@ -65,12 +65,17 @@ Add the marketplace, then install plugins via `/plugin` and navigating to the in
 Alternative; add plugins via command line:
 
 ```bash
+claude plugin install goblin-mode@power-bi-agentic-development
 claude plugin install tabular-editor@power-bi-agentic-development
 claude plugin install pbi-desktop@power-bi-agentic-development
+claude plugin install pbip@power-bi-agentic-development
 claude plugin install semantic-models@power-bi-agentic-development
 claude plugin install reports@power-bi-agentic-development
-claude plugin install pbip@power-bi-agentic-development
+claude plugin install paginated-reports@power-bi-agentic-development
+claude plugin install custom-visuals@power-bi-agentic-development
 claude plugin install fabric-cli@power-bi-agentic-development
+claude plugin install fabric-admin@power-bi-agentic-development
+claude plugin install etl@power-bi-agentic-development
 ```
 
 ### Copilot CLI
@@ -213,22 +218,44 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 </details>
 
 <details>
-<summary><img src="media/icons/reports.svg" alt="" height="20"> <strong>reports</strong> &ensp; Deneb, R, Python, SVG visuals; themes; report design and review</summary>
+<summary><img src="media/icons/reports.svg" alt="" height="20"> <strong>reports</strong> &ensp; Build, format, optimize, and review interactive Power BI reports</summary>
 
 | Type | Name | Description |
 |------|------|-------------|
-| Skill | [`pbi-report-design`](plugins/reports/skills/pbi-report-design/) (Very WIP) | Power BI report best practices, design and style |
-| Skill | [`modifying-theme-json`](plugins/reports/skills/modifying-theme-json/) (WIP) | Working with theme files |
-| Skill | [`deneb-visuals`](plugins/reports/skills/deneb-visuals/) | Deneb visuals with Vega and Vega-Lite specs |
-| Skill | [`r-visuals`](plugins/reports/skills/r-visuals/) | Custom R visuals in Power BI reports |
-| Skill | [`python-visuals`](plugins/reports/skills/python-visuals/) | Custom Python visuals in Power BI reports |
-| Skill | [`svg-visuals`](plugins/reports/skills/svg-visuals/) | SVG visuals via DAX measures in Power BI reports |
-| Skill | [`review-report`](plugins/reports/skills/review-report/) (WIP) | Review Power BI reports for usage metrics and best practices |
+| Skill | [`create-pbi-report`](plugins/reports/skills/create-pbi-report/) | Step-by-step workflow for building a complete report from scratch via the `pbir` CLI: model discovery, pages, theme, visuals, field binding, filtering, formatting, validation, publishing |
+| Skill | [`pbi-report-design`](plugins/reports/skills/pbi-report-design/) | The Power BI report design canon: design identity, visual hierarchy, layout, color discipline, chart selection, KPI/table design, accessibility. Shared reference used by the other report skills |
+| Skill | [`modifying-theme-json`](plugins/reports/skills/modifying-theme-json/) | Design, enforce, audit, and validate report themes through the `pbir` CLI |
+| Skill | [`review-report`](plugins/reports/skills/review-report/) | Actionable feedback on report quality, usage, and effectiveness; usage analysis, health checks |
 | Skill | [`pbir-cli`](plugins/reports/skills/pbir-cli/) | Programmatic report manipulation via the [`pbir` CLI](https://github.com/maxanatsko/pbir.tools), including live Power BI Desktop refresh and page screenshots |
 | Agent | [`deneb-reviewer`](plugins/reports/agents/deneb-reviewer.agent.md) | Review Deneb visual specs for Vega/Vega-Lite syntax and conventions |
 | Agent | [`svg-reviewer`](plugins/reports/agents/svg-reviewer.agent.md) | Review SVG DAX measures for syntax and design quality |
 | Agent | [`r-reviewer`](plugins/reports/agents/r-reviewer.agent.md) | Review R visual scripts (ggplot2) for Power BI conventions |
 | Agent | [`python-reviewer`](plugins/reports/agents/python-reviewer.agent.md) | Review Python visual scripts (matplotlib/seaborn) for Power BI conventions |
+
+</details>
+
+<details>
+<summary><strong>paginated-reports</strong> &ensp; Author, validate, publish, and test print-ready paginated reports</summary>
+
+| Type | Name | Description |
+|------|------|-------------|
+| Skill | [`paginated-report`](plugins/paginated-reports/skills/paginated-report/) | Author, validate, publish, and test Power BI paginated reports in RDL format (Report Builder, PBIRS/SSRS-compatible); connect to a semantic model, render to PDF/Excel |
+| Hook | RDL validation | Validates `.rdl` structure after Write/Edit and on Bash commands touching `.rdl` files; blocks on structural errors only |
+
+</details>
+
+<details>
+<summary><strong>custom-visuals</strong> &ensp; Build Deneb, Python, R, SVG, and pbiviz custom visuals for Power BI</summary>
+
+| Type | Name | Description |
+|------|------|-------------|
+| Skill | [`deneb-visuals`](plugins/custom-visuals/skills/deneb-visuals/) | Deneb visual creation, Vega/Vega-Lite spec authoring, Deneb best practices for PBIR reports |
+| Skill | [`r-visuals`](plugins/custom-visuals/skills/r-visuals/) | Custom R visuals (ggplot2) for Power BI reports |
+| Skill | [`python-visuals`](plugins/custom-visuals/skills/python-visuals/) | Custom Python visuals (matplotlib/seaborn) for Power BI reports |
+| Skill | [`svg-visuals`](plugins/custom-visuals/skills/svg-visuals/) | SVG generation via DAX measures and extension measures for inline chart visualizations (sparklines, bullet charts, KPI indicators, and more) |
+| Skill | [`powerbi-custom-visuals`](plugins/custom-visuals/skills/powerbi-custom-visuals/) | Power BI developer custom visual (`.pbiviz`) development with the `pbiviz` toolchain and its MCP server: scaffold, build, debug, package, certify, publish to AppSource |
+
+Reviewer agents for these visual types (`deneb-reviewer`, `svg-reviewer`, `r-reviewer`, `python-reviewer`) ship in the `reports` plugin above.
 
 </details>
 
@@ -263,6 +290,16 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 | Type | Name | Description |
 |------|------|-------------|
 | Skill | [`audit-tenant-settings`](plugins/fabric-admin/skills/audit-tenant-settings/) | Audit Fabric and Power BI tenant settings, delegated overrides, and Entra security group membership |
+
+</details>
+
+<details>
+<summary><strong>etl</strong> &ensp; Inspect, query, and transform lakehouse data with Spark, Livy, and DuckDB</summary>
+
+| Type | Name | Description |
+|------|------|-------------|
+| Skill | [`executing-spark`](plugins/etl/skills/executing-spark/) | Execute arbitrary Python or PySpark code on Fabric Spark compute without creating a notebook artifact; ephemeral Livy sessions with full Delta table access |
+| Skill | [`using-duckdb`](plugins/etl/skills/using-duckdb/) | Query Fabric lakehouse and warehouse data with DuckDB, locally or inside a Fabric notebook; data freshness and quality checks |
 
 </details>
 
