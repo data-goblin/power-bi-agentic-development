@@ -74,6 +74,7 @@ You must read and understand the common list of operations with simple examples
 9. Review or manage permissions:
    - Item ACL: `fab acl ls "ws.Workspace/Model.SemanticModel"` then `fab acl set "ws.Workspace/Model.SemanticModel" -I user@contoso.com -R Read`
    - Workspace roles: `fab acl ls "ws.Workspace"` then `fab acl set "ws.Workspace" -I user@contoso.com -R Member`
+   - Setting up a service principal for automation instead of a human identity: [service-principals.md](./references/service-principals.md) - creation via az CLI, the workspace-role-plus-tenant-setting-group double requirement, and how to authenticate `fab` as it
 10. Deploy items to Fabric: `fab import "ws.Workspace/New.Notebook" -i ./local-path/Nb.Notebook -f`
 11. Download items from Fabric: `fab export "ws.Workspace/Nb.Notebook" -o ./backup -f` (always `mkdir -p ./backup` first)
 12. Copy or move items between workspaces: `fab cp "dev.Workspace/Item.Notebook" "prod.Workspace" -f` or `fab mv "ws.Workspace/Old.Notebook" "ws.Workspace/New.Notebook" -f`
@@ -552,6 +553,7 @@ Check references before deploying:
 - [Admin APIs](./references/admin.md) - Cross-workspace search, tenant operations, governance
 - [API Reference](./references/fab-api.md) - Capacities, domains, misc API patterns
 - [Connections](./references/connections.md) - Create, update, list connections programmatically; credential types (WorkspaceIdentity, SPN, Basic); OAuth2 limitations
+- [Service Principals](./references/service-principals.md) - Create an SP with az CLI, grant it workspace access, clear the tenant-setting gate, authenticate `fab` as it (real login vs env-token testing), rotation and teardown
 - [Full Command Reference](./references/reference.md) - All commands detailed
 
 **Scripts** (scripts that you can execute):

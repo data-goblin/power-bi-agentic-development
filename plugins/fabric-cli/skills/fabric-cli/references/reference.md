@@ -1438,6 +1438,8 @@ fab auth login -u <client-id> --federated-token <token> --tenant <tenant-id>
 fab auth login -I
 ```
 
+Setting up the service principal itself (az CLI creation, workspace role, the tenant-setting security group it also needs to be in, and a non-destructive way to test its auth without touching your own fab session): [service-principals.md](./service-principals.md).
+
 ### Resource Not Found
 
 ```bash
