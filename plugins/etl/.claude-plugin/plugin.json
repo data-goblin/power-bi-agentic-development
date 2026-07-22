@@ -1,6 +1,6 @@
 {
   "name": "etl",
-  "version": "26.29.1",
+  "version": "26.30.0",
   "description": "Inspect, query, and transform lakehouse data with Spark, Livy, and DuckDB.",
   "author": {
     "name": "Kurt Buhler",

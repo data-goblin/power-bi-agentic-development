@@ -1,6 +1,6 @@
 {
   "name": "fabric-admin",
-  "version": "26.29.1",
+  "version": "26.30.0",
   "description": "Audit tenant settings, governance, security groups, and Fabric admin state.",
   "author": {
     "name": "Kurt Buhler",
