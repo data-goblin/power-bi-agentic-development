@@ -282,7 +282,7 @@ Reference: [Capacity and SKUs in Power BI embedded analytics](https://learn.micr
 
 When an application embeds Power BI content for end users, it authenticates one of three ways:
 
-- **Service principal** ; recommended for production. Entra ID app registration authenticates with a secret or certificate. Needs the tenant setting "Allow service principals to use Power BI APIs" enabled and the SP in the allow group. Cannot set OAuth credentials on datasets; cannot be used for paginated reports in master-user embed.
+- **Service principal** ; recommended for production. Entra ID app registration authenticates with a secret or certificate. Needs the tenant setting "Allow service principals to use Power BI APIs" enabled and the SP in the allow group. Cannot set OAuth credentials on datasets; cannot be used for paginated reports in master-user embed. See [service-principals.md](./service-principals.md) for creating the SP and clearing this exact gate via `az` and `fab`.
 - **Master user account** ; a regular Entra user with Pro or PPU, assigned workspace Admin or Member. Simpler to set up; less secure and harder to scale; cannot embed paginated reports.
 - **End-user delegated (embed for your organization only)** ; the signed-in user authenticates to Entra and consumes with their own license.
 

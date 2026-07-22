@@ -1,6 +1,6 @@
 {
   "name": "pbi-desktop",
-  "version": "26.29.0",
+  "version": "26.29.1",
   "description": "Inspect and query the live Power BI Desktop model via TOM and ADOMD.NET.",
   "author": {
     "name": "Kurt Buhler",
