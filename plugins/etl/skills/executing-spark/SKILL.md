@@ -88,6 +88,10 @@ Results are in `output.data["text/plain"]` when `state: "available"` and `output
 | Scheduled ETL | Notebook via `fab job run` |
 | Agent-driven compute (Dagster, orchestrators) | Livy session |
 
+## Persisting code as a notebook: poll the definition LRO tightly
+
+This skill is for ephemeral execution with no artifact. When you instead want to **persist or change** a notebook (deploy new code, iterate on an existing one), that is an item-definition change, and the poll interval is the single biggest performance lever. `fab import`, `nb create`, and `nb cell edit` take 25-60s because they poll the create/update long-running operation at the server's advertised `Retry-After: 20`; the work itself finishes in ~1s, and neither CLI lets you change that interval. Poll the LRO at ~0.3s and the same deploy takes ~1-2s. The `fabric-cli` skill ships [`scripts/deploy_notebook.py`](../../../fabric-cli/skills/fabric-cli/scripts/deploy_notebook.py) which does this (auto-detects create vs update, `--poll-interval` default 0.3s); strongly prefer it over `fab import` / `nb` for any notebook definition change.
+
 ## Sessions vs Batch Jobs
 
 A Livy **session** (this skill) is interactive: create it, submit statements, read output as it runs, delete it. It stays alive and you pay for idle time until you delete it or it times out (~20 min).
@@ -106,4 +110,4 @@ A Livy statement returns its result **directly** in the response (`output.status
 ## Related
 
 - `using-duckdb` skill (same `etl` plugin) -- read-only Delta querying, local or in-notebook, when you don't need Spark compute
-- `fabric-cli` skill (`fabric-cli` plugin) -- `nb exec` / `fab job run` for notebooks, reading a notebook's exit value, and the SQL-endpoint metadata sync after a Spark write
+- `fabric-cli` skill (`fabric-cli` plugin) -- `nb exec` / `fab job run` for notebooks, reading a notebook's exit value, the SQL-endpoint metadata sync after a Spark write, and `scripts/deploy_notebook.py` for fast notebook definition changes (tight LRO polling)

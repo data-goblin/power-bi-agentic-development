@@ -102,6 +102,35 @@ fab import "Production.Workspace/Sales.Report" -i /tmp/exports/Sales.Report -f
 
 **Always pass `-f`** for non-interactive execution. Without it, `fab import` prompts for overwrite confirmation and will hang in scripts, CI, or anywhere stdin is not a terminal.
 
+### Fast definition changes: the poll interval is the biggest lever
+
+`fab import` takes 25-60s to push a notebook definition, and `nb create` / `nb cell edit` are the same or worse. This is not the API being slow. Creating or updating an item definition is a long-running operation (LRO): the request returns `202 Accepted` with a `Retry-After: 20` header, and the CLIs wait roughly that long between status polls. The server actually finishes in about a second. Neither `fab` nor `nb` exposes a flag or env var to shorten that interval.
+
+Polling the operation every ~0.3s instead of every ~20s is the single biggest performance lever for any definition change. Measured on an F2 capacity, pushing the same notebook (a 40KB / ~1000-line cell):
+
+```yaml
+deploy_a_new_notebook:
+  fab import:                 ~29 s     # createItemWithDefinition, ~20s poll cadence
+  nb create:                  ~23 s     # empty notebook + metadata, same cadence
+  raw REST, 0.25s poll:       ~1.6 s    # POST /workspaces/{ws}/notebooks with the definition
+
+update_a_notebook_in_place:   # the edit / iterate loop
+  nb cell edit:               ~44 s     # getDefinition + edit + updateDefinition, two LROs
+  fab import (overwrite):     ~31 s
+  raw REST updateDefinition:  ~0.7 s    # POST /items/{id}/updateDefinition, 0.25s poll
+```
+
+Use [`scripts/deploy_notebook.py`](../scripts/deploy_notebook.py) for notebook definition changes. It auto-detects create vs update, tight-polls the LRO, and exposes `--poll-interval` (default 0.3s):
+
+```bash
+# Create or update in place (auto-detected); input is a fab-export folder or a bare .ipynb
+python3 scripts/deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./ETL.Notebook
+python3 scripts/deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./notebook-content.ipynb --update-only
+python3 scripts/deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./ETL.Notebook --poll-interval 0.2 --format json
+```
+
+The same rule holds for any definition-based item (reports, semantic models, pipelines): if you hand-roll the REST call, poll `updateDefinition` / create-with-definition at ~0.3s, not the advertised 20s. The one caveat is throttling. On a busy or small capacity the API returns `429` with its own `Retry-After`, which you must honor; the script backs off on 429 automatically, so a genuinely throttled deploy can still take longer regardless of the poll interval.
+
 ### Reports imported without their model need rebinding
 
 A thin `.Report` is a pointer to a `.SemanticModel` via its ID. When you import a report to a different workspace than the original, the dataset ID in `definition.pbir` is still the source ID and must be rebound to the target:

@@ -489,6 +489,20 @@ Flags:
 - `--format` (definition format for export / import)
 - `-f` (skip overwrite and sensitivity prompts)
 
+> [!IMPORTANT]
+> **The poll interval is by far the biggest performance lever for any definition change.**
+> Creating or updating an item definition is a long-running operation (LRO): the API returns
+> `202 Accepted` with a `Retry-After: 20` header. `fab import`, `nb create`, and `nb cell edit`
+> wait roughly that long between status polls, so a notebook that the server finishes in ~1s
+> takes them 25-60s. Neither `fab` nor `nb` exposes a knob to change that interval.
+> For notebook definition changes, strongly prefer [`scripts/deploy_notebook.py`](./scripts/deploy_notebook.py),
+> which polls the LRO every ~0.3s (tunable via `--poll-interval`) and creates in ~1-2s or updates
+> in place in ~1s. Auto-detects create vs update. When you must roll your own for another item
+> type, the rule is the same: poll `updateDefinition` / create at ~0.3s, not the advertised 20s.
+> ```bash
+> python3 scripts/deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./ETL.Notebook   # create or update in place
+> ```
+
 Every Fabric item has a serializable definition. Move definitions between environments depending on scope:
 
 - Single item:
@@ -526,6 +540,7 @@ Check references before deploying:
 - **IMPORTANT:** DON'T try to use `fab ls` on items that aren't data items (.Lakehouse, .Warehouse, etc); use `fab ls` to find workspaces and items, and use `fab get` to look at definitions
 - ALWAYS Use the `-f` flag when using `fab get`, `fab import`, `fab export`, etc. as described above
 - ONLY fallback to `fab api` when a command doesn't exist
+- **Definition changes feel slow but aren't:** `fab import` / `nb create` / `nb cell edit` take 25-60s to push a notebook definition only because they poll the LRO at the server's `Retry-After: 20`. The work is ~1s. Use [`scripts/deploy_notebook.py`](./scripts/deploy_notebook.py) (tight-polls at ~0.3s) for definition changes; the poll interval is the single biggest lever
 
 ## References
 
@@ -585,6 +600,7 @@ governance / deploy
 - [create_direct_lake_model.py](./scripts/create_direct_lake_model.py) ; create a Direct Lake semantic model from lakehouse tables
 - [download_workspace.py](./scripts/download_workspace.py) ; download a full workspace with all item definitions and lakehouse files
 - [run_notebook_checked.py](./scripts/run_notebook_checked.py) ; run a notebook and check its exit value, exiting non-zero when the notebook's own `{ok:false}` verdict fails despite a `Completed` job status (reads the exit value via the notebook job-instance beta endpoint)
+- [deploy_notebook.py](./scripts/deploy_notebook.py) ; create or update a notebook definition fast (~1-2s) by tight-polling the LRO instead of the CLI's ~20s `Retry-After` cadence; auto-detects create vs update, `--poll-interval` is the performance lever. Strongly prefer this over `fab import` / `nb` for any notebook definition change
 
 See [scripts/README.md](./scripts/README.md) for detailed usage, arguments, and examples. Always search the `scripts/` folder before writing a new helper; a script may already exist for the task.
 

@@ -291,6 +291,8 @@ fab import "ws.Workspace/MyNotebook.Notebook" -i /tmp/MyNotebook.Notebook -f
 fab job run "ws.Workspace/MyNotebook.Notebook"
 ```
 
+`fab import` takes 25-60s here because it polls the create/update LRO at the server's `Retry-After: 20`, not because the work is slow (it finishes in ~1s). For any notebook definition change, prefer [`scripts/deploy_notebook.py`](../scripts/deploy_notebook.py), which tight-polls (~0.3s, tunable via `--poll-interval`) and deploys in ~1-2s; it auto-detects create vs update. The poll interval is the single biggest performance lever for definition changes. See [import-download-deploy.md](./import-download-deploy.md#fast-definition-changes-the-poll-interval-is-the-biggest-lever).
+
 ### Common Import Failures
 
 | Error | Cause | Fix |
