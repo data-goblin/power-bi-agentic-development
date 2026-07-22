@@ -63,7 +63,7 @@ The token expires after ~1 hour; re-export and restart Claude Code to refresh. F
 
 - First call against a cold workspace can return `Could not obtain activation parameters for workspace`; retry once after a few seconds.
 - The Lakehouse SQL endpoint is read-only (same constraint as `sqlcmd`); the tool advertises a destructive hint because Warehouse and SQL Database endpoints accept writes.
-- Same metadata sync lag as `sqlcmd`: a table written via Spark may take 10-60s to appear in `INFORMATION_SCHEMA.TABLES`.
+- Same metadata sync lag as `sqlcmd`: a table written via Spark may take 10-60s to appear in `INFORMATION_SCHEMA.TABLES`. Force it with [refreshMetadata](#force-the-sql-endpoint-metadata-sync-skip-the-sleep) instead of sleeping.
 
 ## Wrapper scripts (fallback)
 
@@ -347,9 +347,29 @@ sqlcmd -S "$SQL_HOST" -d LH \
 ### Lakehouse SQL endpoint quirks
 
 - **Read-only**: the Lakehouse SQL endpoint does not support `INSERT`, `UPDATE`, `DELETE`, or `CREATE TABLE`. Use DuckDB, PySpark, or Warehouse T-SQL for writes.
-- **Lag behind OneLake**: the SQL endpoint has its own metadata sync. A table created via Spark may take 10-60 seconds to appear in `INFORMATION_SCHEMA.TABLES`; if you just wrote and a query fails with `Invalid object name`, retry after a short sleep rather than debugging auth.
+- **Lag behind OneLake**: the SQL endpoint has its own metadata sync. A table created via Spark may take 10-60 seconds to appear in `INFORMATION_SCHEMA.TABLES`; if you just wrote and a query fails with `Invalid object name`, either force the sync (below) or, when you don't need `INFORMATION_SCHEMA`/`sys.*`, read the Delta files directly with DuckDB over OneLake, which has no such lag.
 - **Schemas are case-sensitive**: `dbo.Orders` and `dbo.orders` are different objects if the underlying Delta path uses mixed case. Always confirm with `INFORMATION_SCHEMA.TABLES`.
 - **Three-part names work within the same endpoint** (`<database>.<schema>.<table>`); four-part cross-endpoint queries do not.
+
+### Force the SQL endpoint metadata sync (skip the sleep)
+
+Rather than sleeping through the 10-60s lag after a Spark write, force the SQL analytics endpoint to sync. This is a documented GA endpoint:
+
+```
+POST /v1/workspaces/{ws}/sqlEndpoints/{sqlEndpointId}/refreshMetadata
+body (optional): {"recreateTables": false}
+```
+
+- `{sqlEndpointId}` is the **SQL endpoint** id, not the lakehouse id: `fab get "ws.Workspace/LH.Lakehouse" -q "properties.sqlEndpointProperties.id"`.
+- Long-running: a `200` returns per-table `TableSyncStatuses` (`Success`/`Failure`/`NotRun`) synchronously; a `202` returns a `Location` header to poll.
+
+```bash
+WS=$(fab get "ws.Workspace" -q "id" | tr -d '"')
+SQLEP=$(fab get "ws.Workspace/LH.Lakehouse" -q "properties.sqlEndpointProperties.id" | tr -d '"')
+fab api "workspaces/$WS/sqlEndpoints/$SQLEP/refreshMetadata" -X post -i '{"recreateTables": false}'
+```
+
+Use this when a job just wrote a table and a downstream step must read it through the SQL endpoint immediately. If you don't need `INFORMATION_SCHEMA`/`sys.*`, DuckDB over OneLake sidesteps the endpoint (and the lag) entirely -- see [Query Lakehouse or Warehouse Data with DuckDB](#query-lakehouse-or-warehouse-data-with-duckdb).
 
 ### When to use the MCP vs sqlcmd vs DuckDB vs PySpark
 
@@ -626,3 +646,10 @@ fab rm "dest.Workspace/Model.SemanticModel" -f
 ```
 
 For lakehouse properties, endpoints, and file/table operations, see [lakehouses.md](./lakehouses.md).
+
+## Related
+
+- [notebooks.md](./notebooks.md) -- running notebooks as jobs, reading a notebook's [exit value](./notebooks.md#the-notebooks-exit-value-the-only-reliable-success-signal), scheduling
+- [lakehouses.md](./lakehouses.md) -- endpoints, OneLake paths, table ops; and the [SQL-endpoint sync](#force-the-sql-endpoint-metadata-sync-skip-the-sleep) that a Spark write triggers
+- [semantic-models.md](./semantic-models.md) -- DAX query patterns and model refresh
+- `executing-spark` and `using-duckdb` skills (in the `etl` plugin) -- the ephemeral-compute and local-Delta counterparts to the Livy/DuckDB routes here

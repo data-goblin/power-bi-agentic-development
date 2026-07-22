@@ -474,8 +474,10 @@ fab open "Production.Workspace/Sales.Report"
 #### Syntax
 
 ```bash
-fab ln <source> <destination>
+fab ln <shortcut-path> --type <type> [--target <onelake-target>] [-i <json>] [-f]
 ```
+
+`<shortcut-path>` ends in `.Shortcut` (e.g. `ws.Workspace/LH.Lakehouse/Tables/ext.Shortcut`). `--type` is one of `oneLake`, `adlsGen2`, `amazonS3`, `googleCloudStorage`, `dataverse`, `s3Compatible`. Internal (`oneLake`) shortcuts take `--target`; external ones take a `-i` JSON body with the location subpath and connection id. See [lakehouses.md](./lakehouses.md#onelake-shortcuts).
 
 ### assign / unassign - Assign Resources
 

@@ -120,6 +120,42 @@ GET /sessions
 
 Returns all active sessions for the lakehouse. Use to find orphaned sessions.
 
+## Batch Jobs (One-Shot)
+
+Same base URL, `/batches` instead of `/sessions`. A batch runs a single Spark job to completion -- no interactive statement loop, no idle session to clean up. Prefer it for scheduled or fire-and-forget ETL; use sessions for interactive, multi-statement work.
+
+Unlike a session (which takes inline `code`), a batch references a **file** already in OneLake / the lakehouse (`Files/…`) rather than inline source.
+
+### Submit a batch
+
+```
+POST /batches
+```
+
+**Request:**
+```json
+{"file": "abfss://<ws-id>@onelake.dfs.fabric.microsoft.com/<lh-id>/Files/jobs/transform.py",
+ "args": ["--date", "2025-01-01"],
+ "conf": {"spark.sql.shuffle.partitions": "200"}}
+```
+
+**Response (201):** `{"id": <batchId>, "state": "starting"}`
+
+### Poll a batch
+
+```
+GET /batches/{batchId}
+```
+
+`state`: `not_started`, `starting`, `running`, `success`, `dead`, `killed`. Poll until terminal (`success`/`dead`/`killed`). Logs: `GET /batches/{batchId}/log`.
+
+### Cancel / list
+
+```
+DELETE /batches/{batchId}      # cancel
+GET    /batches                # list active batches for the lakehouse
+```
+
 ## Helper Function
 
 ```python

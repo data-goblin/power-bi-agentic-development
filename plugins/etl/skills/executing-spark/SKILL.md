@@ -88,7 +88,22 @@ Results are in `output.data["text/plain"]` when `state: "available"` and `output
 | Scheduled ETL | Notebook via `fab job run` |
 | Agent-driven compute (Dagster, orchestrators) | Livy session |
 
+## Sessions vs Batch Jobs
+
+A Livy **session** (this skill) is interactive: create it, submit statements, read output as it runs, delete it. It stays alive and you pay for idle time until you delete it or it times out (~20 min).
+
+A Livy **batch** is one-shot: submit a single job (a file or inline job spec), poll it to a terminal state, done. No idle-CU footgun, nothing to remember to delete. For scheduled or fire-and-forget agent ETL, prefer a batch over a session; keep sessions for interactive, multi-statement work. Same base URL, `/batches` instead of `/sessions` -- see [`references/livy-api.md`](./references/livy-api.md#batch-jobs-one-shot).
+
+## Livy vs Notebook Jobs: reading the outcome
+
+A Livy statement returns its result **directly** in the response (`output.status` = `ok`/`error`), so you always know whether it worked. A notebook run via `fab job run` does not -- its job status reports `Completed` even when the notebook caught an exception and exited a failure payload. If you run notebooks as batch jobs instead of Livy, you must read the notebook's **exit value** to get its real verdict. The `fabric-cli` skill (in the `fabric-cli` plugin) documents that endpoint and ships `scripts/run_notebook_checked.py` for it.
+
 ## References
 
-- **`references/livy-api.md`** -- Full API reference with endpoints, request/response formats, and error handling
+- **`references/livy-api.md`** -- Full API reference with endpoints (sessions + batches), request/response formats, and error handling
 - **`references/example-script.md`** -- Complete working script that creates a session, queries data, writes results, and cleans up
+
+## Related
+
+- `using-duckdb` skill (same `etl` plugin) -- read-only Delta querying, local or in-notebook, when you don't need Spark compute
+- `fabric-cli` skill (`fabric-cli` plugin) -- `nb exec` / `fab job run` for notebooks, reading a notebook's exit value, and the SQL-endpoint metadata sync after a Spark write

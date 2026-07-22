@@ -408,11 +408,15 @@ fab job run "ws.Workspace/ETL.Notebook" -C '{
 }'
 ```
 
+A `Completed` status means the process finished, **not** that the ETL succeeded -- a notebook can catch its own exception and exit a failure payload while still reporting `Completed`. Read the notebook's exit value to get its real verdict (see [The notebook's exit value](#the-notebooks-exit-value-the-only-reliable-success-signal)), or run it through [`scripts/run_notebook_checked.py`](../scripts/run_notebook_checked.py).
+
 ## Getting Notebook Run Outputs
 
-Cell outputs from completed runs are **not available via any REST API**. The `fab export` and `fab get -q definition` commands return cell source code only; outputs are stored in portal-only snapshots.
+Two different things get conflated here. Keep them apart.
 
-**Workaround**: write notebook results to a lakehouse table or file, then read them back with DuckDB or `fab cp`:
+### Arbitrary cell output (stdout, `df.show()`, print): not retrievable
+
+Rendered cell output from a completed run is **not available via any REST API**. `fab export` and `fab get -q definition` return cell *source* only; outputs live in portal-only snapshots. Workaround unchanged: write results to a lakehouse table or file, then read them back with DuckDB or `fab cp`:
 
 ```python
 # In notebook: write results to lakehouse instead of just printing
@@ -431,6 +435,35 @@ CREATE SECRET (TYPE azure, PROVIDER credential_chain, CHAIN 'cli');
 SELECT * FROM delta_scan('abfss://<ws-id>@onelake.../<lh-id>/Tables/notebook_results');
 "
 ```
+
+### The notebook's exit value: the only reliable success signal
+
+`fab job run` and the job status report `Completed` whenever the notebook **process** finished. A notebook that catches its own exception and returns `notebookutils.notebook.exit(json.dumps({"ok": false, ...}))` instead of raising still shows `Completed`. So job status alone lies about ETL success.
+
+The structured value the notebook passed to `notebookutils.notebook.exit(...)` / `mssparkutils.notebook.exit(...)` **is** retrievable, from the notebook-specific job-instance endpoint:
+
+```
+GET /v1/workspaces/{ws}/notebooks/{nb}/jobs/execute/instances/{run}?beta=true
+    -> properties.exitValue      (a string; parse it if it is JSON)
+```
+
+The GA status route (`items/{id}/jobs/instances/{run}`, where the run's `Location` header points) returns `status` + `failureReason` but has no `properties` and **no** `exitValue`. The `?beta=true` notebook route is the only source. It is an **officially documented but Beta** API (Microsoft marks it "not recommended for production use, may change based on feedback"), and `beta=true` is a required query parameter, not an optional flag.
+
+```bash
+# fab-native (audience defaults to fabric; -P carries the query param)
+fab api "workspaces/$WS/notebooks/$NB/jobs/execute/instances/$RUN" -P beta=true -q "properties.exitValue"
+
+# az rest equivalent (reuses the same az login)
+az rest --method get --resource "https://api.fabric.microsoft.com" \
+  --url "https://api.fabric.microsoft.com/v1/workspaces/$WS/notebooks/$NB/jobs/execute/instances/$RUN?beta=true" \
+  --query "properties.exitValue" -o tsv
+```
+
+Get `$RUN` (the job instance id) from `fab job run-list "ws/Nb.Notebook"` (latest run) or the `--id` you passed to `fab job run-status`. The same beta response carries monitoring links under `properties.computeDetails.monitoringInfo`: `executionSnapshotUrl` (the portal notebook-run snapshot with the traceback) for every compute type, plus `sparkUiUrl`, `driverLogUrl`, and `activityDetails.sparkApplicationId` for Spark notebooks -- direct links for debugging a failed run.
+
+`status: "Deduped"` means the run was skipped because another run of the same job was already in flight: the notebook did **not** execute. Treat it as "did not run", distinct from `Completed`/`Failed`/`Cancelled`.
+
+**Prefer the wrapper** [`scripts/run_notebook_checked.py`](../scripts/run_notebook_checked.py): it starts the run, polls to a terminal status, reads the exit value, and exits non-zero when the notebook's own `{ok:false}` verdict fails despite a `Completed` status (exit `2`), a job Failed/Cancelled (exit `1`), or a `Deduped` skip (exit `3`). For this to work, end the notebook with `notebookutils.notebook.exit(json.dumps({"ok": True, "summary": "..."}))`. The `executing-spark` skill (in the `etl` plugin) covers the contrasting case -- Livy statements return output directly, with no exit-value indirection.
 
 ## Reducing Startup Times
 
@@ -504,6 +537,12 @@ fab job run-sch "ws.Workspace/Nb.Notebook" \
   --enable
 ```
 
+**Timezone gotcha**: in the underlying scheduler API, `startDateTime`/`endDateTime` are UTC, but `localTimeZoneId` is a **Windows** time-zone id (`"Central Standard Time"`), not an IANA name (`America/Chicago`). Getting this wrong shifts every run. Max 20 schedules per item.
+
+### On-demand run vs schedule
+
+An on-demand run is `POST items/{id}/jobs/{jobType}/instances` (notebook `jobType` is `RunNotebook`; the legacy `?jobType=` query form still works) -- this is what `fab job run`/`fab job start` call. A `Deduped` result on an on-demand run means it was skipped because the same job was already running: it did not execute. This is separate from schedules, which use the `.../schedules` sub-resource below.
+
 ### Update or disable an existing schedule
 
 Each schedule has its own ID; list with `fab job run-list --schedule` or read from `fab api "workspaces/<ws-id>/items/<item-id>/jobs/.../schedules"`.
@@ -572,3 +611,11 @@ Working examples in `examples/`:
 
 - **`examples/python-notebook.ipynb`** -- Python kernel with delta-rs, DuckDB, and `notebookutils.data` T-SQL patterns
 - **`examples/pyspark-notebook.ipynb`** -- PySpark kernel with Spark SQL read and `saveAsTable` write patterns
+
+## Related
+
+- [querying-data.md](./querying-data.md) -- running code against a lakehouse without a notebook (`nb exec`, Livy sessions), and reading results back
+- [lakehouses.md](./lakehouses.md) -- attaching lakehouses, table ops, and the SQL-endpoint metadata sync that a notebook write triggers
+- [semantic-models.md](./semantic-models.md) -- refreshing a model after a notebook loads its source tables
+- [`scripts/run_notebook_checked.py`](../scripts/run_notebook_checked.py) -- run a notebook and fail loudly on its exit-value verdict
+- `executing-spark` and `using-duckdb` skills (in the `etl` plugin) -- ephemeral Spark execution and local Delta querying, the notebook-less alternatives

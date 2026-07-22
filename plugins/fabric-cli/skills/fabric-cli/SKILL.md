@@ -280,7 +280,7 @@ Flags:
 - `-i` (JSON body or file)
 - `-f` (skip sensitivity prompt on definition pulls).
 
-Fabric exposes three query paths depending on the source; always prefer the wrapper scripts — they resolve IDs, hosts, and auth for you:
+Fabric exposes three query paths depending on the source; always prefer the wrapper scripts -- they resolve IDs, hosts, and auth for you:
 
 - Semantic models (DAX):
   - Find model fields first: `fab get "ws.Workspace/Model.SemanticModel" -q "definition"`
@@ -403,6 +403,7 @@ Check references before modifying workspaces:
 | `fab job run-list` | List executions | `fab job run-list "ws/Nb.Notebook"` |
 | `fab job run-status` | Check status | `fab job run-status "ws/Nb.Notebook" --id <job-id>` |
 | `fab job run-cancel` | Cancel a job | `fab job run-cancel "ws/Nb.Notebook" --id <job-id> -w` |
+| `scripts/run_notebook_checked.py` | Run a notebook + verify its exit value (status `Completed` ≠ ETL succeeded) | `python3 scripts/run_notebook_checked.py "ws/ETL.Notebook"` |
 | `fab api -A powerbi .../refreshes` | Trigger semantic model refresh | `fab api -A powerbi "groups/<ws-id>/datasets/<model-id>/refreshes" -X post -i '{"type":"Full"}'` |
 
 Flags:
@@ -419,6 +420,7 @@ Jobs map to different endpoints depending on item type:
   - Run asynchronously: `fab job start "ws/ETL.Notebook"`
   - Check status: `fab job run-status "ws/Nb.Notebook" --id <job-id>`
   - List history: `fab job run-list "ws/Nb.Notebook"`
+  - Verify the REAL outcome: a job `Completed` only means the process finished -- a notebook can catch its own exception and exit a failure payload while still showing `Completed`. Read its exit value, or use [`scripts/run_notebook_checked.py`](./scripts/run_notebook_checked.py); details in [notebooks.md](./references/notebooks.md#the-notebooks-exit-value-the-only-reliable-success-signal)
   - Python / PySpark kernels, Livy sessions, cell-level CRUD: [notebooks.md](./references/notebooks.md)
 - Semantic model refresh (not exposed as `fab job`):
   - Trigger: `fab api -A powerbi "groups/<ws-id>/datasets/<model-id>/refreshes" -X post -i '{"type":"Full"}'`
@@ -527,6 +529,25 @@ Check references before deploying:
 
 ## References
 
+**Reference map** (which references cluster together; follow the links between them, not just this list):
+
+```
+etl / notebooks
+  notebooks.md ── run jobs, exit value, scheduling
+    ├─ querying-data.md ── nb exec / Livy, DuckDB/sqlcmd, SQL-endpoint sync
+    └─ lakehouses.md ── attach, table ops, OneLake shortcuts, SQL-endpoint id
+  (cross-plugin) executing-spark, using-duckdb  ── etl plugin: ephemeral Spark, local Delta
+
+data items
+  lakehouses.md · warehouses.md · sql-databases.md · semantic-models.md
+    └─ all feed querying-data.md (route priority) and notebooks.md (load then read)
+
+governance / deploy
+  admin.md · permissions.md · tags.md · folders.md
+  import-download-deploy.md ─ deployment-pipelines.md ─ workspaces.md (git status)
+  (cross-plugin) audit-tenant-settings ── fabric-admin plugin
+```
+
 **Skill references:**
 
 - [Import, Download, and Deploy](./references/import-download-deploy.md) - Export / import / copy / move items, PBIP round-trips, dev-to-prod migration patterns
@@ -563,6 +584,7 @@ Check references before deploying:
 - [query_sql_endpoint.py](./scripts/query_sql_endpoint.py) ; query lakehouse SQL endpoint, warehouse, or SQL database via `sqlcmd` (reuses `az login` through `ActiveDirectoryAzCli`); output as table, csv, or json
 - [create_direct_lake_model.py](./scripts/create_direct_lake_model.py) ; create a Direct Lake semantic model from lakehouse tables
 - [download_workspace.py](./scripts/download_workspace.py) ; download a full workspace with all item definitions and lakehouse files
+- [run_notebook_checked.py](./scripts/run_notebook_checked.py) ; run a notebook and check its exit value, exiting non-zero when the notebook's own `{ok:false}` verdict fails despite a `Completed` job status (reads the exit value via the notebook job-instance beta endpoint)
 
 See [scripts/README.md](./scripts/README.md) for detailed usage, arguments, and examples. Always search the `scripts/` folder before writing a new helper; a script may already exist for the task.
 

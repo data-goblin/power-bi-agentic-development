@@ -718,6 +718,15 @@ fab api -X post "workspaces/$WS_ID/git/initializeConnection" -i '{
 }'
 ```
 
+**Check sync state before deploying.** `git/status` (a long-running operation) tells you whether the workspace matches the remote. The workspace is in sync only when `workspaceHead == remoteCommitHash` **and** the `changes` array is empty; otherwise there are uncommitted workspace edits or unpulled remote commits to reconcile first.
+
+```bash
+# Returns workspaceHead, remoteCommitHash, and a changes[] of items that differ
+fab api "workspaces/$WS_ID/git/status"
+```
+
+Once you know the drift, reconcile it: `fab api -X post "workspaces/$WS_ID/git/commitToGit"` pushes workspace edits, `fab api -X post "workspaces/$WS_ID/git/updateFromGit"` pulls remote commits (both long-running).
+
 ## Advanced Workflows
 
 ### Clone Workspace
