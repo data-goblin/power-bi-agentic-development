@@ -12,4 +12,5 @@ Misc. useful shit for making Claude Code more effective, safe, or satisfying bas
 | [`agent-scripts/`](agent-scripts/) | Helper scripts for installing and running agentic tooling (e.g. enabling Windows long paths so the Copilot CLI install doesn't blow up on `Filename too long`) |
 | [`status-lines/`](status-lines/) | Two-line Claude Code statusline (version, host + cwd, git, vim mode, model + effort, time, usage meters); segmented for easy customization |
 | [`agent-settings/`](agent-settings/) | Sanitized `~/.claude/settings.json` template with the six Bash safety hooks (rm -rf home, npm, pip, ssh, op read, release-age bypass) and opinionated defaults |
+| [`themes/`](themes/) | 22 Power BI report themes generated from the Omarchy desktop themes, with a monospace font, contrast-safe labels and SVG-safe table tooltips |
 | [`package-cooldowns/`](package-cooldowns/) | One-shot setup script that configures uv, bun, pnpm, npm, and pip to ignore packages released in the last 7 days. Reduces supply-chain blast radius |

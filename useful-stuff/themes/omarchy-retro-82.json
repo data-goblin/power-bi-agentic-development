@@ -1,0 +1,1017 @@
+{
+  "name": "Omarchy Retro 82",
+  "background": "#05182e",
+  "backgroundDark": "#031222",
+  "secondaryBackground": "#0a2540",
+  "foreground": "#f6dcac",
+  "foregroundLight": "#f6dcac",
+  "foregroundDark": "#f6dcac",
+  "shapeStroke": "#134e5a",
+  "tableAccent": "#028391",
+  "dataColors": [
+    "#028391",
+    "#3f8f8a",
+    "#8cbfb8",
+    "#e97b3c",
+    "#faa968",
+    "#f85525"
+  ],
+  "good": "#028391",
+  "bad": "#f85525",
+  "neutral": "#e97b3c",
+  "textClasses": {
+    "callout": {
+      "fontFace": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+      "fontSize": 36,
+      "color": "#f6dcac"
+    },
+    "title": {
+      "fontFace": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+      "fontSize": 10,
+      "color": "#f6dcac"
+    },
+    "header": {
+      "fontFace": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+      "fontSize": 12,
+      "color": "#f6dcac"
+    },
+    "label": {
+      "fontFace": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+      "fontSize": 10,
+      "color": "#f6dcac"
+    },
+    "largeTitle": {
+      "fontFace": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+      "fontSize": 14,
+      "color": "#f6dcac"
+    },
+    "dataTitle": {
+      "fontFace": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+      "fontSize": 10,
+      "color": "#f6dcac"
+    },
+    "boldLabel": {
+      "fontFace": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+      "fontSize": 10,
+      "color": "#f6dcac"
+    },
+    "smallLabel": {
+      "fontFace": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+      "fontSize": 9,
+      "color": "#f6dcac"
+    },
+    "smallDataLabel": {
+      "fontFace": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+      "fontSize": 9,
+      "color": "#f6dcac"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "title": [
+          {
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "fontSize": 10,
+            "fontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "bold": false
+          }
+        ],
+        "background": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#05182e"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#134e5a"
+              }
+            },
+            "width": 1,
+            "radius": 0
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": false
+          }
+        ],
+        "categoryAxis": [
+          {
+            "labelColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "gridlineColor": {
+              "solid": {
+                "color": "#134e5a"
+              }
+            },
+            "showAxisTitle": false,
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "fontSize": 10,
+            "gridlineStyle": "solid"
+          }
+        ],
+        "valueAxis": [
+          {
+            "labelColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "gridlineColor": {
+              "solid": {
+                "color": "#134e5a"
+              }
+            },
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "fontSize": 10,
+            "gridlineStyle": "solid"
+          }
+        ],
+        "labels": [
+          {
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "fontSize": 10,
+            "color": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            }
+          }
+        ],
+        "legend": [
+          {
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "fontSize": 10,
+            "labelColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            }
+          }
+        ],
+        "visualTooltip": [
+          {
+            "background": {
+              "solid": {
+                "color": "#05182e"
+              }
+            },
+            "themedBackground": {
+              "solid": {
+                "color": "#05182e"
+              }
+            },
+            "titleFontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "themedTitleFontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "valueFontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "themedValueFontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "titleFontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "valueFontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace"
+          }
+        ],
+        "subTitle": [
+          {
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "fontSize": 10,
+            "fontColor": {
+              "solid": {
+                "color": "#3f8f8a"
+              }
+            }
+          }
+        ],
+        "padding": [
+          {
+            "top": 12,
+            "bottom": 12,
+            "left": 16,
+            "right": 16
+          }
+        ],
+        "visualHeader": [
+          {
+            "foreground": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "border": {
+              "solid": {
+                "color": "#134e5a"
+              }
+            },
+            "background": {
+              "solid": {
+                "color": "#0a2540"
+              }
+            },
+            "transparency": 0
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "background": [
+          {
+            "color": {
+              "solid": {
+                "color": "#031222"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#031222"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "outspacePane": [
+          {
+            "backgroundColor": {
+              "solid": {
+                "color": "#05182e"
+              }
+            },
+            "transparency": 0,
+            "foregroundColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "inputBoxColor": {
+              "solid": {
+                "color": "#0a2540"
+              }
+            },
+            "checkboxAndApplyColor": {
+              "solid": {
+                "color": "#028391"
+              }
+            }
+          }
+        ],
+        "filterCard": [
+          {
+            "$id": "Applied",
+            "backgroundColor": {
+              "solid": {
+                "color": "#0a2540"
+              }
+            },
+            "borderColor": {
+              "solid": {
+                "color": "#2a6b78"
+              }
+            },
+            "foregroundColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "inputBoxColor": {
+              "solid": {
+                "color": "#05182e"
+              }
+            },
+            "transparency": 0
+          },
+          {
+            "$id": "Available",
+            "backgroundColor": {
+              "solid": {
+                "color": "#05182e"
+              }
+            },
+            "borderColor": {
+              "solid": {
+                "color": "#2a6b78"
+              }
+            },
+            "foregroundColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "inputBoxColor": {
+              "solid": {
+                "color": "#0a2540"
+              }
+            },
+            "transparency": 0
+          }
+        ]
+      }
+    },
+    "slicer": {
+      "*": {
+        "items": [
+          {
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "textSize": 11,
+            "fontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "background": {
+              "solid": {
+                "color": "#031222"
+              }
+            }
+          }
+        ],
+        "header": [
+          {
+            "show": false
+          }
+        ],
+        "date": [
+          {
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "textSize": 11,
+            "fontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "background": {
+              "solid": {
+                "color": "#031222"
+              }
+            }
+          }
+        ],
+        "background": [
+          {
+            "show": false
+          }
+        ],
+        "border": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "tableEx": {
+      "*": {
+        "columnHeaders": [
+          {
+            "backColor": {
+              "solid": {
+                "color": "#05182e"
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "fontSize": 10
+          }
+        ],
+        "grid": [
+          {
+            "gridHorizontal": false,
+            "gridHorizontalColor": {
+              "solid": {
+                "color": "#134e5a"
+              }
+            },
+            "gridHorizontalWeight": 1,
+            "gridVertical": false,
+            "outlineColor": {
+              "solid": {
+                "color": "#134e5a"
+              }
+            },
+            "outlineWeight": 0
+          }
+        ],
+        "values": [
+          {
+            "backColor": {
+              "solid": {
+                "color": "#00000000"
+              }
+            },
+            "backColorPrimary": {
+              "solid": {
+                "color": "#05182e"
+              }
+            },
+            "backColorSecondary": {
+              "solid": {
+                "color": "#0a2540"
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "fontColorPrimary": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "fontColorSecondary": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "fontSize": 10
+          }
+        ],
+        "total": [
+          {
+            "backColor": {
+              "solid": {
+                "color": "#05182e"
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "bold": true
+          }
+        ],
+        "visualTooltip": [
+          {
+            "show": true,
+            "transparency": 100,
+            "background": {
+              "solid": {
+                "color": "#00000000"
+              }
+            },
+            "themedBackground": {
+              "solid": {
+                "color": "#00000000"
+              }
+            },
+            "titleFontColor": {
+              "solid": {
+                "color": "#00000000"
+              }
+            },
+            "themedTitleFontColor": {
+              "solid": {
+                "color": "#00000000"
+              }
+            },
+            "valueFontColor": {
+              "solid": {
+                "color": "#00000000"
+              }
+            },
+            "themedValueFontColor": {
+              "solid": {
+                "color": "#00000000"
+              }
+            },
+            "actionFontColor": {
+              "solid": {
+                "color": "#00000000"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "pivotTable": {
+      "*": {
+        "columnHeaders": [
+          {
+            "backColor": {
+              "solid": {
+                "color": "#05182e"
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "fontSize": 10,
+            "autoSizeColumnWidth": true,
+            "columnAdjustment": "fitToContent",
+            "customColumnWidth": false
+          }
+        ],
+        "grid": [
+          {
+            "gridHorizontal": false,
+            "gridHorizontalColor": {
+              "solid": {
+                "color": "#134e5a"
+              }
+            },
+            "gridHorizontalWeight": 1,
+            "gridVertical": false,
+            "outlineColor": {
+              "solid": {
+                "color": "#134e5a"
+              }
+            },
+            "outlineWeight": 0
+          }
+        ],
+        "values": [
+          {
+            "backColor": {
+              "solid": {
+                "color": "#00000000"
+              }
+            },
+            "backColorPrimary": {
+              "solid": {
+                "color": "#05182e"
+              }
+            },
+            "backColorSecondary": {
+              "solid": {
+                "color": "#0a2540"
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "fontColorPrimary": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "fontColorSecondary": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "fontSize": 10,
+            "bandedRowHeaders": true
+          }
+        ],
+        "total": [
+          {
+            "backColor": {
+              "solid": {
+                "color": "#05182e"
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "bold": true
+          }
+        ],
+        "rowHeaders": [
+          {
+            "backColor": {
+              "solid": {
+                "color": "#00000000"
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            }
+          }
+        ],
+        "subTotals": [
+          {
+            "backColor": {
+              "solid": {
+                "color": "#00000000"
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "bold": true
+          }
+        ],
+        "visualTooltip": [
+          {
+            "show": true,
+            "transparency": 100,
+            "background": {
+              "solid": {
+                "color": "#00000000"
+              }
+            },
+            "themedBackground": {
+              "solid": {
+                "color": "#00000000"
+              }
+            },
+            "titleFontColor": {
+              "solid": {
+                "color": "#00000000"
+              }
+            },
+            "themedTitleFontColor": {
+              "solid": {
+                "color": "#00000000"
+              }
+            },
+            "valueFontColor": {
+              "solid": {
+                "color": "#00000000"
+              }
+            },
+            "themedValueFontColor": {
+              "solid": {
+                "color": "#00000000"
+              }
+            },
+            "actionFontColor": {
+              "solid": {
+                "color": "#00000000"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "advancedSlicerVisual": {
+      "*": {
+        "fillCustom": [
+          {
+            "$id": "default",
+            "show": true,
+            "fillColor": {
+              "solid": {
+                "color": "#05182e"
+              }
+            },
+            "transparency": 0
+          },
+          {
+            "$id": "selection:selected",
+            "show": true,
+            "fillColor": {
+              "solid": {
+                "color": "#05182e"
+              }
+            },
+            "transparency": 0
+          },
+          {
+            "$id": "interaction:hover",
+            "show": true,
+            "fillColor": {
+              "solid": {
+                "color": "#0a2540"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "outline": [
+          {
+            "$id": "default",
+            "show": true,
+            "lineColor": {
+              "solid": {
+                "color": "#134e5a"
+              }
+            },
+            "weight": 1
+          },
+          {
+            "$id": "selection:selected",
+            "show": true,
+            "lineColor": {
+              "solid": {
+                "color": "#028391"
+              }
+            },
+            "weight": 3
+          }
+        ],
+        "value": [
+          {
+            "fontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "fontSize": 11,
+            "bold": false,
+            "show": true,
+            "transparency": 0,
+            "verticalAlignment": "middle",
+            "horizontalAlignment": "center",
+            "textWrap": true
+          },
+          {
+            "$id": "default",
+            "fontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "fontSize": 11,
+            "bold": false,
+            "show": true,
+            "transparency": 0,
+            "verticalAlignment": "middle",
+            "horizontalAlignment": "center",
+            "textWrap": true
+          },
+          {
+            "$id": "selection:selected",
+            "fontColor": {
+              "solid": {
+                "color": "#028391"
+              }
+            },
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "fontSize": 11,
+            "bold": false,
+            "show": true,
+            "transparency": 0,
+            "verticalAlignment": "middle",
+            "horizontalAlignment": "center",
+            "textWrap": true
+          },
+          {
+            "$id": "selection:unselected",
+            "fontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "fontSize": 11,
+            "bold": false,
+            "show": true,
+            "transparency": 0,
+            "verticalAlignment": "middle",
+            "horizontalAlignment": "center",
+            "textWrap": true
+          },
+          {
+            "$id": "interaction:hover",
+            "fontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            },
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "fontSize": 11,
+            "bold": false,
+            "show": true,
+            "transparency": 0,
+            "verticalAlignment": "middle",
+            "horizontalAlignment": "center",
+            "textWrap": true
+          }
+        ],
+        "shapeCustomRectangle": [
+          {
+            "tileShape": "rectangle",
+            "rectangleRoundedCurve": 0
+          }
+        ],
+        "padding": [
+          {
+            "$id": "default",
+            "paddingSelection": "Custom",
+            "topMargin": 0,
+            "bottomMargin": 0,
+            "leftMargin": 4,
+            "rightMargin": 4
+          }
+        ],
+        "selection": [
+          {
+            "singleSelect": true,
+            "strictSingleSelect": true
+          }
+        ],
+        "background": [
+          {
+            "show": false
+          }
+        ],
+        "border": [
+          {
+            "show": false
+          }
+        ],
+        "title": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "cardVisual": {
+      "*": {
+        "visualTooltip": [
+          {
+            "show": false
+          }
+        ],
+        "value": [
+          {
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "fontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            }
+          }
+        ],
+        "label": [
+          {
+            "fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace",
+            "fontColor": {
+              "solid": {
+                "color": "#f6dcac"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "card": {
+      "*": {
+        "visualTooltip": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "multiRowCard": {
+      "*": {
+        "visualTooltip": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "image": {
+      "*": {
+        "visualTooltip": [
+          {
+            "show": false
+          }
+        ],
+        "background": [
+          {
+            "show": false
+          }
+        ],
+        "border": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "clusteredBarChart": {
+      "*": {
+        "layout": [
+          {
+            "clusteredGapOverlaps": true,
+            "clusteredGapSize": 40
+          }
+        ],
+        "labels": [
+          {
+            "labelPosition": "InsideBase",
+            "bold": true,
+            "color": {
+              "solid": {
+                "color": "#05182e"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "clusteredColumnChart": {
+      "*": {
+        "layout": [
+          {
+            "clusteredGapOverlaps": true,
+            "clusteredGapSize": 40
+          }
+        ],
+        "labels": [
+          {
+            "labelPosition": "InsideBase",
+            "bold": true,
+            "color": {
+              "solid": {
+                "color": "#05182e"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "lineChart": {
+      "*": {
+        "lineStyles": [
+          {
+            "strokeWidth": 3,
+            "lineChartType": "linear"
+          }
+        ],
+        "markers": [
+          {
+            "show": false
+          }
+        ],
+        "legend": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "textbox": {
+      "*": {
+        "background": [
+          {
+            "show": false
+          }
+        ],
+        "border": [
+          {
+            "show": false
+          }
+        ]
+      }
+    }
+  },
+  "backgroundLight": "#0a2540",
+  "backgroundNeutral": "#134e5a",
+  "foregroundNeutralSecondary": "#f6dcac",
+  "foregroundNeutralTertiary": "#3f8f8a",
+  "hyperlink": "#faa968",
+  "visitedHyperlink": "#3f8f8a",
+  "maximum": "#028391",
+  "center": "#f6dcac",
+  "minimum": "#f85525"
+}
