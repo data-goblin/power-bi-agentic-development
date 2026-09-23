@@ -1,44 +1,38 @@
 # Omarchy themes for Power BI
 
-Power BI report themes generated from the 22 built-in [Omarchy](https://omarchy.org) desktop themes (`/usr/share/omarchy/themes/*/colors.toml`). Each maps the Omarchy palette onto page, visual, table, matrix, slicer and tooltip styles, with dim text picked by contrast (3:1 against the background) so labels stay readable on light themes too.
+## Credits
 
-What every theme sets:
+- [`omarchy-vantablack.json`](omarchy-vantablack.json): [Omarchy Vantablack](https://github.com/omacom/omarchy/tree/quattro/themes/vantablack) by [@bjarneo](https://github.com/bjarneo)
+- [`omarchy-last-horizon.json`](omarchy-last-horizon.json): [Omarchy Last Horizon](https://github.com/omacom/omarchy/tree/quattro/themes/last-horizon) by [HANCORE](https://github.com/HANCORE-linux)
+- [`omarchy-solitude.json`](omarchy-solitude.json): [Omarchy Solitude](https://github.com/omacom/omarchy/tree/quattro/themes/solitude) by [HANCORE](https://github.com/HANCORE-linux) ([repo](https://github.com/HANCORE-linux/omarchy-solitude-theme)). Neovim colours: [ashen.nvim](https://github.com/ficd0/ashen.nvim)
+- [`omarchy-matte-black.json`](omarchy-matte-black.json): [Omarchy Matte Black](https://github.com/omacom/omarchy/tree/quattro/themes/matte-black) by [@tahayvr](https://github.com/tahayvr). Neovim colours: [matteblack.nvim](https://github.com/tahayvr/matteblack.nvim)
+- [`omarchy-miasma.json`](omarchy-miasma.json): [Omarchy Miasma](https://github.com/omacom/omarchy/tree/quattro/themes/miasma) added by the Omarchy maintainers. Original: [miasma.nvim](https://github.com/xero/miasma.nvim) by @xero
+- [`omarchy-ristretto.json`](omarchy-ristretto.json): [Omarchy Ristretto](https://github.com/omacom/omarchy/tree/quattro/themes/ristretto) by [@gthelding](https://github.com/gthelding)
+- [`omarchy-gruvbox.json`](omarchy-gruvbox.json): [Omarchy Gruvbox](https://github.com/omacom/omarchy/tree/quattro/themes/gruvbox) port by the Omarchy maintainers. Original: [gruvbox](https://github.com/morhetz/gruvbox) by @morhetz
+- [`omarchy-hackerman.json`](omarchy-hackerman.json): [Omarchy Hackerman](https://github.com/omacom/omarchy/tree/quattro/themes/hackerman) by [@bjarneo](https://github.com/bjarneo). Neovim colours: [hackerman.nvim](https://github.com/bjarneo/hackerman.nvim)
+- [`omarchy-osaka-jade.json`](omarchy-osaka-jade.json): [Omarchy Osaka Jade](https://github.com/omacom/omarchy/tree/quattro/themes/osaka-jade) by [@Justikun](https://github.com/Justikun) ([repo](https://github.com/Justikun/omarchy-osaka-jade-theme))
+- [`omarchy-everforest.json`](omarchy-everforest.json): [Omarchy Everforest](https://github.com/omacom/omarchy/tree/quattro/themes/everforest) port by the Omarchy maintainers. Original: [everforest](https://github.com/sainnhe/everforest) by @sainnhe
+- [`omarchy-ethereal.json`](omarchy-ethereal.json): [Omarchy Ethereal](https://github.com/omacom/omarchy/tree/quattro/themes/ethereal) by [@bjarneo](https://github.com/bjarneo)
+- [`omarchy-retro-82.json`](omarchy-retro-82.json): [Omarchy Retro 82](https://github.com/omacom/omarchy/tree/quattro/themes/retro-82) by [@OldJobobo](https://github.com/OldJobobo). Neovim colours: [retro-82.nvim](https://github.com/OldJobobo/retro-82.nvim)
+- [`omarchy-tokyo-night.json`](omarchy-tokyo-night.json): [Omarchy Tokyo Night](https://github.com/omacom/omarchy/tree/quattro/themes/tokyo-night) port by the Omarchy maintainers. Original: [Tokyo Night](https://github.com/tokyo-night/tokyo-night-vscode-theme) by @enkia; Neovim port [tokyonight.nvim](https://github.com/folke/tokyonight.nvim) by @folke
+- [`omarchy-catppuccin.json`](omarchy-catppuccin.json): [Omarchy Catppuccin](https://github.com/omacom/omarchy/tree/quattro/themes/catppuccin) port by the Omarchy maintainers. Original: [Catppuccin](https://github.com/catppuccin/catppuccin) (Mocha)
+- [`omarchy-kanagawa.json`](omarchy-kanagawa.json): [Omarchy Kanagawa](https://github.com/omacom/omarchy/tree/quattro/themes/kanagawa) port by the Omarchy maintainers. Original: [kanagawa.nvim](https://github.com/rebelot/kanagawa.nvim) by @rebelot
+- [`omarchy-lumon.json`](omarchy-lumon.json): [Omarchy Lumon](https://github.com/omacom/omarchy/tree/quattro/themes/lumon) by the Omarchy maintainers. Neovim colours: [lumon.nvim](https://github.com/omacom/lumon.nvim)
+- [`omarchy-nord.json`](omarchy-nord.json): [Omarchy Nord](https://github.com/omacom/omarchy/tree/quattro/themes/nord) port by the Omarchy maintainers. Original: [Nord](https://github.com/nordtheme/nord) by Arctic Ice Studio
+- [`omarchy-rose-pine.json`](omarchy-rose-pine.json): [Omarchy Rosé Pine](https://github.com/omacom/omarchy/tree/quattro/themes/rose-pine) port by the Omarchy maintainers. Original: [Rosé Pine](https://github.com/rose-pine/rose-pine-theme) (Dawn)
+- [`omarchy-flexoki-light.json`](omarchy-flexoki-light.json): [Omarchy Flexoki Light](https://github.com/omacom/omarchy/tree/quattro/themes/flexoki-light) port by the Omarchy maintainers. Original: [Flexoki](https://github.com/kepano/flexoki) by @kepano
+- [`omarchy-catppuccin-latte.json`](omarchy-catppuccin-latte.json): [Omarchy Catppuccin Latte](https://github.com/omacom/omarchy/tree/quattro/themes/catppuccin-latte) port by [@ryanyogan](https://github.com/ryanyogan). Original: [Catppuccin](https://github.com/catppuccin/catppuccin) (Latte)
+- [`omarchy-lupine.json`](omarchy-lupine.json): [Omarchy Lupine](https://github.com/omacom/omarchy/tree/quattro/themes/lupine) by [@bjarneo](https://github.com/bjarneo) ([repo](https://github.com/bjarneo/omarchy-lupine-theme))
+- [`omarchy-white.json`](omarchy-white.json): [Omarchy White](https://github.com/omacom/omarchy/tree/quattro/themes/white) by [@bjarneo](https://github.com/bjarneo)
 
-- **Font:** `'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace`. Power BI has no font upload; the viewer sees JetBrains Mono only when it is installed on their machine, and falls back to Consolas, then the browser's monospace font
-- **Colours:** Omarchy `green` is the first data colour and the good/sentiment colour, `red` is bad, `yellow` neutral; pages use `dark_background`, visuals `background`, borders `selection`
-- **Button slicers:** square, flush tiles; the selected tile gets a 3 px outline in the series colour
-- **Tables and matrices:** tooltips are on but fully transparent, so SVG image cells never show their `data:image/svg+xml` URI on hover
+## Set a theme with the pbir CLI
 
-## Use
+```bash
+pbir theme create-template --new-template omarchy-tokyo-night.json --name omarchy-tokyo-night
+pbir theme apply-template "Report.Report" omarchy-tokyo-night -f
+```
 
-- Power BI Desktop: View > Themes > Browse for themes, pick a file
-- pbir CLI: `pbir theme create-template --new-template omarchy-tokyo-night.json --name omarchy-tokyo-night`, then `pbir theme apply-template "Report.Report" omarchy-tokyo-night`
+## Font warning
 
-## Themes
-
-Ordered from darkest to lightest, grouped by palette family.
-
-| File | Theme | Background | Series |
-|------|-------|------------|--------|
-| [`omarchy-vantablack.json`](omarchy-vantablack.json) | Omarchy Vantablack | `#000000` | `#b6b6b6` |
-| [`omarchy-last-horizon.json`](omarchy-last-horizon.json) | Omarchy Last Horizon | `#0c0b0c` | `#87a9b0` |
-| [`omarchy-solitude.json`](omarchy-solitude.json) | Omarchy Solitude | `#101315` | `#9fa5a9` |
-| [`omarchy-matte-black.json`](omarchy-matte-black.json) | Omarchy Matte Black | `#121212` | `#FFC107` |
-| [`omarchy-miasma.json`](omarchy-miasma.json) | Omarchy Miasma | `#222222` | `#5f875f` |
-| [`omarchy-ristretto.json`](omarchy-ristretto.json) | Omarchy Ristretto | `#2c2525` | `#adda78` |
-| [`omarchy-gruvbox.json`](omarchy-gruvbox.json) | Omarchy Gruvbox | `#282828` | `#a9b665` |
-| [`omarchy-hackerman.json`](omarchy-hackerman.json) | Omarchy Hackerman | `#0B0C16` | `#4fe88f` |
-| [`omarchy-osaka-jade.json`](omarchy-osaka-jade.json) | Omarchy Osaka Jade | `#111c18` | `#549e6a` |
-| [`omarchy-everforest.json`](omarchy-everforest.json) | Omarchy Everforest | `#2d353b` | `#a7c080` |
-| [`omarchy-ethereal.json`](omarchy-ethereal.json) | Omarchy Ethereal | `#060B1E` | `#92a593` |
-| [`omarchy-retro-82.json`](omarchy-retro-82.json) | Omarchy Retro 82 | `#05182e` | `#028391` |
-| [`omarchy-tokyo-night.json`](omarchy-tokyo-night.json) | Omarchy Tokyo Night | `#1a1b26` | `#9ece6a` |
-| [`omarchy-catppuccin.json`](omarchy-catppuccin.json) | Omarchy Catppuccin | `#1e1e2e` | `#a6e3a1` |
-| [`omarchy-kanagawa.json`](omarchy-kanagawa.json) | Omarchy Kanagawa | `#1f1f28` | `#76946a` |
-| [`omarchy-lumon.json`](omarchy-lumon.json) | Omarchy Lumon | `#16242d` | `#5e95bc` |
-| [`omarchy-nord.json`](omarchy-nord.json) | Omarchy Nord | `#2e3440` | `#a3be8c` |
-| [`omarchy-rose-pine.json`](omarchy-rose-pine.json) | Omarchy Rose Pine (light) | `#faf4ed` | `#286983` |
-| [`omarchy-flexoki-light.json`](omarchy-flexoki-light.json) | Omarchy Flexoki Light (light) | `#FFFCF0` | `#879A39` |
-| [`omarchy-catppuccin-latte.json`](omarchy-catppuccin-latte.json) | Omarchy Catppuccin Latte (light) | `#eff1f5` | `#40a02b` |
-| [`omarchy-lupine.json`](omarchy-lupine.json) | Omarchy Lupine (light) | `#fafafa` | `#4a2fd0` |
-| [`omarchy-white.json`](omarchy-white.json) | Omarchy White (light) | `#ffffff` | `#3a3a3a` |
+> [!WARNING]
+> Every theme sets the font to `'JetBrainsMono Nerd Font', 'JetBrains Mono', Consolas, monospace`. Power BI cannot embed fonts, so each viewer sees JetBrains Mono only if it is installed on their own machine. Otherwise it falls back to Consolas (Windows), then the browser's default monospace font. Text widths change with the fallback, so check tight cards and table columns on a machine without JetBrains Mono.
