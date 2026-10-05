@@ -1,6 +1,6 @@
 {
   "name": "fabric-cli",
-  "version": "26.40.2",
+  "version": "26.40.3",
   "description": "Connect to, read, and modify anything in Fabric via the CLI, with a Fabric pane that follows what fab does.",
   "author": {
     "name": "Kurt Buhler",

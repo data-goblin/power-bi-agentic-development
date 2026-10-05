@@ -1,6 +1,6 @@
 {
   "name": "databricks-cli",
-  "version": "26.40.2",
+  "version": "26.40.3",
   "description": "A Databricks pane that follows the databricks CLI: browse workspace, Unity Catalog, compute, jobs, pipelines, apps and dashboards, and see what Claude reads or changes.",
   "author": {
     "name": "Kurt Buhler",

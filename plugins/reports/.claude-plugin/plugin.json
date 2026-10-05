@@ -1,6 +1,6 @@
 {
   "name": "reports",
-  "version": "26.40.2",
+  "version": "26.40.3",
   "description": "Build, format, optimize, and review interactive Power BI reports, with a report pane that follows the pbir CLI and shows what Claude reads and changes.",
   "author": {
     "name": "Kurt Buhler",
