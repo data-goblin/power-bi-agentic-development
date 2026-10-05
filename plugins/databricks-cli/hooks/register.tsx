@@ -1,4 +1,5 @@
 import type { EngineInterface, Register, Timer } from 'claude-code'
+import { openCommand } from './open'
 
 import type { Explorer, Onboard, Target, TreeNode, Work } from '../types'
 import { glyph, titleGlyph as dbTitle, type Tier } from './icons'
@@ -101,37 +102,6 @@ function clean(segs: Seg[]): Seg[] {
   return segs
 }
 
-async function installed($: EngineInterface, cmd: string): Promise<boolean> {
-  try {
-    return (await $.process.run(['sh', '-c', 'command -v "$1" >/dev/null 2>&1', 'sh', cmd], { timeoutMs: 5_000 })).exitCode === 0
-  } catch {
-    return false
-  }
-}
-
-const LAUNCH = 'setsid "$@" </dev/null >/dev/null 2>&1 & p=$!; sleep 1; kill -0 "$p" 2>/dev/null && exit 0; wait "$p"'
-
-async function launch($: EngineInterface, ...choices: string[][]): Promise<void> {
-  for (const argv of choices) {
-    if (!(await installed($, argv[0] ?? ''))) continue
-    try {
-      if ((await $.process.run(['sh', '-c', LAUNCH, 'sh', ...argv], { timeoutMs: 15_000 })).exitCode === 0) return
-    } catch {
-      continue
-    }
-  }
-  $.ui.toast(`could not start ${choices.map(c => c[0] ?? '').join(' or ')}`)
-}
-
-async function started($: EngineInterface, argv: string[]): Promise<void> {
-  try {
-    const run = await $.process.run(argv, { timeoutMs: 10_000 })
-    if (run.exitCode !== 0) $.ui.toast(`could not start ${argv[0] ?? ''}: ${(run.stderr || run.stdout).trim().split('\n')[0] ?? ''}`)
-  } catch {
-    $.ui.toast(`could not start ${argv[0] ?? ''}`)
-  }
-}
-
 const slots = { busy: 0, queue: [] as (() => void)[] }
 
 async function limited<T>(fn: () => Promise<T>): Promise<T> {
@@ -147,9 +117,13 @@ async function limited<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 async function openUrl($: EngineInterface, url: string): Promise<void> {
-  const os = await osName($)
-  if (os === 'linux') return launch($, ['gio', 'open', url], ['xdg-open', url])
-  return started($, os === 'darwin' ? ['open', url] : ['rundll32', 'url.dll,FileProtocolHandler', url])
+  const { argv, init } = openCommand(await osName($), url)
+  try {
+    const run = await $.process.run(argv, init)
+    if (run.exitCode !== 0) $.ui.toast(`could not open ${url} with ${argv[0]}: ${run.stderr.trim().split('\n')[0] || `exit ${run.exitCode}`}`)
+  } catch {
+    $.ui.toast(`could not open ${url} with ${argv[0]}`)
+  }
 }
 
 async function fontState($: EngineInterface, charset: string, name: string): Promise<'ok' | 'stale' | 'missing'> {

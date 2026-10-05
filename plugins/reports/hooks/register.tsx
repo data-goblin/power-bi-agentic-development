@@ -1,4 +1,5 @@
 import { type EngineInterface, type Register, type Timer, update } from 'claude-code'
+import { LINUX_LAUNCH as LAUNCH, openCommand } from './open'
 
 import type { Explorer, Target, TreeNode } from '../types'
 import { glyph, type Tier, visualLabel } from './icons'
@@ -37,10 +38,6 @@ const FONT_SCRIPT =
   'ghostty|kitty|alacritty|Alacritty|foot|footclient|wezterm-gui|konsole|gnome-terminal-|xterm|urxvt|st|Terminal|iTerm2) ' +
   'e=$(ps -o etime= -p "$p" 2>/dev/null | awk -F\'[-:]\' \'{n=NF; s=$n+60*$(n-1); if (n>2) s+=3600*$(n-2); if (n>3) s+=86400*$(n-3); print s}\'); [ -n "$e" ] && [ $(( $(date +%s) - e )) -lt "$m" ] && echo stale || echo ok; exit 0;; esac; ' +
   'p=$(ps -o ppid= -p "$p" 2>/dev/null | tr -d " "); done; echo ok'
-
-const LAUNCH =
-  'f=$(mktemp) || exit 1; setsid -f sh -c \'"$@" </dev/null >/dev/null 2>&1; s=$?; [ -e "$0" ] && echo "$s" > "$0"\' "$f" "$@" </dev/null >/dev/null 2>&1; ' +
-  'i=0; while [ "$i" -lt 10 ] && [ ! -s "$f" ]; do sleep 0.05; i=$((i + 1)); done; s=$(cat "$f"); rm -f "$f"; exit "${s:-0}"'
 
 let lastPress = { key: '', at: 0 }
 const views: Record<string, { from: number; max: number; rows: number; room: number }> = {}
@@ -112,13 +109,12 @@ async function launch($: EngineInterface, argv: string[]): Promise<void> {
 }
 
 async function openUrl($: EngineInterface, url: string): Promise<void> {
-  const os = await osName($)
-  if (os === 'linux') return launch($, ['sh', '-c', 'if command -v gio >/dev/null; then exec gio open "$1"; else exec xdg-open "$1"; fi', 'sh', url])
+  const { argv, init } = openCommand(await osName($), url)
   try {
-    const run = await $.process.run(os === 'darwin' ? ['open', url] : ['cmd', '/c', 'start', '', url], { timeoutMs: 10_000 })
-    if (run.exitCode !== 0) $.ui.toast(`could not open ${url} (exit ${run.exitCode})`)
+    const run = await $.process.run(argv, init)
+    if (run.exitCode !== 0) $.ui.toast(`could not open ${url} with ${argv[0]}: ${run.stderr.trim().split('\n')[0] || `exit ${run.exitCode}`}`)
   } catch {
-    $.ui.toast(`could not open ${url}`)
+    $.ui.toast(`could not open ${url} with ${argv[0]}`)
   }
 }
 

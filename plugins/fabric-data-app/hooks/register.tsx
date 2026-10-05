@@ -1,4 +1,5 @@
 import { type EngineInterface, type Register, type Timer, update } from 'claude-code'
+import { openCommand } from './open'
 
 import type { AppInfo, FileNode, FileTree, Source, Theme } from '../types'
 import { merge, parseSources } from './apps'
@@ -31,15 +32,15 @@ import {
   visibleRows,
 } from './tree'
 
-const PANE = 'data-app-pane'
+const PANE = 'fabric-app-pane'
 const TREE = { plugin: 'fabric-data-app', key: 'tree' } as const
 const APPS = { plugin: 'fabric-data-app', key: 'apps' } as const
 const THEME = { plugin: 'fabric-data-app', key: 'theme' } as const
 const ADD_COLOR = '#98c379'
 const DEL_COLOR = '#e06c75'
-const TITLE = 'Data apps'
+const TITLE = 'Fabric apps'
 const WORKING = 'Claude is working in Fabric...'
-const FONT_HINT = 'Tell user once: Data app pane icons need github.com/data-goblin/fabric-nf plus a Nerd Font. Plugin option fontHint=off disables this.'
+const FONT_HINT = 'Tell user once: Fabric app pane icons need github.com/data-goblin/fabric-nf plus a Nerd Font. Plugin option fontHint=off disables this.'
 const BUSY_MAX_MS = 600_000
 const FLASH_MS = 2700
 const DOUBLE_MS = 450
@@ -62,8 +63,6 @@ const FONT_SCRIPT =
   'ghostty|kitty|alacritty|Alacritty|foot|footclient|wezterm-gui|konsole|gnome-terminal-|xterm|urxvt|st|Terminal|iTerm2) ' +
   'e=$(ps -o etime= -p "$p" 2>/dev/null | awk -F\'[-:]\' \'{n=NF; s=$n+60*$(n-1); if (n>2) s+=3600*$(n-2); if (n>3) s+=86400*$(n-3); print s}\'); [ -n "$e" ] && [ $(( $(date +%s) - e )) -lt "$m" ] && echo stale || echo ok; exit 0;; esac; ' +
   'p=$(ps -o ppid= -p "$p" 2>/dev/null | tr -d " "); done; echo ok'
-const WIN_OPEN_VAR = 'DATA_APP_PANE_OPEN'
-const WIN_OPEN = `$ErrorActionPreference = 'Stop'; [Diagnostics.Process]::Start([Diagnostics.ProcessStartInfo]@{ FileName = $env:${WIN_OPEN_VAR}; UseShellExecute = $true }) | Out-Null`
 const PRUNE = ['node_modules', '.git', 'dist', 'target', '.venv', '__pycache__', '.playwright']
 const HOME_PRUNE = ['Library', 'AppData', '.Trash']
 
@@ -744,22 +743,12 @@ async function touched($: EngineInterface, paths: string[]): Promise<void> {
 }
 
 async function openTarget($: EngineInterface, target: string): Promise<void> {
-  const os = await osName($)
-  const argv =
-    os === 'darwin'
-      ? ['open', target]
-      : os === 'win32'
-        ? ['powershell', '-NoProfile', '-NonInteractive', '-Command', WIN_OPEN]
-        : ['setsid', '-f', 'sh', '-c', 'if command -v gio >/dev/null; then exec gio open "$1"; else exec xdg-open "$1"; fi </dev/null >/dev/null 2>&1', 'sh', target]
-  const init =
-    os === 'win32'
-      ? { timeoutMs: 10_000, env: { [WIN_OPEN_VAR]: /^[a-z][a-z0-9+.-]*:\/\//i.test(target) ? target : target.replace(/\//g, '\\') } }
-      : { timeoutMs: 10_000 }
+  const { argv, init } = openCommand(await osName($), target)
   try {
     const run = await $.process.run(argv, init)
-    if (run.exitCode !== 0) $.ui.toast(`could not open ${target} with ${argv[0] ?? ''}: ${run.stderr.trim().split('\n')[0] || `exit ${run.exitCode}`}`)
+    if (run.exitCode !== 0) $.ui.toast(`could not open ${target} with ${argv[0]}: ${run.stderr.trim().split('\n')[0] || `exit ${run.exitCode}`}`)
   } catch {
-    $.ui.toast(`could not open ${target} with ${argv[0] ?? ''}`)
+    $.ui.toast(`could not open ${target} with ${argv[0]}`)
   }
 }
 
@@ -887,8 +876,8 @@ export const register: Register = (on, options) => {
 
   on('command.run', { command: PANE }, async ($, e) => {
     const terminal = (await $.session.surfaces()).includes('terminal')
-    if (terminal && e.presentation && !e.presentation.isFullscreen) return { text: `The data app pane shows in the sidebar, which needs the fullscreen layout. Run /tui fullscreen, then /${PANE}.` }
-    if (terminal && e.presentation && e.presentation.columns < 110) return { text: `The data app pane shows in the sidebar, which needs a terminal at least 110 columns wide. Widen it, then run /${PANE}.` }
+    if (terminal && e.presentation && !e.presentation.isFullscreen) return { text: `The Fabric app pane shows in the sidebar, which needs the fullscreen layout. Run /tui fullscreen, then /${PANE}.` }
+    if (terminal && e.presentation && e.presentation.columns < 110) return { text: `The Fabric app pane shows in the sidebar, which needs a terminal at least 110 columns wide. Widen it, then run /${PANE}.` }
     noDock = false
     const raw = (e.args ?? '').trim()
     const arg = /^["']/.test(raw) ? (tokenize(raw)[0] ?? '') : raw
@@ -1046,8 +1035,8 @@ export const register: Register = (on, options) => {
     if (app) {
       lines.push(
         t.selected === app.dir
-          ? 'The user has this Fabric app selected in the data app pane; "this" or "it" likely refers to it.'
-          : `The user has this file of a Fabric app selected in the data app pane; "this" or "it" likely refers to it: ${t.selected}`,
+          ? 'The user has this Fabric app selected in the Fabric app pane; "this" or "it" likely refers to it.'
+          : `The user has this file of a Fabric app selected in the Fabric app pane; "this" or "it" likely refers to it: ${t.selected}`,
         `app: ${app.title} (${app.cli}) at ${app.dir}`,
       )
       if (app.item) lines.push(`deployed item: workspace ${app.workspace}, item ${app.item}`)

@@ -12,6 +12,7 @@ Usage:
   echo "<p>hi</p>" | python3 show_explainer.py "Title"
 """
 
+import os
 import subprocess
 import sys
 import tempfile
@@ -65,31 +66,31 @@ PAGE = """<!doctype html>
 
 
 def open_in_browser(path: Path):
-    if sys.platform == "darwin":
-        for cmd in (["open", "-a", "Firefox", str(path)], ["open", str(path)]):
-            try:
-                if subprocess.run(cmd, capture_output=True, timeout=8).returncode == 0:
-                    return
-            except Exception:
-                continue
-    elif sys.platform.startswith("win"):
+    if sys.platform.startswith("win"):
+        os.startfile(str(path))
+        return
+    commands = (
+        (["open", "-a", "Firefox", "--", str(path)], ["open", "--", str(path)])
+        if sys.platform == "darwin"
+        else (["gio", "open", str(path)], ["xdg-open", str(path)], ["firefox", str(path)])
+    )
+    for cmd in commands:
         try:
-            subprocess.run(["cmd", "/c", "start", "", str(path)], timeout=8)
-            return
-        except Exception:
-            pass
-    else:
-        for browser in ("xdg-open", "firefox"):
+            process = subprocess.Popen(
+                cmd,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
             try:
-                subprocess.Popen(
-                    [browser, str(path)],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    start_new_session=True,
-                )
+                if process.wait(timeout=1) == 0:
+                    return
+            except subprocess.TimeoutExpired:
                 return
-            except Exception:
-                continue
+        except OSError:
+            continue
+    raise RuntimeError(f"Could not open {path} in a browser")
 
 
 def main():

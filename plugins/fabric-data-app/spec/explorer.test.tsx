@@ -27,7 +27,7 @@ let fonts: Record<string, string> = {}
 let refuseTree = false
 const inits: unknown[] = []
 const PLUGIN = 'fabric-data-app'
-const PANE = 'data-app-pane'
+const PANE = 'fabric-app-pane'
 const mem = new Map<string, { value: unknown; version: number }>()
 const tree = (root: string) => ({
   root,
@@ -207,7 +207,7 @@ test('macOS app: long app trees scroll, copy relative paths, and open files with
   expect(toasts[toasts.length - 1]).toBe('Could not copy: no-clipboard')
   await ui.post({ press: `${root}/f05.ts`, ctrl: true }, { in: 'rows' })
   await clock.settle()
-  expect(ran).toContainEqual(['open', `${root}/f05.ts`])
+  expect(ran).toContainEqual(['open', '--', `${root}/f05.ts`])
   failing.open = { exitCode: 1, stderr: `The file ${root}/f07.ts does not exist.\n` }
   await ui.post({ press: `${root}/f07.ts`, ctrl: true }, { in: 'rows' })
   await clock.settle()
@@ -229,7 +229,7 @@ test('Windows: files and links open through ShellExecute with the target as a li
   const opened = ran.map((argv, i) => [argv, envs[i]] as const).filter(([argv]) => argv[0] === 'powershell')
   expect(opened.map(([argv]) => argv.slice(0, 4))).toEqual([['powershell', '-NoProfile', '-NonInteractive', '-Command'], ['powershell', '-NoProfile', '-NonInteractive', '-Command']])
   expect(opened.every(([argv]) => argv.length === 5 && !argv.some(a => a.includes('R&D') || a.includes('fabric-developer')))).toBe(true)
-  expect(opened.map(([, env]) => env?.DATA_APP_PANE_OPEN)).toEqual(['C:\\Apps\\R&D App\\f05.ts', portal])
+  expect(opened.map(([, env]) => env?.PANE_OPEN_TARGET)).toEqual(['C:\\Apps\\R&D App\\f05.ts', portal])
   expect(ran.some(a => a[0] === 'cmd')).toBe(false)
   expect(ran.some(a => ['setsid', 'osascript', 'uname', 'find', 'touch'].includes(a[0] ?? ''))).toBe(false)
   await ui.unmount()
@@ -240,9 +240,9 @@ test('sidebar only: no pane in the default layout or a narrow terminal, and an i
   const copied: string[] = []
   const clock = world(on, { HOME: '/Users/k' }, ran, copied)
   const before = opens.length
-  const main = await $.command.run({ command: 'data-app-pane', args: '', origin: { kind: 'person' }, presentation: { isFullscreen: false, columns: 200 } } as any)
+  const main = await $.command.run({ command: 'fabric-app-pane', args: '', origin: { kind: 'person' }, presentation: { isFullscreen: false, columns: 200 } } as any)
   expect(JSON.stringify(main)).toContain('/tui fullscreen')
-  const narrow = await $.command.run({ command: 'data-app-pane', args: '', origin: { kind: 'person' }, presentation: { isFullscreen: true, columns: 90 } } as any)
+  const narrow = await $.command.run({ command: 'fabric-app-pane', args: '', origin: { kind: 'person' }, presentation: { isFullscreen: true, columns: 90 } } as any)
   expect(JSON.stringify(narrow)).toContain('110 columns')
   expect(opens.length).toBe(before)
   const ui = await $.ui.mount({ plugin: PLUGIN, surface: 'terminal', component: 'Pane', requestId: PANE, props: { ...paneProps, placement: 'inline' } })
@@ -284,7 +284,7 @@ test('the command resolves . and .. to a canonical folder, keeps the filesystem 
   cwd = '/work/app'
   dirs = ['/', '/work/app', '/work']
   files = { '/work/app/notes.txt': 'x\n' }
-  const run = (args: string) => $.command.run({ command: 'data-app-pane', args, origin: { kind: 'composer' }, presentation: { isFullscreen: true, columns: 200 } } as any)
+  const run = (args: string) => $.command.run({ command: 'fabric-app-pane', args, origin: { kind: 'composer' }, presentation: { isFullscreen: true, columns: 200 } } as any)
   const rootOf = () => (mem.get(`${PLUGIN}/tree`)?.value as any)?.root
   await run('.')
   expect(rootOf()).toBe('/work/app')
@@ -304,7 +304,7 @@ test('Desktop: the command opens the pane whatever the terminal presentation say
   const clock = world(on, { HOME: '/Users/k' }, ran, [])
   surfaces = ['desktop']
   const before = opens.length
-  const out = await $.command.run({ command: 'data-app-pane', args: '', origin: { kind: 'sdk' }, presentation: { isFullscreen: false, columns: 80 } } as any)
+  const out = await $.command.run({ command: 'fabric-app-pane', args: '', origin: { kind: 'sdk' }, presentation: { isFullscreen: false, columns: 80 } } as any)
   await clock.settle()
   expect(JSON.stringify(out)).not.toContain('/tui fullscreen')
   expect(JSON.stringify(out)).toContain('Fabric apps under /elsewhere')
@@ -438,7 +438,7 @@ test('a rescan that finishes after the root moved publishes nothing over the new
   holdFinds = 1
   const rescan = ui.press({ key: 'rescan' })
   await clock.settle()
-  await $.command.run({ command: 'data-app-pane', args: '/B', origin: { kind: 'composer' }, presentation: { isFullscreen: true, columns: 200 } } as any)
+  await $.command.run({ command: 'fabric-app-pane', args: '/B', origin: { kind: 'composer' }, presentation: { isFullscreen: true, columns: 200 } } as any)
   await clock.settle()
   await clock.advance(2_000)
   await rescan
@@ -560,17 +560,17 @@ async function deepApp($: any, clock: any, extra: string[] = []) {
 
 const ids = async (ui: any) => ((await rowsOf(ui)).rows as any[]).map(r => r.id)
 
-test('the pane is data-app-pane: /data-app-pane opens it under that id and title, and its state lives under that plugin name', { timeoutMs: 20_000 }, async ($, on) => {
+test('the pane is fabric-app-pane: /fabric-app-pane opens it under that id and title, and its state lives under that plugin name', { timeoutMs: 20_000 }, async ($, on) => {
   const ran: Ran = []
   const clock = world(on, { HOME: '/home/k' }, ran, [])
   cwd = '/work'
   found = '/work/app/rayfin/rayfin.yml\0'
   files = { '/work/app/rayfin/rayfin.yml': 'name: app\n' }
   const before = opens.length
-  const out = await $.command.run({ command: 'data-app-pane', args: '', origin: { kind: 'person' }, presentation: { isFullscreen: true, columns: 200 } } as any)
+  const out = await $.command.run({ command: 'fabric-app-pane', args: '', origin: { kind: 'person' }, presentation: { isFullscreen: true, columns: 200 } } as any)
   await clock.settle()
   expect(JSON.stringify(out)).toContain('1 Fabric app under /work')
-  expect(opens.slice(before)).toContainEqual(expect.objectContaining({ id: 'data-app-pane', title: 'Data apps: work' }))
+  expect(opens.slice(before)).toContainEqual(expect.objectContaining({ id: 'fabric-app-pane', title: 'Fabric apps: work' }))
   expect((mem.get('fabric-data-app/apps')?.value as any[]).map(a => a.dir)).toEqual(['/work/app'])
 })
 
@@ -620,7 +620,7 @@ test('double-clicking an app or folder goes into it; up and home come back, and 
   await ui.redraw()
   expect(await ui.find({ type: 'Button', key: 'home' })).toBeUndefined()
   await twice('/work/app/package.json')
-  expect(ran.some(a => a[0] === 'setsid' && a.includes('/work/app/package.json'))).toBe(true)
+  expect(ran.some(a => a[0] === 'sh' && a[2]?.includes('setsid -f -w') && a.includes('/work/app/package.json'))).toBe(true)
   await ui.unmount()
 })
 
@@ -879,7 +879,7 @@ test('auto glyphs that fall back to plain Unicode on the terminal give Claude a 
   const ui = await mount($, clock, 'terminal', '/work')
   ran.length = 0
   const first = await $.prompt.submit({ text: 'hi', context: [], origin: { kind: 'person' } } as any)
-  expect(JSON.stringify(first)).toContain('Tell user once: Data app pane icons need github.com/data-goblin/fabric-nf plus a Nerd Font. Plugin option fontHint=off disables this.')
+  expect(JSON.stringify(first)).toContain('Tell user once: Fabric app pane icons need github.com/data-goblin/fabric-nf plus a Nerd Font. Plugin option fontHint=off disables this.')
   expect(JSON.stringify(await $.prompt.submit({ text: 'hi', context: [], origin: { kind: 'person' } } as any))).not.toContain('fabric-nf')
   expect(ran).toEqual([])
   await ui.unmount()
@@ -958,7 +958,7 @@ test('parsing: cd ~ resolves against home for the deploy target, cd "$VAR" resol
   expect(inits.every(i => !i || !Object.keys(i as object).includes('cwd'))).toBe(true)
 })
 
-test('/data-app-pane takes a folder with spaces, quoted or not', { timeoutMs: 20_000 }, async ($, on) => {
+test('/fabric-app-pane takes a folder with spaces, quoted or not', { timeoutMs: 20_000 }, async ($, on) => {
   const ran: Ran = []
   const clock = world(on, { HOME: '/home/k' }, ran, [])
   dirs = ['/A', '/My Apps', '/Other Apps']
@@ -966,12 +966,12 @@ test('/data-app-pane takes a folder with spaces, quoted or not', { timeoutMs: 20
   files = { '/My Apps/app/rayfin/rayfin.yml': 'name: a\n', '/Other Apps/app/rayfin/rayfin.yml': 'name: b\n' }
   await seeded($, clock, '/A', [])
   const ui = await $.ui.mount({ plugin: PLUGIN, surface: 'terminal', component: 'Pane', requestId: PANE, props: paneProps })
-  await $.command.run({ command: 'data-app-pane', args: '/My Apps', origin: { kind: 'person' }, presentation: { isFullscreen: true, columns: 200 } } as any)
+  await $.command.run({ command: 'fabric-app-pane', args: '/My Apps', origin: { kind: 'person' }, presentation: { isFullscreen: true, columns: 200 } } as any)
   await clock.settle()
   await clock.advance(2_000)
   await clock.settle()
   expect((mem.get(`${PLUGIN}/tree`)?.value as any).root).toBe('/My Apps')
-  await $.command.run({ command: 'data-app-pane', args: '"/Other Apps"', origin: { kind: 'person' }, presentation: { isFullscreen: true, columns: 200 } } as any)
+  await $.command.run({ command: 'fabric-app-pane', args: '"/Other Apps"', origin: { kind: 'person' }, presentation: { isFullscreen: true, columns: 200 } } as any)
   await clock.settle()
   await clock.advance(2_000)
   await clock.settle()

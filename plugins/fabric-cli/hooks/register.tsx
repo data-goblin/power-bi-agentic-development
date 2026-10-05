@@ -1,4 +1,5 @@
 import type { EngineInterface, Register, Timer } from 'claude-code'
+import { LINUX_LAUNCH as LAUNCH, openCommand } from './open'
 
 import type { Explorer, Target, TreeNode } from '../types'
 import { glyph, type Tier } from './icons'
@@ -105,8 +106,6 @@ async function installed($: EngineInterface, cmd: string): Promise<boolean> {
   }
 }
 
-const LAUNCH = 'setsid "$@" </dev/null >/dev/null 2>&1 & p=$!; sleep 1; kill -0 "$p" 2>/dev/null && exit 0; wait "$p"'
-
 async function launch($: EngineInterface, ...choices: string[][]): Promise<void> {
   for (const argv of choices) {
     if (!(await installed($, argv[0] ?? ''))) continue
@@ -143,9 +142,13 @@ async function limited<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 async function openUrl($: EngineInterface, url: string): Promise<void> {
-  const os = await osName($)
-  if (os === 'linux') return launch($, ['gio', 'open', url], ['xdg-open', url])
-  return started($, os === 'darwin' ? ['open', url] : ['rundll32', 'url.dll,FileProtocolHandler', url])
+  const { argv, init } = openCommand(await osName($), url)
+  try {
+    const run = await $.process.run(argv, init)
+    if (run.exitCode !== 0) $.ui.toast(`could not open ${url} with ${argv[0]}: ${run.stderr.trim().split('\n')[0] || `exit ${run.exitCode}`}`)
+  } catch {
+    $.ui.toast(`could not open ${url} with ${argv[0]}`)
+  }
 }
 
 function psq(arg: string): string {
@@ -167,7 +170,7 @@ async function terminal($: EngineInterface, linux: string[], cmd: string[], cwd 
     return started($, ['osascript', '-e', `tell application "Terminal" to do script "${(cwd ? `cd ${shq(cwd)} && ${line}` : line).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`, '-e', 'tell application "Terminal" to activate'])
   }
   const inner = `${cwd ? `Set-Location -LiteralPath ${psq(cwd.replace(/\//g, '\\'))}; ` : ''}& ${cmd.map(psq).join(' ')}`
-  return started($, ['powershell', '-NoProfile', '-Command', `Start-Process powershell -ArgumentList @('-NoExit', '-Command', ${psq(inner)})`])
+  return started($, ['powershell', '-NoProfile', '-Command', `$ErrorActionPreference = 'Stop'; Start-Process powershell -ArgumentList @('-NoExit', '-Command', ${psq(inner)})`])
 }
 
 async function fontState($: EngineInterface, charset: string, name: string): Promise<'ok' | 'stale' | 'missing'> {
@@ -409,8 +412,9 @@ function binOf(bin: string, cwd: string): string {
   return cwd.startsWith('/') && !/[~$`]/.test(cwd) ? join(cwd, bin) : 'fab'
 }
 
-function identityOf(env: Record<string, string>): string {
-  return [env.FAB_TENANT_ID, env.FAB_SPN_CLIENT_ID].filter(Boolean).join('|')
+function targetOf(env: Record<string, string>): Target {
+  const identity = [env.FAB_TENANT_ID, env.FAB_SPN_CLIENT_ID].filter(Boolean).join('|')
+  return identity ? { kind: 'fabric', identity } : { kind: 'fabric' }
 }
 
 function listing(stdout: string, n: TreeNode, nodes: TreeNode[]): { kids: TreeNode[]; become: string } {
@@ -502,7 +506,7 @@ function jsonOf<T>(text: string): T | null {
 }
 
 async function loadDomains($: EngineInterface): Promise<void> {
-  const names = jsonOf<{ result?: { data?: { name?: string; id?: string }[] } }>(await fabRaw($, ['ls', '.domains', '-l', '--output_format', 'json']).catch(() => ''))
+  const names = jsonOf<{ result?: { data?: { name?: string; id?: string }[] } }>(await fabRaw($, ['ls', '/.domains', '-l', '--output_format', 'json']).catch(() => ''))
   domainName.clear()
   for (const d of names?.result?.data ?? []) if (d.id && d.name) domainName.set(d.id.toLowerCase(), d.name.replace(/\.Domain$/i, ''))
   const found = new Map<string, string>()
@@ -707,8 +711,7 @@ async function afterFab($: EngineInterface, calls: Invocation[], stale: Set<stri
   const head = calls[0]
   if (!head) return
   fabContext = contextOf(head)
-  const identity = identityOf(head.env)
-  const moved = await point($, identity ? { kind: 'fabric', identity } : { kind: 'fabric' }, 'unasked')
+  const moved = await point($, targetOf(fabContext.env), 'unasked')
   const start = await get($)
   const fresh0 = moved || start.nodes.length === 0 || start.setup !== null
   if (fresh0) await refresh($)
@@ -836,7 +839,7 @@ export const register: Register = (on, options) => {
     if (terminalOnly && e.presentation && e.presentation.columns < 110) return { text: 'The Fabric pane shows in the sidebar, which needs a terminal at least 110 columns wide. Widen it, then run /fabric-pane.' }
     noDock = false
     const workspace = wholeArg(e.args)
-    await point($, { kind: 'fabric' }, 'asked', true)
+    await point($, targetOf(fabContext.env), 'asked', true)
     await refresh($)
     if (workspace) await reveal($, workspace.replace(/\.Workspace$/i, ''), true)
     return { text: workspace ? `Fabric pane on ${workspace}.` : 'Fabric pane open.' }

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-26.30.1-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-26.40.3-blue" alt="Version">
   <img src="https://img.shields.io/badge/Power_BI-F2C811?logo=powerbi&logoColor=000" alt="Power BI">
   <img src="https://img.shields.io/badge/Microsoft_Fabric-008272" alt="Microsoft Fabric">
   <img src="https://img.shields.io/badge/Tabular_Editor-2E7D32" alt="Tabular Editor">
@@ -320,11 +320,11 @@ Reviewer agents for these visual types (`deneb-reviewer`, `svg-reviewer`, `r-rev
 </details>
 
 <details>
-<summary><strong>fabric-data-app</strong> &ensp; Fabric data app pane that follows the rayfin CLI</summary>
+<summary><strong>fabric-data-app</strong> &ensp; Fabric Fabric app pane that follows the rayfin CLI</summary>
 
 | Type | Name | Description |
 |------|------|-------------|
-| Mod | [`/data-app-pane`](plugins/fabric-data-app/hooks/) | Data app pane: every Fabric App (`rayfin/rayfin.yml`) under the working directory with its data sources, deploy state and files, as a tree that follows `rayfin`, with live highlights of what Claude deploys or changes. Optional arg: a folder. Icons: [FabricSymbols NF](https://github.com/data-goblin/fabric-nf) |
+| Mod | [`/fabric-app-pane`](plugins/fabric-data-app/hooks/) | Fabric app pane: every Fabric App (`rayfin/rayfin.yml`) under the working directory with its data sources, deploy state and files, as a tree that follows `rayfin`, with live highlights of what Claude deploys or changes. Optional arg: a folder. Icons: [FabricSymbols NF](https://github.com/data-goblin/fabric-nf) |
 
 </details>
 
@@ -364,16 +364,16 @@ Mods add a pane to Claude Code's sidebar. These panes show your Fabric tenant, D
 
 <img src="media/mods/report-pane.gif" alt="The report pane highlighting a visual Claude reads" width="720">
 
-### Data app pane
+### Fabric app pane
 
-`/data-app-pane` from the `fabric-data-app` plugin follows `rayfin`: every Fabric App under the working directory, its data sources, deploy state and files.
+`/fabric-app-pane` from the `fabric-data-app` plugin follows `rayfin`: every Fabric App under the working directory, its data sources, deploy state and files.
 
-<img src="media/mods/data-app-pane.gif" alt="The data app pane highlighting an app Claude deploys" width="720">
+<img src="media/mods/fabric-app-pane.gif" alt="The Fabric app pane highlighting an app Claude deploys" width="720">
 
 ### Setup
 
-- **Layout:** the sidebar needs the fullscreen layout (`/tui fullscreen`, or `"tui": "fullscreen"` in `~/.claude/settings.json`) and a terminal at least 110 columns wide. In the default layout or tmux the panes stay hidden and their command tells you how to switch. In a fullscreen session the Fabric, Databricks and report panes open by themselves on Claude's first `fab`, `databricks` or `pbir` command, and the data app pane when the working directory holds a Fabric App
-- **Icons:** install [FabricSymbols NF](https://github.com/data-goblin/fabric-nf) (Fabric, report and data app panes) or [DatabricksSymbols NF](https://github.com/data-goblin/databricks-nf) together with a Nerd Font, then restart the terminal. Without them the panes use a Nerd Font alone, then plain Unicode. Auto detection covers Linux and macOS; on Windows set the `glyphs` option
+- **Layout:** the sidebar needs the fullscreen layout (`/tui fullscreen`, or `"tui": "fullscreen"` in `~/.claude/settings.json`) and a terminal at least 110 columns wide. In the default layout or tmux the panes stay hidden and their command tells you how to switch. In a fullscreen session the Fabric, Databricks and report panes open by themselves on Claude's first `fab`, `databricks` or `pbir` command, and the Fabric app pane when the working directory holds a Fabric App
+- **Icons:** install [FabricSymbols NF](https://github.com/data-goblin/fabric-nf) (Fabric, report and Fabric app panes) or [DatabricksSymbols NF](https://github.com/data-goblin/databricks-nf) together with a Nerd Font, then restart the terminal. Without them the panes use a Nerd Font alone, then plain Unicode. Auto detection covers Linux and macOS; on Windows set the `glyphs` option
 - **Getting started:** when the CLI is missing, you are not signed in or the service can't be reached, the Fabric and Databricks panes show the steps to fix it, with commands you can copy
 - **Options:** `glyphs` forces an icon set; `follow` (Follow Claude) decides whether the tree scrolls to what Claude touches; `fontHint` turns off the one-line install hint Claude gets once per session when the icons fall back to plain Unicode
 

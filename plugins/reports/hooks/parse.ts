@@ -125,9 +125,13 @@ export function invocations(command: string, sessionCwd: string): Invocation[] {
   let cwd = sessionCwd
   let start = true
   let maybe = false
+  let gate = -1
   for (let i = 0; i < toks.length; i++) {
     const t = toks[i] ?? ''
     if (SEPARATORS.has(t)) {
+      if (t === '&&' && gate < 0) gate = found.length
+      if (t === '||' && gate >= 0) for (const inv of found.slice(gate)) inv.maybe = true
+      if (t !== '|' && t !== '&&' && t !== '||') gate = -1
       if (t !== '|') maybe = t === '||'
       start = true
       continue

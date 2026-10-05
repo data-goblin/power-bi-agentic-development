@@ -107,13 +107,13 @@ export function children(n: TreeNode, outputs: string[], host: string): TreeNode
     case 'section-catalog':
       for (const r of records(o0)) {
         const name = at(r, 'name')
-        if (name) push(node(`UC:${name}`, n.id, 'catalog', name, name, { note: at(r, 'catalog_type').toLowerCase().replace(/_catalog$/, '') }), true)
+        if (name) push(node(`UC:${name}`, n.id, 'catalog', name, name, { sig: at(r, 'created_at'), note: at(r, 'catalog_type').toLowerCase().replace(/_catalog$/, '') }), true)
       }
       break
     case 'catalog':
       for (const r of records(o0)) {
         const name = at(r, 'name')
-        if (name) push(node(`UC:${n.path}.${name}`, n.id, 'schema', name, at(r, 'full_name') || `${n.path}.${name}`), true)
+        if (name) push(node(`UC:${n.path}.${name}`, n.id, 'schema', name, at(r, 'full_name') || `${n.path}.${name}`, { sig: at(r, 'created_at') }), true)
       }
       break
     case 'schema':

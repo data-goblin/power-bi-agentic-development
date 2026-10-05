@@ -31,7 +31,7 @@ export function isAbsolute(path: string): boolean {
   return path.startsWith('/') || (drives && /^[A-Za-z]:\//.test(path))
 }
 
-export function tokenize(command: string): string[] {
+export function tokenize(command: string, subs: { at: number; body: string }[] = []): string[] {
   const out: string[] = []
   let cur = ''
   let quote = ''
@@ -45,7 +45,15 @@ export function tokenize(command: string): string[] {
     if (quote) {
       if (ch === quote) quote = ''
       else if (ch === '\\' && quote === '"' && i + 1 < command.length) cur += command[++i] ?? ''
-      else cur += ch
+      else if (quote === '"' && ((ch === '$' && command[i + 1] === '(') || ch === '`')) {
+        const end = closing(command, i)
+        if (end < 0) cur += ch
+        else {
+          subs.push({ at: out.length, body: command.slice(ch === '`' ? i + 1 : i + 2, end) })
+          cur += command.slice(i, end + 1)
+          i = end
+        }
+      } else cur += ch
       continue
     }
     if (ch === '"' || ch === "'") {
@@ -181,6 +189,20 @@ function heredocless(command: string): string {
   return out.join('\n')
 }
 
+function closing(command: string, i: number): number {
+  if (command[i] === '`') {
+    let j = i + 1
+    while (j < command.length && command[j] !== '`') j += command[j] === '\\' ? 2 : 1
+    return j < command.length ? j : -1
+  }
+  let depth = 0
+  for (let j = i + 1; j < command.length; j++) {
+    if (command[j] === '(') depth++
+    else if (command[j] === ')' && --depth === 0) return j
+  }
+  return -1
+}
+
 function substitutions(command: string): string[] {
   const out: string[] = []
   let single = false
@@ -207,23 +229,11 @@ function substitutions(command: string): string[] {
       while (i + 1 < command.length && command[i + 1] !== '\n') i++
       continue
     }
-    if (ch === '$' && command[i + 1] === '(') {
-      let depth = 0
-      for (let j = i + 1; j < command.length; j++) {
-        if (command[j] === '(') depth++
-        else if (command[j] === ')' && --depth === 0) {
-          out.push(command.slice(i + 2, j))
-          i = j
-          break
-        }
-      }
-      continue
-    }
-    if (ch === '`') {
-      let j = i + 1
-      while (j < command.length && command[j] !== '`') j += command[j] === '\\' ? 2 : 1
-      if (j < command.length) out.push(command.slice(i + 1, j))
-      i = j
+    if ((ch === '$' && command[i + 1] === '(') || ch === '`') {
+      const end = closing(command, i)
+      if (end < 0) continue
+      out.push(command.slice(ch === '`' ? i + 1 : i + 2, end))
+      i = end
     }
   }
   return out
@@ -249,8 +259,8 @@ function skipFlags(toks: string[], j: number, word: string): number {
 }
 
 export function invocations(command: string, sessionCwd: string, base: Record<string, string> = {}, tools: readonly string[] = ['databricks']): Invocation[] {
-  const text = heredocless(command)
-  const toks = tokenize(text)
+  const subs: { at: number; body: string }[] = []
+  const toks = tokenize(heredocless(command), subs)
   const found: Invocation[] = []
   const loops: { name: string; words: string[] }[] = []
   const exported: Record<string, string> = { ...base }
@@ -264,6 +274,12 @@ export function invocations(command: string, sessionCwd: string, base: Record<st
     }
     if (!start) continue
     start = false
+    let end = i
+    while (end < toks.length && !SEPARATORS.has(toks[end] ?? '')) end++
+    for (let sub = subs[0]; sub && sub.at < end; sub = subs[0]) {
+      subs.shift()
+      found.push(...invocations(sub.body, cwd, exported, tools).slice(0, MAX_CALLS - found.length))
+    }
     const env: Record<string, string> = {}
     let j = i
     for (;;) {
@@ -325,16 +341,7 @@ export function invocations(command: string, sessionCwd: string, base: Record<st
     for (const each of expand(args, loops)) if (found.length < MAX_CALLS) found.push({ tool: head, bin: toks[j] ?? head, args: each, cwd, env: { ...exported, ...env } })
     i = k - 1
   }
-  const keyOf = (inv: Invocation) => `${inv.args.join('\0')}\0${JSON.stringify(inv.env)}`
-  const seen = new Set(found.map(keyOf))
-  for (const body of substitutions(text)) {
-    for (const inv of invocations(body, cwd, exported, tools)) {
-      const key = keyOf(inv)
-      if (seen.has(key) || found.length >= MAX_CALLS) continue
-      seen.add(key)
-      found.push(inv)
-    }
-  }
+  for (const sub of subs) found.push(...invocations(sub.body, cwd, exported, tools).slice(0, MAX_CALLS - found.length))
   return found
 }
 

@@ -1,5 +1,5 @@
 import { expect, mock, test } from 'claude-code/testing'
-import { tokenize } from '../hooks/parse'
+import { invocations, tokenize } from '../hooks/parse'
 
 type Ran = string[][]
 const opens: unknown[] = []
@@ -16,8 +16,8 @@ const DATA: Record<string, unknown> = {
     { object_type: 'NOTEBOOK', path: '/Shared/etl', language: 'PYTHON', object_id: 11 },
     { object_type: 'FILE', path: '/Shared/readme.md', object_id: 12 },
   ],
-  'catalogs list': [{ name: 'main', catalog_type: 'MANAGED_CATALOG' }],
-  'schemas list main': [{ name: 'sales', full_name: 'main.sales' }],
+  'catalogs list': [{ name: 'main', catalog_type: 'MANAGED_CATALOG', created_at: 1_700_000_000_000 }],
+  'schemas list main': [{ name: 'sales', full_name: 'main.sales', created_at: 1_700_000_000_000 }],
   'tables list main sales': [
     { name: 'orders', full_name: 'main.sales.orders', table_type: 'MANAGED' },
     { name: 'orders_v', full_name: 'main.sales.orders_v', table_type: 'VIEW' },
@@ -143,7 +143,7 @@ test('macOS app: sections browse like a file tree, copy CLI arguments, open obje
   expect(copied).toEqual(['main.sales.orders'])
   await ui.post({ press: 'UC:main.sales.orders', ctrl: true }, { in: 'rows' })
   await clock.settle()
-  expect(ran).toContainEqual(['open', `${HOST}/explore/data/main/sales/orders`])
+  expect(ran).toContainEqual(['open', '--', `${HOST}/explore/data/main/sales/orders`])
   const sent = await $.prompt.submit({ text: 'describe this', wait: false } as any)
   expect(JSON.stringify(sent)).toContain('databricks CLI argument: main.sales.orders')
   await ui.unmount()
@@ -184,7 +184,7 @@ test('long sections scroll, and a databricks command Claude runs lights the obje
   await ui.unmount()
 })
 
-test('Windows: objects open through rundll32 with the URL as one literal argument; databricks auth is ignored', { timeoutMs: 20_000 }, async ($, on) => {
+test('Windows: objects open through ShellExecute with the URL as one literal argument; databricks auth is ignored', { timeoutMs: 20_000 }, async ($, on) => {
   const ran: Ran = []
   const clock = world(on, { OS: 'Windows_NT', USERPROFILE: 'C:\\Users\\k' }, ran, [])
   const ui = await open($, clock, 'terminal')
@@ -192,7 +192,7 @@ test('Windows: objects open through rundll32 with the URL as one literal argumen
   await clock.settle()
   await ui.post({ press: 'CL:0123-abc', ctrl: true }, { in: 'rows' })
   await clock.settle()
-  expect(ran).toContainEqual(['rundll32', 'url.dll,FileProtocolHandler', `${HOST}/compute/clusters/0123-abc`])
+  expect(ran.find(a => a[0] === 'powershell')?.at(-1)).toContain('UseShellExecute = $true')
   const before = ran.length
   await $.tool.call({ tool: 'Bash', command: 'databricks auth login --host x' } as any)
   await clock.advance(50)
@@ -386,6 +386,35 @@ test('tables create targets catalog.schema.table, a started cluster refreshes Co
   await ui.unmount()
 })
 
+test('a folder or schema Claude drops and recreates loses what the old one held', { timeoutMs: 20_000 }, async ($, on) => {
+  const ran: Ran = []
+  const copied: string[] = []
+  const clock = world(on, { HOME: '/home/k' }, ran, copied)
+  const saved = { ...DATA }
+  DATA['workspace list /Shared'] = [{ object_type: 'DIRECTORY', path: '/Shared/tmp', object_id: 90 }]
+  DATA['workspace list /Shared/tmp'] = [{ object_type: 'NOTEBOOK', path: '/Shared/tmp/old', object_id: 91 }]
+  const ui = await open($, clock, 'terminal')
+  for (const id of ['S:workspace', 'WS:/Shared', 'WS:/Shared/tmp', 'S:catalog', 'UC:main', 'UC:main.sales']) {
+    await ui.post({ press: id }, { in: 'rows' })
+    await clock.settle()
+  }
+  expect(ids(await rowsOf(ui))).toEqual(expect.arrayContaining(['WS:/Shared/tmp/old', 'UC:main.sales.orders']))
+  DATA['workspace list /Shared'] = [{ object_type: 'DIRECTORY', path: '/Shared/tmp', object_id: 100 }]
+  DATA['workspace list /Shared/tmp'] = []
+  DATA['schemas list main'] = [{ name: 'sales', full_name: 'main.sales', created_at: 1_800_000_000_000 }]
+  DATA['tables list main sales'] = []
+  DATA['volumes list main sales'] = []
+  await $.tool.call({ tool: 'Bash', command: 'databricks workspace delete /Shared/tmp --recursive && databricks workspace mkdirs /Shared/tmp' } as any)
+  await clock.settle()
+  await $.tool.call({ tool: 'Bash', command: 'databricks schemas delete main.sales --force && databricks schemas create sales main' } as any)
+  await clock.settle()
+  Object.assign(DATA, saved)
+  const p = ids(await rowsOf(ui))
+  expect(p).toEqual(expect.arrayContaining(['WS:/Shared/tmp', 'UC:main.sales']))
+  expect(p).not.toContain('WS:/Shared/tmp/old')
+  expect(p).not.toContain('UC:main.sales.orders')
+  await ui.unmount()
+})
 test('follow off: Claude touching objects far away or in a catalog above never moves the view; the wheel still does', { timeoutMs: 20_000, options: { follow: 'off' } } as any, async ($: any, on: any) => {
   const ran: Ran = []
   const copied: string[] = []
@@ -456,6 +485,14 @@ test('&> stays one redirection operator', { timeoutMs: 5_000 }, async () => {
   const tokens = tokenize('databricks catalogs list &> /dev/null')
   expect(tokens).toContain('&>')
   expect(tokens).not.toContain('&')
+})
+
+test('a $( ) call takes the profile exported before it, not one exported after it', { timeoutMs: 5_000 }, async () => {
+  const profiles = (command: string) => invocations(command, '/work').map(i => i.env.DATABRICKS_CONFIG_PROFILE ?? '')
+  expect(profiles('export DATABRICKS_CONFIG_PROFILE=prod; echo "$(databricks jobs list)"')).toEqual(['prod'])
+  expect(profiles('echo "$(databricks jobs list)"; export DATABRICKS_CONFIG_PROFILE=prod')).toEqual([''])
+  expect(profiles('echo $(databricks jobs list); export DATABRICKS_CONFIG_PROFILE=prod')).toEqual([''])
+  expect(profiles("echo '$(databricks jobs list)'")).toEqual([])
 })
 
 test('without the icon fonts Claude gets a one-line font hint once per session, unless fontHint is off', { timeoutMs: 20_000 }, async ($, on) => {

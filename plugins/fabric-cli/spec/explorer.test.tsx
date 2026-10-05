@@ -1,5 +1,5 @@
 import { expect, mock, test } from 'claude-code/testing'
-import { decoded, tokenize } from '../hooks/parse'
+import { decoded, fabPositionals, invocations, tokenize } from '../hooks/parse'
 import { runFailure, spawnFailure } from '../hooks/setup'
 
 type Ran = string[][]
@@ -28,6 +28,9 @@ let paged = false
 const DOM = '11111111-2222-4333-8444-555555555555'
 const toasts: string[] = []
 let fabFail: ((argv: string[]) => unknown) | null = null
+const envOf = new WeakMap<string[], Record<string, string> | undefined>()
+let runHook: ((argv: string[]) => unknown) | null = null
+let surfaces = ['terminal']
 
 function world(on: any, env: Record<string, string>, ran: Ran) {
   mock.env(on, env)
@@ -37,6 +40,7 @@ function world(on: any, env: Record<string, string>, ran: Ran) {
   on('session.start', (_$: any, e: any) => ({ cwd: e.cwd }))
   on('session.cwd', () => ({ value: '/work' }))
   on('session.id', () => ({ value: 'test' }))
+  on('session.surfaces', () => ({ value: surfaces }))
   on('command.register', () => ({ value: undefined }))
   on('ui.open', (_$: any, e: any) => {
     opens.push(e)
@@ -64,6 +68,9 @@ function world(on: any, env: Record<string, string>, ran: Ran) {
   on('process.run', (_$: any, e: any) => {
     const argv: string[] = [...e.argv]
     ran.push(argv)
+    envOf.set(argv, e.init?.env)
+    const hooked = runHook?.(argv)
+    if (hooked) return hooked
     if (argv[0] === 'fab' && fabFail) {
       const failed = fabFail(argv)
       if (failed) return failed
@@ -78,7 +85,7 @@ function world(on: any, env: Record<string, string>, ran: Ran) {
       const second = argv[2].includes('continuationToken=next')
       return ok(JSON.stringify({ status_code: 200, text: { value: second ? all.slice(30) : all.slice(0, 30), ...(second ? {} : { continuationToken: 'next' }) } }))
     }
-    if (argv[0] === 'fab' && argv[1] === 'ls' && argv[2] === '.domains') return ok(domainsOn ? JSON.stringify({ result: { data: [{ name: 'Sales.Domain', id: DOM }] } }) : '')
+    if (argv[0] === 'fab' && argv[1] === 'ls' && argv[2] === '/.domains') return ok(domainsOn ? JSON.stringify({ result: { data: [{ name: 'Sales.Domain', id: DOM }] } }) : '')
     if (argv[0] === 'fab' && argv[1] === 'ls') {
       const path = argv[2] && !argv[2].startsWith('-') ? argv[2].replace(/^\/+/, '') : ''
       if (failing.has(path)) return { value: { exitCode: 1, stdout: '', stderr: 'Forbidden', isStdoutTruncated: false, isStderrTruncated: false } }
@@ -135,7 +142,7 @@ test('macOS app: workspaces draw, scroll, copy fab paths, clear search, open the
   expect(copied).toEqual(['WS00.Workspace/Sales.SemanticModel'])
   await ui.post({ press: 'W:WS00/Sales.SemanticModel', ctrl: true }, { in: 'rows' })
   await clock.settle()
-  expect(ran.find(a => a[0] === 'open')?.[1]).toContain(`/groups/${UUID(1)}/datasets/${UUID(900)}`)
+  expect(ran.find(a => a[0] === 'open')?.at(-1)).toContain(`/groups/${UUID(1)}/datasets/${UUID(900)}`)
   await ui.post({ press: 'W:WS00/Sales.SemanticModel', shift: true }, { in: 'rows' })
   await clock.settle()
   const osa = ran.find(a => a[0] === 'osascript')
@@ -164,7 +171,7 @@ test('a fab export Claude runs shimmers teal on the item; fab get with -o too', 
   await ui.unmount()
 })
 
-test('Windows: the portal opens through rundll32 and te through PowerShell with literal arguments, never cmd, setsid or osascript', { timeoutMs: 20_000 }, async ($, on) => {
+test('Windows: the portal opens through ShellExecute and te through PowerShell with literal arguments, never cmd, setsid or osascript', { timeoutMs: 20_000 }, async ($, on) => {
   const ran: Ran = []
   const { clock } = world(on, { OS: 'Windows_NT', USERPROFILE: 'C:\\Users\\k' }, ran)
   const ui = await open($, clock, 'terminal')
@@ -173,9 +180,9 @@ test('Windows: the portal opens through rundll32 and te through PowerShell with 
   await ui.post({ press: 'W:WS00/Sales.SemanticModel', ctrl: true }, { in: 'rows' })
   await ui.post({ press: 'W:WS00/Sales.SemanticModel', shift: true }, { in: 'rows' })
   await clock.settle()
-  const portal = ran.find(a => a[0] === 'rundll32')
-  expect(portal?.slice(0, 2)).toEqual(['rundll32', 'url.dll,FileProtocolHandler'])
-  const shell = ran.find(a => a[0] === 'powershell')
+  const portal = ran.find(a => a[0] === 'powershell' && a.at(-1)?.includes('UseShellExecute'))
+  expect(portal?.at(-1)).toContain('$env:PANE_OPEN_TARGET')
+  const shell = ran.find(a => a[0] === 'powershell' && a.at(-1)?.includes('Start-Process'))
   expect(shell?.at(-1)).toContain("& ''te'' ''interactive'' ''-s'' ''WS00'' ''-d'' ''Sales''")
   expect(ran.some(a => ['cmd', 'setsid', 'osascript', 'uname', 'xdg-terminal-exec'].includes(a[0] ?? ''))).toBe(false)
   await ui.unmount()
@@ -537,6 +544,162 @@ test('rm -f on a whole workspace re-lists the tenant, and a refused clipboard wr
   await ui.unmount()
 })
 
+const held = () => {
+  let release = () => {}
+  const until = new Promise<void>(r => (release = r))
+  return { until, release }
+}
+const done = (stdout: string, more: object = {}) => ({ value: { exitCode: 0, stdout, stderr: '', isStdoutTruncated: false, isStderrTruncated: false, ...more } })
+const failed = (stderr: string) => ({ value: { exitCode: 1, stdout: '', stderr, isStdoutTruncated: false, isStderrTruncated: false } })
+const listed = (path: string) => JSON.stringify({ result: { data: ITEMS[path] ?? [] } })
+
+test('a workspace reload that finishes after a newer refresh is dropped', { timeoutMs: 20_000 }, async ($, on) => {
+  const ran: Ran = []
+  const { clock } = world(on, { HOME: '/home/k' }, ran)
+  const ui = await open($, clock, 'terminal')
+  ITEMS['WS03.Workspace'] = [{ name: 'Old.Report', id: UUID(970) }]
+  await ui.post({ press: 'W:WS03' }, { in: 'rows' })
+  await clock.settle()
+  const slow = held()
+  let first = true
+  runHook = argv => {
+    if (argv[1] !== 'ls' || argv[2] !== '/WS03.Workspace' || !first) return null
+    first = false
+    const stdout = listed('WS03.Workspace')
+    return slow.until.then(() => done(stdout))
+  }
+  await $.tool.call({ tool: 'Bash', command: 'fab set WS03.Workspace/Old.Report -q description -i x' } as any)
+  await clock.advance(10)
+  ITEMS['WS03.Workspace'] = [{ name: 'New.Report', id: UUID(971) }]
+  await ui.press({ key: 'refresh' })
+  await clock.settle()
+  slow.release()
+  await clock.settle()
+  runHook = null
+  expect((await rowsOf(ui)).rows.some((r: any) => r.id === 'W:WS03/New.Report')).toBe(true)
+  delete ITEMS['WS03.Workspace']
+  await ui.unmount()
+})
+
+test('a cut-off tenant listing keeps the tree and says why', { timeoutMs: 20_000 }, async ($, on) => {
+  const ran: Ran = []
+  const { clock } = world(on, { HOME: '/home/k' }, ran)
+  const ui = await open($, clock, 'terminal')
+  runHook = argv => (argv[1] === 'ls' && argv[2] === '/' ? done('{"result":{"data":[{"name":"WS00.Wor', { isStdoutTruncated: true }) : null)
+  await ui.press({ key: 'refresh' })
+  await clock.settle()
+  runHook = null
+  expect((await rowsOf(ui)).rows.some((r: any) => r.id === 'W:WS00')).toBe(true)
+  expect(JSON.stringify(await ui.drawn())).toContain('too much output')
+  await ui.unmount()
+})
+
+test('/fabric-pane opens in a session with the desktop app attached, whatever the terminal layout', { timeoutMs: 20_000 }, async ($, on) => {
+  const ran: Ran = []
+  world(on, { HOME: '/home/k' }, ran)
+  surfaces = ['terminal', 'desktop']
+  const before = opens.length
+  await $.command.run({ command: PANE, args: '', origin: { kind: 'person' }, presentation: { isFullscreen: false, columns: 80 } } as any)
+  surfaces = ['terminal']
+  expect(opens.length).toBeGreaterThan(before)
+})
+
+test('a slow earlier selection does not overwrite the details of the latest one', { timeoutMs: 20_000 }, async ($, on) => {
+  const ran: Ran = []
+  const { clock } = world(on, { HOME: '/home/k' }, ran)
+  const ui = await open($, clock, 'terminal')
+  const slow = held()
+  runHook = argv => (argv[1] === 'ls' && argv[2] === '/WS00.Workspace' ? slow.until.then(() => done(listed('WS00.Workspace'))) : null)
+  void ui.post({ press: 'W:WS00' }, { in: 'rows' })
+  await clock.advance(1000)
+  await ui.post({ press: 'W:WS01' }, { in: 'rows' })
+  await clock.settle()
+  slow.release()
+  await clock.settle()
+  runHook = null
+  const drawn = JSON.stringify(await ui.drawn())
+  expect(drawn).toContain('workspace WS01')
+  expect(drawn).not.toContain('workspace WS00')
+  await ui.unmount()
+})
+
+test('heredoc markers inside quotes or comments hide no commands; expanding heredoc bodies still run their substitutions; -f takes no value', { timeoutMs: 5_000 }, async () => {
+  expect(invocations("printf '%s\\n' 'example <<EOF'\nfab rm WS05.Workspace -f", '/w')).toHaveLength(1)
+  expect(invocations('echo x # <<EOF\nfab rm WS05.Workspace -f', '/w')).toHaveLength(1)
+  expect(invocations('cat <<EOF\n$(fab rm WS05.Workspace -f)\nEOF', '/w')).toHaveLength(1)
+  expect(invocations("cat <<'EOF'\n$(fab rm WS05.Workspace -f)\nEOF", '/w')).toHaveLength(0)
+  expect(fabPositionals(['-f', 'WS05.Workspace'])).toEqual(['WS05.Workspace'])
+})
+
+test('fab listings from many commands at once share one limit of four processes', { timeoutMs: 20_000 }, async ($, on) => {
+  const ran: Ran = []
+  const { clock } = world(on, { HOME: '/home/k' }, ran)
+  const ui = await open($, clock, 'terminal')
+  const slow = held()
+  let live = 0
+  let peak = 0
+  runHook = argv => {
+    if (argv[1] !== 'ls' || argv[2] === '/') return null
+    peak = Math.max(peak, ++live)
+    return slow.until.then(() => {
+      live--
+      return done(listed(''))
+    })
+  }
+  for (let i = 10; i < 20; i++) await $.tool.call({ tool: 'Bash', command: `fab ls WS${i}.Workspace` } as any)
+  await clock.advance(1000)
+  slow.release()
+  await clock.settle()
+  runHook = null
+  expect(peak).toBe(4)
+  await ui.unmount()
+})
+
+test('a workspace reload that fails after a change shows its error', { timeoutMs: 20_000 }, async ($, on) => {
+  const ran: Ran = []
+  const { clock } = world(on, { HOME: '/home/k' }, ran)
+  const ui = await open($, clock, 'terminal')
+  await ui.post({ press: 'W:WS00' }, { in: 'rows' })
+  await clock.settle()
+  failing.add('WS00.Workspace')
+  await $.tool.call({ tool: 'Bash', command: 'fab mkdir WS00.Workspace/X.Report' } as any)
+  await clock.settle()
+  failing.delete('WS00.Workspace')
+  expect(JSON.stringify(await ui.drawn())).toContain('error: Forbidden')
+  await ui.unmount()
+})
+
+test('Linux: a failed URL launch reports the target', { timeoutMs: 20_000 }, async ($, on) => {
+  const ran: Ran = []
+  const { clock } = world(on, { HOME: '/home/k' }, ran)
+  const ui = await open($, clock, 'terminal')
+  await ui.post({ press: 'W:WS00' }, { in: 'rows' })
+  await clock.settle()
+  runHook = argv => (argv[0] === 'sh' && argv[2]?.startsWith('setsid') ? failed('gio: no handler') : null)
+  await ui.post({ press: 'W:WS00/Sales.Report', ctrl: true }, { in: 'rows' })
+  await clock.settle()
+  runHook = null
+  expect(toasts.some(t => t.startsWith('could not open https://') && t.includes('gio: no handler'))).toBe(true)
+  await ui.unmount()
+})
+
+test('macOS: a refused osascript or open says it could not start', { timeoutMs: 20_000 }, async ($, on) => {
+  const ran: Ran = []
+  const { clock } = world(on, { HOME: '/Users/k' }, ran)
+  const ui = await open($, clock, 'terminal')
+  await ui.post({ press: 'W:WS00' }, { in: 'rows' })
+  await clock.settle()
+  runHook = argv => (argv[0] === 'osascript' || argv[0] === 'open' ? failed('execution error: Not authorized to send Apple events to Terminal. (-1743)') : null)
+  const from = toasts.length
+  await ui.post({ press: 'W:WS00/Sales.SemanticModel', shift: true }, { in: 'rows' })
+  await ui.post({ press: 'W:WS00/Sales.SemanticModel', ctrl: true }, { in: 'rows' })
+  await clock.settle()
+  runHook = null
+  expect(toasts.slice(from).filter(t => t.startsWith('could not start'))).toHaveLength(1)
+  expect(toasts.slice(from).filter(t => t.startsWith('could not open'))).toHaveLength(1)
+  await ui.unmount()
+})
+
 test('a lakehouse opens to Files and Tables; a Delta folder becomes a table and a schema lists its tables', { timeoutMs: 20_000 }, async ($, on) => {
   const ran: Ran = []
   const { clock } = world(on, { HOME: '/home/k' }, ran)
@@ -588,7 +751,7 @@ test('follow off: Claude reads far away or inside a folder above the view never 
   await ui.unmount()
 })
 
-test('workspaces group by domain with counts, and the top-left icon turns grouping off', { timeoutMs: 20_000 }, async ($, on) => {
+test('workspaces group by domain with counts through the absolute /.domains path, and the top-left icon turns grouping off', { timeoutMs: 20_000 }, async ($, on) => {
   const ran: Ran = []
   const { clock } = world(on, { HOME: '/home/k' }, ran)
   domainsOn = true
@@ -599,6 +762,7 @@ test('workspaces group by domain with counts, and the top-left icon turns groupi
   expect(ids).toContain('D:none')
   expect(JSON.stringify(p.rows.find((r: any) => r.id === `D:${DOM}`))).toContain('3 workspaces')
   expect(ids).not.toContain('W:WS00')
+  expect(ran.filter(a => a[1] === 'ls' && a[2]?.endsWith('.domains')).every(a => a[2] === '/.domains')).toBe(true)
   await ui.press({ key: 'domains' })
   await clock.settle()
   p = await rowsOf(ui)
@@ -708,6 +872,27 @@ test('a fab binary written with ~ falls back to fab on PATH; an absolute one is 
   await ui.press({ key: 'refresh' })
   await clock.settle()
   expect(listingsAfter(from).some(a => a[0] === '/opt/fab/bin/fab')).toBe(true)
+  await ui.unmount()
+})
+
+test('listings carry the auth env of the command that triggered them, and /fabric-pane keeps that tenant apart from the default one', { timeoutMs: 20_000 }, async ($, on) => {
+  const ran: Ran = []
+  const { clock } = world(on, { HOME: '/home/k' }, ran)
+  const ui = await open($, clock, 'terminal')
+  const roots = (from: number) => ran.slice(from).filter(a => a[0] === 'fab' && a[1] === 'ls' && a[2] === '/')
+  let from = ran.length
+  await $.tool.call({ tool: 'Bash', command: 'FAB_TENANT_ID=tenant-b FAB_SPN_CLIENT_ID=app-b FAB_SPN_CLIENT_SECRET=s fab ls WS00.Workspace' } as any)
+  await clock.settle()
+  const tenantB = ran.slice(from).filter(a => a[0] === 'fab' && a[1] === 'ls')
+  expect(tenantB.length).toBeGreaterThan(0)
+  expect(tenantB.every(a => envOf.get(a)?.FAB_TENANT_ID === 'tenant-b')).toBe(true)
+  await $.command.run({ command: PANE, args: '', origin: { kind: 'person' } } as any)
+  await clock.settle()
+  from = ran.length
+  await $.tool.call({ tool: 'Bash', command: 'fab ls WS00.Workspace' } as any)
+  await clock.settle()
+  expect(roots(from).length).toBe(1)
+  expect(envOf.get(roots(from)[0] ?? [])?.FAB_TENANT_ID).toBeUndefined()
   await ui.unmount()
 })
 
