@@ -1,6 +1,6 @@
 {
   "name": "fabric-data-app",
-  "version": "26.40.3",
+  "version": "26.40.4",
   "description": "A Fabric data app pane that follows the rayfin CLI: browse every Fabric App under your working directory with its data sources and files, and see what Claude reads, deploys or changes.",
   "author": {
     "name": "Kurt Buhler",
