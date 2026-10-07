@@ -45,6 +45,10 @@ te script -s "workspace" -d "model" -S samples/columns/hide_key_columns.csx --sa
 - **add_expression_to_descriptions.csx** - Add DAX expressions to measure descriptions
 - **clean_object_names.csx** - Convert CamelCase names to Proper Case Names
 
+### UI (`ui/`)
+
+- **set-ui-font-size.csx** - Set the TE3 desktop UI font size for the session (TE3 only, not CLI)
+
 ## Script Headers
 
 All scripts include:
