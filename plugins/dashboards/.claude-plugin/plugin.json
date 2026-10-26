@@ -1,6 +1,6 @@
 {
   "name": "dashboards",
-  "version": "26.40.8",
+  "version": "26.40.9",
   "description": "Query Fabric and Power BI semantic models for Claude Dashboards: reuse model measures, give every KPI a target and a trend, and crossfilter every visual.",
   "author": {
     "name": "Kurt Buhler",
