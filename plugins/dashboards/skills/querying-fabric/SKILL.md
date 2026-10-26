@@ -31,7 +31,9 @@ crossfiltering:  selecting a mark in one visual filters every other visual
    the model with the user when several look alike (dev, test and prod copies are common).
 2. **Read the schema before writing any query.** `get_model_schema` with part `Measures`, then `Columns` and
    `Relationships` for the tables you will slice by. Read measure descriptions, display folders, format strings
-   and expressions. See [Reusing the model's measures](#reusing-the-models-measures).
+   and expressions. See [Reusing the model's measures](#reusing-the-models-measures). Look for data-quality
+   columns too (estimated, imputed, provisional, source, is-complete flags): decide which rows count and apply
+   that filter to every query, or the dashboard averages fabricated rows.
 3. **Answer one business question.** Pick the measures that answer it, the target each KPI is judged against,
    the date grain of its trend, and the dimensions the user will click to crossfilter.
 4. **Write one query per visual grain.** One `EVALUATE` per visual; see
@@ -167,8 +169,50 @@ ORDER BY 'Date'[Year], 'Date'[Month Number]
 
 Every column in it is a model measure; the query only decides the grain and the filters.
 
+Query rules that keep queries small and fast. They are checked: a query that breaks one is rewritten before
+the dashboard uses it.
+
+```yaml
+one context:  all measures for one visual are evaluated in ONE filter context: SUMMARIZECOLUMNS, or
+              CALCULATETABLE ( ROW ( ... ), filters ); never CALCULATE ( [m], filters ) once per column, and
+              never ADDCOLUMNS ( table, "a", CALCULATE ( ... ), "b", CALCULATE ( ... ) ) with the filter repeated
+windows:      several periods (7/30/90 days, YTD vs PY) are rows: GENERATE over a DATATABLE of windows, below
+no FILTER:    never FILTER ( 'Table', ... ) over a whole table, in a VAR or anywhere else; filter columns with
+              TREATAS or a column predicate ('T'[Flag] = FALSE, 'T'[Date] >= _From)
+no iterating: no AVERAGEX / MEDIANX / COUNTROWS ( FILTER ( ... ) ) / GROUPBY ( CURRENTGROUP ) over fact rows;
+              buckets (price bands, order-size bands) are a column or a DATATABLE of bands with the measures
+              evaluated per band, like windows
+no dates:     no DATE ( 2025, ... ) literals; every boundary derives from _Last = MAX of the fact date
+```
+
+```dax
+DEFINE
+    VAR _Valid = TREATAS ( { FALSE }, 'Fact'[Is Provisional] )
+    VAR _Last = CALCULATE ( MAX ( 'Fact'[Date] ), _Valid )
+    VAR _Windows = DATATABLE ( "Window", STRING, "Days", INTEGER, { { "7d", 7 }, { "30d", 30 }, { "90d", 90 } } )
+
+EVALUATE
+    GENERATE (
+        _Windows,
+        CALCULATETABLE (
+            ROW ( "Average", [Average Value], "Target Rate", [Target Rate], "Days", [Days] ),
+            DATESBETWEEN ( 'Date'[Date], _Last - [Days] + 1, _Last ),
+            _Valid
+        )
+    )
+ORDER BY [Days]
+```
+
+On the test model this shape returned the same numbers as the copied-block version in 62 ms instead of 109,
+with 35 storage-engine queries instead of 87.
+
+Read [references/query-performance.md](./references/query-performance.md) for the measured before-and-after
+of each rule and how to benchmark a query with `te query --runs`.
+
 References, read when you need them:
 
+- [references/query-performance.md](./references/query-performance.md): fewer storage-engine scans, the
+  windows pattern, benchmarking
 - [references/dax-query-patterns.md](./references/dax-query-patterns.md): query structure, worked patterns for
   dashboard visuals (KPI row, trend, ranked list, TopN with "other", small multiples), anti-patterns
 - [references/dax-core-reference.md](./references/dax-core-reference.md): CALCULATE filter arguments,
