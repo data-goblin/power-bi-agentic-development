@@ -38,7 +38,10 @@ crossfiltering:  selecting a mark in one visual filters every other visual
    the date grain of its trend, and the dimensions the user will click to crossfilter.
 4. **Write one query per visual grain.** One `EVALUATE` per visual; see
    [references/dax-query-patterns.md](./references/dax-query-patterns.md).
-5. **Test every query** with `run_dax_query` before the dashboard uses it. See [Testing](#testing-and-iteration).
+5. **Lint, then test every query.** Save each query to a `.dax` file and run
+   `python3 <this skill's directory>/scripts/lint_dax.py queries/*.dax`. Rewrite every query it flags until it
+   prints `ok`, then run each with `run_dax_query` before the dashboard uses it. See
+   [Testing](#testing-and-iteration).
 6. **Wire crossfiltering** through query parameters; see [references/crossfiltering.md](./references/crossfiltering.md).
 7. **Check the numbers against a known total.** Compare one KPI against the same measure with no filters, or
    against a figure the user already trusts from a report. A dashboard that is wrong by a filter is worse than
@@ -169,8 +172,8 @@ ORDER BY 'Date'[Year], 'Date'[Month Number]
 
 Every column in it is a model measure; the query only decides the grain and the filters.
 
-Query rules that keep queries small and fast. They are checked: a query that breaks one is rewritten before
-the dashboard uses it.
+Query rules that keep queries small and fast. `scripts/lint_dax.py` checks them: a query that breaks one is
+rewritten before the dashboard uses it.
 
 ```yaml
 one context:  all measures for one visual are evaluated in ONE filter context: SUMMARIZECOLUMNS, or
