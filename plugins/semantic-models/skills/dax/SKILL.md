@@ -31,6 +31,10 @@ Trace capture and performance profiling:
 - **Remote models (Fabric Service / XMLA):** Run DAX with the Tabular Editor CLI `te query` (`-s <workspace> -d <model>`) against the workspace XMLA endpoint; see the [`te-cli` skill](../../../tabular-editor/skills/te-cli/) (tabular-editor plugin).
 - **Power BI Modeling MCP:** also available for trace and query if you prefer an MCP tool; reach for it after the options above.
 
+## User-defined functions
+
+- **[`references/udf-authoring.md`](./references/udf-authoring.md)** — UDF signatures, the parameter type system, VAL versus EXPR evaluation, type checks, patterns and testing
+
 ## Related Skills
 
 - [`semantic-model`](../semantic-model/) — Model design, build, and auditing including DAX anti-patterns and best practices
