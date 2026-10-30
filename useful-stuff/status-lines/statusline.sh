@@ -133,6 +133,7 @@ rate_5h=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty
 rate_7d=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty' 2>/dev/null)
 rate_5h_resets=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty' 2>/dev/null)
 rate_7d_resets=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty' 2>/dev/null)
+[ -n "$rate_7d" ] && mkdir -p "$HOME/.cache/claude" && jq -c '.rate_limits' <<<"$input" > "$HOME/.cache/claude/usage.json" 2>/dev/null
 session_cost=$(echo "$input" | jq -r '.cost.total_cost_usd // empty' 2>/dev/null)
 fast_mode=$(echo "$input" | jq -r '.fast_mode // empty' 2>/dev/null)
 vim_mode=$(echo "$input" | jq -r '.vim.mode // empty' 2>/dev/null)
