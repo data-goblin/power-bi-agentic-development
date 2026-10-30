@@ -3,7 +3,7 @@
 A UserPromptSubmit hook that tells the agent how much of the Claude plan's 5-hour and weekly limits is used, so it can plan around them.
 
 ```mermaid
-flowchart LR
+flowchart TB
     cc[Claude Code] -->|rate_limits on stdin| sl[statusline script]
     sl -->|writes| f[~/.cache/claude/usage.json]
     p[prompt submitted] --> h[usage-context.sh]
