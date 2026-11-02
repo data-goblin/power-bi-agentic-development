@@ -240,19 +240,22 @@ async function get($: EngineInterface): Promise<Explorer> {
   return cached
 }
 
+function flush($: EngineInterface): Promise<unknown> {
+  saveTimer?.cancel()
+  saveTimer = null
+  if (!cached) return Promise.resolve()
+  const { nodes, ...rest } = cached
+  const writes: Promise<unknown>[] = [$.state.set(STATE, { ...rest, nodes: [] })]
+  if (nodes !== savedNodes) {
+    savedNodes = nodes
+    writes.push($.state.set(NODES, nodes))
+  }
+  return Promise.all(writes)
+}
+
 function save($: EngineInterface): void {
   saveTimer?.cancel()
-  saveTimer = $.clock.after(1_000, () => {
-    saveTimer = null
-    if (!cached) return
-    const { nodes, ...rest } = cached
-    const writes: Promise<unknown>[] = [$.state.set(STATE, { ...rest, nodes: [] })]
-    if (nodes !== savedNodes) {
-      savedNodes = nodes
-      writes.push($.state.set(NODES, nodes))
-    }
-    quiet(Promise.all(writes))
-  })
+  saveTimer = $.clock.after(1_000, () => quiet(flush($)))
 }
 
 async function commit($: EngineInterface, fn: (ex: Explorer) => Explorer): Promise<void> {
@@ -1574,6 +1577,11 @@ export const register: Register = (on, options) => {
   follow = options?.follow !== 'off'
   fontHint = options?.fontHint !== 'off'
   reportLinks = options?.reportLinks === 'portal' ? 'portal' : 'embed'
+
+  on('session.end', async ($, e, next) => {
+    await flush($).catch(() => undefined)
+    return next(e)
+  })
 
   on('session.start', async ($, e, next) => {
     useDrives((await $.env.get('OS')) === 'Windows_NT')
