@@ -183,7 +183,7 @@ export function glyph(n: TreeNode, tier: Tier): Glyph {
   if (n.kind === 'theme color' || n.kind === 'theme prop') {
     const code = n.note.split(' ')[0] ?? ''
     if (SWATCH.test(code)) return { char: tier === 'plain' ? '■' : '\u{f0764}', color: swatch(code) }
-    return { char: '·', color: hex(GLYPH_DIM) }
+    return { char: '◦', color: hex(GLYPH_DIM) }
   }
   if (n.kind === 'text class') {
     const hexColor = n.note.split(' ').find(w => SWATCH.test(w))

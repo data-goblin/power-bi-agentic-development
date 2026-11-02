@@ -190,7 +190,7 @@ export function parseSources(input: SourceInputs): Source[] {
     add({
       kind: 'SQLDatabase',
       name: 'SQL database',
-      note: [data.dialect || 'sql', entities.length ? `${entities.length} table${entities.length === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · '),
+      note: [data.dialect || 'sql', entities.length ? `${entities.length} table${entities.length === 1 ? '' : 's'}` : ''].filter(Boolean).join(', '),
       children: entities,
     })
   }

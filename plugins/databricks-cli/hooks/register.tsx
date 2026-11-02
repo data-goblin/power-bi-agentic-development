@@ -44,15 +44,24 @@ const UNREACHABLE =
 const SIGNED_OUT =
   /(?:status|code|http)\W{0,3}401\b|\b401 unauthorized|\bunauthorized\b|unauthenticated|not authenticated|not logged in|no credentials|cannot configure default credentials|cannot get access token|(?:invalid|expired) (?:access |refresh |oauth )?token|token (?:is |has )?(?:invalid|expired|not set)|credential was not sent|has no \S+ profile configured|no configuration file found|no profiles configured|cannot load databricks config|databricks auth login/i
 const FONT_SCRIPT =
-  'f=; command -v fc-list >/dev/null 2>&1 && f=$(fc-list ":charset=$1" file 2>/dev/null | head -n1 | cut -d: -f1); ' +
-  '[ -n "$f" ] || f=$(ls "$HOME"/Library/Fonts/*"$2"* /Library/Fonts/*"$2"* "$HOME"/.local/share/fonts/*"$2"* 2>/dev/null | head -n1); ' +
+  'f=; command -v fc-list >/dev/null 2>&1 && f=$(fc-list ":charset=$1" file 2>/dev/null | grep -vi lastresort | head -n1 | cut -d: -f1); ' +
+  '[ -n "$f" ] || for g in "$HOME"/Library/Fonts/*"$2"* /Library/Fonts/*"$2"* "$HOME"/.local/share/fonts/*"$2"*; do [ -f "$g" ] || continue; ' +
+  '[ "$2" = Nerd ] && ! LC_ALL=C grep -aqE "Nerd Fonts (3\\.([2-9]|[1-9][0-9])|[4-9]|[1-9][0-9]+)\\." "$g" && continue; f=$g; break; done; ' +
   '[ -n "$f" ] || { echo missing; exit 0; }; m=$(stat -c %Z "$f" 2>/dev/null || stat -f %c "$f"); p=$PPID; ' +
   'while [ -n "$p" ] && [ "$p" -gt 1 ]; do c=$(ps -o comm= -p "$p" 2>/dev/null); c=$(basename "$c" 2>/dev/null | tr -d " "); case "$c" in ' +
   'ghostty|kitty|alacritty|Alacritty|foot|footclient|wezterm-gui|konsole|gnome-terminal-|xterm|urxvt|st|Terminal|iTerm2) ' +
   'e=$(ps -o etime= -p "$p" 2>/dev/null | awk -F\'[-:]\' \'{n=NF; s=$n+60*$(n-1); if (n>2) s+=3600*$(n-2); if (n>3) s+=86400*$(n-3); print s}\'); [ -n "$e" ] && [ $(( $(date +%s) - e )) -lt "$m" ] && echo stale || echo ok; exit 0;; esac; ' +
   'p=$(ps -o ppid= -p "$p" 2>/dev/null | tr -d " "); done; echo ok'
 
+const NERD_PROBE = 'f04eb f0b9f f460 f47c f0450'
+const SAVE_MS = 1_000
+const LOADING = 'loading…'
+
 let lastPress = { key: '', at: 0 }
+let mem: Explorer | null = null
+let saving: Timer | null = null
+let pressedCursor = ''
+const optimistic = new Map<string, boolean>()
 const views = new Map<string, { from: number; max: number }>()
 let detected: Tier = 'nerd'
 let glyphSetting = 'auto'
@@ -152,7 +161,7 @@ async function detectGlyphs($: EngineInterface): Promise<void> {
     detected = 'nerd'
     return
   }
-  const nerd = (await fontState($, 'f04eb', 'Nerd')) === 'ok'
+  const nerd = (await fontState($, NERD_PROBE, 'Nerd')) === 'ok'
   detected = nerd && (await fontState($, 'f3000', 'DatabricksSymbols')) === 'ok' ? 'databricks' : nerd ? 'nerd' : 'plain'
 }
 
@@ -172,48 +181,45 @@ function titleGlyph(tier: Tier): string {
 }
 
 function label(target: Target | null): string {
-  return target?.profile ? `${TITLE} · ${target.profile}` : TITLE
+  return target?.profile ? `${TITLE}, ${target.profile}` : TITLE
 }
 function titleFor(target: Target | null): string {
-  return `${titleGlyph(tierFor('terminal'))} ${label(target)}`
+  return label(target)
 }
 async function get($: EngineInterface): Promise<Explorer> {
+  if (mem) return mem
   const [view, tree] = await Promise.all([$.state.get(STATE), $.state.get(NODES)])
-  return { ...empty(), ...view.value, nodes: tree.value ?? [] }
+  mem ??= { ...empty(), ...view.value, nodes: tree.value ?? [] }
+  return mem
+}
+
+async function save($: EngineInterface): Promise<void> {
+  const ex = mem
+  if (!ex) return
+  const { nodes, ...rest } = ex
+  await Promise.all([$.state.set(NODES, nodes), $.state.set(STATE, { ...rest, nodes: [] })])
 }
 
 async function put($: EngineInterface, fn: (ex: Explorer) => Explorer): Promise<void> {
-  for (let i = 0; ; i++) {
-    if (i >= 50) throw new Error('pane state is busy; try again')
-    const [view, tree] = await Promise.all([$.state.get(STATE), $.state.get(NODES)])
-    const cur: Explorer = { ...empty(), ...view.value, nodes: tree.value ?? [] }
-    const next = anchored(cur, fn(cur))
-    if (next.nodes !== cur.nodes) {
-      const done = await $.state.set(NODES, next.nodes, { ifVersion: tree.version })
-      if (!done.isSet) continue
-    }
-    const keys = Object.keys(next) as (keyof Explorer)[]
-    if (!keys.some(k => k !== 'nodes' && next[k] !== cur[k])) return
-    const { nodes: _nodes, ...rest } = next
-    const done = await $.state.set(STATE, { ...rest, nodes: [] }, { ifVersion: view.version })
-    if (done.isSet) return
-  }
+  await get($)
+  const cur = mem ?? empty()
+  const next = anchored(cur, fn(cur))
+  const keys = Object.keys(next) as (keyof Explorer)[]
+  if (!keys.some(k => next[k] !== cur[k])) return
+  mem = next
+  saving ??= $.clock.after(SAVE_MS, () => {
+    saving = null
+    quiet(save($))
+  })
+  $.ui.invalidate('ui.render')
 }
 
 function patch($: EngineInterface, fn: (ex: Explorer) => Partial<Explorer>) {
   return put($, ex => ({ ...ex, ...fn(ex) }))
 }
 
-async function patchView($: EngineInterface, fn: (ex: Explorer) => Partial<Explorer>): Promise<void> {
-  for (let i = 0; ; i++) {
-    if (i >= 50) throw new Error('pane state is busy; try again')
-    const view = await $.state.get(STATE)
-    const cur: Explorer = { ...empty(), ...view.value, nodes: [] }
-    const change = fn(cur)
-    if (Object.keys(change).length === 0) return
-    const done = await $.state.set(STATE, { ...cur, ...change, nodes: [] }, { ifVersion: view.version })
-    if (done.isSet) return
-  }
+function patchView($: EngineInterface, fn: (ex: Explorer) => Partial<Explorer>): Promise<void> {
+  return patch($, fn)
 }
 
 const sameTarget = (a: Target | null, b: Target | null) => JSON.stringify(a) === JSON.stringify(b)
@@ -376,6 +382,58 @@ async function press($: EngineInterface, n: TreeNode): Promise<void> {
   else if (!isDouble) await select($, n)
 }
 
+function pressNow($: EngineInterface, n: TreeNode, r: Row | undefined, mods: { ctrl: boolean; shift: boolean }): void {
+  const fail = (err: unknown) => $.ui.toast(errorText(err))
+  if (mods.ctrl || mods.shift) {
+    void get($)
+      .then(ex => (mods.ctrl ? openWeb($, ex, n) : openLocal($, ex, n)))
+      .catch(fail)
+    return
+  }
+  const isDouble = lastPress.key === n.id && Date.now() - lastPress.at < DOUBLE_MS
+  if (!isDouble && r && !r.leaf) optimistic.set(n.id, !r.open)
+  pressedCursor = n.id
+  $.ui.invalidate('ui.render')
+  void press($, n)
+    .catch(fail)
+    .finally(() => {
+      optimistic.delete(n.id)
+      if (pressedCursor === n.id) pressedCursor = ''
+      $.ui.invalidate('ui.render')
+    })
+}
+
+type RowInput = { key?: unknown; ctrl?: unknown; shift?: unknown; copy?: unknown }
+
+async function rowInput($: EngineInterface, surface: string, data: RowInput): Promise<void> {
+  const ex = await get($)
+  if (typeof data.copy === 'string') {
+    const n = ex.nodes.find(x => x.id === data.copy)
+    if (n) await copyOf($, n.path || n.name, surface)
+    return
+  }
+  if (typeof data.key !== 'string') return
+  const rows = visible(ex, SORT, rootOf(ex))
+  const at = rows.findIndex(r => r.node.id === ex.cursor)
+  const cur = rows[at]
+  const move = (d: number) => {
+    const target = rows[Math.max(0, Math.min(rows.length - 1, (at < 0 ? 0 : at) + d))]
+    return target ? patchView($, () => ({ cursor: target.node.id, scroll: null })) : Promise.resolve()
+  }
+  if (data.key === 'up' || data.key === 'k') await move(-1)
+  else if (data.key === 'down' || data.key === 'j') await move(1)
+  else if (data.key === 'pageup') await move(-10)
+  else if (data.key === 'pagedown') await move(10)
+  else if (data.key === 'home') await move(-rows.length)
+  else if (data.key === 'end') await move(rows.length)
+  else if (cur && (data.key === 'y' || data.key === 'Y')) await copyOf($, cur.node.path || cur.node.name, surface)
+  else if (cur && (data.key === 'right' || data.key === 'l') && !cur.leaf && !cur.open) await select($, cur.node)
+  else if (cur && (data.key === 'left' || data.key === 'h')) {
+    if (!cur.leaf && cur.open) await patchView($, x => ({ expanded: x.expanded.filter(id => id !== cur.node.id) }))
+    else if (cur.node.parent) await patchView($, () => ({ cursor: cur.node.parent }))
+  } else if (cur && (data.key === ' ' || data.key === 'space' || data.key === 'return')) await (data.key === 'return' && cur.leaf ? openLocal($, ex, cur.node) : select($, cur.node))
+}
+
 function guides(depth: number): string {
   const lines = Array.from({ length: depth }, (_, i) => `<rect x="${i * 16 + 7.5}" y="0" width="1" height="${ROW_PX}" fill="#34343c"/>`).join('')
   return `<svg xmlns="${SVG_NS}" width="${depth * 16}" height="${ROW_PX}" viewBox="0 0 ${depth * 16} ${ROW_PX}">${lines}</svg>`
@@ -415,6 +473,10 @@ class CliError extends Error {
   }
 }
 
+function isAbort(err: unknown): boolean {
+  return !(err instanceof CliError) && /aborted/i.test(err instanceof Error ? err.message : String(err))
+}
+
 function troubleOf(text: string): Trouble {
   return UNREACHABLE.test(text) ? 'unreachable' : SIGNED_OUT.test(text) ? 'signedOut' : ''
 }
@@ -425,8 +487,9 @@ async function dbRun($: EngineInterface, tail: string[], profile: string): Promi
   try {
     run = await limited(() => $.process.run(argv, { timeoutMs: 60_000 }))
   } catch (err) {
+    if (isAbort(err)) throw err
     const text = (err instanceof Error ? err.message : String(err)).trim()
-    throw new CliError(text.split('\n')[0] || 'databricks did not start', /timed? ?out/i.test(text) ? 'unreachable' : 'missing')
+    throw new CliError(text.split('\n')[0] || 'databricks did not start', /timed? ?out/i.test(text) ? 'unreachable' : /ENOENT|not found|no such file|cannot find|command not found|executable file/i.test(text) ? 'missing' : troubleOf(text))
   }
   if (run.exitCode !== 0) {
     const text = (run.stderr || run.stdout).trim()
@@ -491,6 +554,7 @@ async function probe($: EngineInterface, profile: string): Promise<Onboard | nul
     await dbRun($, ['current-user', 'me'], profile)
     return null
   } catch (err) {
+    if (isAbort(err)) throw err
     return onboardOf(err)
   }
 }
@@ -501,7 +565,13 @@ async function doRefresh($: EngineInterface): Promise<void> {
   await patchView($, () => ({ status: 'loading' }))
   treeGen++
   hosts.clear()
-  const onboard = await probe($, target.profile)
+  let onboard: Onboard | null
+  try {
+    onboard = await probe($, target.profile)
+  } catch {
+    await patchView($, cur => (cur.status === 'loading' ? { status: '' } : {}))
+    return
+  }
   if (onboard) {
     await patchView($, cur => (sameTarget(cur.target, target) ? { onboard, status: '' } : {}))
     return
@@ -510,7 +580,8 @@ async function doRefresh($: EngineInterface): Promise<void> {
     await patch($, cur => (sameTarget(cur.target, target) ? { nodes: roots(), expanded: cur.nodes.length ? cur.expanded : [], status: '', onboard: null } : {}))
     await expandOpen($)
   } catch (err) {
-    await patch($, cur => failed(cur, target, err))
+    if (isAbort(err)) await patchView($, cur => (cur.status === 'loading' ? { status: '' } : {}))
+    else await patch($, cur => failed(cur, target, err))
   }
 }
 async function listChildren($: EngineInterface, n: TreeNode, profile: string): Promise<TreeNode[]> {
@@ -553,6 +624,7 @@ function reloadNode($: EngineInterface, id: string): Promise<boolean> {
       if (owned) statusOwner = ''
       await patch($, cur => (gen === treeGen && sameTarget(cur.target, target) && cur.nodes.some(x => x.id === n.id) ? { nodes: merge(cur.nodes, n.id, kids), ...(owned ? { status: '' } : {}), ...(cur.onboard ? { onboard: null } : {}) } : {}))
     } catch (err) {
+      if (isAbort(err)) return false
       statusOwner = n.id
       await patchView($, cur => failed(cur, target, err))
       return false
@@ -573,6 +645,8 @@ function expandNode($: EngineInterface, n: TreeNode): Promise<boolean> {
     const target = ex.target
     if (!ex.nodes.some(c => c.parent === n.id && c.kind === PLACEHOLDER)) return true
     const gen = treeGen
+    const holder = (name: string) => (x: TreeNode) => (x.parent === n.id && x.kind === PLACEHOLDER && x.name !== name ? { ...x, name } : x)
+    if (ex.nodes.some(c => c.parent === n.id && c.kind === PLACEHOLDER && c.name !== LOADING)) await patch($, cur => ({ nodes: cur.nodes.map(holder(LOADING)) }))
     try {
       const kids = await listChildren($, n, target?.profile ?? '')
       const owned = statusOwner === n.id
@@ -585,8 +659,12 @@ function expandNode($: EngineInterface, n: TreeNode): Promise<boolean> {
       })
       return true
     } catch (err) {
-      statusOwner = n.id
-      await patchView($, cur => failed(cur, target, err))
+      if (isAbort(err)) return false
+      const onboard = onboardOf(err)
+      await patch($, cur => {
+        if (gen !== treeGen || !sameTarget(cur.target, target)) return {}
+        return { nodes: cur.nodes.map(holder(errorText(err))), ...(onboard ? { onboard } : {}) }
+      })
       return false
     }
   })().finally(() => loading.delete(key))
@@ -731,8 +809,13 @@ export const register: Register = (on, options) => {
     hinted = false
     fellBack = false
     quiet(detectGlyphs($).then(() => $.ui.invalidate('ui.render')))
+    saving?.cancel()
+    saving = null
+    mem = null
+    optimistic.clear()
+    pressedCursor = ''
     await patchView($, () => ({ work: null, busy: {} }))
-    await $.command.register({ name: PANE, description: 'Open the Databricks pane; args: [profile]' })
+    await $.command.register({ name: PANE, description: 'Open the Databricks pane; args: [profile]', immediate: true })
     const ex = await get($)
     activeProfile = ex.target?.profile ?? ''
     if (ex.target) quiet(openPane($, { id: PANE, title: titleFor(ex.target) }))
@@ -748,7 +831,7 @@ export const register: Register = (on, options) => {
     quiet(detectGlyphs($).then(() => $.ui.invalidate('ui.render')))
     const [profile = ''] = tokenize(e.args ?? '')
     await point($, { kind: 'databricks', profile }, 'asked', true)
-    await refresh($)
+    quiet(refresh($))
     return { text: profile ? `Databricks pane on profile ${profile}.` : 'Databricks pane open.' }
   })
 
@@ -791,6 +874,13 @@ export const register: Register = (on, options) => {
     return result
   })
 
+  on('session.end', async ($, e, next) => {
+    saving?.cancel()
+    saving = null
+    await save($).catch(() => undefined)
+    return next(e)
+  })
+
   on('ui.close', async ($, e, next) => {
     const result = await next(e)
     if (e.id === PANE && e.origin.kind === 'person') closed = true
@@ -805,31 +895,29 @@ export const register: Register = (on, options) => {
       return {}
     }
     if (e.requestId === PANE && e.element.startsWith('z:') && e.data && typeof e.data === 'object') {
-      const data = e.data as { zone?: unknown; ctrl?: unknown }
+      const data = e.data as RowInput & { zone?: unknown }
       const id = typeof data.zone === 'string' ? data.zone : ''
       if (id === PROPS) {
         propsOpen = !propsOpen
         $.ui.invalidate('ui.render')
         return {}
       }
-      const ex = await get($)
+      if (typeof data.key === 'string' || typeof data.copy === 'string') {
+        await rowInput($, e.surface, data)
+        return {}
+      }
+      const ex = mem ?? (await get($))
       const n = ex.nodes.find(x => x.id === id)
-      if (n && data.ctrl) quiet(openWeb($, ex, n))
-      else if (n) quiet(press($, n))
+      if (n) pressNow($, n, visible(ex, SORT, rootOf(ex)).find(r => r.node.id === id), { ctrl: Boolean(data.ctrl), shift: Boolean(data.shift) })
       return {}
     }
     if (e.requestId !== PANE || e.element !== 'rows' || !e.data || typeof e.data !== 'object') return next(e)
     const view = views.get(e.surface) ?? { from: 0, max: 0 }
-    const data = e.data as { press?: unknown; key?: unknown; ctrl?: unknown; shift?: unknown; scrollTo?: unknown; copy?: unknown }
+    const data = e.data as RowInput & { press?: unknown; scrollTo?: unknown }
     const ex = await get($)
     if (typeof data.scrollTo === 'number') {
       const to = Math.round(Math.max(0, Math.min(1, data.scrollTo)) * view.max)
       if (to !== ex.scroll) await patchView($, () => ({ scroll: to }))
-      return {}
-    }
-    if (typeof data.copy === 'string') {
-      const n = ex.nodes.find(x => x.id === data.copy)
-      if (n) await copyOf($, n.path || n.name, e.surface)
       return {}
     }
     if (typeof data.press === 'string') {
@@ -841,26 +929,7 @@ export const register: Register = (on, options) => {
       else await press($, n)
       return {}
     }
-    if (typeof data.key !== 'string') return {}
-    const rows = visible(ex, SORT, rootOf(ex))
-    const at = rows.findIndex(r => r.node.id === ex.cursor)
-    const cur = rows[at]
-    const move = (d: number) => {
-      const target = rows[Math.max(0, Math.min(rows.length - 1, (at < 0 ? 0 : at) + d))]
-      return target ? patchView($, () => ({ cursor: target.node.id, scroll: null })) : Promise.resolve()
-    }
-    if (data.key === 'up' || data.key === 'k') await move(-1)
-    else if (data.key === 'down' || data.key === 'j') await move(1)
-    else if (data.key === 'pageup') await move(-10)
-    else if (data.key === 'pagedown') await move(10)
-    else if (data.key === 'home') await move(-rows.length)
-    else if (data.key === 'end') await move(rows.length)
-    else if (cur && (data.key === 'y' || data.key === 'Y')) await copyOf($, cur.node.path || cur.node.name, e.surface)
-    else if (cur && (data.key === 'right' || data.key === 'l') && !cur.leaf && !cur.open) await select($, cur.node)
-    else if (cur && (data.key === 'left' || data.key === 'h')) {
-      if (!cur.leaf && cur.open) await patchView($, x => ({ expanded: x.expanded.filter(id => id !== cur.node.id) }))
-      else if (cur.node.parent) await patchView($, () => ({ cursor: cur.node.parent }))
-    } else if (cur && (data.key === ' ' || data.key === 'return')) await (data.key === 'return' && cur.leaf ? openLocal($, ex, cur.node) : select($, cur.node))
+    await rowInput($, e.surface, data)
     return {}
   })
 
@@ -904,7 +973,15 @@ export const register: Register = (on, options) => {
     const Svg = 'Svg' in table ? table.Svg : undefined
     const native = e.surface === 'desktop' && Boolean(Svg)
     nativeScroll = native
-    const ex = await get($)
+    const stored = await get($)
+    const ex: Explorer =
+      optimistic.size || pressedCursor
+        ? {
+            ...stored,
+            cursor: pressedCursor || stored.cursor,
+            expanded: [...optimistic].reduce((open, [id, isOpen]) => (isOpen ? [...open.filter(x => x !== id), id] : open.filter(x => x !== id)), stored.expanded),
+          }
+        : stored
     const now = await $.clock.now()
     const busyTone = (id: string) => {
       const b = ex.busy[id]
@@ -947,7 +1024,7 @@ export const register: Register = (on, options) => {
     if (!native) views.set(e.surface, { from, max })
     const shown = rows.slice(from, from + room - pinned.length)
     const clip = (s: string, max = width) => (s.length > max ? s.slice(0, max - 1) + '…' : s)
-    const loadingRow = (n: TreeNode) => n.kind === PLACEHOLDER && n.name === 'loading…'
+    const loadingRow = (n: TreeNode) => n.kind === PLACEHOLDER && n.name === LOADING
     const rowSpec = (r: Row): RowSpec => {
       const n = r.node
       const g = glyph(n, tier)
@@ -1036,6 +1113,11 @@ export const register: Register = (on, options) => {
                   <Text color={TITLE_COLOR}>{`${icon(line.icon[0], line.icon[1])} `}</Text>
                   <Text bold>{line.title}</Text>
                 </Text>
+              ) : 'cmd' in line && native ? (
+                <Box key={`line-${i}`} marginLeft={2} flexDirection="row" flexWrap="wrap" alignItems="center">
+                  {line.label ? <Text>{line.label}</Text> : null}
+                  <Button key={`onboard-${b}-${i}`} plain label={line.cmd} onPress={p => void copyOf($, line.cmd, p.surface).catch((err: unknown) => $.ui.toast(errorText(err)))} />
+                </Box>
               ) : 'cmd' in line ? (
                 <Box key={`line-${i}`} marginLeft={2}>
                   <Client
@@ -1062,6 +1144,7 @@ export const register: Register = (on, options) => {
       const nativeRow = (r: Row) => {
         const n = r.node
         const g = glyph(n, 'plain')
+        const kindName = n.kind.replace(/^section-/, '').replace(/_/g, ' ')
         const faded = n.hidden || n.kind === PLACEHOLDER || n.kind === EMPTY
         const label = clip(n.name, Math.max(4, width - r.depth * 2 - 8 - n.note.length))
         const lit = brightSet.has(n.id) || dimSet.has(n.id) || busyTone(n.id) !== ''
@@ -1075,7 +1158,7 @@ export const register: Register = (on, options) => {
               {loadingRow(n) ? (
                 <Client key={`ph:${n.id}`} module="./rows.tsx" props={{ rows: [{ id: '', left: [{ t: '', spin: true }, { t: ' Loading…', c: MUTED }], right: [] }], active: '', activeBg: '', hoverBg: '', tones: TONES } satisfies RowsProps} />
               ) : (
-                <Text key={`i:${n.id}`} color={g.color}>{g.char}</Text>
+                icon16(UI_SVG[g.icon], kindName, { t: g.char, c: g.color }, `i:${n.id}`)
               )}
               {loadingRow(n) ? null : (
                 <Text color={faded ? MUTED : lit ? TONES[work?.tone ?? 'orange']?.bright[1] : undefined} bold={n.id === ex.selected} wrap="truncate-end">
@@ -1143,7 +1226,6 @@ export const register: Register = (on, options) => {
         <Box flexDirection="column">
           <Box key="desk-head" height={1} flexDirection="row" alignItems="center">
             <Box flexGrow={1} flexShrink={1} flexDirection="row" alignItems="center" gap={1}>
-              <Text color={TITLE_COLOR}>{titleGlyph(tier)}</Text>
               <Text bold wrap="truncate-end">{headName}</Text>
               {ex.status ? <Text color={MUTED} wrap="truncate-end">{ex.status}</Text> : null}
             </Box>

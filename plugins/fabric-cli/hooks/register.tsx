@@ -11,7 +11,7 @@ import { ancestors, EMPTY, empty, emptyMark, isLoaded, merge, type Row, visible 
 import { type ApiFolder, type ApiItem, folderTree, inOneLake, itemUrl, modelOf, parseChildren, parseOneLake, parseWorkspaces, PLACEHOLDER, typeLabel } from './fabric'
 import { FAB_TONE, type FabKind, fabCalls, fabGuids, fabKind, fabPositionals, fabWorkspaces, type Invocation, invocations, join, modelFromConnection, posix, queryOf, targetLabel, tokenize, useDrives } from './parse'
 import { fabTouched, nodeAtPath } from './touch'
-import { COPY, REFRESH, runFailure, setupOf, setupRows, spawnFailure } from './setup'
+import { CliError, COPY, isAborted, REFRESH, runFailure, setupOf, setupRows, spawnFailure } from './setup'
 
 const STATE = { plugin: 'fabric-cli', key: 'explorer' } as const
 const NODES = { plugin: 'fabric-cli', key: 'nodes' } as const
@@ -36,13 +36,15 @@ const TONES: Record<string, { bright: string[]; dim: string[] }> = {
   purple: { bright: ['#a855f7', '#c084fc', '#d8b4fe', '#f3e8ff'], dim: ['#581c87', '#6b21a8', '#8b47c4', '#a874d6'] },
 }
 const FONT_SCRIPT =
-  'f=; command -v fc-list >/dev/null 2>&1 && f=$(fc-list ":charset=$1" file 2>/dev/null | head -n1 | cut -d: -f1); ' +
-  '[ -n "$f" ] || f=$(ls "$HOME"/Library/Fonts/*"$2"* /Library/Fonts/*"$2"* "$HOME"/.local/share/fonts/*"$2"* 2>/dev/null | head -n1); ' +
+  'f=; command -v fc-list >/dev/null 2>&1 && f=$(fc-list ":charset=$1" file 2>/dev/null | grep -vi lastresort | head -n1 | cut -d: -f1); ' +
+  '[ -n "$f" ] || for g in "$HOME"/Library/Fonts/*"$2"* /Library/Fonts/*"$2"* "$HOME"/.local/share/fonts/*"$2"*; do [ -f "$g" ] && { [ -z "$3" ] || LC_ALL=C grep -aqE "$3" "$g"; } && { f=$g; break; }; done; ' +
   '[ -n "$f" ] || { echo missing; exit 0; }; m=$(stat -c %Z "$f" 2>/dev/null || stat -f %c "$f"); p=$PPID; ' +
   'while [ -n "$p" ] && [ "$p" -gt 1 ]; do c=$(ps -o comm= -p "$p" 2>/dev/null); c=$(basename "$c" 2>/dev/null | tr -d " "); case "$c" in ' +
   'ghostty|kitty|alacritty|Alacritty|foot|footclient|wezterm-gui|konsole|gnome-terminal-|xterm|urxvt|st|Terminal|iTerm2) ' +
   'e=$(ps -o etime= -p "$p" 2>/dev/null | awk -F\'[-:]\' \'{n=NF; s=$n+60*$(n-1); if (n>2) s+=3600*$(n-2); if (n>3) s+=86400*$(n-3); print s}\'); [ -n "$e" ] && [ $(( $(date +%s) - e )) -lt "$m" ] && echo stale || echo ok; exit 0;; esac; ' +
   'p=$(ps -o ppid= -p "$p" 2>/dev/null | tr -d " "); done; echo ok'
+const NERD_PROBE = 'f04eb ebff eac5 f47c f460 ec82'
+const NERD_VERSION = 'Nerd Fonts (3\\.([5-9]|[1-9][0-9])|[4-9]|[1-9][0-9]+)\\.'
 
 let lastPress = { key: '', at: 0 }
 const views = new Map<string, { from: number; max: number }>()
@@ -183,9 +185,9 @@ async function terminal($: EngineInterface, linux: string[], cmd: string[], cwd 
   return started($, ['powershell', '-NoProfile', '-Command', `$ErrorActionPreference = 'Stop'; Start-Process powershell -ArgumentList @('-NoExit', '-Command', ${psq(inner)})`])
 }
 
-async function fontState($: EngineInterface, charset: string, name: string): Promise<'ok' | 'stale' | 'missing'> {
+async function fontState($: EngineInterface, charset: string, name: string, version = ''): Promise<'ok' | 'stale' | 'missing'> {
   try {
-    const out = (await $.process.run(['sh', '-c', FONT_SCRIPT, 'sh', charset, name], { timeoutMs: 5_000 })).stdout.trim()
+    const out = (await $.process.run(['sh', '-c', FONT_SCRIPT, 'sh', charset, name, version], { timeoutMs: 5_000 })).stdout.trim()
     return out === 'stale' || out === 'missing' ? out : 'ok'
   } catch {
     return 'missing'
@@ -197,7 +199,7 @@ async function detectGlyphs($: EngineInterface): Promise<void> {
     detected = 'nerd'
     return
   }
-  const nerd = (await fontState($, 'f04eb', 'Nerd')) === 'ok'
+  const nerd = (await fontState($, NERD_PROBE, 'Nerd', NERD_VERSION)) === 'ok'
   detected = nerd && (await fontState($, 'f2621', 'FabricSymbols')) === 'ok' ? 'fabric' : nerd ? 'nerd' : 'plain'
 }
 
@@ -220,43 +222,65 @@ function titleFor(target: Target | null): string {
   return target ? tenantName || targetLabel(target) : TITLE
 }
 
-async function get($: EngineInterface): Promise<Explorer> {
+let cached: Explorer | null = null
+let savedNodes: TreeNode[] | null = null
+let saveTimer: Timer | null = null
+
+async function load($: EngineInterface): Promise<Explorer> {
   const [view, tree] = await Promise.all([$.state.get(STATE), $.state.get(NODES)])
-  return { ...empty(), ...view.value, nodes: tree.value ?? [] }
+  const nodes = tree.value ?? []
+  savedNodes = nodes
+  return { ...empty(), ...view.value, nodes }
 }
 
-async function put($: EngineInterface, fn: (ex: Explorer) => Explorer): Promise<void> {
-  for (let i = 0; ; i++) {
-    if (i >= 50) throw new Error('pane state is busy; try again')
-    const [view, tree] = await Promise.all([$.state.get(STATE), $.state.get(NODES)])
-    const cur: Explorer = { ...empty(), ...view.value, nodes: tree.value ?? [] }
-    const next = anchored(cur, fn(cur))
-    if (next.nodes !== cur.nodes) {
-      const done = await $.state.set(NODES, next.nodes, { ifVersion: tree.version })
-      if (!done.isSet) continue
-    }
-    const keys = Object.keys(next) as (keyof Explorer)[]
-    if (!keys.some(k => k !== 'nodes' && next[k] !== cur[k])) return
-    const { nodes: _nodes, ...rest } = next
-    const done = await $.state.set(STATE, { ...rest, nodes: [] }, { ifVersion: view.version })
-    if (done.isSet) return
+async function get($: EngineInterface): Promise<Explorer> {
+  if (cached) return cached
+  const ex = await load($)
+  cached ??= ex
+  return cached
+}
+
+function flush($: EngineInterface): Promise<unknown> {
+  saveTimer?.cancel()
+  saveTimer = null
+  if (!cached) return Promise.resolve()
+  const { nodes, ...rest } = cached
+  const writes: Promise<unknown>[] = [$.state.set(STATE, { ...rest, nodes: [] })]
+  if (nodes !== savedNodes) {
+    savedNodes = nodes
+    writes.push($.state.set(NODES, nodes))
   }
+  return Promise.all(writes)
+}
+
+function save($: EngineInterface): void {
+  saveTimer?.cancel()
+  saveTimer = $.clock.after(1_000, () => quiet(flush($)))
+}
+
+async function commit($: EngineInterface, fn: (ex: Explorer) => Explorer): Promise<void> {
+  if (!cached) await get($)
+  const now = cached ?? empty()
+  const next = fn(now)
+  if ((Object.keys(next) as (keyof Explorer)[]).every(k => next[k] === now[k])) return
+  cached = next
+  $.ui.invalidate('ui.render')
+  save($)
+}
+
+function put($: EngineInterface, fn: (ex: Explorer) => Explorer): Promise<void> {
+  return commit($, cur => anchored(cur, fn(cur)))
 }
 
 function patch($: EngineInterface, fn: (ex: Explorer) => Partial<Explorer>) {
   return put($, ex => ({ ...ex, ...fn(ex) }))
 }
 
-async function patchView($: EngineInterface, fn: (ex: Explorer) => Partial<Explorer>): Promise<void> {
-  for (let i = 0; ; i++) {
-    if (i >= 50) throw new Error('pane state is busy; try again')
-    const view = await $.state.get(STATE)
-    const cur: Explorer = { ...empty(), ...view.value, nodes: [] }
+function patchView($: EngineInterface, fn: (ex: Explorer) => Partial<Explorer>): Promise<void> {
+  return commit($, cur => {
     const change = fn(cur)
-    if (Object.keys(change).length === 0) return
-    const done = await $.state.set(STATE, { ...cur, ...change, nodes: [] }, { ifVersion: view.version })
-    if (done.isSet) return
-  }
+    return Object.keys(change).length === 0 ? cur : { ...cur, ...change }
+  })
 }
 
 const sameTarget = (a: Target | null, b: Target | null) => JSON.stringify(a) === JSON.stringify(b)
@@ -519,12 +543,24 @@ async function fabRaw($: EngineInterface, args: string[], urgent = false): Promi
     () => $.process.run([ctx.bin, ...args], { timeoutMs: 60_000, ...(Object.keys(ctx.env).length ? { env: ctx.env } : {}) }),
     urgent,
   )
-  if (run.exitCode !== 0 || run.isStdoutTruncated) throw new Error((run.stderr || run.stdout).trim().split('\n')[0] || `fab ${args[0]} failed`)
+  if (run.exitCode !== 0 || run.isStdoutTruncated) throw new CliError((run.stderr || run.stdout).trim().split('\n')[0] || `fab ${args[0]} failed`, '')
   return run.stdout
 }
 
 function quiet(p: Promise<unknown>): void {
   void p.catch(() => undefined)
+}
+
+function orAborted<T>(fallback: T): (err: unknown) => T {
+  return err => {
+    if (isAborted(err)) throw err
+    return fallback
+  }
+}
+
+function swap<V>(into: Map<string, V>, from: Map<string, V>): void {
+  into.clear()
+  for (const [k, v] of from) into.set(k, v)
 }
 
 const domainOf = new Map<string, string>()
@@ -618,7 +654,7 @@ async function toggleRun($: EngineInterface, capacity: string): Promise<void> {
     $.ui.toast(`could not ${resume ? 'resume' : 'pause'} ${name}: ${err instanceof Error ? err.message : String(err)}`)
   } finally {
     capBusy.delete(key)
-    await loadDomains($, true).catch(() => undefined)
+    await loadGroups($, true).catch(() => undefined)
     const ex = await get($)
     if (ex.cursor && ex.nodes.find(n => n.id === ex.cursor)?.sig.toLowerCase() === key) {
       const n = ex.nodes.find(x => x.id === ex.cursor)
@@ -639,6 +675,7 @@ let pressedCursor = ''
 const TENANT_CLOSED = '#tenant-closed'
 const SETTINGS = 'TS:'
 let tenantAsked = false
+let tenantLoading = false
 
 function jsonOf<T>(text: string): T | null {
   try {
@@ -652,8 +689,25 @@ let groupsLoaded: Promise<void> | null = null
 let pending = ''
 
 function warmGroups($: EngineInterface): Promise<void> {
-  if (!groupsLoaded) groupsLoaded = loadDomains($).catch(() => undefined)
+  if (!groupsLoaded) {
+    const job: Promise<void> = loadDomains($).then(
+      async problem => {
+        if (!problem) return
+        if (groupsLoaded === job) groupsLoaded = null
+        await patchView($, () => ({ status: errorText(problem) }))
+      },
+      () => {
+        if (groupsLoaded === job) groupsLoaded = null
+      },
+    )
+    groupsLoaded = job
+  }
   return groupsLoaded
+}
+
+async function loadGroups($: EngineInterface, withCapacity: boolean): Promise<void> {
+  const problem = await loadDomains($, withCapacity)
+  if (problem) await patchView($, () => ({ status: errorText(problem) }))
 }
 
 async function withPending<T>($: EngineInterface, text: string, fn: () => Promise<T>): Promise<T> {
@@ -667,32 +721,68 @@ async function withPending<T>($: EngineInterface, text: string, fn: () => Promis
   }
 }
 
-async function loadDomains($: EngineInterface, withCapacity = false): Promise<void> {
-  const [domainList, capacityList] = await Promise.all([
-    fabRaw($, ['ls', '/.domains', '-l', '--output_format', 'json']).catch(() => ''),
-    fabRaw($, ['ls', '/.capacities', '-l', '--output_format', 'json']).catch(() => ''),
-  ])
-  const names = jsonOf<{ result?: { data?: { name?: string; id?: string }[] } }>(domainList)
-  domainName.clear()
-  for (const d of names?.result?.data ?? []) if (d.id && d.name) domainName.set(d.id.toLowerCase(), d.name.replace(/\.Domain$/i, ''))
-  const caps = jsonOf<{ result?: { data?: { name?: string; id?: string }[] } }>(capacityList)
-  capacityName.clear()
-  for (const c of (caps?.result?.data ?? []) as { id?: string; name?: string; state?: string; sku?: string; region?: string; subscriptionId?: string; resourceGroup?: string }[]) {
-    if (!c.id || !c.name) continue
-    const known = (v?: string) => (v && v !== 'Unknown' ? v : '')
-    capacityInfo.set(c.id.toLowerCase(), { name: c.name.replace(/\.Capacity$/i, ''), region: c.region ?? '', subscription: known(c.subscriptionId), group: known(c.resourceGroup) })
-    capacityName.set(c.id.toLowerCase(), shortCapacity(c.name.replace(/\.Capacity$/i, ''), c.sku ?? ''))
-    if (c.state) capacityState.set(c.id.toLowerCase(), c.state)
-    if (c.sku) capacitySku.set(c.id.toLowerCase(), c.sku)
+type Listed = { result?: { data?: { id?: string; name?: string; state?: string; sku?: string; region?: string; subscriptionId?: string; resourceGroup?: string }[] } }
+
+async function loadDomains($: EngineInterface, withCapacity = false): Promise<string> {
+  const problems: string[] = []
+  const failed = (what: string, err: unknown) => {
+    if (isAborted(err)) throw err
+    problems.push(`${what}: ${err instanceof Error ? err.message : String(err)}`)
+  }
+  const list = (path: string): Promise<Listed | null> =>
+    fabRaw($, ['ls', path, '-l', '--output_format', 'json']).then(
+      text => {
+        const body = jsonOf<Listed>(text)
+        if (!body) problems.push(`fab ls ${path} returned no JSON`)
+        return body
+      },
+      (err: unknown) => {
+        failed(`fab ls ${path}`, err)
+        return null
+      },
+    )
+  const [names, caps] = await Promise.all([list('/.domains'), list('/.capacities')])
+  if (names) {
+    const next = new Map<string, string>()
+    for (const d of names.result?.data ?? []) if (d.id && d.name) next.set(d.id.toLowerCase(), d.name.replace(/\.Domain$/i, ''))
+    swap(domainName, next)
+  }
+  if (caps) {
+    const next = new Map<string, string>()
+    for (const c of caps.result?.data ?? []) {
+      if (!c.id || !c.name) continue
+      const known = (v?: string) => (v && v !== 'Unknown' ? v : '')
+      capacityInfo.set(c.id.toLowerCase(), { name: c.name.replace(/\.Capacity$/i, ''), region: c.region ?? '', subscription: known(c.subscriptionId), group: known(c.resourceGroup) })
+      next.set(c.id.toLowerCase(), shortCapacity(c.name.replace(/\.Capacity$/i, ''), c.sku ?? ''))
+      if (c.state) capacityState.set(c.id.toLowerCase(), c.state)
+      if (c.sku) capacitySku.set(c.id.toLowerCase(), c.sku)
+    }
+    swap(capacityName, next)
+  }
+  const ran = domainName.size > 0 || withCapacity
+  if (!ran) {
+    if (names) domainOf.clear()
+    return problems.join('; ')
   }
   const found = new Map<string, string>()
   const onCapacity = new Map<string, string>()
   let token = ''
-  for (let page = 0; (domainName.size > 0 || withCapacity) && page < 50; page++) {
-    const body = jsonOf<{ status_code?: number; text?: { value?: { id?: string; domainId?: string; capacityId?: string }[]; continuationToken?: string } }>(
-      await fabRaw($, ['api', token ? `workspaces?continuationToken=${encodeURIComponent(token)}` : 'workspaces']).catch(() => ''),
-    )
-    if (!body || (body.status_code && body.status_code >= 400)) break
+  let complete = true
+  for (let page = 0; page < 50; page++) {
+    let text = ''
+    try {
+      text = await fabRaw($, ['api', token ? `workspaces?continuationToken=${encodeURIComponent(token)}` : 'workspaces'])
+    } catch (err) {
+      failed('fab api workspaces', err)
+      complete = false
+      break
+    }
+    const body = jsonOf<{ status_code?: number; text?: { value?: { id?: string; domainId?: string; capacityId?: string }[]; continuationToken?: string } }>(text)
+    if (!body || (body.status_code && body.status_code >= 400)) {
+      problems.push(`fab api workspaces returned ${body?.status_code ?? 'no JSON'}`)
+      complete = false
+      break
+    }
     for (const w of body.text?.value ?? []) {
       if (!w.id) continue
       if (w.domainId && domainName.has(w.domainId.toLowerCase())) found.set(w.id.toLowerCase(), w.domainId.toLowerCase())
@@ -701,10 +791,11 @@ async function loadDomains($: EngineInterface, withCapacity = false): Promise<vo
     token = body.text?.continuationToken ?? ''
     if (!token) break
   }
-  domainOf.clear()
-  for (const [w, d] of found) domainOf.set(w, d)
-  capacityOf.clear()
-  for (const [w, c] of onCapacity) capacityOf.set(w, c)
+  if (complete) {
+    swap(domainOf, found)
+    swap(capacityOf, onCapacity)
+  }
+  return problems.join('; ')
 }
 
 async function loadTenant($: EngineInterface): Promise<void> {
@@ -715,12 +806,12 @@ async function loadTenant($: EngineInterface): Promise<void> {
     tenantName = saved.name
     return
   }
-  const status = await fabRaw($, ['auth', 'status'], true).catch(() => '')
+  const status = await fabRaw($, ['auth', 'status'], true).catch(orAborted(''))
   const id = status.match(/Tenant ID:\s*([0-9a-f-]{36})/i)?.[1]?.toLowerCase()
   if (!id) return
   tenantId = id
   const body = jsonOf<{ text?: { value?: { tenantId?: string; displayName?: string }[] } }>(
-    await fabRaw($, ['api', '-A', 'azure', 'tenants?api-version=2022-12-01'], true).catch(() => ''),
+    await fabRaw($, ['api', '-A', 'azure', 'tenants?api-version=2022-12-01'], true).catch(orAborted('')),
   )
   tenantName = body?.text?.value?.find(x => x.tenantId?.toLowerCase() === id)?.displayName ?? ''
   if (tenantName) await $.store.set('tenant', { id, name: tenantName }).catch(() => undefined)
@@ -876,7 +967,7 @@ async function toggleCapacity($: EngineInterface): Promise<void> {
   if (on && capacityOf.size === 0) {
     await withPending($, 'Fetching capacities…', async () => {
       await warmGroups($)
-      if (capacityOf.size === 0) await loadDomains($, true)
+      if (capacityOf.size === 0) await loadGroups($, true)
     })
   }
   await patch($, cur => ({ byCapacity: on, nodes: grouped(cur.nodes, cur.byDomain !== false, on), root: /^[DC]:/.test(cur.root) ? '' : cur.root }))
@@ -889,6 +980,7 @@ async function relistRoot($: EngineInterface): Promise<void> {
     const kids = parseWorkspaces(await fabLs($))
     await patch($, cur => (sameTarget(cur.target, target) ? { nodes: grouped(merge(grouped(cur.nodes, false), '', kids), cur.byDomain !== false, cur.byCapacity === true), setup: null } : {}))
   } catch (err) {
+    if (isAborted(err)) return void $.ui.invalidate('ui.render')
     statusOwner = ''
     const setup = setupOf(err)
     await patchView($, cur => (sameTarget(cur.target, target) ? { status: setup ? '' : errorText(err), setup } : {}))
@@ -904,11 +996,15 @@ async function doRefresh($: EngineInterface): Promise<void> {
     const view = await get($)
     const byDomain = view.byDomain !== false
     const byCapacity = view.byCapacity === true
-    const [listing] = await Promise.all([fabLs($), byDomain || byCapacity ? loadDomains($, byCapacity) : Promise.resolve(), loadTenant($)])
+    const [listing, problem] = await Promise.all([fabLs($), byDomain || byCapacity ? loadDomains($, byCapacity) : Promise.resolve(''), loadTenant($)])
     const nodes = grouped(parseWorkspaces(listing), byDomain, byCapacity)
-    await patch($, cur => (sameTarget(cur.target, target) ? { nodes, expanded: cur.nodes.length ? cur.expanded : [], status: '', setup: null } : {}))
+    await patch($, cur => (sameTarget(cur.target, target) ? { nodes, expanded: cur.nodes.length ? cur.expanded : [], status: problem ? errorText(problem) : '', setup: null } : {}))
     await expandOpen($)
   } catch (err) {
+    if (isAborted(err)) {
+      await patchView($, cur => (cur.status === 'loading' ? { status: '' } : {}))
+      return void $.ui.invalidate('ui.render')
+    }
     const setup = setupOf(err)
     await patch($, cur => (sameTarget(cur.target, target) ? { status: setup ? '' : errorText(err), setup } : {}))
   }
@@ -990,6 +1086,7 @@ function expandFabric($: EngineInterface, n: TreeNode, urgent = false): Promise<
       )
       return true
     } catch (err) {
+      if (isAborted(err)) return false
       const why = inOneLake(n) ? oneLakeReason((await get($)).nodes, n, err) : errorText(err)
       await patch($, cur => ({ nodes: cur.nodes.map(x => (x.parent === n.id && x.kind === PLACEHOLDER ? { ...x, name: why } : x)) }))
       return false
@@ -1228,7 +1325,7 @@ function apiPathOf(n: TreeNode): string {
 
 async function namesOf($: EngineInterface, list: string, suffix: RegExp, into: Map<string, string>): Promise<void> {
   if (into.size > 0) return
-  const body = jsonOf<{ result?: { data?: { name?: string; id?: string }[] } }>(await fabRaw($, ['ls', list, '-l', '--output_format', 'json']).catch(() => ''))
+  const body = jsonOf<{ result?: { data?: { name?: string; id?: string }[] } }>(await fabRaw($, ['ls', list, '-l', '--output_format', 'json']).catch(orAborted('')))
   for (const d of body?.result?.data ?? []) if (d.id && d.name) into.set(d.id.toLowerCase(), d.name.replace(suffix, ''))
 }
 
@@ -1417,11 +1514,74 @@ function wholeArg(args: string | undefined): string {
   return /^["']/.test(raw) ? (tokenize(raw)[0] ?? '') : raw
 }
 
+type RowsData = { press?: unknown; key?: unknown; ctrl?: unknown; shift?: unknown; scrollTo?: unknown; copy?: unknown; tab?: unknown }
+
+async function rowsMessage($: EngineInterface, surface: string, data: RowsData): Promise<void> {
+  const view = views.get(surface) ?? { from: 0, max: 0 }
+  if (typeof data.tab === 'string' && data.tab.startsWith(CAP)) {
+    quiet(toggleRun($, data.tab.slice(CAP.length)))
+    return
+  }
+  const ex = await get($)
+  if (typeof data.scrollTo === 'number') {
+    const to = Math.round(Math.max(0, Math.min(1, data.scrollTo)) * view.max)
+    if (to !== ex.scroll) await patchView($, () => ({ scroll: to }))
+    return
+  }
+  if (typeof data.copy === 'string') {
+    const n = ex.nodes.find(x => x.id === data.copy)
+    if (n) await copyOf($, n.path || n.name, surface)
+    return
+  }
+  if (typeof data.press === 'string' && data.press.startsWith(FIND)) {
+    pressHit($, Number(data.press.slice(FIND.length)))
+    return
+  }
+  if (typeof data.press === 'string') {
+    const n = data.press === TENANT ? tenantNode() : ex.nodes.find(x => x.id === data.press)
+    if (!n) return
+    if (ex.scroll === null) await patchView($, () => ({ scroll: view.from }))
+    if (data.ctrl) await openWeb($, ex, n)
+    else if (data.shift) await openLocal($, ex, n)
+    else {
+      const row = treeRows(withOptimistic(ex)).find(r => r.node.id === n.id)
+      if (row) pressNow($, n, row)
+      else await press($, n)
+    }
+    return
+  }
+  if (typeof data.key !== 'string') return
+  const rows = treeRows(ex)
+  const at = rows.findIndex(r => r.node.id === ex.cursor)
+  const cur = rows[at]
+  const move = (d: number) => {
+    const target = rows[Math.max(0, Math.min(rows.length - 1, (at < 0 ? 0 : at) + d))]
+    return target ? patchView($, () => ({ cursor: target.node.id, scroll: null })) : Promise.resolve()
+  }
+  if (data.key === 'up' || data.key === 'k') await move(-1)
+  else if (data.key === 'down' || data.key === 'j') await move(1)
+  else if (data.key === 'pageup') await move(-10)
+  else if (data.key === 'pagedown') await move(10)
+  else if (data.key === 'home') await move(-rows.length)
+  else if (data.key === 'end') await move(rows.length)
+  else if (cur && (data.key === 'y' || data.key === 'Y')) await copyOf($, cur.node.path || cur.node.name, surface)
+  else if (cur && (data.key === 'right' || data.key === 'l') && !cur.leaf && !cur.open) await select($, cur.node)
+  else if (cur && (data.key === 'left' || data.key === 'h')) {
+    if (!cur.leaf && cur.open) await patchView($, x => ({ expanded: x.expanded.filter(id => id !== cur.node.id) }))
+    else if (cur.node.parent) await patchView($, () => ({ cursor: cur.node.parent }))
+  } else if (cur && (data.key === ' ' || data.key === 'space' || data.key === 'return')) await (data.key === 'return' && cur.leaf ? openLocal($, ex, cur.node) : select($, cur.node))
+}
+
 export const register: Register = (on, options) => {
   glyphSetting = typeof options?.glyphs === 'string' ? options.glyphs : 'auto'
   follow = options?.follow !== 'off'
   fontHint = options?.fontHint !== 'off'
   reportLinks = options?.reportLinks === 'portal' ? 'portal' : 'embed'
+
+  on('session.end', async ($, e, next) => {
+    await flush($).catch(() => undefined)
+    return next(e)
+  })
 
   on('session.start', async ($, e, next) => {
     useDrives((await $.env.get('OS')) === 'Windows_NT')
@@ -1432,8 +1592,11 @@ export const register: Register = (on, options) => {
     generation++
     blink?.cancel()
     blink = null
+    saveTimer?.cancel()
+    saveTimer = null
+    cached = await load($)
     await patchView($, () => ({ flash: [], flashDim: [], work: null, busy: {} }))
-    await $.command.register({ name: PANE, description: 'Open the Fabric pane; args: [workspace]' })
+    await $.command.register({ name: PANE, description: 'Open the Fabric pane; args: [workspace]', immediate: true })
     const ex = await get($)
     if (ex.target) quiet(openPane($, { id: PANE, title: titleFor(ex.target) }))
     return next(e)
@@ -1448,8 +1611,7 @@ export const register: Register = (on, options) => {
     quiet(detectGlyphs($).then(() => $.ui.invalidate('ui.render')))
     const workspace = wholeArg(e.args)
     await point($, targetOf(fabContext.env), 'asked', true)
-    await refresh($)
-    if (workspace) await reveal($, workspace.replace(/\.Workspace$/i, ''), true)
+    $.clock.after(0, () => quiet(refresh($).then(() => (workspace ? reveal($, workspace.replace(/\.Workspace$/i, ''), true) : undefined))))
     return { text: workspace ? `Fabric pane on ${workspace}.` : 'Fabric pane open.' }
   })
 
@@ -1503,7 +1665,11 @@ export const register: Register = (on, options) => {
 
   on('ui.message', async ($, e, next) => {
     if (e.requestId === PANE && e.element.startsWith('z:') && e.data && typeof e.data === 'object') {
-      const data = e.data as { zone?: unknown; ctrl?: unknown; shift?: unknown }
+      const data = e.data as { zone?: unknown; ctrl?: unknown; shift?: unknown; key?: unknown; copy?: unknown }
+      if (typeof data.key === 'string' || typeof data.copy === 'string') {
+        await rowsMessage($, e.surface, data)
+        return {}
+      }
       const id = typeof data.zone === 'string' ? data.zone : ''
       if (id === PROPS) {
         propsOpen = !propsOpen
@@ -1548,60 +1714,7 @@ export const register: Register = (on, options) => {
       return {}
     }
     if (e.requestId !== PANE || e.element !== 'rows' || !e.data || typeof e.data !== 'object') return next(e)
-    const view = views.get(e.surface) ?? { from: 0, max: 0 }
-    const data = e.data as { press?: unknown; key?: unknown; ctrl?: unknown; shift?: unknown; scrollTo?: unknown; copy?: unknown; tab?: unknown }
-    if (typeof data.tab === 'string' && data.tab.startsWith(CAP)) {
-      quiet(toggleRun($, data.tab.slice(CAP.length)))
-      return {}
-    }
-    const ex = await get($)
-    if (typeof data.scrollTo === 'number') {
-      const to = Math.round(Math.max(0, Math.min(1, data.scrollTo)) * view.max)
-      if (to !== ex.scroll) await patchView($, () => ({ scroll: to }))
-      return {}
-    }
-    if (typeof data.copy === 'string') {
-      const n = ex.nodes.find(x => x.id === data.copy)
-      if (n) await copyOf($, n.path || n.name, e.surface)
-      return {}
-    }
-    if (typeof data.press === 'string' && data.press.startsWith(FIND)) {
-      pressHit($, Number(data.press.slice(FIND.length)))
-      return {}
-    }
-    if (typeof data.press === 'string') {
-      const n = data.press === TENANT ? tenantNode() : ex.nodes.find(x => x.id === data.press)
-      if (!n) return {}
-      if (ex.scroll === null) await patchView($, () => ({ scroll: view.from }))
-      if (data.ctrl) await openWeb($, ex, n)
-      else if (data.shift) await openLocal($, ex, n)
-      else {
-        const row = treeRows(withOptimistic(ex)).find(r => r.node.id === n.id)
-        if (row) pressNow($, n, row)
-        else await press($, n)
-      }
-      return {}
-    }
-    if (typeof data.key !== 'string') return {}
-    const rows = treeRows(ex)
-    const at = rows.findIndex(r => r.node.id === ex.cursor)
-    const cur = rows[at]
-    const move = (d: number) => {
-      const target = rows[Math.max(0, Math.min(rows.length - 1, (at < 0 ? 0 : at) + d))]
-      return target ? patchView($, () => ({ cursor: target.node.id, scroll: null })) : Promise.resolve()
-    }
-    if (data.key === 'up' || data.key === 'k') await move(-1)
-    else if (data.key === 'down' || data.key === 'j') await move(1)
-    else if (data.key === 'pageup') await move(-10)
-    else if (data.key === 'pagedown') await move(10)
-    else if (data.key === 'home') await move(-rows.length)
-    else if (data.key === 'end') await move(rows.length)
-    else if (cur && (data.key === 'y' || data.key === 'Y')) await copyOf($, cur.node.path || cur.node.name, e.surface)
-    else if (cur && (data.key === 'right' || data.key === 'l') && !cur.leaf && !cur.open) await select($, cur.node)
-    else if (cur && (data.key === 'left' || data.key === 'h')) {
-      if (!cur.leaf && cur.open) await patchView($, x => ({ expanded: x.expanded.filter(id => id !== cur.node.id) }))
-      else if (cur.node.parent) await patchView($, () => ({ cursor: cur.node.parent }))
-    } else if (cur && (data.key === ' ' || data.key === 'return')) await (data.key === 'return' && cur.leaf ? openLocal($, ex, cur.node) : select($, cur.node))
+    await rowsMessage($, e.surface, e.data as RowsData)
     return {}
   })
 
@@ -1642,10 +1755,21 @@ export const register: Register = (on, options) => {
     if (e.surface === 'terminal' && tier === 'plain' && glyphSetting === 'auto') fellBack = true
     const { Box, Text, Button, Input, Client } = $.ui.resolve(e)
     const ex = withOptimistic(await get($))
-    if (ex.target && !tenantName && !tenantAsked) {
-      tenantAsked = true
-      quiet(loadTenant($).then(() => $.ui.invalidate('ui.render')))
-      quiet(warmGroups($))
+    if (ex.target && !tenantName && !tenantAsked && !tenantLoading) {
+      tenantLoading = true
+      $.clock.after(0, () =>
+        quiet(
+          loadTenant($)
+            .then(() => {
+              tenantAsked = true
+              $.ui.invalidate('ui.render')
+            })
+            .finally(() => {
+              tenantLoading = false
+            }),
+        ),
+      )
+      $.clock.after(0, () => quiet(warmGroups($).then(() => $.ui.invalidate('ui.render'))))
     }
     const now = await $.clock.now()
     const busyTone = (id: string) => {
@@ -1868,6 +1992,7 @@ export const register: Register = (on, options) => {
           label={icon('\u{f0450}', '↻')}
           onPress={() => {
             tenantName = ''
+            tenantAsked = false
             quiet($.store.delete('tenant'))
             quiet(refresh($))
           }}
@@ -2020,7 +2145,20 @@ export const register: Register = (on, options) => {
             </Box>
           ) : null}
           {ex.setup ? (
-            <Client key="setup" module="./rows.tsx" props={{ rows: setupRows(ex.setup, tier, width), active: '', activeBg: '', hoverBg: '#2d2f33', tones: TONES } satisfies RowsProps} />
+            <Box key="setup" flexDirection="column">
+              {setupRows(ex.setup, 'plain', width).map((r, i) => (
+                <Box key={`su:${i}`} height={1} overflow="hidden" flexDirection="row" alignItems="center">
+                  {r.left.map((sg, j) => {
+                    const tab = sg.tab ?? (r.id.startsWith(COPY) && sg.t.trim() ? r.id : '')
+                    return tab ? (
+                      <Button key={`sb:${j}`} plain label={sg.t} onPress={p => (tab === REFRESH ? quiet(refresh($)) : quiet(copyOf($, tab.slice(COPY.length), p.surface)))} />
+                    ) : (
+                      <Text key={`st:${j}`} color={sg.c} bold={sg.b}>{sg.t}</Text>
+                    )
+                  })}
+                </Box>
+              ))}
+            </Box>
           ) : (
             <Box key="tree" flexDirection="column">
               {first > 0 ? <Box key="above" height={first} /> : null}

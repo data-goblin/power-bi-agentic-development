@@ -72,13 +72,16 @@ const OWN_NAME: Record<string, [string, string]> = {
 const THEME_FILE = '.local/state/omarchy/current/theme/colors.toml'
 const APP_COLOR = '#5a91e2'
 const FONT_SCRIPT =
-  'f=; command -v fc-list >/dev/null 2>&1 && f=$(fc-list ":charset=$1" file 2>/dev/null | head -n1 | cut -d: -f1); ' +
-  '[ -n "$f" ] || f=$(ls "$HOME"/Library/Fonts/*"$2"* /Library/Fonts/*"$2"* "$HOME"/.local/share/fonts/*"$2"* 2>/dev/null | head -n1); ' +
+  'f=; command -v fc-list >/dev/null 2>&1 && f=$(fc-list ":charset=$1" file 2>/dev/null | grep -vi lastresort | head -n1 | cut -d: -f1); ' +
+  '[ -n "$f" ] || for g in "$HOME"/Library/Fonts/*"$2"* /Library/Fonts/*"$2"* "$HOME"/.local/share/fonts/*"$2"*; do [ -f "$g" ] && { [ "$2" != Nerd ] || LC_ALL=C grep -aqE "Nerd Fonts (3\\.([2-9]|[1-9][0-9])|[4-9]|[1-9][0-9]+)\\." "$g"; } && { f=$g; break; }; done; ' +
   '[ -n "$f" ] || { echo missing; exit 0; }; m=$(stat -c %Z "$f" 2>/dev/null || stat -f %c "$f"); p=$PPID; ' +
   'while [ -n "$p" ] && [ "$p" -gt 1 ]; do c=$(ps -o comm= -p "$p" 2>/dev/null); c=$(basename "$c" 2>/dev/null | tr -d " "); case "$c" in ' +
   'ghostty|kitty|alacritty|Alacritty|foot|footclient|wezterm-gui|konsole|gnome-terminal-|xterm|urxvt|st|Terminal|iTerm2) ' +
   'e=$(ps -o etime= -p "$p" 2>/dev/null | awk -F\'[-:]\' \'{n=NF; s=$n+60*$(n-1); if (n>2) s+=3600*$(n-2); if (n>3) s+=86400*$(n-3); print s}\'); [ -n "$e" ] && [ $(( $(date +%s) - e )) -lt "$m" ] && echo stale || echo ok; exit 0;; esac; ' +
   'p=$(ps -o ppid= -p "$p" 2>/dev/null | tr -d " "); done; echo ok'
+const NERD_PROBE = 'f04eb eac5 f0379 f0450'
+const PROBE_MS = 60_000
+const DEPLOY_TRIES = 3
 const PRUNE = ['node_modules', '.git', 'dist', 'target', '.venv', '__pycache__', '.playwright']
 const HOME_PRUNE = ['Library', 'AppData', '.Trash']
 
@@ -109,6 +112,28 @@ let pending = ''
 type Deployed = { type: string; name: string; id: string }
 const deployedOf = new Map<string, Deployed[]>()
 const deployAsked = new Set<string>()
+const deployLoads = new Map<string, Promise<Deployed[]>>()
+const deployTries = new Map<string, number>()
+let probe: Timer | null = null
+let drawnTerminal = false
+let booting: Promise<void> | null = null
+let rescanning: Promise<void> | null = null
+
+function isAbort(err: unknown): boolean {
+  return /abort/i.test(err instanceof Error ? `${err.name} ${err.message}` : String(err))
+}
+
+function forgetDeployed($: EngineInterface, workspaces: string[]): void {
+  let gone = false
+  for (const w of workspaces) {
+    const ws = w.toLowerCase()
+    if (!ws) continue
+    gone = deployedOf.delete(ws) || deployAsked.has(ws) || gone
+    deployAsked.delete(ws)
+    deployTries.delete(ws)
+  }
+  if (gone) $.ui.invalidate('ui.render')
+}
 
 function jsonOf<T>(text: string): T | null {
   try {
@@ -118,24 +143,63 @@ function jsonOf<T>(text: string): T | null {
   }
 }
 
-async function loadDeployed($: EngineInterface, workspace: string, force = false): Promise<Deployed[]> {
-  if (!/^[0-9a-f-]{36}$/i.test(workspace)) return []
-  const hit = deployedOf.get(workspace.toLowerCase())
-  if (hit && !force) return hit
+async function fetchDeployed($: EngineInterface, workspace: string): Promise<Deployed[] | null> {
   const out: Deployed[] = []
   let token = ''
   for (let page = 0; page < 20; page++) {
     const path = `workspaces/${workspace}/items${token ? `?continuationToken=${encodeURIComponent(token)}` : ''}`
-    const run = await $.process.run(['fab', 'api', path, '-q', 'text'], { timeoutMs: 60_000 }).catch(() => null)
-    const body = run && run.exitCode === 0 ? jsonOf<{ value?: { id?: string; displayName?: string; type?: string }[]; continuationToken?: string }>(run.stdout) : null
-    if (!body || !Array.isArray(body.value)) return out
+    const run = await $.process.run(['fab', 'api', path, '-q', 'text'], { timeoutMs: 60_000 })
+    const body = run.exitCode === 0 ? jsonOf<{ value?: { id?: string; displayName?: string; type?: string }[]; continuationToken?: string }>(run.stdout) : null
+    if (!body || !Array.isArray(body.value)) return null
     for (const i of body.value) if (i.id && i.displayName && i.type) out.push({ type: i.type, name: i.displayName, id: i.id })
     token = body.continuationToken ?? ''
-    if (!token) break
+    if (!token) return out
   }
-  deployedOf.set(workspace.toLowerCase(), out)
-  $.ui.invalidate('ui.render')
   return out
+}
+
+function loadDeployed($: EngineInterface, workspace: string): Promise<Deployed[]> {
+  if (!/^[0-9a-f-]{36}$/i.test(workspace)) return Promise.resolve([])
+  const ws = workspace.toLowerCase()
+  const hit = deployedOf.get(ws)
+  if (hit) return Promise.resolve(hit)
+  const live = deployLoads.get(ws)
+  if (live) return live
+  deployAsked.add(ws)
+  const failed = () => {
+    const tries = (deployTries.get(ws) ?? 0) + 1
+    deployTries.set(ws, tries)
+    if (tries < DEPLOY_TRIES) deployAsked.delete(ws)
+  }
+  const run = fetchDeployed($, workspace)
+    .then(
+      out => {
+        if (out) {
+          deployedOf.set(ws, out)
+          deployTries.delete(ws)
+        } else failed()
+        $.ui.invalidate('ui.render')
+        return out ?? []
+      },
+      (err: unknown) => {
+        if (isAbort(err)) deployAsked.delete(ws)
+        else failed()
+        throw err
+      },
+    )
+    .finally(() => {
+      if (deployLoads.get(ws) === run) deployLoads.delete(ws)
+    })
+  deployLoads.set(ws, run)
+  return run
+}
+
+function moved(before: AppInfo[], after: AppInfo[]): string[] {
+  const old = new Map(before.map(a => [a.dir, a]))
+  return after.flatMap(a => {
+    const prev = old.get(a.dir)
+    return prev && (prev.workspace !== a.workspace || prev.item !== a.item) ? [prev.workspace, a.workspace] : []
+  })
 }
 
 function viewApp(app: AppInfo): AppInfo {
@@ -204,7 +268,9 @@ async function openSource($: EngineInterface, id: string): Promise<void> {
   if (!hit) return
   let url = sourceUrl(hit.app, hit.src)
   if (!url && hit.app.workspace && !deployedOf.has(hit.app.workspace.toLowerCase())) {
-    await withBusy($, 'Finding deployed items…', () => loadDeployed($, hit?.app.workspace ?? ''))
+    await withBusy($, 'Finding deployed items…', () =>
+      loadDeployed($, hit?.app.workspace ?? '').catch((err: unknown) => report($, `could not list deployed items: ${err instanceof Error ? err.message : String(err)}`)),
+    )
     hit = sourceAt((await getApps($)).map(viewApp), id) ?? hit
     url = sourceUrl(hit.app, hit.src)
   }
@@ -472,7 +538,7 @@ function markerOf(path: string): { dir: string; cli: string } | null {
   return null
 }
 
-async function discover($: EngineInterface, root: string): Promise<AppInfo[]> {
+async function discover($: EngineInterface, root: string): Promise<AppInfo[] | null> {
   const names = root === home ? [...PRUNE, ...HOME_PRUNE] : PRUNE
   const prune = names.flatMap((name, i) => (i === 0 ? ['-name', name] : ['-o', '-name', name]))
   const markers = CLIS.flatMap((c, i) => [...(i ? ['-o'] : []), ...(c.marker.includes('/') ? ['-path', `*/${c.marker}`] : ['-name', c.marker])])
@@ -483,8 +549,9 @@ async function discover($: EngineInterface, root: string): Promise<AppInfo[]> {
       const run = await $.process.run(['find', '-H', root, '-maxdepth', '6', '(', ...prune, ')', '-prune', '-o', '(', ...markers, ')', '-print0'], { timeoutMs: 10_000 })
       hits = run.stdout.split('\0').filter(Boolean)
     }
-  } catch {
-    hits = []
+  } catch (err) {
+    if (!isAbort(err)) await report($, `could not search ${shortPath(root)} for apps: ${err instanceof Error ? err.message : String(err)}`)
+    return null
   }
   const kinds = new Map<string, string[]>()
   for (const hit of hits) {
@@ -515,13 +582,16 @@ async function syncApps($: EngineInterface, found?: AppInfo[], at = epoch): Prom
   const t = await get($)
   if (!t.root || epoch !== at) return { added: [], changed: [] }
   const before = await getApps($)
-  const apps = (found ?? (await discover($, t.root))).filter(a => a.dir !== t.root)
+  const scan = found ?? (await discover($, t.root))
+  if (!scan) return { added: [], changed: [] }
+  const apps = scan.filter(a => a.dir !== t.root)
   const now = await get($)
   if (epoch !== at || now.root !== t.root) return { added: [], changed: [] }
   await $.state.set(APPS, apps)
   const old = new Map(before.map(a => [a.dir, JSON.stringify(a)]))
   const added = apps.filter(a => !old.has(a.dir)).map(a => a.dir)
   const changed = apps.filter(a => old.has(a.dir) && old.get(a.dir) !== JSON.stringify(a)).map(a => a.dir)
+  forgetDeployed($, moved(before, apps))
   await patch($, cur => {
     if (cur.root !== t.root) return {}
     const keep = new Set(apps.map(a => a.dir))
@@ -620,7 +690,12 @@ function refreshGit($: EngineInterface): Promise<void> {
 
 async function reset($: EngineInterface, start: string, focus = false, found?: AppInfo[]): Promise<void> {
   const mine = ++epoch
+  if (focus) {
+    closed = false
+    await openPane($, { id: PANE, title: titleOf(start), focus: true })
+  }
   const apps = found ?? (await discover($, start))
+  if (!apps || epoch !== mine) return
   const root = apps.some(a => a.dir === start) ? dirname(start) : start
   const keepHidden = (await get($)).showHidden
   if (epoch !== mine) return
@@ -796,6 +871,7 @@ async function afterBash($: EngineInterface, jobs: Job[]): Promise<{ ids: string
   const ids = [...added, ...changed, ...sync.added, ...sync.changed, ...hits.filter(p => present.has(p))]
   if (deploy) {
     const target = deployDir ? appOf(apps, deployDir) : undefined
+    forgetDeployed($, (target ? [target] : apps).map(a => a.workspace))
     const deployed = [...changed, ...sync.changed].filter(d => apps.some(a => a.dir === d))
     return { ids: deployed.length ? deployed : target ? [target.dir] : [], tone: 'teal' }
   }
@@ -862,7 +938,10 @@ async function refreshApps($: EngineInterface, paths: string[]): Promise<string[
     if (epoch !== at || now.root !== root) return []
     const changed = fresh.filter((a, j) => JSON.stringify(a) !== JSON.stringify(apps[j])).map(a => a.dir)
     if (changed.length === 0) return []
-    if ((await $.state.set(APPS, fresh, { ifVersion: cur.version })).isSet) return changed
+    if ((await $.state.set(APPS, fresh, { ifVersion: cur.version })).isSet) {
+      forgetDeployed($, moved(apps, fresh))
+      return changed
+    }
   }
   return []
 }
@@ -890,12 +969,12 @@ async function openTarget($: EngineInterface, target: string): Promise<void> {
 }
 
 async function toggle($: EngineInterface, n: FileNode): Promise<void> {
-  if (n.kind === 'dir' && !n.loaded) await loadDirs($, [n.id])
   await patch($, t => {
     const open = new Set(t.expanded)
     if (n.kind === 'dir') open.has(n.id) ? open.delete(n.id) : open.add(n.id)
     return { expanded: [...open], cursor: n.id, selected: n.kind === 'dir' && n.parent !== t.root ? t.selected : n.id }
   })
+  if (n.kind === 'dir' && !n.loaded) await loadDirs($, [n.id])
 }
 
 async function press($: EngineInterface, n: FileNode): Promise<void> {
@@ -938,7 +1017,8 @@ async function fontState($: EngineInterface, charset: string, name: string): Pro
   try {
     const out = (await $.process.run(['sh', '-c', FONT_SCRIPT, 'sh', charset, name], { timeoutMs: 5_000 })).stdout.trim()
     return out === 'stale' || out === 'missing' ? out : 'ok'
-  } catch {
+  } catch (err) {
+    if (isAbort(err)) throw err
     return 'missing'
   }
 }
@@ -957,22 +1037,57 @@ function jumpTo(t: FileTree, query: string): Partial<FileTree> {
   return { query: '', expanded: [...open], cursor: first ?? t.cursor, scroll: null, top: first && top && !inside(top, first) ? '' : top }
 }
 
-let lastDetect = 0
-
 async function detectGlyphs($: EngineInterface): Promise<void> {
-  lastDetect = await $.clock.now()
   if (remote) {
     detected = 'nerd'
     return
   }
-  const nerd = (await fontState($, 'f04eb', 'Nerd')) === 'ok'
-  detected = nerd && (await fontState($, 'f2002', 'FabricSymbols')) === 'ok' ? 'fabric' : nerd ? 'nerd' : 'plain'
+  try {
+    const [nerd, fabric] = await Promise.all([fontState($, NERD_PROBE, 'Nerd'), fontState($, 'f2002', 'FabricSymbols')])
+    detected = nerd === 'ok' ? (fabric === 'ok' ? 'fabric' : 'nerd') : 'plain'
+  } catch {
+    return
+  }
+}
+
+function reprobe($: EngineInterface): void {
+  if (glyphSetting !== 'auto' || !drawnTerminal || detected === 'fabric' || closed || noDock) return
+  const was = detected
+  quiet(
+    detectGlyphs($).then(() => {
+      if (detected !== was) $.ui.invalidate('ui.render')
+    }),
+  )
+}
+
+function boot($: EngineInterface, detect: boolean): Promise<void> {
+  booting ??= startup($, detect).finally(() => {
+    booting = null
+  })
+  return booting
+}
+
+async function rescan($: EngineInterface): Promise<void> {
+  rescanning ??= withBusy($, 'Rescanning…', async () => {
+    deployedOf.clear()
+    deployAsked.clear()
+    deployTries.clear()
+    await syncApps($)
+    const cur = await get($)
+    await loadDirs($, cur.nodes.filter(n => n.kind === 'dir' && n.loaded).map(n => n.id))
+    await refreshGit($)
+  })
+    .catch((err: unknown) => report($, `rescan failed: ${err instanceof Error ? err.message : String(err)}`))
+    .finally(() => {
+      rescanning = null
+    })
+  return rescanning
 }
 
 async function startup($: EngineInterface, detect: boolean): Promise<void> {
   if (detect) {
     remote = Boolean((await $.env.get('SSH_CONNECTION')) || (await $.env.get('SSH_TTY')))
-    await detectGlyphs($)
+    quiet(detectGlyphs($).then(() => $.ui.invalidate('ui.render')))
   }
   try {
     await $.state.set(THEME, parseTheme(String(await $.fs.read(`${(await $.env.get('HOME')) ?? ''}/${THEME_FILE}`))))
@@ -984,13 +1099,52 @@ async function startup($: EngineInterface, detect: boolean): Promise<void> {
   const cwd = await cwdOf($)
   if (!t.root) await put($, () => emptyTree(cwd))
   const apps = await discover($, t.root || cwd)
-  if (apps.length) {
+  if (apps?.length) {
     if (!t.root || t.nodes.length === 0) await reset($, t.root || cwd, false, apps)
     else {
       await syncApps($, apps)
       await openPane($, { id: PANE, title: titleOf(t.root || cwd) })
     }
   }
+}
+
+type TreeInput = { key?: unknown; copy?: unknown; ctrl?: unknown; shift?: unknown }
+
+async function treeInput($: EngineInterface, t: FileTree, data: TreeInput, surface: string): Promise<void> {
+  if (typeof data.copy === 'string') {
+    const hit = data.copy.includes('#') ? sourceAt((await getApps($)).map(viewApp), data.copy) : null
+    if (hit) await copyText($, hit.src.item || hit.child || hit.src.name, surface)
+    else await copyOf($, data.copy, t.root, Boolean(data.shift), surface)
+    return
+  }
+  if (typeof data.key !== 'string') return
+  const key = data.key
+  const top = topOf(t)
+  const rows = itemsOf(t, (await getApps($)).map(viewApp)).filter(r => !r.source || (r.source.kind !== 'none' && r.source.kind !== 'error'))
+  const at = rows.findIndex(r => r.node.id === t.cursor)
+  const item = rows[at]
+  const cur = item?.node
+  const move = (d: number) => {
+    const target = rows[Math.max(0, Math.min(rows.length - 1, (at < 0 ? 0 : at) + d))]
+    return target ? patch($, () => ({ cursor: target.node.id, scroll: null })) : Promise.resolve()
+  }
+  if (key === 'up' || key === 'k') await move(-1)
+  else if (key === 'down' || key === 'j') await move(1)
+  else if (key === 'pageup') await move(-10)
+  else if (key === 'pagedown') await move(10)
+  else if (key === 'home') await move(-rows.length)
+  else if (key === 'end') await move(rows.length)
+  else if (item?.source && cur) {
+    if (key === 'return') await openSource($, cur.id)
+    else if (key === ' ' || key === 'space') await patch($, () => ({ selected: cur.id }))
+    else if (key === 'left' || key === 'h') await patch($, () => ({ cursor: cur.parent }))
+  } else if (cur && (key === 'y' || key === 'Y')) await copyOf($, cur.id, t.root, key === 'Y' || Boolean(data.shift), surface)
+  else if (cur && (key === 'right' || key === 'l') && cur.kind === 'dir' && !t.expanded.includes(cur.id)) await toggle($, cur)
+  else if (cur && (key === 'left' || key === 'h')) {
+    if (cur.kind === 'dir' && t.expanded.includes(cur.id)) await toggle($, cur)
+    else if (cur.parent !== (top || t.root)) await patch($, () => ({ cursor: cur.parent }))
+  } else if (cur && key === 'return') await (cur.kind === 'file' ? openNode($, cur, false) : toggle($, cur))
+  else if (cur && (key === ' ' || key === 'space')) await toggle($, cur)
 }
 
 export const register: Register = (on, options) => {
@@ -1004,14 +1158,22 @@ export const register: Register = (on, options) => {
     fellBack = false
     closed = false
     noDock = false
-    await $.command.register({ name: PANE, description: 'Show the Fabric apps under a folder; args: [path]' })
-    quiet(startup($, true))
+    await $.command.register({ name: PANE, description: 'Show the Fabric apps under a folder; args: [path]', immediate: true })
+    probe?.cancel()
+    probe = $.clock.every(PROBE_MS, () => reprobe($))
+    quiet(boot($, true))
     return next(e)
   })
 
-  on('classic.SessionStart', { source: ['clear', 'resume', 'fork'] }, async ($, e, next) => {
-    quiet(startup($, false))
+  on('classic.SessionStart', { source: ['fork'] }, async ($, e, next) => {
+    $.clock.after(0, () => quiet(boot($, false)))
     return next(e)
+  })
+
+  on('session.end', async ($, e, next) => {
+    const result = await next(e)
+    if (e.reason === 'clear' || e.reason === 'resume' || e.reason === 'other') $.clock.after(0, () => quiet(boot($, false)))
+    return result
   })
 
   on('command.run', { command: PANE }, async ($, e) => {
@@ -1032,9 +1194,8 @@ export const register: Register = (on, options) => {
       )
       if (kind !== 'dir') return { text: kind === 'missing' ? `No folder at ${shortPath(root)}.` : `${shortPath(root)} is not a folder.` }
     }
-    await reset($, root, true)
-    const apps = await getApps($)
-    return { text: `${apps.length} Fabric app${apps.length === 1 ? '' : 's'} under ${shortPath(root)}.` }
+    $.clock.after(0, () => void withBusy($, 'Finding Fabric apps…', () => reset($, root, true)).catch((err: unknown) => report($, `could not open ${shortPath(root)}: ${err instanceof Error ? err.message : String(err)}`)))
+    return { text: `Showing the Fabric apps under ${shortPath(root)}.` }
   })
 
   on('tool.call', async ($, e, next) => {
@@ -1058,6 +1219,7 @@ export const register: Register = (on, options) => {
       throw err
     }
     if (hits.length) quiet(flash($, result.deny || result.isError ? [] : hits, hitTone, 1))
+    if (hits.length && hitTone === 'orange' && !result.deny && !result.isError) forgetDeployed($, (await getApps($)).filter(a => hits.some(h => h === a.dir || h.startsWith(`${a.dir}#`))).map(a => a.workspace))
     const record = e.tool === 'Bash' && !result.deny && !result.isError && result.result && typeof result.result === 'object' ? (result.result as { backgroundTaskId?: unknown }) : undefined
     const task = typeof record?.backgroundTaskId === 'string' ? record.backgroundTaskId : ''
     if (result.deny || (result.isError && e.tool !== 'Bash')) {
@@ -1107,7 +1269,11 @@ export const register: Register = (on, options) => {
 
   on('ui.message', async ($, e, next) => {
     if (e.requestId === PANE && e.element.startsWith('z:') && e.data && typeof e.data === 'object') {
-      const data = e.data as { zone?: unknown; ctrl?: unknown; shift?: unknown }
+      const data = e.data as TreeInput & { zone?: unknown }
+      if (typeof data.key === 'string' || (typeof data.copy === 'string' && data.copy !== PROPS)) {
+        await treeInput($, await get($), data, e.surface)
+        return {}
+      }
       const id = typeof data.zone === 'string' ? data.zone : ''
       if (id === PROPS) {
         propsOpen = !propsOpen
@@ -1123,17 +1289,11 @@ export const register: Register = (on, options) => {
       return {}
     }
     if (e.requestId !== PANE || e.element !== 'rows' || !e.data || typeof e.data !== 'object') return next(e)
-    const data = e.data as { press?: unknown; key?: unknown; ctrl?: unknown; shift?: unknown; scrollTo?: unknown; copy?: unknown }
+    const data = e.data as TreeInput & { press?: unknown; scrollTo?: unknown }
     const t = await get($)
     if (typeof data.scrollTo === 'number') {
       const to = Math.round(Math.max(0, Math.min(1, data.scrollTo)) * view.max)
       if (to !== t.scroll) await patch($, () => ({ scroll: to }))
-      return {}
-    }
-    if (typeof data.copy === 'string') {
-      const hit = data.copy.includes('#') ? sourceAt((await getApps($)).map(viewApp), data.copy) : null
-      if (hit) await copyText($, hit.src.item || hit.child || hit.src.name, e.surface)
-      else await copyOf($, data.copy, t.root, Boolean(data.shift), e.surface)
       return {}
     }
     if (typeof data.press === 'string') {
@@ -1148,33 +1308,7 @@ export const register: Register = (on, options) => {
       else await press($, n)
       return {}
     }
-    if (typeof data.key !== 'string') return {}
-    const top = topOf(t)
-    const rows = itemsOf(t, (await getApps($)).map(viewApp)).filter(r => !r.source || (r.source.kind !== 'none' && r.source.kind !== 'error'))
-    const at = rows.findIndex(r => r.node.id === t.cursor)
-    const item = rows[at]
-    const cur = item?.node
-    const move = (d: number) => {
-      const target = rows[Math.max(0, Math.min(rows.length - 1, (at < 0 ? 0 : at) + d))]
-      return target ? patch($, () => ({ cursor: target.node.id, scroll: null })) : Promise.resolve()
-    }
-    if (data.key === 'up' || data.key === 'k') await move(-1)
-    else if (data.key === 'down' || data.key === 'j') await move(1)
-    else if (data.key === 'pageup') await move(-10)
-    else if (data.key === 'pagedown') await move(10)
-    else if (data.key === 'home') await move(-rows.length)
-    else if (data.key === 'end') await move(rows.length)
-    else if (item?.source && cur) {
-      if (data.key === 'return') await openSource($, cur.id)
-      else if (data.key === ' ') await patch($, () => ({ selected: cur.id }))
-      else if (data.key === 'left' || data.key === 'h') await patch($, () => ({ cursor: cur.parent }))
-    } else if (cur && (data.key === 'y' || data.key === 'Y')) await copyOf($, cur.id, t.root, data.key === 'Y' || Boolean(data.shift), e.surface)
-    else if (cur && (data.key === 'right' || data.key === 'l') && cur.kind === 'dir' && !t.expanded.includes(cur.id)) await toggle($, cur)
-    else if (cur && (data.key === 'left' || data.key === 'h')) {
-      if (cur.kind === 'dir' && t.expanded.includes(cur.id)) await toggle($, cur)
-      else if (cur.parent !== (top || t.root)) await patch($, () => ({ cursor: cur.parent }))
-    } else if (cur && data.key === 'return') await (cur.kind === 'file' ? openNode($, cur, false) : toggle($, cur))
-    else if (cur && data.key === ' ') await toggle($, cur)
+    await treeInput($, t, data, e.surface)
     return {}
   })
 
@@ -1205,6 +1339,7 @@ export const register: Register = (on, options) => {
       }
     }
     const t = await get($)
+    if (!t.root) $.clock.after(0, () => quiet(boot($, false)))
     const lines: string[] = []
     const viewed = (await getApps($)).map(viewApp)
     const app = t.selected ? appOf(viewed, t.selected) : undefined
@@ -1238,14 +1373,7 @@ export const register: Register = (on, options) => {
       const { Box: Empty } = $.ui.resolve(e)
       return <Empty />
     }
-    if (glyphSetting === 'auto' && e.surface === 'terminal' && detected !== 'fabric' && (await $.clock.now()) - lastDetect > 60_000) {
-      const was = detected
-      quiet(
-        detectGlyphs($).then(() => {
-          if (detected !== was) $.ui.invalidate('ui.render')
-        }),
-      )
-    }
+    if (e.surface === 'terminal') drawnTerminal = true
     const tier = tierFor(e.surface)
     if (e.surface === 'terminal' && tier === 'plain' && glyphSetting === 'auto') fellBack = true
     const table = $.ui.resolve(e)
@@ -1260,7 +1388,8 @@ export const register: Register = (on, options) => {
       const ws = a.workspace.toLowerCase()
       if (!ws || !t.expanded.includes(a.dir) || deployAsked.has(ws)) continue
       deployAsked.add(ws)
-      quiet(loadDeployed($, a.workspace))
+      const workspace = a.workspace
+      $.clock.after(0, () => quiet(loadDeployed($, workspace)))
     }
     const appByDir = new Map(apps.map(a => [a.dir, a]))
     const theme: Theme = (await $.state.get(THEME)).value ?? DEFAULT_THEME
@@ -1456,7 +1585,7 @@ export const register: Register = (on, options) => {
     const title = topNode ? topNode.name : t.root.split('/').pop() || t.root || TITLE
     const count = `${apps.length} app${apps.length === 1 ? '' : 's'}`
     const icon16 = (source: string | undefined, alt: string, fallback: Seg, key: string) =>
-      native && Svg && source ? <Svg key={key} source={source} alt={alt} width={16} height={16} /> : <Text key={key} color={fallback.c}>{fallback.t}</Text>
+      native && Svg && source ? <Svg key={key} source={source} alt={alt} width={16} height={16} /> : <Text key={key} color={fallback.c || undefined} dimColor={fallback.c === ''}>{fallback.t}</Text>
     const rule = (key: string) => <Text key={key} color="#2e2e34" wrap="truncate-end">{'─'.repeat(width)}</Text>
     const busyRow = (key: string, text: string) => (
       <Client key={key} module="./rows.tsx" props={{ rows: [{ id: '', left: [{ t: '', spin: true }, { t: ` ${text}`, c: MUTED }], right: [] }], active: '', activeBg: '', hoverBg: '', tones: TONES } satisfies RowsProps} />
@@ -1471,22 +1600,11 @@ export const register: Register = (on, options) => {
         ))}
       </Box>
     )
-    const rescan = () =>
-      quiet(
-        (async () => {
-          deployedOf.clear()
-          deployAsked.clear()
-          await syncApps($)
-          const cur = await get($)
-          await loadDirs($, cur.nodes.filter(n => n.kind === 'dir' && n.loaded).map(n => n.id))
-          await refreshGit($)
-        })(),
-      )
     const toggles = (
       <Box flexDirection="row" alignItems="center" gap={native ? 1 : 2}>
         {topNode && <Button key="up" plain dimColor label={icon('\u{f005d}', '↑')} onPress={() => quiet(goUp($))} />}
         {topNode && <Button key="home" plain dimColor label={icon('\u{f02dc}', '⌂')} onPress={() => quiet(goHome($))} />}
-        <Button key="rescan" plain dimColor label={icon('\u{f0450}', '↻')} onPress={rescan} />
+        <Button key="rescan" plain dimColor label={icon('\u{f0450}', '↻')} onPress={() => void rescan($)} />
         <Button
           key="hidden"
           plain
@@ -1665,7 +1783,7 @@ export const register: Register = (on, options) => {
           <Box key="details" flexDirection="column">
             {rule('rule-top')}
             <Box flexDirection="row" alignItems="center" gap={1} marginBottom={1}>
-              <Text color={heading.color}>{heading.char}</Text>
+              <Text color={heading.color || undefined} dimColor={heading.color === ''}>{heading.char}</Text>
               <Text bold wrap="truncate-end">{headName}</Text>
               <Box flexGrow={1} />
               {clear}
