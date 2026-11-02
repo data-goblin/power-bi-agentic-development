@@ -56,9 +56,17 @@ function reported(stdout: string): { message: string; code: string } {
   }
 }
 
-export function spawnFailure(err: unknown, bin: string): CliError {
+const MISSING = /ENOENT|not found|no such file|cannot start|could not start|failed to start/i
+
+export function isAborted(err: unknown): boolean {
+  return !(err instanceof CliError) && /aborted/i.test(err instanceof Error ? err.message : String(err))
+}
+
+export function spawnFailure(err: unknown, bin: string): Error {
   const text = err instanceof Error ? err.message : String(err)
-  return NETWORK.test(text) ? new CliError(firstLine(text) || `${bin} timed out`, 'unreachable') : new CliError(firstLine(text) || `${bin} could not start`, 'missing')
+  if (isAborted(err) && !/ENOENT/.test(text)) return err instanceof Error ? err : new Error(text)
+  if (NETWORK.test(text)) return new CliError(firstLine(text) || `${bin} timed out`, 'unreachable')
+  return new CliError(firstLine(text) || `${bin} could not start`, MISSING.test(text) ? 'missing' : '')
 }
 
 export function runFailure(run: { exitCode: number; stdout: string; stderr: string }, fallback: string): CliError {
