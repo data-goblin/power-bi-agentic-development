@@ -1165,6 +1165,11 @@ export const register: Register = (on, options) => {
     return next(e)
   })
 
+  on('classic.SessionStart', { source: ['fork'] }, async ($, e, next) => {
+    $.clock.after(0, () => quiet(boot($, false)))
+    return next(e)
+  })
+
   on('session.end', async ($, e, next) => {
     const result = await next(e)
     if (e.reason === 'clear' || e.reason === 'resume' || e.reason === 'other') $.clock.after(0, () => quiet(boot($, false)))
