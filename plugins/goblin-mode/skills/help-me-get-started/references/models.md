@@ -11,7 +11,7 @@ The `semantic-models` skills drive every model change through `te` first (add/se
 $arch = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { 'x64' }
 $dir  = "$env:LOCALAPPDATA\Programs\te"
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
-Invoke-WebRequest "https://cdn.tabulareditor.com/files/cli/latest/te-win-$arch.zip" -OutFile "$env:TEMP\te.zip"
+Invoke-WebRequest "https://cdn.tabulareditor.com/files/latest/cli/te-win-$arch.zip" -OutFile "$env:TEMP\te.zip"
 Expand-Archive -Force "$env:TEMP\te.zip" -DestinationPath $dir
 [Environment]::SetEnvironmentVariable('Path', "$([Environment]::GetEnvironmentVariable('Path','User'));$dir", 'User')
 & "$dir\te.exe" --version
@@ -22,7 +22,7 @@ Expand-Archive -Force "$env:TEMP\te.zip" -DestinationPath $dir
 os=$(uname -s | tr 'A-Z' 'a-z'); [ "$os" = darwin ] && os=osx
 arch=$(uname -m); case "$arch" in arm64|aarch64) arch=arm64 ;; x86_64|amd64) arch=x64 ;; esac
 mkdir -p "$HOME/.local/bin"
-curl -fsSL "https://cdn.tabulareditor.com/files/cli/latest/te-$os-$arch.tar.gz" | tar xz -C "$HOME/.local/bin" te
+curl -fsSL "https://cdn.tabulareditor.com/files/latest/cli/te-$os-$arch.tar.gz" | tar xz -C "$HOME/.local/bin" te
 chmod +x "$HOME/.local/bin/te"
 export PATH="$HOME/.local/bin:$PATH"   # add to ~/.zshrc or ~/.bashrc to persist
 te --version

@@ -4,7 +4,7 @@ Full command surface for the `te` CLI. Companion to the te-cli skill (SKILL.md).
 
 ## Installation
 
-Download from https://tabulareditor.com (signed in with a TE account), or pull the archive from the public CDN (no auth; useful for scripted installs and CI): `https://cdn.tabulareditor.com/files/cli/latest/<archive>`. The CDN serves GET only; HEAD requests return 404, so probe with a ranged GET if you must check availability. Single self-contained binary; no .NET / runtime install needed.
+Download from https://tabulareditor.com (signed in with a TE account), or pull the archive from the public CDN (no auth; useful for scripted installs and CI): `https://cdn.tabulareditor.com/files/latest/cli/<archive>`. The CDN serves GET only; HEAD requests return 404, so probe with a ranged GET if you must check availability. Single self-contained binary; no .NET / runtime install needed.
 
 | Platform | Archive | Install location (suggested) |
 |---|---|---|
@@ -13,7 +13,7 @@ Download from https://tabulareditor.com (signed in with a TE account), or pull t
 | Linux x64 / ARM64 | `te-linux-x64.tar.gz` / `te-linux-arm64.tar.gz` | `~/.local/bin` |
 
 ```bash
-curl -fsSL "https://cdn.tabulareditor.com/files/cli/latest/te-linux-x64.tar.gz" | tar xz -C ~/.local/bin te
+curl -fsSL "https://cdn.tabulareditor.com/files/latest/cli/te-linux-x64.tar.gz" | tar xz -C ~/.local/bin te
 chmod +x ~/.local/bin/te
 ```
 
