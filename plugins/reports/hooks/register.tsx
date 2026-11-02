@@ -37,13 +37,14 @@ const ROW_PX = 24
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const SVG_KIND: Record<string, string> = { report: 'Report', 'semantic model': 'SemanticModel' }
 const FONT_SCRIPT =
-  'f=; command -v fc-list >/dev/null 2>&1 && f=$(fc-list ":charset=$1" file 2>/dev/null | head -n1 | cut -d: -f1); ' +
-  '[ -n "$f" ] || f=$(ls "$HOME"/Library/Fonts/*"$2"* /Library/Fonts/*"$2"* "$HOME"/.local/share/fonts/*"$2"* 2>/dev/null | head -n1); ' +
+  'f=; if command -v fc-list >/dev/null 2>&1; then f=$(fc-list ":charset=$1" file 2>/dev/null | grep -vi lastresort | head -n1 | cut -d: -f1); fi; ' +
+  '[ -n "$f" ] || for g in "$HOME"/Library/Fonts/*"$2"* /Library/Fonts/*"$2"* "$HOME"/.local/share/fonts/*"$2"*; do [ -f "$g" ] && { [ "$2" != Nerd ] || LC_ALL=C grep -aqE "Nerd Fonts (3\\.([2-9]|[1-9][0-9])|[4-9]|[1-9][0-9]+)\\." "$g"; } && { f=$g; break; }; done; ' +
   '[ -n "$f" ] || { echo missing; exit 0; }; m=$(stat -c %Z "$f" 2>/dev/null || stat -f %c "$f"); p=$PPID; ' +
   'while [ -n "$p" ] && [ "$p" -gt 1 ]; do c=$(ps -o comm= -p "$p" 2>/dev/null); c=$(basename "$c" 2>/dev/null | tr -d " "); case "$c" in ' +
   'ghostty|kitty|alacritty|Alacritty|foot|footclient|wezterm-gui|konsole|gnome-terminal-|xterm|urxvt|st|Terminal|iTerm2) ' +
   'e=$(ps -o etime= -p "$p" 2>/dev/null | awk -F\'[-:]\' \'{n=NF; s=$n+60*$(n-1); if (n>2) s+=3600*$(n-2); if (n>3) s+=86400*$(n-3); print s}\'); [ -n "$e" ] && [ $(( $(date +%s) - e )) -lt "$m" ] && echo stale || echo ok; exit 0;; esac; ' +
   'p=$(ps -o ppid= -p "$p" 2>/dev/null | tr -d " "); done; echo ok'
+const NERD_PROBE = 'f04eb eac5 ebff ebf6 ec01'
 
 let lastPress = { key: '', at: 0 }
 const views: Record<string, { from: number; max: number; rows: number; room: number }> = {}
@@ -65,7 +66,10 @@ let reportLinks = 'embed'
 let tenantId = ''
 let propsOpen = false
 let nativeScroll = false
-const modelLinks = new Map<string, { url: string; lines: string[] }>()
+const modelLinks = new Map<string, { pbir: string; url: string; lines: string[] }>()
+let urlLookup: Promise<void> | null = null
+let optimistic: { target: Target; cursor: string; selected: string; expanded: string[]; detail: string[] } | null = null
+let seen: { ex: Explorer; nodes: TreeNode[] } | null = null
 
 function osName($: EngineInterface): Promise<'linux' | 'darwin' | 'win32'> {
   platform ??= (async () => {
@@ -167,8 +171,8 @@ async function detectGlyphs($: EngineInterface): Promise<void> {
     detected = 'nerd'
     return
   }
-  const nerd = (await fontState($, 'f04eb', 'Nerd')) === 'ok'
-  detected = nerd && (await fontState($, 'f2621', 'FabricSymbols')) === 'ok' ? 'fabric' : nerd ? 'nerd' : 'plain'
+  const [nerd, fabric] = (await Promise.all([fontState($, NERD_PROBE, 'Nerd'), fontState($, 'f2621', 'FabricSymbols')])).map(s => s === 'ok')
+  detected = nerd && fabric ? 'fabric' : nerd ? 'nerd' : 'plain'
 }
 
 function fontNote(): string {
@@ -187,7 +191,7 @@ function titleGlyph(tier: Tier): string {
 }
 
 function titleFor(target: Target | null): string {
-  return `${titleGlyph(tierFor('terminal'))} ${target ? targetLabel(target) : TITLE}`
+  return target ? targetLabel(target) : TITLE
 }
 
 async function get($: EngineInterface): Promise<Explorer> {
@@ -339,12 +343,61 @@ async function goHome($: EngineInterface): Promise<void> {
   await patch($, () => ({ root: '', scroll: {} }))
 }
 
-async function press($: EngineInterface, ex: Explorer, n: TreeNode): Promise<void> {
+function pressNow($: EngineInterface, id: string): boolean {
   const now = Date.now()
-  const isDouble = lastPress.key === n.id && now - lastPress.at < DOUBLE_MS
-  lastPress = { key: isDouble ? '' : n.id, at: now }
-  if (isDouble) await openNode($, await get($), n)
-  else await select($, ex.target, n)
+  const isDouble = lastPress.key === id && now - lastPress.at < DOUBLE_MS
+  lastPress = { key: isDouble ? '' : id, at: now }
+  const n = !isDouble && seen ? seen.nodes.find(x => x.id === id) : undefined
+  const t = seen?.ex.target
+  if (n && seen && t?.kind === 'local') {
+    optimistic = { target: t, ...toggled(seen.ex, seen.nodes, n), detail: reportDetail(n, t.path) }
+    $.ui.invalidate('ui.render')
+  }
+  return isDouble
+}
+
+function settlePress($: EngineInterface): void {
+  if (!optimistic) return
+  optimistic = null
+  $.ui.invalidate('ui.render')
+}
+
+async function press($: EngineInterface, ex: Explorer, n: TreeNode, isDouble: boolean): Promise<void> {
+  try {
+    if (isDouble) await openNode($, await get($), n)
+    else await select($, ex.target, n)
+  } finally {
+    settlePress($)
+  }
+}
+
+async function copyNode($: EngineInterface, id: string, surface: string): Promise<void> {
+  const n = (await nodesOf($, (await get($)).target)).find(x => x.id === id)
+  if (n) await copyOf($, n.path || n.name, surface)
+}
+
+async function keyed($: EngineInterface, key: string, surface: string): Promise<void> {
+  const ex = await get($)
+  const nodes = await nodesOf($, ex.target)
+  const rows = visible(ex, nodes, rootOf(ex, nodes))
+  const at = rows.findIndex(r => r.node.id === ex.cursor)
+  const cur = rows[at]
+  const move = (d: number) => {
+    const target = rows[Math.max(0, Math.min(rows.length - 1, (at < 0 ? 0 : at) + d))]
+    return target ? patch($, () => ({ cursor: target.node.id, scroll: {} })) : Promise.resolve()
+  }
+  if (key === 'up' || key === 'k') await move(-1)
+  else if (key === 'down' || key === 'j') await move(1)
+  else if (key === 'pageup') await move(-10)
+  else if (key === 'pagedown') await move(10)
+  else if (key === 'home') await move(-rows.length)
+  else if (key === 'end') await move(rows.length)
+  else if (cur && (key === 'y' || key === 'Y')) await copyOf($, cur.node.path || cur.node.name, surface)
+  else if (cur && (key === 'right' || key === 'l') && !cur.leaf && !cur.open) await select($, ex.target, cur.node)
+  else if (cur && (key === 'left' || key === 'h')) {
+    if (!cur.leaf && cur.open) await patch($, x => ({ expanded: x.expanded.filter(id => id !== cur.node.id) }))
+    else if (cur.node.parent) await patch($, () => ({ cursor: cur.node.parent }))
+  } else if (cur && (key === ' ' || key === 'space' || key === 'return')) await (key === 'return' && cur.leaf ? openNode($, ex, cur.node) : select($, ex.target, cur.node))
 }
 
 async function openNode($: EngineInterface, ex: Explorer, n: TreeNode): Promise<void> {
@@ -407,13 +460,23 @@ function reportLink(portal: string, page: string): string {
   return `https://app.powerbi.com/reportEmbed?reportId=${encodeURIComponent(id)}&autoAuth=true${tenantId ? `&ctid=${encodeURIComponent(tenantId)}` : ''}${page ? `&pageName=${encodeURIComponent(page)}` : ''}`
 }
 
+async function pbirText($: EngineInterface, path: string): Promise<string> {
+  try {
+    return String(await $.fs.read(`${path}/definition.pbir`))
+  } catch {
+    return ''
+  }
+}
+
 async function resolveModel($: EngineInterface, target: Target | null): Promise<{ url: string; lines: string[]; why: string }> {
   if (target?.kind !== 'local') return { url: '', lines: [], why: 'no report is open' }
+  const text = await pbirText($, target.path)
   const hit = modelLinks.get(target.path)
-  if (hit) return { ...hit, why: '' }
+  if (hit && hit.pbir === text) return { url: hit.url, lines: hit.lines, why: '' }
+  modelLinks.delete(target.path)
   let pbir: Record<string, unknown> | null = null
   try {
-    pbir = JSON.parse(String(await $.fs.read(`${target.path}/definition.pbir`))) as Record<string, unknown>
+    pbir = JSON.parse(text) as Record<string, unknown>
   } catch {
     pbir = null
   }
@@ -426,7 +489,7 @@ async function resolveModel($: EngineInterface, target: Target | null): Promise<
   const id = /^[0-9a-f-]{36}$/i.test(ref.id) ? ref.id.toLowerCase() : ref.name ? await fabId($, `${ws}.Workspace/${ref.name}.SemanticModel`) : ''
   if (!id) return { url: '', lines: [`Workspace: ${ws}`], why: `fab could not find ${ref.name || 'the model'} in ${ws}` }
   const out = { url: `${workspaceUrl(wsGuid)}/datasets/${id}/details`, lines: [`Workspace: ${ws}`, `Model ID: ${id}`] }
-  modelLinks.set(target.path, out)
+  modelLinks.set(target.path, { pbir: text, ...out })
   return { ...out, why: '' }
 }
 
@@ -443,7 +506,7 @@ async function targetUrl($: EngineInterface, ws: string, report: string): Promis
   const wsId = await fabId($, `${ws}.Workspace`)
   if (!wsId) return ''
   const reportId = await fabId($, `${ws}.Workspace/${report}.Report`)
-  return reportId ? reportUrl(wsId, reportId) : workspaceUrl(wsId)
+  return reportId ? reportUrl(wsId, reportId) : ''
 }
 
 function webUrl(ex: Explorer, n: TreeNode): string {
@@ -497,7 +560,7 @@ async function directEdit($: EngineInterface, files: string[], run = ''): Promis
   await light($, (await get($)).changed, 'orange', false, run)
 }
 
-function toggled(ex: Explorer, nodes: TreeNode[], n: TreeNode): Partial<Explorer> {
+function toggled(ex: Explorer, nodes: TreeNode[], n: TreeNode): { expanded: string[]; cursor: string; selected: string } {
   const open = new Set(ex.expanded)
   if (nodes.some(c => c.parent === n.id)) open.has(n.id) ? open.delete(n.id) : open.add(n.id)
   return { expanded: [...open], cursor: n.id, selected: n.id }
@@ -546,17 +609,30 @@ async function doRefresh($: EngineInterface): Promise<void> {
     )
     const before = await setTree($, target, nodes)
     if (!before) return
+    const linked = modelLinks.get(target.path)
+    const current = Boolean(linked) && linked?.pbir === (await pbirText($, target.path))
+    if (!current) modelLinks.delete(target.path)
+    let recheck = null as TreeNode | null
     await patch($, cur => {
       if (!sameTarget(cur.target, target)) return {}
       const sel = cur.selected ? nodes.find(n => n.id === cur.selected) : undefined
-      const picked = !cur.selected ? {} : sel ? { detail: [...reportDetail(sel, target.path), ...(sel.kind === 'semantic model' ? cur.detail.filter(l => /^(Workspace|Model ID|Fabric): /.test(l)) : [])] } : { selected: '', detail: [] }
+      const model = sel?.kind === 'semantic model'
+      recheck = model && !current && sel ? sel : null
+      const picked = !cur.selected ? {} : sel ? { detail: [...reportDetail(sel, target.path), ...(model && current ? cur.detail.filter(l => /^(Workspace|Model ID|Fabric): /.test(l)) : [])] } : { selected: '', detail: [] }
       const expanded = before.length ? cur.expanded : nodes.filter(n => !n.parent).map(n => n.id)
       return { changed: diff(before, nodes), expanded, status: '', ...picked, ...(follow ? {} : { scroll: anchored(cur, before, nodes, expanded) }) }
     })
+    if (recheck) quiet(modelDetail($, target, recheck))
     const m = target.path.match(/([^/]+)\.Workspace\/([^/]+)\.Report$/)
-    if (m?.[1] && m[2] && !(await get($)).targetUrl) {
-      const [url] = await Promise.all([targetUrl($, m[1], m[2]), loadTenant($)])
-      await patch($, c => (sameTarget(c.target, target) ? { targetUrl: url } : {}))
+    if (m?.[1] && m[2] && !urlLookup && !(await get($)).targetUrl) {
+      const [ws, report] = [m[1], m[2]]
+      urlLookup = (async () => {
+        const [url] = await Promise.all([targetUrl($, ws, report), loadTenant($)])
+        if (url) await patch($, c => (sameTarget(c.target, target) ? { targetUrl: url } : {}))
+      })().finally(() => {
+        urlLookup = null
+      })
+      quiet(urlLookup)
     }
   } catch (err) {
     await patch($, cur => (sameTarget(cur.target, target) ? { status: `error: ${err instanceof Error ? err.message : String(err)}` } : {}))
@@ -599,7 +675,12 @@ async function select($: EngineInterface, target: Target | null, n: TreeNode): P
   if (!node || target?.kind !== 'local') return
   const detail = reportDetail(node, target.path)
   await patch($, cur => (sameTarget(cur.target, target) ? { ...toggled(cur, nodes, node), detail } : {}))
-  if (node.kind !== 'semantic model') return
+  if (node.kind === 'semantic model') quiet(withBusy($, 'Finding the deployed model…', () => modelDetail($, target, node)))
+}
+
+async function modelDetail($: EngineInterface, target: Target, node: TreeNode): Promise<void> {
+  if (target.kind !== 'local') return
+  const detail = reportDetail(node, target.path)
   const model = await resolveModel($, target).catch(() => null)
   const more = model ? (model.lines.length ? model.lines : [`Fabric: ${model.why}`]) : []
   if (more.length) await patch($, cur => (sameTarget(cur.target, target) && cur.cursor === node.id ? { detail: [...detail, ...more] } : {}))
@@ -639,9 +720,12 @@ export const register: Register = (on, options) => {
     fellBack = false
     pbirBin = 'pbir'
     lastPress = { key: '', at: 0 }
+    modelLinks.clear()
+    optimistic = null
+    seen = null
     quiet(detectGlyphs($).then(() => $.ui.invalidate('ui.render')))
     await patch($, () => ({ flash: [], flashDim: [], work: null }))
-    await $.command.register({ name: PANE, description: 'Open the Report pane; args: <path to .Report>' })
+    await $.command.register({ name: PANE, description: 'Open the Report pane; args: <path to .Report>', immediate: true })
     const ex = await get($)
     if (ex.target) quiet(openPane($, { id: PANE, title: titleFor(ex.target) }))
     return next(e)
@@ -653,7 +737,7 @@ export const register: Register = (on, options) => {
     if (terminalOnly && e.presentation && e.presentation.columns < 110) return { text: 'The Report pane shows in the sidebar, which needs a terminal at least 110 columns wide. Widen it, then run /report-pane.' }
     noDock = false
     fellBack = false
-    await detectGlyphs($)
+    quiet(detectGlyphs($).then(() => $.ui.invalidate('ui.render')))
     const cwd = await cwdOf($)
     let target = (await get($)).target
     const first = wholeArg(e.args)
@@ -753,63 +837,56 @@ export const register: Register = (on, options) => {
 
   on('ui.message', async ($, e, next) => {
     if (e.requestId === PANE && e.element.startsWith('z:') && e.data && typeof e.data === 'object') {
-      const data = e.data as { zone?: unknown; ctrl?: unknown; shift?: unknown }
+      const data = e.data as { zone?: unknown; ctrl?: unknown; shift?: unknown; key?: unknown; copy?: unknown }
+      if (typeof data.key === 'string') {
+        await keyed($, data.key, e.surface)
+        return {}
+      }
+      if (typeof data.copy === 'string') {
+        if (data.copy !== PROPS) await copyNode($, data.copy, e.surface)
+        return {}
+      }
       const id = typeof data.zone === 'string' ? data.zone : ''
       if (id === PROPS) {
         propsOpen = !propsOpen
         $.ui.invalidate('ui.render')
         return {}
       }
+      const isDouble = !data.ctrl && !data.shift && id ? pressNow($, id) : false
       const ex = await get($)
       const n = (await nodesOf($, ex.target)).find(x => x.id === id)
       if (n && data.ctrl) quiet(openWeb($, ex, n))
       else if (n && data.shift) quiet(openShell($, ex))
-      else if (n) quiet(press($, ex, n))
+      else if (n) quiet(press($, ex, n, isDouble))
+      else settlePress($)
       return {}
     }
     if (e.requestId !== PANE || e.element !== 'rows' || !e.data || typeof e.data !== 'object') return next(e)
     const data = e.data as { press?: unknown; key?: unknown; ctrl?: unknown; shift?: unknown; scrollTo?: unknown; copy?: unknown }
+    const isDouble = typeof data.press === 'string' && !data.ctrl && !data.shift ? pressNow($, data.press) : false
     const ex = await get($)
     if (typeof data.scrollTo === 'number') {
       const to = Math.round(Math.max(0, Math.min(1, data.scrollTo)) * (views[e.surface]?.max ?? 0))
       if (to !== ex.scroll[e.surface]) await patch($, cur => ({ scroll: { ...cur.scroll, [e.surface]: to } }))
       return {}
     }
-    const nodes = await nodesOf($, ex.target)
     if (typeof data.copy === 'string') {
-      const n = nodes.find(x => x.id === data.copy)
-      if (n) await copyOf($, n.path || n.name, e.surface)
+      await copyNode($, data.copy, e.surface)
       return {}
     }
     if (typeof data.press === 'string') {
-      const n = nodes.find(x => x.id === data.press)
-      if (!n) return {}
+      const n = (await nodesOf($, ex.target)).find(x => x.id === data.press)
+      if (!n) {
+        settlePress($)
+        return {}
+      }
       if (ex.scroll[e.surface] === undefined) await patch($, cur => ({ scroll: { ...cur.scroll, [e.surface]: views[e.surface]?.from ?? 0 } }))
       if (data.ctrl) await openWeb($, ex, n)
       else if (data.shift) await openShell($, ex)
-      else await press($, ex, n)
+      else await press($, ex, n, isDouble)
       return {}
     }
-    if (typeof data.key !== 'string') return {}
-    const rows = visible(ex, nodes, rootOf(ex, nodes))
-    const at = rows.findIndex(r => r.node.id === ex.cursor)
-    const cur = rows[at]
-    const move = (d: number) => {
-      const target = rows[Math.max(0, Math.min(rows.length - 1, (at < 0 ? 0 : at) + d))]
-      return target ? patch($, () => ({ cursor: target.node.id, scroll: {} })) : Promise.resolve()
-    }
-    if (data.key === 'up' || data.key === 'k') await move(-1)
-    else if (data.key === 'down' || data.key === 'j') await move(1)
-    else if (data.key === 'pageup') await move(-10)
-    else if (data.key === 'pagedown') await move(10)
-    else if (data.key === 'home') await move(-rows.length)
-    else if (data.key === 'end') await move(rows.length)
-    else if (cur && (data.key === 'y' || data.key === 'Y')) await copyOf($, cur.node.path || cur.node.name, e.surface)
-    else if (cur && (data.key === 'right' || data.key === 'l') && !cur.leaf && !cur.open) await select($, ex.target, cur.node)
-    else if (cur && (data.key === 'left' || data.key === 'h')) {
-      if (!cur.leaf && cur.open) await patch($, x => ({ expanded: x.expanded.filter(id => id !== cur.node.id) }))
-      else if (cur.node.parent) await patch($, () => ({ cursor: cur.node.parent }))
-    } else if (cur && (data.key === ' ' || data.key === 'return')) await (data.key === 'return' && cur.leaf ? openNode($, ex, cur.node) : select($, ex.target, cur.node))
+    if (typeof data.key === 'string') await keyed($, data.key, e.surface)
     return {}
   })
 
@@ -852,8 +929,10 @@ export const register: Register = (on, options) => {
     const Svg = 'Svg' in table ? table.Svg : undefined
     const native = e.surface === 'desktop' && Boolean(Svg)
     nativeScroll = native
-    const ex = await get($)
-    const nodes = await nodesOf($, ex.target)
+    const raw = await get($)
+    const nodes = await nodesOf($, raw.target)
+    const ex = optimistic && sameTarget(optimistic.target, raw.target) ? { ...raw, cursor: optimistic.cursor, selected: optimistic.selected, expanded: optimistic.expanded, detail: optimistic.detail } : raw
+    seen = { ex, nodes }
     const now = await $.clock.now()
     const work = ex.work && (!ex.work.running || now - ex.work.at < BUSY_MAX_MS) ? ex.work : null
     const tone = work?.tone ?? ''
@@ -969,7 +1048,10 @@ export const register: Register = (on, options) => {
       <Box flexDirection="row" alignItems="center" gap={native ? 1 : 2}>
         {rootNode && <Button key="up" plain dimColor label={icon('\u{f005d}', '↑')} onPress={() => quiet(goUp($))} />}
         {rootNode && <Button key="home" plain dimColor label={icon('\u{f02dc}', '⌂')} onPress={() => quiet(goHome($))} />}
-        <Button key="refresh" plain dimColor label={icon('\u{f0450}', '↻')} onPress={() => quiet(refresh($))} />
+        <Button key="refresh" plain dimColor label={icon('\u{f0450}', '↻')} onPress={() => {
+          if (ex.target?.kind === 'local') modelLinks.delete(ex.target.path)
+          quiet(refresh($))
+        }} />
         <Button key="collapse" plain dimColor label={icon('\u{eac5}', '⊟')} onPress={() => quiet(patch($, () => ({ expanded: [] })))} />
         <Text> </Text>
       </Box>
