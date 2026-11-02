@@ -76,7 +76,7 @@ The shape that works for Power BI / Fabric semantic models: **two pipelines, one
 
 ### Getting `te` onto a runner
 
-The download at tabulareditor.com sits behind sign-in, so a pipeline cannot script it; the public CDN archive (`https://cdn.tabulareditor.com/files/cli/latest/<archive>`, GET only, see the Installation section in `command-reference.md`) is the scriptable alternative. The pinned, reproducible option is to commit the **extracted** binary for the runner's OS/arch into the repo (e.g. `tools/te/te` for Linux, `tools/te/te.exe` for Windows; ~70 MB, consider Git LFS) and put that folder on `PATH`:
+The download at tabulareditor.com sits behind sign-in, so a pipeline cannot script it; the public CDN archive (`https://cdn.tabulareditor.com/files/latest/cli/<archive>`, GET only, see the Installation section in `command-reference.md`) is the scriptable alternative. The pinned, reproducible option is to commit the **extracted** binary for the runner's OS/arch into the repo (e.g. `tools/te/te` for Linux, `tools/te/te.exe` for Windows; ~70 MB, consider Git LFS) and put that folder on `PATH`:
 
 ```yaml
 # GitHub Actions (Linux runner)
