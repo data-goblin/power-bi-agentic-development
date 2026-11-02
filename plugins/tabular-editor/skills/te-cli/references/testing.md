@@ -110,7 +110,7 @@ te test snapshot --output-file baseline.snapshot.json -s ws -d model
 te test snapshot --diff baseline.snapshot.json --tolerance 0.001 -s ws -d model
 ```
 
-Scope with `--measures "Revenue*"` (glob on measure names) or `--table Sales`. `--save` here names the snapshot file to write and has nothing to do with the mutation flag on editing commands. Snapshots compare a model against its own past; data refreshes between capture and diff will show up as drift, so snapshot workflows fit refactors on a stable dataset, not moving data.
+Scope with `--measures "Revenue*"` (glob on measure names) or `--table Sales`. `-o, --output-file` names the snapshot file to write; `--save` is rejected here. Snapshots compare a model against its own past; data refreshes between capture and diff will show up as drift, so snapshot workflows fit refactors on a stable dataset, not moving data.
 
 ## A/B compare (pre-cutover gate)
 
