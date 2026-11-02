@@ -4,7 +4,7 @@ import { DB_CODEPOINTS } from './icon-data'
 type Rgb = [number, number, number]
 type Icon = { db: string; nerd: string; rgb: Rgb; plain: string }
 export type Tier = 'databricks' | 'nerd' | 'plain'
-export type Glyph = { char: string; color: string | undefined; label?: string }
+export type Glyph = { char: string; color: string | undefined; label?: string; icon: string }
 
 const RED: Rgb = [255, 54, 33]
 const SLATE: Rgb = [148, 163, 184]
@@ -19,8 +19,8 @@ const ICONS: Record<string, Icon> = {
   folder: { db: 'ui_folder', nerd: '\u{f024b}', rgb: [184, 175, 137], plain: '■' },
   repo: { db: 'ui_repo', nerd: '\u{f02a2}', rgb: [240, 80, 50], plain: '⑂' },
   notebook: { db: 'ui_notebook', nerd: '\u{f082e}', rgb: [96, 165, 250], plain: '▤' },
-  file: { db: 'file', nerd: '\u{f0214}', rgb: SLATE, plain: '·' },
-  library: { db: 'file_code', nerd: '\u{f03d7}', rgb: SLATE, plain: '·' },
+  file: { db: 'file', nerd: '\u{f0214}', rgb: SLATE, plain: '▫' },
+  library: { db: 'file_code', nerd: '\u{f03d7}', rgb: SLATE, plain: '▫' },
   dashboard: { db: 'ui_dashboard', nerd: '\u{f056e}', rgb: [251, 191, 36], plain: '▦' },
   catalog: { db: 'ui_catalog', nerd: '\u{f05da}', rgb: [167, 139, 250], plain: '◆' },
   schema: { db: 'ui_schema', nerd: '\u{f01bc}', rgb: [129, 140, 248], plain: '◇' },
@@ -43,7 +43,7 @@ const ICONS: Record<string, Icon> = {
   placeholder: { db: '', nerd: '\u{f0453}', rgb: [110, 110, 122], plain: '…' },
   empty: { db: '', nerd: '∅', rgb: [110, 110, 122], plain: '∅' },
 }
-const FALLBACK: Icon = { db: 'file', nerd: '\u{f0214}', rgb: SLATE, plain: '·' }
+const FALLBACK: Icon = { db: 'file', nerd: '\u{f0214}', rgb: SLATE, plain: '▫' }
 
 const hex = (c: Rgb) => `#${c.map(v => v.toString(16).padStart(2, '0')).join('')}`
 
@@ -55,10 +55,11 @@ function variant(n: TreeNode): string {
 }
 
 export function glyph(n: TreeNode, tier: Tier): Glyph {
-  const icon = ICONS[variant(n)] ?? ICONS[n.kind] ?? FALLBACK
+  const key = ICONS[variant(n)] ? variant(n) : ICONS[n.kind] ? n.kind : 'file'
+  const icon = ICONS[key] ?? FALLBACK
   const cp = DB_CODEPOINTS[icon.db]
   const char = tier === 'databricks' && cp ? String.fromCodePoint(cp) : tier === 'plain' ? icon.plain : icon.nerd
-  return { char, color: hex(icon.rgb) }
+  return { char, color: hex(icon.rgb), icon: key }
 }
 
 export function titleGlyph(tier: Tier): string {
