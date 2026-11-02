@@ -1,6 +1,6 @@
 ---
 name: te-cli
-description: Expert guidance for the cross-platform Tabular Editor CLI (the `te` binary, currently in preview) that manages Power BI / Analysis Services semantic models from the terminal on macOS, Linux, and Windows. Use when the user mentions the `te` CLI or "Tabular Editor CLI" (not the "2"), or runs a `te` command to scaffold, inspect, edit, validate, run BPA on, query, deploy, refresh, test, or migrate a semantic model. Not for the legacy Windows-only `TabularEditor.exe` (TE2).
+description: Expert guidance for the cross-platform Tabular Editor CLI (the `te` binary, in preview) that manages Power BI and Analysis Services semantic models from the terminal on macOS, Linux and Windows. Use when the user mentions the `te` CLI or Tabular Editor CLI, runs a `te` command, or wants to scaffold, inspect, edit, validate, run BPA on, query, deploy, refresh or migrate a semantic model from a terminal or CI pipeline. Also use for DAX regression tests, measure contracts and invariants, data quality and orphan-key checks, snapshot baselines or A/B comparison of two deployed models, even when the user does not name `te`. Not for the legacy Windows-only TabularEditor.exe (TE2).
 ---
 
 # Tabular Editor CLI (`te`)
@@ -195,6 +195,7 @@ Bundled (load as needed):
 - `references/get-te-cli.md` - agent self-service install of the `te` binary from the public CDN
 - `references/command-reference.md` - object path grammar, global options, all command families, authentication, connections/profiles/sessions
 - `references/testing.md` - authoring `.test.yaml` suites (assertions, tolerance, tags, matrix), snapshot regression, A/B compare across workspaces
+- `references/dax-test-patterns.md` - what to test: measure contracts (additivity, time shift, blank, safe division, bounds), integrity and schema checks, verified suite examples, CI tagging
 - `references/semantic-modeling-practices.md` - modeling best practices tied to `te` commands, with sources
 - `references/workflows.md` - multi-step recipes (table + M partition, format conversions, deploy, refresh, perspectives, translations, incremental refresh, field parameters)
 - `references/gotchas.md` - path/property traps, output shapes, behavior traps
