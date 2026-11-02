@@ -53,12 +53,14 @@ te util migrate --output-format json           # machine-readable for codemods (
 | `-W` / `-WARN` | (default; deploy results include warnings) |
 | `-E` / `-ERR` | (default; deploy exits non-zero on failure) |
 | `-L <user> <pass>` (after `-D`; `-LOGIN`) | _Not yet implemented_ as SQL auth. Use `te auth login -u <id> -p <secret> -t <tenant>` (cached) or `--auth env` with `AZURE_CLIENT_*` variables |
-| `-SC` / `-SCHEMACHECK` | _Not yet implemented_ (connects to data sources; `te validate` is DAX-only and never touches a source) |
+| `-SC` / `-SCHEMACHECK` | `te schemacheck [--ci vsts] [--trx results.trx] [--fail-on warning]` (same exit rule: drift warns, a missing source column fails). Also checks M and Direct Lake tables, which TE2 never read; a legacy partition on Oracle, ODBC or a non-SQL-Server OLE DB provider is **Not checked** rather than checked. `te2 <model> -SC` keeps TE2's exact scope and `-T` assertions |
 
 **Behavioral differences from TE2**:
 - `te deploy` and `te refresh` are dry runs by default: they print the TMSL they would send and change nothing. Pass `--execute` to act; in CI pass `--execute --force` because `--execute` otherwise asks for confirmation.
 - `te deploy` and `te save-as` run BPA as a pre-flight gate by default (TE2 did not). `--skip-bpa` to disable, `--fix-bpa` to auto-fix in memory.
 - `te script` exits non-zero when a script calls `Error(...)`; TE2 reported success.
+- In TE2 compatibility mode a script that throws or does not compile aborts the run, as in TE2: no build output (`-B`/`-F`/`-TMDL`), no BPA, no deploy, no `-T` file, exit 1. Compile errors print `Error <code> on line <n>, col <n>: <message>` on stdout and become `-V`/`-G` annotations pointing at the script line. Each script runs in one update batch, so cascading fix-ups (formula renames) apply when the script ends.
+- Scripts see `TECLI` defined and `TE3` undefined, in `te script` and in TE2 compatibility mode; TE2 defined neither.
 - All commands support `--output-format json`; `validate`, `bpa run`, `test run` and `query` share one findings JSON shape (see `config-cicd-env.md`).
 - No `start /wait` wrapper needed on Windows; it is a normal console binary. Cross-platform, except local SSAS / Power BI Desktop connections (Windows only).
 

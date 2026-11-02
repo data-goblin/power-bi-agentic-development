@@ -152,7 +152,7 @@ A bare `.cs`/`.csx` positional is accepted as a file; files and `--inline` snipp
 ### Snapshot + diff for regression testing
 
 ```bash
-te test snapshot --save baseline.snapshot.json -s ws -d model           # capture baseline
+te test snapshot --output-file baseline.snapshot.json -s ws -d model           # capture baseline
 # … make changes, redeploy …
 te test snapshot --diff baseline.snapshot.json --tolerance 0.001 -s ws -d model   # detect drift
 ```

@@ -45,7 +45,7 @@ Backed by Azure Identity's full credential chain. `--auth` is a global option (e
 ```bash
 te auth login                                              # browser
 echo "$AZURE_CLIENT_SECRET" | te auth login -u "$AZURE_CLIENT_ID" -p - -t "$AZURE_TENANT_ID"   # SPN, secret via stdin, cached
-te auth login -u <appId> -p <secret> -t <tenant> --save=false   # one-shot, no cache
+te ls -s <server> -d <db> --auth env                        # SPN from AZURE_CLIENT_* env vars, nothing cached
 te auth login --identity                                   # managed identity (alias -I)
 te auth status                                             # exit 0 if authenticated, 1 otherwise
 te auth logout                                             # clear every cached record
@@ -305,13 +305,16 @@ Empty `--where` and `te find` results exit 0 and say what was searched, how the 
 | Command | Purpose | Key flags |
 |---|---|---|
 | `te validate` | Expressions + relationship integrity + TOM errors + name collisions | `--ci vsts\|github` (aliases `azdo`, `azure-devops`, `gh`; `none` = off; other values rejected), `--trx <file>`, `--errors-only` (= `--no-warnings --no-antipatterns`), `--server-only`, `--no-multiline`. CSV output rejected. Every finding shows its code in the text tables. `TE0012` (duplicate name within a table) and `TE0013` (measure name repeated across tables) are errors that also block `te save-as` unless `--force`/`--skip-validation`; `TE0014` warns that a TMDL folder has no `database.tmdl` (compatibility level substituted; still exits 0) |
+| `te schemacheck [table]` | Source schema drift: added, retyped and missing source columns, per table. Never writes the model | `--ci vsts\|github`, `--trx <file>`, `--fail-on error\|warning` (default `error`). Added/retyped column = warning (exit 0), missing source column or unreadable legacy query = error (exit 1). Checks legacy SQL query, M and Direct Lake / Fabric tables; calculated tables, calculation groups, skip-annotated tables and sources it cannot read are listed as **Not checked** and never fail the run. Connection comes from the table's own data source; one table accepts the `te add -t Table` source flags (`--source-table` alone overrides only the name). Honours TE2's annotations (`TabularEditor_SkipSchemaCheck`, `TabularEditor_IgnoreSourceColumnAdded`, `TabularEditor_IgnoreDataTypeChange`, `TabularEditor_IgnoreMissingSourceColumn`, model-level `TabularEditor_SchemaCheckNoWarnings`). Read-only counterpart of `te set <table> --update-schema` |
 | `te bpa run` | Run BPA | `-r/--rules <file-or-url>` (repeatable; replaces the user-rule layer), `--no-defaults`, `--no-model-rules`, `--allow-external-rules`, `--rule <id>` (repeatable), `--path <filter>`, `--vpax <file>`, `--fail-on error\|warning` (default `error`), `--ci`, `--trx`, `--fix`, `--save`, `--save-to`, `--serialization`, `--stat\|--name-only\|--diff`, `--no-multiline`. Text output has a `Rule ID` column |
 | `te bpa rules <sub>` | Manage rules | `list` (alias `ls`; `--all`, `--disabled`, `--ignored`, `--no-defaults`), `add <id>` (`--name`, `--scope`, `--expression` (`-` = stdin), `--category`, `--severity 1\|2\|3`, `--description`, `--fix-expression`), `set <id> -p name=value` (repeatable; `name`, `expression`, `scope`, `category`, `severity`, `description`, `fixExpression`), `remove <id>` (alias `rm`), `ignore <id>` / `unignore <id>` (model annotation), `init [--force]`, `disable <id>` / `enable <id>` (built-ins; writes `bpa.disabledBuiltInRuleIds`). All take `--rules-file <path>` or `--model-rules` |
-| `te vertipaq [path]` | VertiPaq stats (needs a deployed model, or `--import`) | `--columns`, `--relationships`, `--partitions`, `--all`, `--detail`, `--fields <csv>`, `--top <N>`, `--stats`, `--export <vpax>`, `--import <vpax>` (offline), `--obfuscate`, `--annotate`, `--save`. Unknown path errors with candidates |
+| `te vertipaq [path]` | VertiPaq stats (needs a deployed model, or `--import`) | `--columns`, `--relationships`, `--partitions`, `--all`, `--detail`, `--fields <csv>`, `--top <N>`, `--stats`, `--export <vpax>`, `--import <vpax>` (offline), `--obfuscate`, `--annotate`, `--push` (writes the prepared annotations to the workspace; requires `--annotate`, refused with `--import`). Unknown path errors with candidates |
 
 ```bash
 te validate --model ./model --ci github --trx results.trx
 te validate --errors-only --output-format json
+te schemacheck --model ./model --ci vsts --trx schema.trx       # drift gate; --fail-on warning fails on any drift
+te schemacheck Sales --output-format json
 te bpa run --fail-on error --ci github --output-format json
 te bpa run --fix --save --stat
 te bpa run --rule TE3_BUILT_IN_SET_ISAVAILABLEINMDX_FALSE --path Sales
@@ -341,7 +344,7 @@ Mutating commands and `te diff` share one shape: `changes[]` of `{objectPath, ob
 | Command | Purpose | Key flags |
 |---|---|---|
 | `te query [dax]` | DAX query (needs `-s/-d`, `--local` or active connection) | positional or `-q <dax>` (`-q -` = stdin; bare redirected stdin is read when no query given), `--file <file.dax>`, `--limit <N>` (default 100), `-o, --output-file <file>` (`.csv\|.tsv\|.json\|.dax`), `--no-validate`, `--trace`, `--cold`, `--plan` (needs `--trace`), `--runs <N>` |
-| `te script [files]` | C# script(s) via the TE3 scripting host | `--file <path>` (repeatable) or bare `.cs`/`.csx` positionals, `--inline "<code>"` (repeatable; `-` = stdin), `--validate` (compile only; no model needed), `--save`, `--save-to`, `--serialization`, `--force`, `--stat\|--name-only\|--diff`. Sources run in the order written. Exits non-zero when a script calls `Error(...)` (changes are still saved with `--save`). Refused on Windows when the `DisableCSharpScripts` administrator policy is set (see config-cicd-env.md) |
+| `te script [files]` | C# script(s) via the TE3 scripting host | `--file <path>` (repeatable) or bare `.cs`/`.csx` positionals, `--inline "<code>"` (repeatable; `-` = stdin), `--validate` (compile only; no model needed), `--save`, `--save-to`, `--serialization`, `--force`, `--stat\|--name-only\|--diff`. Sources run in the order written. Exits non-zero when a script calls `Error(...)` (changes are still saved with `--save`). Refused on Windows when the `DisableCSharpScripts` administrator policy is set, and a script that leaves the model (files, network, processes, `#r`, direct server commands) is refused under `BlockUnsafeScripts` with `blockedByPolicy: true` in JSON (see config-cicd-env.md) |
 | `te macro <sub>` | TE3 macros (`MacroActions.json`; `--macros <file>` → `TE_MACROS_PATH` → `macros` config → `./MacroActions.json`) | `list` (alias `ls`), `run <name-or-id>` (`--on <path>`, `--save`, `--save-to`, `--force`), `add <name>` (`-e "<code>"` or `-s <file.cs>`, `--tooltip`, `--contexts`, `--enabled`), `set <name-or-id> -p name=value` (`name`, `execute`, `enabled`, `tooltip`, `validContexts`; `-` = stdin), `remove` (alias `rm`), `sort`, `init [--force]` |
 
 ```bash
@@ -367,7 +370,7 @@ Scripts see `TECLI` defined (TE3 defines `TE3`); `SelectMeasure()`/`SelectTable(
 
 | Command | Purpose | Key flags |
 |---|---|---|
-| `te deploy` | Deploy the model (`-m`, `-s/-d`, `--local`, or active connection) to a target | `--target-server <ws-or-endpoint>`, `--target-database <name>` (required when the source is remote; a local source falls back to the active connection), `--execute`, `--force` (skip the confirmation; **required in CI** together with `--non-interactive`), `--deploy-full`, `--deploy-connections`, `--deploy-partitions`, `--skip-refresh-policy`, `--deploy-roles`, `--deploy-role-members`, `--deploy-shared-expressions`, `--create-only`, `--skip-bpa`, `--fix-bpa`, `--bpa-rules <file>`, `--ci vsts\|github` (aliases `azdo`, `azure-devops`, `gh`), `-p, --profile <name>`. **Fails (exit non-zero, JSON `success: false`, reason in `error`) when the server accepts the metadata but parks objects with errors**; unprocessed objects are not a failure |
+| `te deploy` | Deploy the model (`-m`, `-s/-d`, `--local`, or active connection) to a target | `--target-server <ws-or-endpoint>`, `--target-database <name>` (required when the source is remote; a local source falls back to the active connection), `--execute`, `--force` (skip the confirmation; **required in CI** together with `--non-interactive`), `--deploy-full`, `--deploy-connections`, `--deploy-partitions`, `--skip-refresh-policy`, `--deploy-roles`, `--deploy-role-members`, `--deploy-shared-expressions`, `--create-only`, `--skip-linguistic-metadata` (keep the target's AI instructions, AI data schema and Q&A synonyms; also with `--deploy-full`), `--skip-bpa`, `--fix-bpa`, `--bpa-rules <file>`, `--ci vsts\|github` (aliases `azdo`, `azure-devops`, `gh`), `-p, --profile <name>`. **Fails (exit non-zero, JSON `success: false`, reason in `error`) when the server accepts the metadata but parks objects with errors**; unprocessed objects are not a failure |
 | `te refresh` | Refresh a deployed model | `--type full\|dataonly\|automatic\|calculate\|clearvalues\|defragment\|add` (default `automatic`), `--table <name>` (repeatable), `--partition Table.Partition` (repeatable, without `--table`), `--apply-refresh-policy true\|false\|<table>` (default: applied when a targeted table has a policy and type/scope allow it; off on Power BI Desktop), `--effective-date yyyy-MM-dd`, `--max-parallelism <N>`, `--execute` (asks for confirmation at a terminal, `n` default), `--force` (skip it; **required unattended**: redirected output, `--output-format json` or `--non-interactive` without `--force` is an error), `--no-progress`, `--trace [path]` (server-clock timings; stale `te-refresh-*` traces older than an hour are cleaned up) |
 
 ```bash
@@ -399,7 +402,7 @@ Suite authoring (`.test.yaml`, assertions, tolerance, matrix expansion) is in te
 | `te test spec` | Print the test file format reference | n/a |
 | `te test use [suite]` | Activate suite for the session; no arg clears | n/a |
 | `te test list` (alias `ls`) | List tests without running | `--suite <path>` |
-| `te test snapshot` | Capture / diff measure snapshots | `--save <file>`, `--diff <baseline>`, `--tolerance <rel>`, `--measures <glob>`, `--table <name>`, `--suite <path>` |
+| `te test snapshot` | Capture / diff measure snapshots | `-o, --output-file <file>`, `--diff <baseline>`, `--tolerance <rel>`, `--measures <glob>`, `--table <name>`, `--suite <path>` |
 | `te test compare` | A/B-compare two deployed models | `--source-a ws/model`, `--source-b ws/model`, `--auth-a`, `--auth-b`, `--suite`, `--tolerance` |
 
 ```bash
@@ -407,7 +410,7 @@ te test init --example
 te test init --from-model --model ./my-model
 te test run -s ws -d model --ci github --trx results.trx --output-format json
 te test run --tag revenue
-te test snapshot --save baseline.snapshot.json -s ws -d model
+te test snapshot --output-file baseline.snapshot.json -s ws -d model
 te test snapshot --diff baseline.snapshot.json --tolerance 0.01 -s ws -d model
 te test compare --source-a prod-ws/model --source-b dev-ws/model --suite .te-tests
 ```
@@ -418,7 +421,7 @@ Covered above; full synopsis:
 
 ```
 te connect [<server> [<database>]] [--local] [-w/--workspace <path-or-server-db>] [--workspace-format tmdl|bim|database.json] [--workspace-auth <method>] [--force] [-p/--profile <name>] [--clear]
-te auth login [-u <appId>] [-p <secret>|-] [-t <tenant>] [-I/--identity] [--certificate <path>] [--certificate-password <pw>] [--save[=false]]
+te auth login [-u <appId>] [-p <secret>|-] [-t <tenant>] [-I/--identity] [--certificate <path>] [--certificate-password <pw>]
 te auth status | te auth logout
 te profile {set|show|list|remove} <name> [...]
 te session [show | list | clear | prune [--all] [--dry-run]]

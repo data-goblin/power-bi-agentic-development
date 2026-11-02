@@ -105,7 +105,7 @@ With `--ci github`/`--ci vsts`, annotations go to stderr and carry the finding c
 Snapshots capture every measure's value (auto-generated `ROW()` queries, or the suite's queries with `--suite`) so a refactor can prove it changed nothing:
 
 ```bash
-te test snapshot --save baseline.snapshot.json -s ws -d model
+te test snapshot --output-file baseline.snapshot.json -s ws -d model
 # ...refactor measures, redeploy...
 te test snapshot --diff baseline.snapshot.json --tolerance 0.001 -s ws -d model
 ```
