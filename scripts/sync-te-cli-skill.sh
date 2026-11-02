@@ -204,6 +204,8 @@ done
 # Strip the upstream version frontmatter (unsupported here; plugin.json versions instead).
 perl -ni -e 'print unless !$d && /^version:/ && ($d=1)' "$DEST/SKILL.md"
 
+find "$DEST" -name '*.md' -exec perl -pi -e 's{cdn\.tabulareditor\.com/files/cli/latest/}{cdn.tabulareditor.com/files/latest/cli/}g' {} +
+
 # Re-apply the local-only augmentations (upstream does not carry these).
 write_get_ref
 inject_pointer
