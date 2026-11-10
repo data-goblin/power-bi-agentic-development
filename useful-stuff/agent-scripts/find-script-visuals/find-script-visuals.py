@@ -65,7 +65,8 @@ def scan(r: dict) -> dict:
     return row | {"status": "scanned", "hits": dict(hits)}
 
 
-settings = call("GET", f"{API}/admin/tenantsettings")[2]["tenantSettings"]
+body = call("GET", f"{API}/admin/tenantsettings")[2]
+settings = body.get("value") or body["tenantSettings"]
 if not next(s for s in settings if s["settingName"] == SETTING)["enabled"]:
     sys.exit(print(json.dumps({"setting": SETTING, "enabled": False})))
 workspaces = pages(f"{API}/admin/workspaces", "workspaces")
