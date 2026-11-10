@@ -11,6 +11,7 @@ Misc. useful shit for making Claude Code more effective, safe, or satisfying bas
 | [`hooks/block-release-age-bypass`](hooks/block-release-age-bypass/) | Block `--no-minimum-release-age` / `--minimum-release-age=0` bypass flags on bun/npm |
 | [`hooks/usage-context`](hooks/usage-context/) | Give the agent its 5-hour and weekly Claude plan usage on every prompt, read from the statusline |
 | [`agent-scripts/`](agent-scripts/) | Helper scripts for installing and running agentic tooling (e.g. enabling Windows long paths so the Copilot CLI install doesn't blow up on `Filename too long`) |
+| [`agent-scripts/find-script-visuals`](agent-scripts/find-script-visuals/) | Find every report in a tenant that uses R or Python visuals, before they retire |
 | [`status-lines/`](status-lines/) | Two-line Claude Code statusline (version, host + cwd, git, vim mode, model + effort, time, usage meters); segmented for easy customization |
 | [`agent-settings/`](agent-settings/) | Sanitized `~/.claude/settings.json` template with the six Bash safety hooks (rm -rf home, npm, pip, ssh, op read, release-age bypass) and opinionated defaults |
 | [`themes/`](themes/) | 22 Power BI report themes generated from the Omarchy desktop themes, with a monospace font, contrast-safe labels and SVG-safe table tooltips |

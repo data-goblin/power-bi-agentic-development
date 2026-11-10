@@ -5,6 +5,7 @@ Helper scripts that smooth out installing and running Claude Code, GitHub Copilo
 | Script | Description |
 |--------|-------------|
 | [`enable-windows-longpaths.ps1`](enable-windows-longpaths.ps1) | Example: enable Windows + git long path support so `copilot plugin install`, `git clone`, and other long-path operations don't blow up on `Filename too long`. Often needed on Windows before installing the Copilot CLI or this marketplace's plugins |
+| [`find-script-visuals/`](find-script-visuals/) | Find every report in a tenant that uses R or Python visuals |
 
 ## enable-windows-longpaths.ps1
 
