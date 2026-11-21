@@ -117,7 +117,7 @@ For detailed report design guidance (layout, spacing, visual hierarchy, color, a
 | Add or modify textboxes | **`references/textbox.md`** -- paragraphs, textRuns, textStyle |
 | Sort a visual | **`references/sort-visuals.md`** -- sortDefinition inside query |
 | Sync slicers across pages | **`references/visual-json.md`** -- syncGroup (groupName, fieldChanges, filterChanges) |
-| Edit visual interactions | **`references/visual-json.md`** + **`references/page.md`** -- visualInteractions in page.json (NoFilter, Filter, Highlight) |
+| Edit visual interactions | **`references/visual-json.md`** + **`references/page.md`** -- visualInteractions in page.json (Default, DataFilter, HighlightFilter, NoFilter) |
 | Change table/matrix column widths | **`references/visual-json.md`** -- columnWidth with metadata selector |
 | Group visuals | **`references/visual-json.md`** -- visualGroup, parentGroupName, groupMode |
 | Hide visuals or fields | **`references/visual-json.md`** -- isHidden at root level, query projection control |

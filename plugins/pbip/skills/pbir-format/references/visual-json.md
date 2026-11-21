@@ -258,7 +258,7 @@ Visual interactions control cross-filtering between visuals on a page. Configure
 ]
 ```
 
-Types: `"NoFilter"` (disable cross-filter), `"Filter"` (cross-filter), `"Highlight"` (cross-highlight).
+Types: `"Default"` (the target visual type decides between filter and highlight), `"DataFilter"` (cross-filter), `"HighlightFilter"` (cross-highlight), `"NoFilter"` (disable cross-filter). Any other value, such as `"Filter"` or `"Highlight"`, fails the page schema.
 
 Only interactions that deviate from the default need to be listed. By default, all visuals cross-filter each other.
 
@@ -277,7 +277,7 @@ Only interactions that deviate from the default need to be listed. By default, a
 Two behaviors that are easy to conflate:
 
 - `drillFilterOtherVisuals: true` -- drilling a hierarchy level re-filters the rest of the page, behaving like a data-point click; `false` isolates the drill to that visual. Desktop writes this flag explicitly per visual, so read the value on the visual you are editing rather than assuming a global default
-- `visualInteractions` (page.json) -- controls on-click cross-filter mode (NoFilter/Filter/Highlight). Both settings must align; a `true` drill flag still respects any `NoFilter` interaction pairs for that visual
+- `visualInteractions` (page.json) -- controls on-click cross-filter mode (Default/DataFilter/HighlightFilter/NoFilter). Both settings must align; a `true` drill flag still respects any `NoFilter` interaction pairs for that visual
 
 Do not confuse `drillFilterOtherVisuals` (same-page hierarchy walk) with drillthrough (navigates to a separate page via `visualLink.type: "Drillthrough"`).
 

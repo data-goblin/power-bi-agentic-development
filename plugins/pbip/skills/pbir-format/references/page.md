@@ -33,7 +33,7 @@ Override default cross-filtering between visuals on this page:
 ]
 ```
 
-Types: `"NoFilter"` (disable cross-filter), `"Filter"`, `"Highlight"`.
+Types: `"Default"` (the target visual type decides between filter and highlight), `"DataFilter"` (cross-filter), `"HighlightFilter"` (cross-highlight), `"NoFilter"` (disable cross-filter). Any other value, such as `"Filter"` or `"Highlight"`, fails the page schema.
 
 ### Tooltip Pages
 
