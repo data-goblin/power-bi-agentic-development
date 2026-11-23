@@ -1,0 +1,21 @@
+table Variants
+	lineageTag: db392ee4-737f-45fa-bd04-25486dafb8a7
+
+	calculationGroup
+
+		calculationItem Plain = SELECTEDMEASURE ()
+
+		calculationItem Guarded = IF ( ISNUMERIC ( SELECTEDMEASURE () ), SELECTEDMEASURE () * 2, SELECTEDMEASURE () )
+
+			formatStringDefinition = SELECTEDMEASUREFORMATSTRING ()
+
+	column Name
+		dataType: string
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+	column Ordinal
+		dataType: int64
+		isHidden
+		sourceColumn: Ordinal
+

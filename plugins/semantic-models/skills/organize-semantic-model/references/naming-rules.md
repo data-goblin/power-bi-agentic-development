@@ -1,242 +1,27 @@
-# Naming rules
+# House naming decisions
 
-Reference for pass 2 of the `organize-semantic-model` skill. These are defaults; the organization's own documented conventions and terminology win over them.
+Title Case, spaces, acronyms in capitals, no abbreviations a business user would not recognise. Agree the vocabulary before renaming: key metric words (Revenue, Turnover, Sales), any documented standard, the prior-period convention, the unit convention.
 
-## Core Principle
+## Decisions
 
-Names must align with the business terminology used by people in the organization. Never assume terminology -- always confirm with the user or infer from existing patterns in the model. The model should be an authoritative source of truth for terminology.
-
-## Rule Categories
-
-### 1. Human-Readable Names (No Programming Conventions)
-
-**Rule:** All table, column, measure and hierarchy names use Title Case with spaces: capitalize every major word, keep short articles, conjunctions and prepositions lowercase unless they start the name (`Days of Supply`, `Net Sales by Region`), and keep acronyms in capitals (`YTD`, `COGS`, `ID`). No CamelCase, snake_case, UPPER_CASE, or other programming conventions.
-
-| Anti-Pattern | Correct |
-|-------------|---------|
-| `OrderStatus` | `Order Status` |
-| `past_due_orders` | `Past Due Orders` |
-| `TOTAL_COST` | `Total Cost` |
-| `net_sales_previous_year` | `Net Sales 1YP` |
-| `TurnoverMTD` | `Turnover MTD` |
-| `SellMrgn%` | `Selling Margin (%)` |
-
-**Detection patterns in TMDL:**
-- `measure [a-z]+_[a-z]+` -- snake_case measures
-- `measure [A-Z][a-z]+[A-Z]` -- CamelCase measures
-- `measure [A-Z_]{4,}` -- UPPER_CASE measures
-- Same patterns for `column` declarations
-
-### 2. No Abbreviations or Acronyms
-
-**Rule:** Spell out full words. Exceptions only for universally understood abbreviations (MTD, YTD, QTD) or standard business acronyms that are defined in descriptions.
-
-| Anti-Pattern | Correct |
-|-------------|---------|
-| `Del. Mrgn %` | `Delivery Margin (%)` |
-| `TFS` | `Total Freight Surcharge` |
-| `COGS` | `Total Net Invoice COGS` (with description defining COGS) |
-| `T&CF` | `Total Taxes & Commercial Fees` |
-| `NetSls` | `Net Sales` |
-| `TotDelCst` | `Total Delivery Cost` |
-| `inv_lines_cnt` | `Invoice Lines` |
-| `frght` | `Freight` |
-| `shp_dt` | `Ship Date` |
-| `CustKey` | `Customer Key` |
-| `BillDocTypeCd` | `Billing Document Type Code` |
-| `NI_COGS` | `Net Invoice COGS` |
-
-**Detection patterns:**
-- Names shorter than 5 characters that aren't common words
-- Names containing periods followed by spaces (abbreviation dots): `\w+\.\s`
-- Names with vowels removed: consecutive consonants of 3+ characters
-- Single-letter or two-letter words that aren't prepositions/articles
-
-### 3. No Technical Prefixes
-
-**Rule:** Do not use DIM_, FACT_, or similar technical prefixes on table names. Use Tabular Editor's Table Groups annotation to organize tables into Dimension/Fact categories instead.
-
-| Anti-Pattern | Correct |
-|-------------|---------|
-| `DIM_Customer` | `Customer` |
-| `FACT_Invoices` | `Invoices` |
-| `DIM_Date` | `Date` |
-| `stg_Orders` | `Orders` |
-
-**Exception:** Field parameters can use `FP_` prefix and calculation groups can use `CG_` prefix when not exposed to end users or the AI schema. Technical tables like `__Measures` or `__Formatting` can use underscore prefixes.
-
-**Detection patterns:**
-- `table (DIM|FACT|dim|fact|STG|stg|RAW|raw)_` -- technical prefixes
-
-### 4. No Excessive Symbols or Special Characters
-
-**Rule:** Avoid emojis, excessive dollar signs, Unicode decorations, or other non-standard characters in names.
-
-| Anti-Pattern | Correct |
-|-------------|---------|
-| `Turnover $$$` | `Turnover` |
-| `Revenue $$` | `Revenue` |
-| `SELL_MARGIN_$` | `Selling Margin (Value)` |
-
-**Detection patterns:**
-- Names containing `$`, `#` (except `#` in count measures like `# Customers`)
-- Names containing emoji Unicode ranges
-- Names with repeated special characters
-
-### 5. Consistent Aggregation Syntax
-
-**Rule:** Choose one convention for time aggregations and apply it uniformly throughout the model.
-
-**Recommended convention:** Use standard abbreviations as suffixes, wrapped in nothing or minimal syntax:
-- `MTD` (Month to Date)
-- `QTD` (Quarter to Date)
-- `YTD` (Year to Date)
-- `Weekly Average`, `Daily Average` (for rolling)
-
-**Placement:** Aggregation follows the base measure name:
-- `Turnover MTD`
-- `Budget QTD`
-- `Net Sales YTD`
-
-| Anti-Pattern | Correct |
-|-------------|---------|
-| `mtd_turnover_ly` | `MTD Turnover 1YP` |
-| `TurnoverMTD` | `Turnover MTD` |
-| `MonthToDateSales` | `Sales MTD` |
-
-### 6. Consistent Unit Syntax
-
-**Rule:** Choose one convention for units and apply it uniformly. Use parentheses for units.
-
-**Recommended convention:** `Measure Name (Unit)` where unit is one of:
-- Currency symbol or code in parentheses when needed: `(EUR)`, `(USD)`
-- `(%)` for percentages
-- `(Quantity)` for quantity measures
-- `(Value)` for monetary value (default, sometimes omitted)
-- `(Units)` or `(pcs)` for piece counts
-
-| Anti-Pattern | Correct |
-|-------------|---------|
-| `SellMrgn%` | `Selling Margin (%)` |
-| `SELL_MARGIN_$` | `Selling Margin (Value)` |
-| `TrnOvr_Qty` | `Turnover (Quantity)` |
-| `SM pct 1YP` | `Selling Margin 1YP (%)` |
-
-### 7. Consistent Period Syntax
-
-**Rule:** Choose one convention for time period comparisons and apply it uniformly.
-
-**Recommended convention:** Use `nYP` (n-Year Prior) format:
-- `1YP` = 1 Year Prior (previous year)
-- `2YP` = 2 Years Prior
-- `1MP` = 1 Month Prior (if needed)
-
-**Placement:** Period follows the base measure name but precedes unit:
-- `Turnover 1YP`
-- `Net Sales 2YP`
-- `Selling Margin 1YP (%)`
-
-| Anti-Pattern | Correct |
-|-------------|---------|
-| `Turnover_Last_Year` | `Turnover 1YP` |
-| `T.O. Qty PY` | `Turnover 1YP (Quantity)` |
-| `TRNVR_2YR` | `Turnover 2YP` |
-| `DM val 2 yrs ago` | `Delivery Margin 2YP (Value)` |
-| `net_sales_previous_year` | `Net Sales 1YP` |
-| `S.M. % LY` | `Standard Margin 1YP (%)` |
-
-### 8. Consistent Comparison Syntax
-
-**Rule:** For measures that compare actuals to targets or prior periods, use `vs.` syntax with the target/period and unit.
-
-**Recommended convention:** `Base Measure vs. Target (Unit)`
-- `Turnover vs 1YP (%)` -- percentage variance to prior year
-- `Budget MTD vs. Turnover (delta)` -- absolute variance using delta symbol or word
-- `Forecast vs. Turnover (%)` -- percentage variance to forecast
-
-Use the delta symbol or abbreviation consistently:
-- Either always `(delta)` or always the delta symbol
-- Either always `vs.` (with period) or always `vs` (without)
-
-### 9. Display Folder Organization
-
-**Rule:** 3 to 5 top-level folders per table, nested with `/` (a backslash does not nest). Numbered prefixes control sort order when alphabetical order is wrong. Keep a larger structure only if it predates the session.
-
-**Fact table example:**
-```
-1. Measures
-2. Facts
-3. Degenerate Dimensions
-4. Keys
+```yaml
+tables: no DIM_, FACT_, stg_, RAW_ prefixes; FP_ (field parameter) and CG_ (calculation group) allowed when hidden from users and the AI schema; __Measures style tables allowed
+symbols: no emoji, no $$$; "#" only for counts (# Customers)
+measure name order: [Aggregation] [Base] [Period] ([Unit])
+aggregation: leading, standard abbreviation: MTD Turnover 1YP, YTD Net Sales
+period: nYP (1YP, 2YP, 1MP), before the unit: Selling Margin 1YP (%)
+unit: in parentheses: (%), (Quantity), (Value) (default, often omitted), (EUR)
+comparison: "vs" plus period or target, then the unit: Turnover vs 1YP (%); pick "vs" or "vs." once, and one delta word or symbol
+hidden key columns: [Table Name] Key
+display folders: numbered prefixes only when alphabetical order is wrong, e.g. 1. Measures, 2. Facts, 3. Keys
 ```
 
-**Dimension table example:**
-```
-1. [Primary Hierarchy Name]
-2. Attributes
-3. Keys
-```
+## Detection
 
-### 10. Descriptions
+Technical prefixes: `table (DIM|FACT|dim|fact|STG|stg|RAW|raw)_`. Programming case: snake_case, CamelCase, UPPER_CASE. Run them as BPA rules (`te bpa run -r <rules.json> --no-defaults`) rather than by eye; rule shape is in the `bpa-rules` skill.
 
-**Rule:** All visible measures and columns should have descriptions (TMDL `///` comments). Descriptions should explain:
-- What the measure calculates
-- Any business context needed to interpret it
-- How to use it (for measures that require filter context, like field parameters)
-- Definition of acronyms used in the name
+## Applying renames
 
-**Example:**
-```tmdl
-/// Net orders exclude cancellation document types
-measure 'Net Orders' =
-```
-
-### 11. Synonyms (Prep for AI)
-
-When using "Prep your data for AI" or setting synonyms:
-- Only list real synonyms that people in the organization use
-- Consider multilingual synonyms for international organizations
-- Synonyms primarily benefit AI/agent queries
-
-## Measure Name Construction Order
-
-The full name of a measure should follow this consistent construction:
-
-```
-[Aggregation] [Base Name] [Period] ([Unit])
-```
-
-Examples:
-- `Turnover` (base only)
-- `Turnover (Quantity)` (base + unit)
-- `Turnover 1YP` (base + period)
-- `Turnover 1YP (Quantity)` (base + period + unit)
-- `MTD Turnover 1YP` (aggregation + base + period)
-- `Turnover vs 1YP (%)` (base + comparison + unit)
-- `MTD Turnover vs 1YP (%)` (aggregation + base + comparison + unit)
-
-## Column Name Rules
-
-Columns generally follow simpler rules:
-1. Use full, human-readable names with spaces
-2. Use standard casing (not snake_case or CamelCase)
-3. Avoid abbreviations
-4. Hidden key columns can use `[Table Name] Key` pattern
-5. Group into display folders by purpose (Hierarchy, Attributes, Keys, Facts)
-
-## Agreeing Terminology Before Renaming
-
-Do not rename until the business vocabulary is known. Ask, or infer from existing names and reports and confirm:
-
-1. The words used for key metrics (Revenue, Turnover, Sales, Gross Sales)
-2. Any documented naming standard already in place
-3. The prior-period convention (1YP, PY, Prior Year, Last Year)
-4. The unit convention ((%), (Value), (Quantity))
-
-Then present the proposed renames grouped by issue (programming conventions, abbreviations, inconsistent period/unit/aggregation syntax, technical prefixes) and get confirmation before applying them.
-
-## Applying Renames
-
-- Tabular Editor (MCP or GUI): setting `Name` rewrites DAX references when Automatic Formula Fix-up is on. Confirm with `get_object_details` on a dependent measure afterwards
-- TMDL on disk without Tabular Editor: rename the declaration, then update every `[Old Name]` and `'Table'[Old Column]` reference across `definition/` (tables, `relationships.tmdl`, `functions.tmdl`, roles, perspectives, cultures), and finish with `rg -n "<old name>" definition/` returning nothing
-- Reports: repair bindings with `pbir fields replace` or `pbir fields replace-table` (the `pbir-cli` skill); never edit report JSON by hand
+- `te mv <old> <new> --save` renames and rewrites dependent DAX; check a dependent measure after
+- TMDL on disk without `te`: rename the declaration, then every `[Old]` and `'Table'[Old]` in tables, relationships, functions, roles, perspectives and cultures
+- Reports: `pbir fields replace "Report.Report" --from "Sales.Old" --to "Sales.New"`

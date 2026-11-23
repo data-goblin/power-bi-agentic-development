@@ -1,7 +1,7 @@
 {
   "name": "pbi-desktop",
   "version": "0.27.0",
-  "description": "Inspect and query the live Power BI Desktop model via TOM and ADOMD.NET.",
+  "description": "Windows only: traces, TOM and the Desktop Bridge for a running Power BI Desktop, with te validate hooks that say when they are off.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

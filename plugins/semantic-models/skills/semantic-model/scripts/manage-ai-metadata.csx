@@ -1,10 +1,10 @@
 // Manage semantic model AI instructions and AI schema from te script.
 //
 // Non-interactive usage:
-//   TE_AI_ACTION=get TE_AI_TARGET=both te script -S manage-ai-metadata.csx -m ./model --output-format json
-//   TE_AI_ACTION=set TE_AI_TARGET=instructions TE_AI_INPUT_FILE=./instructions.md te script -S manage-ai-metadata.csx -m ./model --save
-//   TE_AI_ACTION=set TE_AI_TARGET=schema TE_AI_INPUT_FILE=./schema.json te script -S manage-ai-metadata.csx -m ./model --save
-//   TE_AI_ACTION=delete TE_AI_TARGET=schema te script -S manage-ai-metadata.csx -m ./model --save
+//   TE_AI_ACTION=get TE_AI_TARGET=both te script manage-ai-metadata.csx -m ./model --output-format json
+//   TE_AI_ACTION=set TE_AI_TARGET=instructions TE_AI_INPUT_FILE=./instructions.md te script manage-ai-metadata.csx -m ./model --save
+//   TE_AI_ACTION=set TE_AI_TARGET=schema TE_AI_INPUT_FILE=./schema.json te script manage-ai-metadata.csx -m ./model --save
+//   TE_AI_ACTION=delete TE_AI_TARGET=schema te script manage-ai-metadata.csx -m ./model --save
 //
 // Environment variables:
 //   TE_AI_ACTION       list | get | set | delete. Default: get.

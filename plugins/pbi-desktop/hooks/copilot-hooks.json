@@ -1,23 +1,14 @@
 {
   "version": 1,
-  "description": "Copilot CLI wiring for the Power BI Desktop TOM/ADOMD hooks. One entry per event runs every check in turn (pbi-hooks.sh pre / post), each gated in-script. Claude Code uses hooks.json instead; see README.md.",
+  "description": "Copilot CLI wiring for the Windows-only Power BI Desktop hook. Copilot has no `if` field, so the script re-checks the command itself.",
   "hooks": {
-    "PreToolUse": [
-      {
-        "type": "command",
-        "matcher": "Bash|bash|powershell",
-        "bash": "[ -f \"$CLAUDE_PLUGIN_ROOT/hooks/pbi-hooks.sh\" ] || exit 0; bash \"$CLAUDE_PLUGIN_ROOT/hooks/pbi-hooks.sh\" pre; [ $? -eq 2 ] && exit 2; exit 0",
-        "powershell": "$ErrorActionPreference='Stop'; try { & \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\run-hook.ps1\" pbi-hooks.sh pre; exit $LASTEXITCODE } catch { exit 0 }",
-        "timeoutSec": 10
-      }
-    ],
     "PostToolUse": [
       {
         "type": "command",
         "matcher": "Bash|bash|powershell",
-        "bash": "[ -f \"$CLAUDE_PLUGIN_ROOT/hooks/pbi-hooks.sh\" ] || exit 0; bash \"$CLAUDE_PLUGIN_ROOT/hooks/pbi-hooks.sh\" post; [ $? -eq 2 ] && exit 2; exit 0",
-        "powershell": "$ErrorActionPreference='Stop'; try { & \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\run-hook.ps1\" pbi-hooks.sh post; exit $LASTEXITCODE } catch { exit 0 }",
-        "timeoutSec": 60
+        "bash": "[ -f \"$CLAUDE_PLUGIN_ROOT/hooks/desktop-hooks.sh\" ] || { echo 'pbi-desktop hooks are OFF: desktop-hooks.sh is missing.' >&2; exit 0; }; bash \"$CLAUDE_PLUGIN_ROOT/hooks/desktop-hooks.sh\" post; [ $? -eq 2 ] && exit 2; exit 0",
+        "powershell": "$ErrorActionPreference='Stop'; try { & \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\run-hook.ps1\" desktop-hooks.sh post; exit $LASTEXITCODE } catch { [Console]::Error.WriteLine('pbi-desktop hooks are OFF: ' + $_.Exception.Message); exit 0 }",
+        "timeoutSec": 120
       }
     ]
   }

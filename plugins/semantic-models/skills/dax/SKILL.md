@@ -1,42 +1,38 @@
 ---
 name: dax
-description: DAX performance optimization for semantic models. Automatically invoke when the user asks to "optimize DAX", "fix slow DAX", "DAX performance", "tune a measure", "debug a measure", "DAX anti-patterns", or mentions slow queries, server timings, or DAX authoring.
+description: Tune slow DAX with server timings. Use when a measure, visual query or DAX query is slow, when reading a Formula Engine / Storage Engine trace (xmSQL, CallbackDataID, fusion, parallelism), when a rewrite must be proven equal to the original, or when a SUMMARIZECOLUMNS or calendar time intelligence result looks wrong. Not for writing ordinary DAX, which needs no skill; UDF details are in the wiki page linked below.
 ---
 
-# DAX
+# DAX performance tuning
 
-Skills and references for writing, debugging, and optimizing DAX in semantic models.
+Rules
 
-## Object references
+- Measure first, then rewrite. A rewrite without a before/after trace and an equal-result check is a guess
+- Object reference format (`'Table'[Column]`, `[Measure]`) is owned by the `semantic-model` skill; follow it in every rewrite
+- Rewriting a measure or UDF is yours to do. Changing the report query, the model (relationships, columns, aggregations) or Delta layout needs the user's approval first, and a model copy for model changes
+- Equal output is the success test: same rows, columns and values (`te query -o a.csv` before, `-o b.csv` after, then diff)
 
-Write column references as `'Table'[Column]`: the table name is always present and always in single quotes. Write measure references as `[Measure]`, never prefixed with a table. This applies everywhere DAX or model metadata names an object: measure, calculated column and calculation item expressions, RLS filters, format string expressions, DAX queries (`te query`, `pbir model -q`), and descriptions or annotations that mention an object.
+## Loop
 
-Why: a measure belongs to the model rather than to its home table, so moving it between tables must not change any expression that uses it; a bare `[Measure]` also tells the reader at a glance that it is a measure and not a column. An unqualified column is ambiguous as soon as two tables share a column name, and quoting every table name keeps one consistent form whether or not the name needs quotes.
+```bash
+te query --file q.dax --trace --cold --runs 10 --plan -s <workspace> -d <model>
+te query --file q.dax -o before.csv
+te validate --errors-only --model <folder>
+```
 
-## Optimization
+- `--runs N` implies `--trace --cold` per run; compare medians and drop the first run. `--plan` needs `--trace` and may be missing on Fabric
+- Local Desktop model on Windows: add `--local`. Direct Lake models are not exposed through the Desktop proxy; use the workspace endpoint
+- Visual queries: get the real query from Performance Analyzer (copy query) or `connect-pbid` trace capture, then `DEFINE` every measure it uses so the trace shows the full expression
+- Per-step values inside a measure: `EVALUATEANDLOG` (Desktop only, `connect-pbid`)
 
-For systematic DAX query performance optimization, read the workflow reference first:
+## Reading the trace
 
-**[`references/dax-performance-optimization.md`](./references/dax-performance-optimization.md)** — Tiered framework (4 tiers), phased workflow, decision guide, and error handling.
+Fix in this order: callbacks, FE time, SE query count, then data volume and parallelism. Full cue table: [references/signals.md](references/signals.md)
 
-Detailed reference files (progressive disclosure — consult as directed by the workflow):
+## Gotchas Learn documents and models get wrong
 
-- **[`references/engine-internals.md`](./references/engine-internals.md)** — FE/SE architecture, xmSQL, compression/segments, SE fusion, trace diagnostics
-- **[`references/dax-patterns.md`](./references/dax-patterns.md)** — Tier 1 DAX patterns (DAX001–DAX021) + Tier 2 query structure (QRY001–QRY004)
-- **[`references/model-optimization.md`](./references/model-optimization.md)** — Tier 3 model patterns (MDL001–MDL009) + Tier 4 Direct Lake (DL001–DL002)
-
-Trace capture and performance profiling:
-
-- **Local models (Power BI Desktop):** Use the Tabular Editor CLI `te query` (see the [`te-cli` skill](../../../tabular-editor/skills/te-cli/)) first; as an alternative, the [`connect-pbid` skill](../../../pbi-desktop/skills/connect-pbid/) covers FE/SE timing (`performance-profiling.md`) and intermediate result inspection (`evaluateandlog-debugging.md`).
-- **Remote models (Fabric Service / XMLA):** Run DAX with the Tabular Editor CLI `te query` (`-s <workspace> -d <model>`) against the workspace XMLA endpoint; see the [`te-cli` skill](../../../tabular-editor/skills/te-cli/) (tabular-editor plugin).
-- **Power BI Modeling MCP:** also available for trace and query if you prefer an MCP tool; reach for it after the options above.
-
-## User-defined functions
-
-- **[`references/udf-authoring.md`](./references/udf-authoring.md)** — UDF signatures, the parameter type system, VAL versus EXPR evaluation, type checks, patterns and testing
-
-## Related Skills
-
-- [`semantic-model`](../semantic-model/) — Model design, build, and auditing including DAX anti-patterns and best practices
-- [`connect-pbid` (pbi-desktop plugin)](../../../pbi-desktop/skills/connect-pbid/) — Trace capture, performance profiling, EVALUATEANDLOG debugging
-- [`lineage-analysis`](../lineage-analysis/) — Impact analysis before model changes
+- SUMMARIZECOLUMNS in measures changed in June 2024: GroupBy columns are no longer filtered by columns of other tables (SelfValue), rows fully covered by one TREATAS are validated, and mixing KeepFilters with plain filters in one table cluster errors. A "faster" rewrite to SUMMARIZECOLUMNS can change rows. `SUMMARIZE` keeps the old behaviour. Source: https://learn.microsoft.com/en-us/dax/summarizecolumns-function-dax
+- A bare predicate in CALCULATE replaces an existing filter on that column; `FILTER(table, ...)` intersects. Only `KEEPFILTERS(predicate)` matches it
+- Calendar-based time intelligence is still preview and Desktop/TMDL-authored only (no service authoring, no live or composite models); Learn advises against offset columns on date tables except in special cases. `DATEADD` takes `extension` (precise, extended, endaligned) and `truncation` (anchored, blank) with calendars. Source: https://learn.microsoft.com/en-us/power-bi/transform-model/desktop-time-intelligence
+- UDFs: [wiki/udf-authoring.md](../../wiki/udf-authoring.md)
+- Model metadata through DAX: `INFO.*` functions run in `te query` and DAX query view

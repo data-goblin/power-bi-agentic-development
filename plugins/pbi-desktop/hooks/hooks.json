@@ -1,33 +1,13 @@
 {
-  "description": "Validates DAX references, measure metadata, referential integrity, compatibility level, and model metadata cache for Power BI Desktop connections via TOM/ADOMD.NET. Toggle checks in config.yaml next to this file.",
+  "description": "Windows only. After PowerShell that saves model changes, runs te validate --local against the open Power BI Desktop model and reports measures without metadata. Says at session start when it is off. Toggle in config.yaml.",
   "hooks": {
-    "PreToolUse": [
+    "SessionStart": [
       {
-        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" validate-dax",
-            "timeout": 10,
-            "if": "Bash(*tom_nuget*)"
-          },
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" validate-dax",
-            "timeout": 10,
-            "if": "Bash(* -File *.ps1*)"
-          },
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" validate-measure",
-            "timeout": 10,
-            "if": "Bash(*Measures.Add*)"
-          },
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" validate-measure",
-            "timeout": 10,
-            "if": "Bash(* -File *.ps1*)"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/desktop-hooks.sh\" session",
+            "timeout": 5
           }
         ]
       }
@@ -38,26 +18,14 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" refresh-cache",
-            "timeout": 30,
-            "if": "Bash(* -File *.ps1*)"
-          },
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" check-compat",
-            "timeout": 10,
-            "if": "Bash(* -File *.ps1*)"
-          },
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" check-ri",
-            "timeout": 60,
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/desktop-hooks.sh\" post",
+            "timeout": 120,
             "if": "Bash(*SaveChanges*)"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbi-hooks.sh\" check-ri",
-            "timeout": 60,
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/desktop-hooks.sh\" post",
+            "timeout": 120,
             "if": "Bash(* -File *.ps1*)"
           }
         ]

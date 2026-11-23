@@ -1,0 +1,4 @@
+database udf-optional-default
+	compatibilityLevel: 1706
+	compatibilityMode: powerBI
+

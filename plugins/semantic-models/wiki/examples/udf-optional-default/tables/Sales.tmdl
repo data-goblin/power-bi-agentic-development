@@ -1,0 +1,12 @@
+table Sales
+	lineageTag: 2adcb294-34f0-4878-9853-e027344fa9d1
+
+	column Amount
+		lineageTag: b9827509-9fc7-4e9b-8607-f59d6f588267
+		isNameInferred
+		sourceColumn: [Amount]
+
+	partition Sales = calculated
+		mode: import
+		source = DATATABLE("Amount", CURRENCY, {{100}, {250}})
+
