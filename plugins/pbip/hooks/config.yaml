@@ -1,47 +1,26 @@
-# PBIP Hook Configuration
-#
-# Toggle individual validation checks on or off.
-# All checks are enabled by default. Set to false to disable.
-# Changes take effect immediately (no restart needed).
+# PBIP hook configuration. Every check is on unless set to false here; changes apply immediately.
 
-# Master kill-switch for all hooks in this plugin.
-# Set to false if you see noisy "PostToolUse hook error" messages on Windows,
-# or while troubleshooting unrelated issues. Leaves individual checks below
-# intact; flip this back to true to re-enable everything.
+# Master switch for every hook in this plugin. Turn off if Windows shows noisy
+# "PostToolUse hook error" notices (see README.md, Known Windows issues).
 all_hooks_enabled: true
 
-# JSON syntax validation (jq empty)
+# JSON syntax of every file in *.Report/ (jq empty)
 json_syntax: true
 
-# Folder name spaces check (pages/visuals won't render with spaces)
-folder_spaces: true
-
-# Required fields per file type (from Microsoft JSON schemas)
-required_fields: true
-
-# $schema URL format validation
-schema_url: true
-
-# Enumerated property values (e.g. page displayOption) must match the schema enum
-enum_values: true
-
-# Visual/page name format (word chars and hyphens only)
+# Page and visual folder and name rule: letters, digits, underscore or hyphen, at most 50 characters
 name_format: true
 
-# byPath target directory existence check
+# Run pbir validate on the report after a PBIR edit when pbir is installed; only errors in the edited file block
+pbir_validate: true
+
+# Fallback when pbir is missing: required properties and $schema prefix per file type
+required_fields: true
+
+# definition.pbir byPath target folder must exist
 bypath_exists: true
 
-# fab exists check for byConnection models (requires fab CLI + auth)
-fab_exists: true
+# Ask Fabric (fab exists) whether a byConnection model exists. Needs fab and a signed-in session; makes a network call.
+fab_exists: false
 
-# TMDL structural syntax validation (requires tmdl-validate binary)
-tmdl_syntax: true
-
-# visualContainerObjects names checked against Microsoft's core visual catalog.
-# Self-contained: allowlist + catalog version live in core-visual-catalog.json,
-# no pbir CLI dependency. On by default because the 15 container objects are a
-# closed, universal set (same for built-in and custom visuals), so it won't
-# false-positive on custom visuals. Visual type ids are intentionally not
-# enforced. Set to false if the bundled catalog lags a newly added container
-# object. (Replaces the former pbir-delegated `semantic_validation` toggle.)
-visual_catalog_enum: true
+# Run te validate on the semantic model after a .tmdl edit when te is installed
+tmdl_validate: true

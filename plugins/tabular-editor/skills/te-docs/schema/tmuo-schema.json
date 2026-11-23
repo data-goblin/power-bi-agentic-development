@@ -3,7 +3,6 @@
   "$id": "https://docs.tabulareditor.com/references/user-options.html",
   "title": "Tabular Editor User Options",
   "description": "Schema for Tabular Editor 3 user options file (.tmuo) that stores user-specific settings per model",
-  "$comment": "Version 1.0.0 - Schema location is temporary until schemas repo is available.",
   "type": "object",
   "properties": {
     "UseWorkspace": {
@@ -125,6 +124,18 @@
       "additionalProperties": {
         "$ref": "#/$defs/refreshOverrideProfile"
       }
+    },
+    "Permissions": {
+      "type": "object",
+      "description": "Per-model AI grants. Written when at least one grant has been given."
+    },
+    "WorkspaceConnectionAuthMode": {
+      "type": "string",
+      "description": "Legacy; written only when it is not Integrated."
+    },
+    "AIConsent": {
+      "type": "object",
+      "description": "Legacy. Read when present, never written back."
     }
   },
   "additionalProperties": true,

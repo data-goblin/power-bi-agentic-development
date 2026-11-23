@@ -171,6 +171,7 @@ The repo contains skills, agents, and hooks.
 
 Hook checks can be individually toggled via config files. Set any check to `false` to disable it:
 - `plugins/pbip/hooks/config.yaml` -- PBIR, TMDL, and report binding validation
+- `plugins/tabular-editor/hooks/config.yaml` -- C# script compile check
 - `plugins/pbi-desktop/hooks/config.yaml` -- DAX references, measure metadata, referential integrity, metadata cache
 
 ### Power BI and Fabric skills, agents, and hooks: available plugins
@@ -193,11 +194,12 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 
 | Type | Name | Description |
 |------|------|-------------|
-| Skill | [`bpa-rules`](plugins/tabular-editor/skills/bpa-rules/) | Create and improve Best Practice Analyzer rules for models |
-| Skill | [`c-sharp-scripting`](plugins/tabular-editor/skills/c-sharp-scripting/) | C# scripting and macros for TE |
+| Skill | [`bpa-rules`](plugins/tabular-editor/skills/bpa-rules/) | Write, debug and run Best Practice Analyzer rules, proven with `te bpa run` |
+| Skill | [`c-sharp-scripting`](plugins/tabular-editor/skills/c-sharp-scripting/) | C# scripts for Tabular Editor: `te script` versus the TE3 and TE2 desktop apps, what does not run headless, about 180 examples |
 | Skill | [`te-cli`](plugins/tabular-editor/skills/te-cli/) | Cross-platform Tabular Editor CLI (`te`, preview) for semantic models from the terminal |
-| Skill | [`te2-cli`](plugins/tabular-editor/skills/te2-cli/) | Tabular Editor 2 CLI usage and automation (not TE3) |
-| Skill | [`te-docs`](plugins/tabular-editor/skills/te-docs/) | Tabular Editor documentation search, TE3 config files. Uses [`pbi-search`](https://github.com/data-goblin/pbi-search) CLI |
+| Skill | [`te2-cli`](plugins/tabular-editor/skills/te2-cli/) | TE2 (`TabularEditor.exe`) gotchas and porting to `te` with `te util migrate` |
+| Skill | [`te-docs`](plugins/tabular-editor/skills/te-docs/) | Tabular Editor documentation lookup and the TE3 `.tmuo` user options file. Uses [`pbi-search`](https://github.com/data-goblin/pbi-search) CLI when installed |
+| Hook | C# script check | After a `.csx` edit, `te script --validate` compiles the script; advisory, never blocks |
 | Command | [`/suggest-rule`](plugins/tabular-editor/commands/suggest-rule.md) | Generate BPA rules from descriptions |
 | Agent | [`bpa-expression-helper`](plugins/tabular-editor/agents/bpa-expression-helper.agent.md) | Debug and improve BPA rule expressions |
 
@@ -223,13 +225,14 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 
 | Type | Name | Description |
 |------|------|-------------|
-| Skill | [`pbip`](plugins/pbip/skills/pbip/) | Power BI Project (PBIP) format, structure, and file types |
-| Skill | [`tmdl`](plugins/pbip/skills/tmdl/) | Author and edit TMDL files directly |
-| Skill | [`pbir-format`](plugins/pbip/skills/pbir-format/) | Author and edit PBIR metadata files directly (visual.json, report.json, themes, filters, report extensions, visual calculations) |
-| Agent | [`pbip-validator`](plugins/pbip/agents/pbip-validator.agent.md) | Validate PBIP project structure, TMDL syntax, and PBIR schemas |
-| Hook | PBIR validation | Validates PBIR structure, required fields, naming conventions, and schema URLs |
-| Hook | Report binding validation | Validates semantic model binding (byPath directory exists; byConnection model exists via `fab exists`) |
-| Hook | TMDL validation | Validates TMDL structural syntax |
+| Skill | [`pbip`](plugins/pbip/skills/pbip/) | PBIP project structure, thick and thin reports, gotchas that make pages vanish in Desktop, project validation |
+| Skill | [`tmdl`](plugins/pbip/skills/tmdl/) | Rules and gotchas for hand-editing TMDL, validated with `te validate` |
+| Skill | [`pbir-format`](plugins/pbip/skills/pbir-format/) | Read-only reference for the PBIR format (visual.json, page.json, filters, schema versions, enum codes); changes go through `pbir` |
+| Agent | [`pbip-validator`](plugins/pbip/agents/pbip-validator.agent.md) | Runs `validate_pbip.py`, `pbir validate` and `te validate` on a project and triages the findings |
+| Hook | PBIR validation | After a Write or Edit in a `.Report` folder: JSON syntax, the page and visual name rule, then `pbir validate` (errors in the edited file block); a jq fallback when `pbir` is missing |
+| Hook | Report binding validation | `definition.pbir` has byPath or byConnection and a byPath target exists; the `fab exists` check for byConnection is off by default |
+| Hook | TMDL validation | Runs `te validate` on the model after a `.tmdl` edit; parse errors block, reference and DAX errors are advisory; says so once per session when `te` is missing |
+| Hook | Dependency doctor | SessionStart note listing which of the checks above are off because `jq`, `pbir` or `te` is missing |
 
 </details>
 

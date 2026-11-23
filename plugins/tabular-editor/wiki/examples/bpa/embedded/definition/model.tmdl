@@ -1,0 +1,27 @@
+model Model
+	culture: en-US
+
+	annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["MEASURE_NAME_NO_UNDERSCORE"]}
+
+	annotation BestPracticeAnalyzer = ```
+			[
+			  {
+			    "ID": "MEASURE_HAS_DESCRIPTION",
+			    "Name": "Measures need a description",
+			    "Severity": 1,
+			    "Scope": "Measure",
+			    "Expression": "string.IsNullOrWhitespace(Description)",
+			    "CompatibilityLevel": 1200
+			  },
+			  {
+			    "ID": "MEASURE_NAME_NO_UNDERSCORE",
+			    "Name": "Measure names use spaces, not underscores",
+			    "Severity": 2,
+			    "Scope": "Measure",
+			    "Expression": "Name.Contains(\"_\")",
+			    "CompatibilityLevel": 1200
+			  }
+			]
+			```
+
+ref table Facts

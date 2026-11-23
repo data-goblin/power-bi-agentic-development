@@ -1,0 +1,7 @@
+relationship 5b2a7a0e-8c1d-4e3f-9a64-1d2e3f4a5b61
+	fromColumn: Sales.'Product Key'
+	toColumn: Product.'Product Key'
+
+relationship 9c3d8b1f-7a2e-4f50-8b75-2e3f4a5b6c72
+	fromColumn: Sales.'Order Date'
+	toColumn: 'Order Date'.Date

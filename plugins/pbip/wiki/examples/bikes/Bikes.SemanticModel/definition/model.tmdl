@@ -1,0 +1,14 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+
+ref table Sales
+ref table Product
+ref table 'Order Date'
+
+ref expression 'Source Folder'
+
+ref role 'Regional Manager'
+
+ref perspective Finance

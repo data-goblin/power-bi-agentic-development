@@ -1,199 +1,58 @@
 ---
 name: pbir-format
-description: Format reference for Power BI Enhanced Report (PBIR) JSON schemas and patterns. Automatically invoke when the user asks about PBIR JSON structure, visual.json properties, PBIR expressions, objects vs visualContainerObjects, theme inheritance, conditional formatting patterns, extension measures, bookmarks, field references, filter formatting, query roles, PBIR page structure, report wallpaper, or any PBIR metadata format question.
+description: Read-only reference for the PBIR report format (visual.json, page.json, report.json, themes, filters, bookmarks, report extensions). Use to understand or diagnose PBIR files, schema versions, expression literals, ComparisonKind and filter enums, or why a page or visual does not show in Desktop. All changes go through pbir, never by editing the JSON.
 ---
 
-# PBIR Format Reference
+# PBIR format
 
-Skill that teaches Claude about the Power BI Enhanced Report (PBIR) JSON format to read and use it. Doesn't support legacy `report.json` or `layout` report metadata. To convert from legacy to PBIR format, users have to open and save their reports in Power BI Desktop.
-
-Follow within reason the [mental model](./important/MENTAL-MODEL.md) when working with reports.
-
-**Hard rule:** Treat PBIR JSON as an implementation detail. Read it when schema context is
-useful, but make every report, visual, page, bookmark, filter, mobile-layout, and theme change
-through `pbir`. Never hand-edit, text-replace, or script writes to report JSON. If `pbir` cannot
-express a requested mutation, stop and report the capability gap instead of inventing a raw-JSON
-fallback.
-
-## General, critical guidance
-
-- **Check examples:** Check [examples](./examples/) for a valid report
-- **Take a backup:** Make a copy of the report before modifying it
-- **PBIX vs PBIP vs PBIR:** Work on a local `.Report` folder in PBIR format. Use Power BI
-  Desktop or `pbir report convert` for supported conversions; do not unzip, rezip, or patch PBIX
-  internals. Do not work directly on PBIT files.
-- **Valid JSON vs. Rendering JSON:** Valid JSON does not guarantee rendering. A visual might not render if the bound field is invalid (missing, wrong table, or misspelled) in the visual.json, if the visual elements are cropped by their container, if a model performance issue causes the dax query to time out, if a model data quality issue results in (Blank) or empty values, etc. Check whether a visual rendered using tools like the chrome or chrome devTools MCP server if the report was published to Power BI, but it's often faster to just ask the user to check in Power BI Desktop or the browser.
-- **Hierarchical formatting cascade:** In Power BI reports, formatting is determined by the following order of operations: defaults --> Theme wildcards (*) --> Theme visualTypes --> bespoke visual.json configuration. Theme overwrites defaults, visualType overrides wildcards in themes, and visual.json overrides all theme formatting. Prefer putting as much of the formatting in the theme as possible over bespoke visual.json formatting because then changes only need to happen in one place
-- **PBIR files are strict JSON:** No comments allowed
-- **DON'T MAKE ASSUMPTIONS:** Check the Microsoft documentation and other reputable resources for context if needed, or ask the user.
-
-## Report Structure
-
-```
-Report.Report/
-+-- .pbi/localSettings.json                # Local-only, gitignored
-+-- .platform                              # Fabric Git integration
-+-- definition.pbir                        # Semantic model connection (byPath or byConnection) can open this file in Power BI Desktop to open the report
-+-- mobileState.json                       # PBIR-Legacy artifact only; current PBIR stores phone layout per-visual in mobile.json
-+-- semanticModelDiagramLayout.json        # Model diagrams
-+-- CustomVisuals/                         # Private custom visuals only
-+-- definition/
-|   +-- version.json                       # REQUIRED -- PBIR version
-|   +-- report.json                        # REQUIRED -- report-level config, including theme, report filters, settings
-|   +-- reportExtensions.json              # Extension measures and visual calculations (report- and visual-level DAX)
-|   +-- pages/
-|   |   +-- pages.json                     # Page order, active page
-|   |   +-- [PageName]/                    # Power BI Desktop may generate names with spaces; recommend no spaces for human-authored names
-|   |       +-- page.json                  # Page-level properties, including size, background, filters
-|   |       +-- visuals/
-|   |           +-- [VisualName]/
-|   |               +-- visual.json        # Visual config, formatting, and field data bindings <-- most important and complex file for report dev and formatting
-|   |               +-- mobile.json        # Mobile formatting of the visual (niche)
-|   +-- bookmarks/                         # Bookmarks are a bad practice and should be avoided if possible!
-|       +-- bookmarks.json                 # Bookmark order and groups
-|       +-- [id].bookmark.json             # Individual bookmark state containing a snapshot of the report basically
-+-- StaticResources/
-    +-- RegisteredResources/               # Custom themes, images
-        +-- [ThemeName].json               # Custom theme <-- second most important and complex file for formatting
-    +-- SharedResources/BaseThemes/        # Microsoft base themes
-```
-
+Learn: [PBIR report folder](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report). Schemas: [microsoft/json-schemas](https://github.com/microsoft/json-schemas/tree/main/fabric/item/report/definition).
 
 ## Rules
 
-Follow within reason the [mental model](./important/MENTAL-MODEL.md) when reviewing or providing feedback on reports.
+- Change a report only through `pbir` (pbir-cli skill). Do not hand-edit, text-replace or script writes to PBIR JSON. If `pbir` has no command for a change, say so instead of writing raw JSON
+- Discover instead of remembering: `pbir schema describe <visual type> [object]` lists objects, properties and allowed values; `pbir schema roles <type>` the data roles; `pbir cat` prints a file. Enum codes and property lists in a skill go stale; the schema does not
+- Real, Desktop-written visual.json files for every common visual type are in `examples/visuals/` (index: `examples/visuals/__index.md`), and a whole report in `examples/K201-MonthSlicer.Report`. Copy a property's shape from there
+- PBIR is the default and generally available format. `report.json` at the report root (and `mobileState.json`) is PBIR-Legacy: Desktop converts it when it saves; do not convert by script
+- Valid JSON is not rendering JSON. A visual can pass `pbir validate` and still show nothing (field missing in the model, container too small, query timeout). Check rendering in Desktop or the service, or ask
+- Names: page, visual and bookmark folder names and `name` values are letters, digits, underscore or hyphen, at most 50 characters. Anything else is silently ignored by Desktop (see the pbip skill)
+- `$schema` URLs: keep one report's schemas as a matched set; versions move together ([schema map](../../wiki/pbir-schema-map.md)). Do not upgrade one file by hand
 
-### Modifying a report
+## Surprises worth knowing
 
-1. Understand the user's request. Ask questions if necessary to clarify the business context -- focus on the business process, the users, and the model
-2. Explore the report efficiently to locate relevant pages and visuals
-3. Check the connected semantic model. For thin reports (`byConnection`), use `fab`, `pbir`, or `te` CLI tools to explore the model. For `byPath`, connect to the local model in Power BI Desktop. Understanding the model reveals available fields and calculation logic
-4. Identify the appropriate visuals and pages to modify. Ask the user for clarification if needed
-5. Plan modifications with the correct PBIR structure and property values
+- Every property value is `{"expr": {...}}`. A `Literal.Value` is a string that carries its type: `"'text'"`, `"50D"`, `"8L"`, `"true"`, `"null"`, `"'#1971c2'"`. The D versus L suffix is property specific, so copy it from a real file ([literals](../../wiki/pbir-expression-values.md))
+- `objects` formats a visual's content; `visualContainerObjects` formats the container (title, background, border, tooltip, altText). Unknown names in `visualContainerObjects` are ignored without an error; `pbir validate --semantic` checks them
+- Formatting cascade, weakest to strongest: defaults, theme wildcards, theme visual-type entries, `visual.json` ([cascade](../../wiki/pbir-theme-cascade.md)). Put shared formatting in the theme
+- `pages.json`: `pageOrder` entries without a page are ignored; `landingPageName` beats `activePageName`
+- `definition.pbir` is `byPath` (local model folder) or `byConnection` (Fabric-hosted model only); see [entry files](../../wiki/pbip-entry-files.md)
+- Phone layout is per visual in `mobile.json` under PBIR; `mobileState.json` is Legacy only
+- Extension measures and visual calculations live in `reportExtensions.json` (schema `reportExtension` 1.0.0); a report-level measure is not in the model, so `te` will not see it
 
-### Creating a report
+## Layout
 
-1. Same workflow as modifying, except the report is generated with `pbir new`. Do not scaffold
-   report JSON by hand
-2. Ensure `definition.pbir` is configured properly (byPath or byConnection)
-3. Use a theme.json file. Recommended: [the SQLBI/Data Goblins theme](./examples/K201-MonthSlicer.Report/StaticResources/RegisteredResources/SqlbiDataGoblinTheme.json)
-4. Add filters with `pbir add filter`; see [filter pane reference](references/filter-pane.md)
+```dirtree
+Report.Report/
+  definition.pbir               model binding
+  definition/
+    version.json, report.json, reportExtensions.json
+    pages/pages.json, pages/<name>/page.json, pages/<name>/visuals/<name>/visual.json (+ mobile.json)
+    bookmarks/bookmarks.json, bookmarks/<id>.bookmark.json
+  StaticResources/RegisteredResources/   custom themes and images
+  StaticResources/SharedResources/BaseThemes/
+```
 
-### Additional validation
+## Validate
 
-For detailed report design guidance (layout, spacing, visual hierarchy, color, accessibility), see the **`pbi-report-design`** skill. Key rules enforced during validation:
+```bash
+pbir validate <Name>.Report --fields --strict
+pbir validate <Name>.Report --semantic
+```
 
-- Use a custom theme; push formatting to the theme over bespoke visual.json unless the user specifies otherwise
-- Visuals must not overlap; maintain equal spacing between visuals and page edges
-- Every page needs a title (textbox or background image). Ensure textboxes are tall enough to render (24-28 pt)
-- Follow the 3-30-300 rule: KPIs/cards at top, breakdowns in middle, detail at bottom. Maximum 2-3 slicers per page; use the filter pane for additional filtering
-- Prefer Deneb, Python, or R custom visuals over SVG or heavily customized core visuals -- balance elegance against technical debt
-- Use report extensions (thin report measures, visual calculations) only when model measures are not feasible
-- Centralize conditional formatting in extension or model measures referencing theme semantic colors (`"bad"`, `"good"`)
-- Use consistent colors to direct attention, not to decorate. Avoid pie charts beyond 5 categories
-- Sort visuals logically (typically descending by measure). Start chart axes at zero unless there is an explicit reason not to
-- Use consistent fonts. Set `altText` for accessibility. Name visuals descriptively (`revenue_bar_chart` not `a1b2c3d4`)
-- Eliminate redundant visuals. Consider the "Apply" button on high-cardinality slicers
-- See the [Data Goblins report checklist](https://data-goblins.com/report-checklist) for pre-deployment validation
+The pbip hooks run `pbir validate` after each edit when `pbir` is installed and block on errors in the edited file. Design review (layout, colour, accessibility) is the `pbi-report-design` skill.
 
+## Wiki
 
-## What to Read for Common Tasks
-
-| Task | Read |
-|------|------|
-| Add or modify a visual | **`references/visual-json.md`** -- expression syntax, field references, query roles, position, objects vs visualContainerObjects, selectors |
-| Change formatting or colors | **`references/visual-container-formatting.md`** (container chrome) + **`references/theme.md`** (theme-level formatting). Prefer theme changes over bespoke visual formatting |
-| Add conditional formatting | **`references/schema-patterns/conditional-formatting.md`** + **`references/measures.md`** (extension measures for CF) |
-| Add or configure filters | **`references/filter-pane.md`** -- all 7 filter types, default values, filter discovery |
-| Work with the theme | **`references/theme.md`** -- inheritance, wildcards, visual-type overrides, filter pane styling, inspecting and modifying with jq |
-| Push visual formatting to theme | **`references/theme.md`** -- preview and promote reusable formatting with `pbir theme push-visual` |
-| Change page layout/background | **`references/page.md`** -- dimensions, background, wallpaper, visualInteractions |
-| Create a tooltip page | **`references/page.md`** -- tooltip page setup (type, size, visibility) + visualTooltip opt-in on visuals |
-| Create a drillthrough page | **`references/page.md`** -- drillthrough filter in page filterConfig |
-| Change report settings | **`references/report.md`** -- themeCollection, resourcePackages, settings, outspacePane |
-| Add extension measures | **`references/measures.md`** -- reportExtensions.json structure, DAX patterns, referencing |
-| Add annotations / metadata | **`references/annotations.md`** -- custom name-value metadata on reports, pages, and visuals for deployment scripts, documentation, and external tooling |
-| Add images or SVGs | **`references/images.md`** -- RegisteredResources, base64 in themes, SVG measures |
-| Add or modify textboxes | **`references/textbox.md`** -- paragraphs, textRuns, textStyle |
-| Sort a visual | **`references/sort-visuals.md`** -- sortDefinition inside query |
-| Sync slicers across pages | **`references/visual-json.md`** -- syncGroup (groupName, fieldChanges, filterChanges) |
-| Edit visual interactions | **`references/visual-json.md`** + **`references/page.md`** -- visualInteractions in page.json (Default, DataFilter, HighlightFilter, NoFilter) |
-| Change table/matrix column widths | **`references/visual-json.md`** -- columnWidth with metadata selector |
-| Group visuals | **`references/visual-json.md`** -- visualGroup, parentGroupName, groupMode |
-| Hide visuals or fields | **`references/visual-json.md`** -- isHidden at root level, query projection control |
-| Format chart elements (labels, markers, lines) | **`references/visual-json.md`** -- labels, markers, lineStyles, dataPoint |
-| Add analytics lines (reference, trend, error, forecast) | **`references/visual-json.md`** -- y1AxisReferenceLine, trend, error, forecast |
-| Work with bookmarks | **`references/bookmarks.md`** -- bookmark state, filter snapshots, visual show/hide |
-| Find model fields | **`references/semantic-model/finding-fields.md`** -- pbir model, te, fab commands |
-| Rebind to different model | **`references/semantic-model/report-rebinding.md`** -- byPath vs byConnection conversion |
-| Understand schema versions | **`references/schemas.md`** -- all schema types and current versions |
-| Validate or check conformance | **`references/validation.md`** -- conformance dimensions, `pbir validate` categories, name and required-field rules, audit and discovery commands |
-| Understand how visuals generate DAX queries | **`references/semantic-model/inferring-queries-from-visuals.md`** -- visual metadata → SUMMARIZECOLUMNS mapping, data roles, IGNORE() context |
-| Build or verify DAX query patterns | **`references/semantic-model/model-queries.md`** -- SUMMARIZECOLUMNS patterns, ROW(), query execution methods |
-| Rename a table or field across a report | **`references/how-to/fix-broken-field-references.md`** -- complete `pbir fields replace` / `replace-table` workflow |
-| Fix broken field references after model changes | **`references/how-to/fix-broken-field-references.md`** -- diagnosis, repair workflow for renamed/moved/removed fields, slicer value pitfalls |
-| Convert legacy report.json to PBIR format | **`references/how-to/convert-legacy-to-pbir.md`** -- format differences, step-by-step conversion, projections-to-queryState mapping, validation |
-| Understand reportExtensions.json schema | **`references/report-extensions.md`** -- file schema structure, entities, visual calculations; see `references/measures.md` for DAX authoring patterns |
-| Set dynamic (measure-driven) alt text | **`references/visual-container-formatting.md`** -- altText as a Measure expression under visualContainerObjects.general |
-| Add a dynamic text run to a textbox | **`references/textbox.md`** -- measure-bound textRuns; round-trip from Desktop required |
-| Understand drill-down cross-filter behavior | **`references/visual-json.md`** -- drillFilterOtherVisuals vs visualInteractions |
-| Register a custom visual (AppSource, org-store, private .pbiviz) | **`references/report.md`** -- publicCustomVisuals, organizationCustomVisuals, resourcePackages |
-| Understand schema version coupling | **`references/schemas.md`** -- parent/embedded schema sets, copying fragments between reports |
-| Set up mobile (phone) layout | **`references/pbir-structure.md`** -- mobile.json per-visual, coordinate space, git hygiene |
-| Git hygiene for a PBIR project | **`references/pbir-structure.md`** -- what to track, ignore, and leave to Desktop |
-
-## definition.pbir
-
-A report must be connected to a semantic model. There are two ways to do this:
-
-- **byPath** -- Local PBIP reference/thick report: `{"byPath": {"path": "../Model.SemanticModel"}}` (schema 2.0.0)
-- **byConnection** -- Remote/thin report: `{"byConnection": {"connectionString": "Data Source=powerbi://..."}}` (schema 2.0.0)
-
-## Related Skills
-
-- **`pbip`** -- PBIP project operations: rename cascades, project forking, report JSON patterns
-- **`tmdl`** -- TMDL file format, authoring, and editing
-
-## References
-
-**Fetching Docs:** To retrieve current Power BI developer/report format docs, search https://learn.microsoft.com and fetch the relevant pages. Search based on the user's request and run multiple searches as needed to ensure sufficient context before proceeding.
-
-**Examples:**
-- **`examples/K201-MonthSlicer.Report/`** -- Real PBIR report with 7 visual types (slicer, advancedSlicerVisual, kpi, lineChart, scatterChart, tableEx, textbox), extension measures, bookmarks, conditional formatting
-- **`examples/visuals/`** -- 54 standalone visual.json examples; see `examples/visuals/__index.md` for a catalog. Split into `default/` (minimal, theme-only) and `formatted/` (bespoke formatting, conditional formatting, gradients, filters)
-
-**Core references:**
-- **`references/visual-json.md`** -- visual.json: expressions, field refs, query roles, position, objects vs vCO, selectors, sorting, filters, drill-down propagation
-- **`references/desktop-bridge.md`** -- Verifying PBIR edits on the canvas via `pbir desktop` reload + screenshot; preview setting; locating the open PBIP
-- **`references/pbir-structure.md`** -- PBIR folder structure, mobile.json storage mechanics, git hygiene
-- **`references/schemas.md`** -- Schema versions, URLs, and embedded schema coupling
-- **`references/validation.md`** -- Conformance dimensions and how to validate (schema, names and ids, required fields, fields, enums, roles, layout, theme, semantic); `pbir validate` categories; audit and discovery commands
-- **`references/enumerations.md`** -- Valid property enumerations
-- **`references/version-json.md`** -- version.json format (concise)
-- **`references/platform.md`** -- .platform file format (concise)
-- **`references/bookmarks.md`** -- Bookmark structure and state snapshots
-
-**Formatting & expressions:**
-- **`references/theme.md`** -- Theme wildcards, inheritance, color system, filter pane styling,
-  visual-type overrides, and the corresponding `pbir theme` commands
-- **`references/schema-patterns/`** -- Expressions, selectors, conditional formatting, visual calculations
-- **`references/visual-container-formatting.md`** -- objects vs visualContainerObjects deep-dive; dynamic (measure-driven) altText
-- **`references/measures-vs-literals.md`** -- When to use measure expressions vs literal values
-- **`references/measures.md`** -- Extension measure patterns
-
-**Visual & page configuration:**
-- **`references/textbox.md`** -- Textbox visual format; dynamic (measure-bound) text runs
-- **`references/page.md`** -- Page configuration and backgrounds
-- **`references/report.md`** -- Report-level settings; custom visual registration (AppSource, org-store, private .pbiviz)
-- **`references/wallpaper.md`** -- Report wallpaper/canvas background
-- **`references/filter-pane.md`** -- Filter pane formatting
-- **`references/sort-visuals.md`** -- Visual sort configuration
-- **`references/images.md`** -- Static images, base64 in themes, SVG measures
-- **`references/report-extensions.md`** -- reportExtensions.json format
-- **`references/annotations.md`** -- Custom metadata on reports, pages, and visuals
-
-**Semantic model integration:**
-- **`references/semantic-model/`** -- Field references, model structure, report rebinding, query inference
-
-**How-to guides:**
-- **`references/how-to/`** -- Advanced conditional formatting, SVG in visuals, fix broken field references, convert legacy to PBIR
+- [Schema map and limits](../../wiki/pbir-schema-map.md)
+- [Literals and enum codes](../../wiki/pbir-expression-values.md)
+- [Filters](../../wiki/pbir-filters.md)
+- [page.json](../../wiki/pbir-page-json.md)
+- [Theme cascade](../../wiki/pbir-theme-cascade.md)

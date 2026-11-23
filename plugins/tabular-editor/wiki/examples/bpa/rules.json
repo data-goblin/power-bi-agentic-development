@@ -1,0 +1,30 @@
+[
+  {
+    "ID": "MEASURE_HAS_DESCRIPTION",
+    "Name": "Visible measures need a description",
+    "Category": "Documentation",
+    "Description": "%objectname% is visible and has no description.",
+    "Severity": 3,
+    "Scope": "Measure",
+    "Expression": "!IsHidden and string.IsNullOrWhitespace(Description)",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "MEASURE_NAME_NO_UNDERSCORE",
+    "Name": "Measure names use spaces, not underscores",
+    "Category": "Naming",
+    "Severity": 2,
+    "Scope": "Measure",
+    "Expression": "RegEx.IsMatch(Name, \"(?i)^[a-z0-9]+(_[a-z0-9]+)+$\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "COLUMN_HIDDEN_KEY",
+    "Name": "Key columns are hidden",
+    "Category": "Model layout",
+    "Severity": 2,
+    "Scope": "Column",
+    "Expression": "IsKey and !IsHidden",
+    "CompatibilityLevel": 1200
+  }
+]

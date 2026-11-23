@@ -27,6 +27,8 @@
 #                                               get-te-cli.md + pointer, no network
 #   scripts/sync-te-cli-skill.sh --install-hook install a post-merge git hook so
 #                                               every `git pull` runs this sync
+#   scripts/sync-te-cli-skill.sh --check        exit 1 when upstream HEAD differs from the
+#                                               commit recorded in UPSTREAM.txt (no clone)
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -39,61 +41,52 @@ POINTER='To get the `te` CLI yourself (as the agent), see [references/get-te-cli
 write_get_ref() {
   mkdir -p "$DEST/references"
   cat > "$GETREF" <<'GETREF_EOF'
-# Get the `te` CLI binary (agent self-service)
+# Get the `te` CLI binary
 
-The `te` (Tabular Editor CLI) binary is published per platform on a public CDN,
-no account or auth needed:
+Install `te` only when the user asks for it. Official install and update notes: https://docs.tabulareditor.com/en/cli/
+
+The binary is published per platform on a public CDN, no account needed:
 
     https://cdn.tabulareditor.com/files/latest/cli/te-<os>-<arch>.tar.gz   (.zip on Windows)
 
-Pick the asset for the platform:
+Assets: `te-osx-arm64`, `te-osx-x64`, `te-linux-x64`, `te-linux-arm64` (`.tar.gz`), `te-win-x64`, `te-win-arm64` (`.zip`).
 
-- macOS arm64 (Apple Silicon): `te-osx-arm64.tar.gz`
-- macOS x64 (Intel): `te-osx-x64.tar.gz`
-- Linux x64: `te-linux-x64.tar.gz`
-- Linux arm64: `te-linux-arm64.tar.gz`
-- Windows x64: `te-win-x64.zip`
-- Windows arm64: `te-win-arm64.zip`
+The CDN publishes no checksum or signature (`.sha256`, `.sig` and `SHA256SUMS` next to the archive returned 404 on 2026-11-23). Say that to the user before installing; do not pipe the download into `tar` or a shell. Download to a file, print its SHA256, extract, then check the binary runs.
 
-## macOS / Linux: detect, download, put on PATH
+## macOS / Linux
 
 ```bash
 os=$(uname -s | tr 'A-Z' 'a-z'); [ "$os" = darwin ] && os=osx
 arch=$(uname -m); case "$arch" in arm64|aarch64) arch=arm64 ;; x86_64|amd64) arch=x64 ;; esac
+dir=$(mktemp -d)
+curl -fsSL -o "$dir/te.tar.gz" "https://cdn.tabulareditor.com/files/latest/cli/te-$os-$arch.tar.gz"
+sha256sum "$dir/te.tar.gz" 2>/dev/null || shasum -a 256 "$dir/te.tar.gz"
 mkdir -p "$HOME/.local/bin"
-curl -fsSL "https://cdn.tabulareditor.com/files/latest/cli/te-$os-$arch.tar.gz" \
-  | tar xz -C "$HOME/.local/bin" te
-chmod +x "$HOME/.local/bin/te"
-export PATH="$HOME/.local/bin:$PATH"          # this shell
+tar -xzf "$dir/te.tar.gz" -C "$HOME/.local/bin" te
 "$HOME/.local/bin/te" --version
 ```
 
-Persist PATH across shells once (skip if `~/.local/bin` is already on PATH):
+Add `~/.local/bin` to `PATH` in the shell profile if it is not there.
 
-```bash
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc   # or ~/.zshrc
-```
-
-## Windows (PowerShell): download, put on PATH
+## Windows (PowerShell)
 
 ```powershell
 $arch = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { 'x64' }
 $dir  = "$env:LOCALAPPDATA\Programs\te"
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
 Invoke-WebRequest "https://cdn.tabulareditor.com/files/latest/cli/te-win-$arch.zip" -OutFile "$env:TEMP\te.zip"
+(Get-FileHash "$env:TEMP\te.zip" -Algorithm SHA256).Hash
 Expand-Archive -Force "$env:TEMP\te.zip" -DestinationPath $dir
-[Environment]::SetEnvironmentVariable('Path', "$([Environment]::GetEnvironmentVariable('Path','User'));$dir", 'User')
 & "$dir\te.exe" --version
 ```
 
-## Verify and stay current
+Add `$dir` to the user `Path` if it is not there.
 
-`te --version` prints the build. The CDN `latest` path is always the newest at
-download time; for a binary that keeps itself current, use the self-updating
-`te` wrapper instead (`te --update`, plus a daily check on `te --version`).
+## Notes
 
-The CDN serves GET only; HEAD requests return 404. Probe availability with a
-ranged GET (`curl -r 0-99 -o /dev/null -w "%{http_code}"`), never `curl -I`.
+- `te --version` prints the build. `latest` is the newest build at download time
+- The CDN answers GET only; HEAD returns 404. Probe a file with a ranged GET (`curl -r 0-99 -o /dev/null -w "%{http_code}"`)
+- Preview builds stop working after 2026-12-31 (Learn: te-cli-limitations); check the docs for the licence that follows
 GETREF_EOF
 }
 
@@ -184,10 +177,21 @@ EOF
   printf 'installed post-merge hook -> %s\n' "$hook"
 }
 
+check_upstream() {
+  local have head
+  have="$(sed -n 's/^commit:[[:space:]]*//p' "$DEST/UPSTREAM.txt" 2>/dev/null | head -1)"
+  head="$(git ls-remote "$UPSTREAM" HEAD 2>/dev/null | cut -f1)"
+  [ -n "$head" ] || { printf 'sync-te-cli: cannot reach upstream; no verdict\n' >&2; return 0; }
+  if [ "$have" = "$head" ]; then printf 'sync-te-cli: vendored copy is at upstream HEAD %s\n' "$head"; return 0; fi
+  printf 'sync-te-cli: upstream HEAD %s is ahead of vendored %s; run scripts/sync-te-cli-skill.sh\n' "$head" "${have:-unknown}" >&2
+  return 1
+}
+
 case "${1:-}" in
   --install-hook|install-hook) install_hook; exit 0 ;;
   --write-local) write_get_ref; inject_pointer; printf 'wrote local-only get-te-cli.md + SKILL pointer\n'; exit 0 ;;
-  -h|--help) sed -n '2,33p' "$0"; exit 0 ;;
+  --check) check_upstream; exit $? ;;
+  -h|--help) sed -n '2,38p' "$0"; exit 0 ;;
 esac
 
 command -v git >/dev/null 2>&1 || { printf 'sync-te-cli: git not found; skipping\n' >&2; exit 0; }
@@ -212,10 +216,20 @@ for f in "$SRC/references/"*.md; do
   cp "$f" "$DEST/references/"
 done
 
+# Record which upstream release is vendored (read before the version line is stripped).
+UP_VERSION="$(sed -n 's/^version:[[:space:]]*//p' "$SRC/SKILL.md" | head -1)"
+UP_COMMIT="$(git -C "$tmp" rev-parse HEAD 2>/dev/null)"
+UP_DATE="$(git -C "$tmp" log -1 --format=%cs 2>/dev/null)"
+UP_FILES="$(cd "$SRC/references" && ls -1 *.md | grep -v '^pbir-cli-tandem.md$' | tr '\n' ' ')"
+{
+  printf 'repo: TabularEditor/CLI\npath: skills/te-cli\nskill_version: %s\ncommit: %s\ncommit_date: %s\nsynced: %s\n' "${UP_VERSION:-unknown}" "${UP_COMMIT:-unknown}" "${UP_DATE:-unknown}" "$(date +%F)"
+  printf 'upstream_files: SKILL.md %s\n' "$UP_FILES"
+} > "$DEST/UPSTREAM.txt"
+
 # Strip the upstream version frontmatter (unsupported here; plugin.json versions instead).
 perl -ni -e 'print unless !$d && /^version:/ && ($d=1)' "$DEST/SKILL.md"
 
-perl -pi -e 'BEGIN{$d=shift} $_="$d\n" if /^description:/' 'description: Expert guidance for the cross-platform Tabular Editor CLI (the `te` binary, in preview) that manages Power BI and Analysis Services semantic models from the terminal on macOS, Linux and Windows. Use when the user mentions the `te` CLI or Tabular Editor CLI, runs a `te` command, or wants to scaffold, inspect, edit, validate, run BPA on, query, deploy, refresh or migrate a semantic model from a terminal or CI pipeline. Also use for DAX regression tests, measure contracts and invariants, data quality and orphan-key checks, snapshot baselines or A/B comparison of two deployed models, even when the user does not name `te`. Not for the legacy Windows-only TabularEditor.exe (TE2).' "$DEST/SKILL.md"
+perl -pi -e 'BEGIN{$d=shift} $_="$d\n" if /^description:/' 'description: Drive the Tabular Editor CLI (`te`) to scaffold, inspect, edit, validate, run BPA on, query, deploy, refresh and test a semantic model from a terminal or CI. Use when running a `te` command, validating or deploying TMDL, BIM or PBIP models, writing DAX regression tests, or migrating a TabularEditor.exe (TE2) pipeline with `te util migrate`.' "$DEST/SKILL.md"
 perl -pi -e 's{`--save` here names the snapshot file to write and has nothing to do with the mutation flag on editing commands\.}{`-o, --output-file` names the snapshot file to write; `--save` is rejected here.}' "$DEST/references/testing.md"
 find "$DEST" -name '*.md' -exec perl -pi -e 's{cdn\.tabulareditor\.com/files/cli/latest/}{cdn.tabulareditor.com/files/latest/cli/}g' {} +
 
@@ -223,6 +237,9 @@ find "$DEST" -name '*.md' -exec perl -pi -e 's{cdn\.tabulareditor\.com/files/cli
 write_get_ref
 inject_pointer
 inject_local_sections
+for marker in 'references/get-te-cli.md' '## Bundled scripts' 'manage-ai-metadata.csx' '`references/dax-test-patterns.md`'; do
+  grep -qF "$marker" "$DEST/SKILL.md" || printf 'sync-te-cli: WARNING local section "%s" did not land; upstream changed the anchor it hooks onto\n' "$marker" >&2
+done
 
 if git -C "$REPO_ROOT" diff --quiet -- plugins/tabular-editor/skills/te-cli 2>/dev/null; then
   printf 'sync-te-cli: up to date with upstream\n'

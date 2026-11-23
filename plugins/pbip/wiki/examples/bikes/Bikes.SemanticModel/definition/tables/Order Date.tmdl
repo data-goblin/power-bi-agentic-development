@@ -1,0 +1,25 @@
+table 'Order Date'
+	lineageTag: 2b3c4d5e-6f70-4182-9ba3-c4d5e6f7a8b2
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: Long Date
+		summarizeBy: none
+		sourceColumn: Date
+
+	column 'Month Name'
+		dataType: string
+		summarizeBy: none
+		sortByColumn: 'Month Number'
+		sourceColumn: MonthName
+
+	column 'Month Number'
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: MonthNumber
+
+	partition 'Order Date' = calculated
+		source = CALENDAR ( DATE ( 2024, 1, 1 ), DATE ( 2025, 12, 31 ) )

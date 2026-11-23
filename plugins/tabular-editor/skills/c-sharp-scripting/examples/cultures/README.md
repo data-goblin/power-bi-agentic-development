@@ -13,13 +13,13 @@ Scripts for managing cultures and translations in Tabular models.
 
 ### Execute Inline
 ```bash
-te script "model.bim" -e 'var culture = Model.AddCulture("es-ES"); culture.Name = "Spanish";' --save
+te script --model "model.bim" --inline 'var culture = Model.AddCulture("es-ES"); culture.Name = "Spanish";' --save
 ```
 
 ### Execute Script File
 ```bash
-te script "model.bim" -S samples/cultures/add-culture.csx --save
-te script -s "Production" -d "Sales" -S samples/cultures/modify-translations.csx --save
+te script --model "model.bim" --file examples/cultures/add-culture.csx --save
+te script -s "Production" -d "Sales" --file examples/cultures/modify-translations.csx --save
 ```
 
 ### With Fabric CLI Workflow
@@ -28,7 +28,7 @@ te script -s "Production" -d "Sales" -S samples/cultures/modify-translations.csx
 fab export "Workspace/Model.SemanticModel" -o ./model -f
 
 # Add cultures
-te script "./model/Model.SemanticModel/definition" -S samples/cultures/add-culture.csx --save
+te script --model "./model/Model.SemanticModel/definition" --file examples/cultures/add-culture.csx --save
 
 # Import back
 fab import "Workspace/Model.SemanticModel" -i ./model/Model.SemanticModel -f

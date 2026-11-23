@@ -40,13 +40,13 @@ Scripts for managing DAX measures in Tabular models.
 
 ### Execute Inline
 ```bash
-te script "model.bim" -e 'var m = Model.Tables["Sales"].AddMeasure("Revenue", "SUM(Sales[Amount])"); m.FormatString = "$#,0";' --save
+te script --model "model.bim" --inline 'var m = Model.Tables["Sales"].AddMeasure("Revenue", "SUM(Sales[Amount])"); m.FormatString = "$#,0";' --save
 ```
 
 ### Execute Script File
 ```bash
-te script "model.bim" -S samples/measures/hide-measures.csx --save
-te script -s "Production" -d "Sales" -S samples/measures/format-all-measures.csx --save
+te script --model "model.bim" --file examples/measures/hide-measures.csx --save
+te script -s "Production" -d "Sales" --file examples/measures/format-all-measures.csx --save
 ```
 
 ### With Fabric CLI Workflow
@@ -55,8 +55,8 @@ te script -s "Production" -d "Sales" -S samples/measures/format-all-measures.csx
 fab export "Workspace/Model.SemanticModel" -o ./model -f
 
 # Run measure scripts
-te script "./model/Model.SemanticModel/definition" -S samples/measures/add_measures.csx --save
-te script "./model/Model.SemanticModel/definition" -S samples/measures/format-all-measures.csx --save
+te script --model "./model/Model.SemanticModel/definition" --file examples/measures/add_measures.csx --save
+te script --model "./model/Model.SemanticModel/definition" --file examples/measures/format-all-measures.csx --save
 
 # Import back
 fab import "Workspace/Model.SemanticModel" -i ./model/Model.SemanticModel -f

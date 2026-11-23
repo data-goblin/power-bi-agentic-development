@@ -1,0 +1,7 @@
+perspective Finance
+
+	perspectiveTable Sales
+
+		perspectiveMeasure 'Total Sales'
+
+		perspectiveMeasure 'Return Rate'

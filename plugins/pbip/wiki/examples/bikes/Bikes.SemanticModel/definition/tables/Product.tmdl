@@ -1,0 +1,36 @@
+table Product
+	lineageTag: 1a2b3c4d-5e6f-4071-8a92-b3c4d5e6f7a1
+
+	column 'Product Key'
+		dataType: int64
+		isHidden
+		isKey
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+	column 'Product Name'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: ProductName
+
+	column Category
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Category
+
+	hierarchy 'Product Hierarchy'
+
+		level Category
+			column: Category
+
+		level 'Product Name'
+			column: 'Product Name'
+
+	partition Product = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents('Source Folder' & "\product.csv"), [Delimiter=",", Encoding=65001]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true])
+				in
+				    Promoted

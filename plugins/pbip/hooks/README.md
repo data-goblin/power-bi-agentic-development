@@ -1,137 +1,42 @@
-# PBIP Validation Hooks
+# PBIP hooks
 
-PostToolUse hooks that validate PBIR and TMDL files after Write, Edit, and Bash tool use.
+Checks that run after the agent writes or edits a file in a PBIP project. They block (exit 2) only when a real tool or a hard rule reports an error in the edited file, and they say so once per session when a tool they use is missing, instead of passing silently.
 
-## Hook files
-
-| Hook | Trigger | Scope |
-|---|---|---|
-| `validate-pbir.sh` | Write, Edit, Bash | .json/.pbir files in .Report/ |
-| `validate-report-binding.sh` | Write, Edit, Bash | definition.pbir binding validation (byPath/byConnection) |
-| `validate-tmdl.sh` | Write, Edit, Bash | .tmdl files in .SemanticModel/ or .Dataset/ |
+```dirtree
+hooks.json                 Claude Code wiring (Edit and Write; SessionStart doctor)
+copilot-hooks.json         Copilot CLI wiring, through run-hook.ps1
+config.yaml                switches for each check
+lib.sh                     shared helpers
+validate-pbir.sh           *.Report/ files
+validate-tmdl.sh           *.tmdl files
+validate-report-binding.sh definition.pbir
+doctor.sh                  SessionStart: which checks are off
+```
 
 ## Checks
 
-All checks are toggleable via `config.yaml`. Set any key to `false` to disable.
+- `validate-tmdl.sh` finds the model root (the folder with `model.tmdl`) and runs `te validate --model <root> --errors-only --non-interactive`. A TMDL parse error blocks. Reference and DAX errors are sent to the model as advisory context, because a multi-file refactor is invalid half-way. Without `te` it says so once and lets the edit through
+- `validate-pbir.sh` checks JSON syntax and the page and visual naming rule (letters, digits, underscore, hyphen; at most 50 characters), then runs `pbir validate <report> --json` and blocks only on errors located in the edited file. Without `pbir` it falls back to required properties and the `$schema` prefix
+- `validate-report-binding.sh` checks that `definition.pbir` has `byPath` or `byConnection` and that a `byPath` target exists. `fab_exists` (off by default) asks Fabric whether a `byConnection` model exists; it needs `fab` and a network call
 
-| Config key | Check | Hooks |
-|---|---|---|
-| `json_syntax` | JSON syntax (`jq empty`) | validate-pbir |
-| `folder_spaces` | Folder names with spaces (won't render) | validate-pbir |
-| `required_fields` | Required fields per file type (from Microsoft JSON schemas) | validate-pbir |
-| `schema_url` | `$schema` URL matches expected pattern | validate-pbir |
-| `name_format` | Visual/page name is word chars and hyphens only | validate-pbir |
-| `bypath_exists` | byPath target directory exists locally | validate-report-binding |
-| `fab_exists` | byConnection model exists in Fabric (via `fab exists`) | validate-report-binding |
-| `tmdl_syntax` | TMDL structural syntax (via `tmdl-validate`) | validate-tmdl |
-| `visual_catalog_enum` | `visualContainerObjects` names vs Microsoft's core visual catalog (self-contained; allowlist in `core-visual-catalog.json`, **on by default**) | validate-pbir |
+The `te` wrapper installs and updates itself on first use. The hook calls `te` only when its managed binary is already installed, so a hook never triggers a download.
 
-## Required fields (from schemas)
+## Config
 
-Derived from Microsoft's published JSON schemas at [github.com/microsoft/json-schemas](https://github.com/microsoft/json-schemas/tree/main/fabric/item/report/definition).
-
-| File | Schema | Required |
-|---|---|---|
-| `visual.json` | visualContainer/2.7.0 | `$schema`, `name`, `position` + oneOf(`visual`, `visualGroup`) |
-| `page.json` | page/2.1.0 | `$schema`, `name`, `displayName`, `displayOption` |
-| `report.json` | report/3.2.0 | `$schema`, `themeCollection` |
-| `definition.pbir` | definitionProperties/2.0.0 | `$schema`, `version`, `datasetReference` |
-
-## Graceful degradation
-
-- If `jq` is not installed, all hooks skip silently
-- If `fab` CLI is not installed or not authenticated, the `fab_exists` check skips silently
-- If `tmdl-validate` binary is not found, TMDL hooks skip silently
-- If `core-visual-catalog.json` is missing, the `visual_catalog_enum` check skips silently
-- If `config.yaml` is missing, all checks default to enabled
+`config.yaml` holds one switch per check and a master switch, `all_hooks_enabled`. Any key set to `false` turns that check off.
 
 ## Known Windows issues
 
-Claude Code has several open bugs that affect plugin hooks on Windows. If you see spurious `PostToolUse hook error` notices on Edit/Write/Bash calls that clearly shouldn't match any `if` filter, you are hitting one or more of:
-
-| Bug | Effect |
-|---|---|
-| [anthropics/claude-code#49229](https://github.com/anthropics/claude-code/issues/49229) | The `if` field is silently ignored; every matcher entry spawns for every tool call |
-| [#38800](https://github.com/anthropics/claude-code/issues/38800) | `${CLAUDE_PLUGIN_ROOT}` expansion breaks when the user path contains spaces |
-| [#47070](https://github.com/anthropics/claude-code/issues/47070) | `execvpe(/bin/bash)` fails on Windows with Docker Desktop but no full WSL distro |
-| [#50243](https://github.com/anthropics/claude-code/issues/50243) | Bash hooks silently not invoked on Windows with `settings.local.json`-only config |
-| [#34457](https://github.com/anthropics/claude-code/issues/34457) | Hooks with shell commands cause 5+ minute hangs/crashes on Windows |
-
-The hook scripts in this plugin defensively exit 0 on any environmental failure so the errors are cosmetic (the tool call still runs). If the noise bothers you, flip the master kill-switch in `config.yaml`:
-
-```yaml
-all_hooks_enabled: false
-```
-
-That disables every hook in this plugin without touching individual check toggles. Flip it back to `true` once you upgrade to a Claude Code build that resolves the underlying bugs.
+Claude Code has open bugs that produce spurious `PostToolUse hook error` notices on Windows: the `if` field is ignored ([#49229](https://github.com/anthropics/claude-code/issues/49229)), `${CLAUDE_PLUGIN_ROOT}` breaks on paths with spaces ([#38800](https://github.com/anthropics/claude-code/issues/38800)), and hooks can hang ([#34457](https://github.com/anthropics/claude-code/issues/34457)). The scripts exit 0 on any environment failure, so the notices are cosmetic. Set `all_hooks_enabled: false` to silence them.
 
 ## Copilot CLI
 
-Copilot CLI does not read `hooks.json`; the manifest at `../.github/plugin/plugin.json` points it at `copilot-hooks.json` in this folder instead, which wires the same scripts with explicit `bash` (Unix) and `powershell` (Windows) commands. This matters because Copilot differs from Claude Code in three ways:
+Copilot CLI does not read `hooks.json`; `../.github/plugin/plugin.json` points it at `copilot-hooks.json`. Copilot hooks run user-wide and without an `if` filter, so each script re-applies its own path filter and exits 0 on anything unrelated. On Windows `run-hook.ps1` locates Git Bash, forwards stdin, and exits 0 unless the script returns 2. The `doctor.sh` SessionStart hook is Claude Code only.
 
-- Plugins and their hooks are user-wide: they run in every session on the machine, in every project, so a hook must be inert outside a Power BI project.
-- There is no `if` field; a `matcher` filters on tool name only, so every entry fires on every matching tool call. The scripts re-apply their own path and command filters and exit 0 on anything unrelated.
-- A PreToolUse hook that exits with any code other than 0 or 2 denies the tool call (fail-closed), and on Windows the command runs under PowerShell, so a bare `bash "..."` with no Git Bash on `PATH` denies everything. `run-hook.ps1` locates Git Bash, forwards stdin, and exits 0 unless the script itself returns 2; if `bash` or the script cannot be found the hook is a no-op.
+## Test by hand
 
-If a hook still misbehaves in Copilot, delete the `hooks` folder from the installed copy under `~/.copilot/installed-plugins/` (`%USERPROFILE%\.copilot\installed-plugins\` on Windows); the uninstall notes in the repo README cover the `Access is denied (os error 5)` case.
+```bash
+printf '{"tool_name":"Edit","session_id":"t","tool_input":{"file_path":"%s"}}' "$PWD/Bikes.SemanticModel/definition/tables/Sales.tmdl" | bash validate-tmdl.sh
+```
 
-## tmdl-validate binary
-
-`validate-tmdl.sh` depends on the `tmdl-validate` binary, which ships prebuilt in `bin/`:
-
-| File | Platform |
-|---|---|
-| `tmdl-validate-darwin-arm64` | macOS Apple Silicon |
-| `tmdl-validate-darwin-x64` | macOS Intel |
-| `tmdl-validate-linux-x64` | Linux x86_64 (glibc) |
-| `tmdl-validate-windows-x64.exe` | Windows x86_64 |
-
-The hook picks the right binary for the current OS and architecture; if none is found it falls back to `tmdl-validate` on `PATH`, then skips silently.
-
-### Antivirus false positives
-
-These are **unsigned binaries**, so Windows Defender, SmartScreen, and some corporate AV products may flag them as suspicious. They are not. The binary is a small Rust TMDL structural linter with no network access and no filesystem writes, loaded only by a hook you can read in `validate-tmdl.sh`.
-
-This is a known issue that already affected the earlier `pbi-hooks` and `connect-pbid` binaries (see #14), which were eventually replaced with pure-bash and PowerShell scripts for that reason. `tmdl-validate` cannot take the same path; it contains a hand-written TMDL parser that will stay closed-source, so a script port is not on the table.
-
-If your AV quarantines the binary, either whitelist the file, disable the hook by setting `tmdl_syntax: false` in `config.yaml`, or delete the binary and the hook will skip silently.
-
-### Stopgap
-
-This whole binary is a stopgap. It gets replaced by the Tabular Editor 3 CLI (`te validate`) once the TE3 CLI ships in a few weeks, at which point `validate-tmdl.sh` will call `te` instead and the bundled binaries will be removed from the plugin.
-
-## Updating required fields when schemas change
-
-1. Fetch the latest schema:
-   ```
-   https://raw.githubusercontent.com/microsoft/json-schemas/main/fabric/item/report/definition/{schemaType}/{version}/schema.json
-   ```
-   For definition.pbir: `.../definitionProperties/{version}/schema.json`
-
-2. Find the top-level `"required"` array. Check `oneOf`/`anyOf` constraints and nested `$ref` definitions.
-
-3. Update the jq extraction and MISSING checks in `validate-pbir.sh`.
-
-4. Update the table above.
-
-5. Test: `echo '{"tool_name":"Write","tool_input":{"file_path":"<path>"}}' | bash plugins/pbip/hooks/validate-pbir.sh`
-
-## "if" filter syntax in hooks.json
-
-Edit/Write `"if"` uses **gitignore path patterns** (recursive `**`, single-level `*`):
-- `Edit(**.Report/**)` -- any file inside any .Report/ at any depth
-- `Write(**/definition.pbir)` -- definition.pbir at any depth
-
-Bash `"if"` uses **glob text matching** against the command string (not path-aware):
-- `Bash(*.Report/*)` -- any command text containing `.Report/`
-- `Bash(*.tmdl*)` -- any command text containing `.tmdl`
-
-Pipes not supported in `"if"`; use separate Edit and Write matchers instead of `Write|Edit`.
-
-## Constraints
-
-- 10-second timeout per hook; jq calls are consolidated (one per file type)
-- Must work on bash 3.2 (macOS) and bash 4+ (Git Bash / Linux); no `mapfile`, no associative arrays
-- `.gitattributes` enforces `eol=lf` so scripts work on Windows checkout
-- Only exit 2 + stderr surfaces in Claude Code; stdout exit 0 is invisible
-- Full semantic validation (visual types, expressions, field references) belongs in pbir-cli; the `visual_catalog_enum` check is the one exception kept here, a self-contained `visualContainerObjects` name check against the bundled `core-visual-catalog.json` allowlist (15 container objects, universal to every visual). Visual type ids are not enforced, custom visuals use arbitrary ids. Refresh the bundled catalog when its upstream core visual schema ships new container objects
+Exit 2 with the message on stderr is a block; exit 0 with JSON on stdout is advisory context.

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Copilot CLI wiring for the PBIP validation hooks (PBIR structure, TMDL syntax, report binding). Claude Code uses hooks.json instead; see README.md.",
+  "description": "Copilot CLI wiring for the PBIP validation hooks (PBIR naming and pbir validate, te validate for TMDL, report binding). Claude Code uses hooks.json instead; see README.md.",
   "hooks": {
     "PostToolUse": [
       {
@@ -8,21 +8,21 @@
         "matcher": "Write|Edit|write|edit|create",
         "bash": "[ -f \"$CLAUDE_PLUGIN_ROOT/hooks/validate-pbir.sh\" ] || exit 0; bash \"$CLAUDE_PLUGIN_ROOT/hooks/validate-pbir.sh\"; [ $? -eq 2 ] && exit 2; exit 0",
         "powershell": "$ErrorActionPreference='Stop'; try { & \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\run-hook.ps1\" validate-pbir.sh; exit $LASTEXITCODE } catch { exit 0 }",
-        "timeoutSec": 10
+        "timeoutSec": 30
       },
       {
         "type": "command",
         "matcher": "Write|Edit|write|edit|create",
         "bash": "[ -f \"$CLAUDE_PLUGIN_ROOT/hooks/validate-tmdl.sh\" ] || exit 0; bash \"$CLAUDE_PLUGIN_ROOT/hooks/validate-tmdl.sh\"; [ $? -eq 2 ] && exit 2; exit 0",
         "powershell": "$ErrorActionPreference='Stop'; try { & \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\run-hook.ps1\" validate-tmdl.sh; exit $LASTEXITCODE } catch { exit 0 }",
-        "timeoutSec": 10
+        "timeoutSec": 30
       },
       {
         "type": "command",
         "matcher": "Write|Edit|write|edit|create",
         "bash": "[ -f \"$CLAUDE_PLUGIN_ROOT/hooks/validate-report-binding.sh\" ] || exit 0; bash \"$CLAUDE_PLUGIN_ROOT/hooks/validate-report-binding.sh\"; [ $? -eq 2 ] && exit 2; exit 0",
         "powershell": "$ErrorActionPreference='Stop'; try { & \"$env:CLAUDE_PLUGIN_ROOT\\hooks\\run-hook.ps1\" validate-report-binding.sh; exit $LASTEXITCODE } catch { exit 0 }",
-        "timeoutSec": 10
+        "timeoutSec": 30
       }
     ]
   }

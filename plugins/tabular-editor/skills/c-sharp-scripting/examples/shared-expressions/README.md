@@ -13,13 +13,13 @@ Scripts for managing shared M expressions (Power Query parameters and functions)
 
 ### Execute Inline
 ```bash
-te script "model.bim" -e 'var expr = Model.AddExpression("ServerName", "\"prod-server\"", ExpressionKind.M);' --save
+te script --model "model.bim" --inline 'var expr = Model.AddExpression("ServerName", "\"prod-server\"", ExpressionKind.M);' --save
 ```
 
 ### Execute Script File
 ```bash
-te script "model.bim" -S samples/shared-expressions/add-shared-expression.csx --save
-te script -s "Production" -d "Sales" -S samples/shared-expressions/list-shared-expressions.csx
+te script --model "model.bim" --file examples/shared-expressions/add-shared-expression.csx --save
+te script -s "Production" -d "Sales" --file examples/shared-expressions/list-shared-expressions.csx
 ```
 
 ### With Fabric CLI Workflow
@@ -28,7 +28,7 @@ te script -s "Production" -d "Sales" -S samples/shared-expressions/list-shared-e
 fab export "Workspace/Model.SemanticModel" -o ./model -f
 
 # Manage shared expressions
-te script "./model/Model.SemanticModel/definition" -S samples/shared-expressions/add-shared-expression.csx --save
+te script --model "./model/Model.SemanticModel/definition" --file examples/shared-expressions/add-shared-expression.csx --save
 
 # Import back
 fab import "Workspace/Model.SemanticModel" -i ./model/Model.SemanticModel -f

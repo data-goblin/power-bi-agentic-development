@@ -21,8 +21,8 @@ $ARGUMENTS
 
 2. **Load Skill Context**
    - Load the `bpa-rules` skill for reference documentation
-   - Review `references/expression-syntax.md` for available properties and patterns
-   - Check `examples/comprehensive-rules.json` for similar existing rules
+   - Read `${CLAUDE_PLUGIN_ROOT}/wiki/bpa-dynamic-linq.md` for what compiles, and run `te get <path> --properties` for the properties of the scope
+   - Check `${CLAUDE_PLUGIN_ROOT}/skills/bpa-rules/examples/comprehensive-rules.json` for similar existing rules
 
 3. **Generate Rule**
    - Determine appropriate Scope based on what objects the rule applies to
@@ -51,26 +51,24 @@ Provide the complete rule in JSON format:
 ```
 
 5. **Validate**
-   - Ensure Expression syntax is valid
+   - Run it: `te bpa run --model <model> -r <rules.json> --no-defaults --no-model-rules --rule <ID> --non-interactive --output-format json` and require `ruleErrors` 0
    - Verify Scope includes all applicable object types
    - Check that rule doesn't duplicate existing standard rules
 
-## Examples
+## Example
 
-**User**: "Create a rule to check if measures use CALCULATE without filters"
+**User**: "Create a rule to flag visible measures without a description"
 
 **Output**:
 ```json
 {
-  "ID": "DAX_CALCULATE_NO_FILTERS",
-  "Name": "CALCULATE should have filter arguments",
-  "Category": "DAX Expressions",
-  "Description": "CALCULATE without filter arguments is redundant. Either add filters or remove CALCULATE.",
-  "Severity": 1,
-  "Scope": "Measure, CalculatedColumn",
-  "Expression": "Tokenize().Any(Type = FUNCTION and Text = \"CALCULATE\") and not Tokenize().Any(Type = FUNCTION and Text = \"CALCULATE\" and Next.Type = OPEN_PARENS and Next.Next.Type <> COMMA)",
-  "FixExpression": null,
-  "CompatibilityLevel": 1200,
-  "Remarks": "May have false positives for complex expressions"
+  "ID": "MEASURE_HAS_DESCRIPTION",
+  "Name": "Visible measures need a description",
+  "Category": "Documentation",
+  "Description": "%objectname% is visible and has no description.",
+  "Severity": 3,
+  "Scope": "Measure",
+  "Expression": "!IsHidden and string.IsNullOrWhitespace(Description)",
+  "CompatibilityLevel": 1200
 }
 ```

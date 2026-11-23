@@ -1,21 +1,27 @@
-# Tabular Editor Script Samples
+# Tabular Editor script examples
 
 Non-interactive C# scripts for automating Power BI semantic model operations.
 
 ## Usage
 
-All scripts in this directory are **non-interactive** and can be run from the CLI without user input.
+Scripts here take no prompts. Some read the TE3 selection; see below.
 
-### From Claude Code Plugin
+Run a script without `--save` first: the default is a dry run that prints what would change.
+
+### Scripts that use `Selected`
+
+Under `te script` nothing is selected, so `Selected.<Plural>` is empty and `Selected.<Singular>` throws. Scripts that read the selection (`create_sum_measures.csx` and others, found with `grep -l "Selected\." -r .`) need a filter on `Model.AllColumns` or `Model.Tables` before they do anything under `te`; they work as written in the TE3 desktop app.
+
+### Check a script compiles
 
 ```bash
-te script -s "workspace" -d "model" -S samples/measures/create_sum_measures.csx --save
+te script --validate --file examples/columns/hide_key_columns.csx
 ```
 
-### From Command Line
+### Run against a remote model
 
 ```bash
-te script -s "workspace" -d "model" -S samples/columns/hide_key_columns.csx --save
+te script -s "workspace" -d "model" --file examples/columns/hide_key_columns.csx --save
 ```
 
 ## Script Categories

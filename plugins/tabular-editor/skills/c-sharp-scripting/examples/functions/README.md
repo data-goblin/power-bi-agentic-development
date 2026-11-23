@@ -13,13 +13,13 @@ Scripts for managing DAX user-defined functions (UDFs) in Tabular models.
 
 ### Execute Inline
 ```bash
-te script "model.bim" -e 'var fn = Model.AddExpression("MyFunction", "VAR Result = 1 RETURN Result");' --save
+te script --model "model.bim" --inline 'var fn = Model.AddExpression("MyFunction", "VAR Result = 1 RETURN Result");' --save
 ```
 
 ### Execute Script File
 ```bash
-te script "model.bim" -S samples/functions/add-function.csx --save
-te script -s "Production" -d "Sales" -S samples/functions/list-functions.csx
+te script --model "model.bim" --file examples/functions/add-function.csx --save
+te script -s "Production" -d "Sales" --file examples/functions/list-functions.csx
 ```
 
 ### With Fabric CLI Workflow
@@ -28,7 +28,7 @@ te script -s "Production" -d "Sales" -S samples/functions/list-functions.csx
 fab export "Workspace/Model.SemanticModel" -o ./model -f
 
 # Manage functions
-te script "./model/Model.SemanticModel/definition" -S samples/functions/add-function.csx --save
+te script --model "./model/Model.SemanticModel/definition" --file examples/functions/add-function.csx --save
 
 # Import back
 fab import "Workspace/Model.SemanticModel" -i ./model/Model.SemanticModel -f
