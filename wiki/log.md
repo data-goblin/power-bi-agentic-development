@@ -32,3 +32,5 @@ One line per check: `YYYY-MM-DD <page> <what was checked against what>`.
 2026-11-23 plugins/paginated-reports/wiki/paginated-publish-and-export.md REST page URLs return 200; flow and constraints carried over from earlier notes, not re-run
 2026-11-23 plugins/paginated-reports/wiki/pbidataset-connection-and-fields.md starter passes validate_rdl.py; connect string rules from earlier repository notes
 2026-11-23 plugins/paginated-reports/wiki/rdl-structure-and-order.md three starters and ten public samples pass validate_rdl.py
+2026-11-23 plugins/fabric-cli/wiki/*.md ten pages condensed from the former references; fab commands checked against fab 1.7.0 help and read-only calls; REST bodies marked Unverified where not run
+2026-11-23 plugins/etl/wiki/livy-api.md Livy token scopes and endpoints against Learn get-started-api-livy-session; session behaviour not run (consumes capacity)

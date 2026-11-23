@@ -2,16 +2,12 @@
 
 Tenant-setting scoping, certification and endorsement, guest access, service-principal admin permissions, and most distribution postures are only as strong as the Entra security groups they point at. A stale, empty, or over-permissioned SG silently weakens every setting that references it.
 
-This reference covers the four moves needed to audit SGs from a Fabric governance perspective: enumerate the graphIds in use, resolve each group, flag red-flag patterns, and cross-check admin role assignments. Feed everything back into the tenant-settings report so the admin sees the full picture per setting.
+Moves: enumerate the graphIds in use, resolve each group, flag red-flag patterns, cross-check admin role assignments.
 
 ## 1. Enumerate every SG referenced across tenant settings
 
 ```bash
-fab api "admin/tenantsettings" --output_format json 2>/dev/null \
-  | jq -r '.result.data[0].text.tenantSettings[]
-           | (.enabledSecurityGroups // []) + (.excludedSecurityGroups // [])
-           | .[] | "\(.graphId)\t\(.name)"' \
-  | sort -u
+fab api "admin/tenantsettings" -q "text.tenantSettings[].[enabledSecurityGroups, excludedSecurityGroups][][].[graphId, name]" 
 ```
 
 For each `graphId`, track which settings reference it. The same SG often shows up across unrelated settings; that's an important signal by itself (see red flags below).
@@ -66,24 +62,6 @@ az rest --method get \
 
 If the tenant uses Privileged Identity Management (PIM), also check `roleEligibilitySchedules`; eligibility and active assignment are separate, and PIM-eligible principals still count for bypass calculations once they activate.
 
-## 5. Feed back into the tenant-settings report
+## Prerequisites
 
-After resolving groups, re-read the `audit-tenant-settings.py` output. For each SG-scoped entry, attach:
-
-- Member count (total, users, SPs, guests)
-- Owner count
-- Red-flag list (empty / stale / dynamic / guest / nested-SP / unowned)
-- The tenant settings that also reference this SG (so the admin sees the blast radius of any membership change)
-
-## Prerequisites for SG work
-
-- `az login` with at least `Group.Read.All`, `User.Read.All`, `Directory.Read.All`, and `RoleManagement.Read.Directory` scopes. Verify with `az account show`.
-- For PIM queries, also `PrivilegedAccess.Read.AzureAD`.
-- Ask the user to run `az login` themselves; don't auto-authenticate.
-
-## Output standards for SG findings
-
-- Summarize membership with counts, never full member lists unless the user explicitly asks.
-- When presenting red flags, name the group, state the SG's current membership profile, and list which tenant settings reference it.
-- Do not produce compliance claims ("this SG violates SOC 2"); state the facts and let the user draw the compliance conclusion with their own team.
-- When a red flag depends on an assumption (e.g. "stale groups haven't changed in months"), say so explicitly; the metric is heuristic, not absolute.
+`az login` with `Group.Read.All`, `User.Read.All`, `Directory.Read.All` and `RoleManagement.Read.Directory` (plus `PrivilegedAccess.Read.AzureAD` for PIM). Ask the user to log in; never authenticate for them. For each SG-scoped setting report member count (users, SPs, guests), owner count, red flags and the other settings that use the same group. State heuristics as heuristics; make no compliance claims.

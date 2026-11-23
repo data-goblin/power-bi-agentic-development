@@ -1,11 +1,11 @@
 ---
 name: fabric-capacity
-description: Automatically invoke this skill whenever the user asks why a Fabric capacity is busy, throttled, at 90 or 100 percent, or what is consuming CUs; asks for current capacity utilization, carry forward or per-item CU usage; wants to query or repair the Microsoft Fabric Capacity Metrics app or its semantic model; or wants to start, pause or monitor a capacity from a script or status bar.
+description: "Read Fabric capacity utilization and per-item CU from the Capacity Metrics app model, repair that app, and start or pause a capacity. Use when a capacity is busy, throttled or at 90 or 100 percent, when asked what consumes CUs, for current utilization or carry forward, or to query or fix the Metrics app model."
 ---
 
 # Fabric Capacity
 
-Read capacity utilization and per-item CU from the Microsoft Fabric Capacity Metrics semantic model with `fab`, and start or pause a capacity. Invoke the `fabric-cli` skill alongside this one; its `references/capacity-cost.md` covers budget math, smoothing and throttling.
+Read capacity utilization and per-item CU from the Microsoft Fabric Capacity Metrics semantic model with `fab`, and start or pause a capacity. Needs the `fabric-cli` plugin; its `references/capacity-cost.md` covers budget math, smoothing and throttling. Learn: https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app
 
 ## Where the numbers live
 
@@ -15,10 +15,10 @@ live (DirectQuery, CapacityMetricsCES connector):
   Timepoint CU Detail:       same, per timepoint detail page
   Metrics By Item [And Day|And Hour|And Operation]: CU (s), Duration (s), Operations, Users per item
   System Events:             pause, resume, state changes
-import (fresh only after a model refresh; Pro workspace = 8 refreshes a day):
+import (fresh only after a model refresh; a Pro workspace allows 8 scheduled refreshes a day, Unverified for this workspace):
   Capacities, Items, Workspaces, Timepoints/Dates calendars
   Average utilization (last 1 hour | last 24 hours | last 7 days): measures on the Health page
-not available:               Azure Monitor has no metrics namespace for Microsoft.Fabric/capacities
+not available:               Azure Monitor metrics for Microsoft.Fabric/capacities (Unverified; not found in the Azure Monitor supported-metrics index)
 ```
 
 Anything that must be current (a status bar, "what is using the capacity now") needs the DirectQuery tables.
@@ -28,7 +28,7 @@ Anything that must be current (a status bar, "what is using the capacity now") n
 The model sits in a Pro workspace, so there is no XMLA endpoint and `te` cannot connect. Use `executeQueries` through fab. DirectQuery tables need the capacity passed as an M parameter inside a `DEFINE` block; without it the connector fails, and the error reads like a credential problem.
 
 ```bash
-fab api -A powerbi "groups/<metrics-ws-id>/datasets/<metrics-model-id>/executeQueries" -X post -i "$(jq -cn --arg q "$(cat <<'EOF'
+cat > "$TMPDIR/cu.dax" <<'EOF'
 DEFINE
   MPARAMETER 'CapacitiesList' = {"<CAPACITY-ID-UPPERCASE>"}
   VAR point = MINX(TOPN(2, 'CU Detail', 'CU Detail'[Window start time], DESC), 'CU Detail'[Window start time])
@@ -37,7 +37,8 @@ ROW("pct", CALCULATE(
   DIVIDE(SUM('CU Detail'[Interactive]) + SUM('CU Detail'[Background]), MAX('CU Detail'[Base capacity units]) * 30),
   'CU Detail'[Window start time] = point) * 100)
 EOF
-)" '{queries: [{query: $q}]}')"
+BODY=$(jq -cn --rawfile q "$TMPDIR/cu.dax" '{queries: [{query: $q}]}')
+fab api -A powerbi "groups/<metrics-ws-id>/datasets/<metrics-model-id>/executeQueries" -X post -i "$BODY"
 ```
 
 - `CU Detail` values are CU-seconds per 30 s timepoint, already smoothed; utilization % = (Interactive + Background) / (Base capacity units * 30). `CU limit` is a ratio (1.0), not a denominator
@@ -50,7 +51,7 @@ EOF
 ## Start and pause
 
 ```bash
-fab get ".capacities/<name>.Capacity" -q properties.state   # Active | Paused, ~10 s
+fab get ".capacities/<name>.Capacity" -q properties.state   # Active | Paused
 fab start ".capacities/<name>.Capacity" -f
 fab stop  ".capacities/<name>.Capacity" -f                  # bills the carry forward at once
 ```
@@ -59,17 +60,14 @@ fab stop  ".capacities/<name>.Capacity" -f                  # bills the carry fo
 
 ## Keeping the metrics app alive
 
-Failure modes seen on one tenant, in the order they surfaced:
+Seen on one tenant; install steps: https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app-install
 
-- The data source OAuth refresh token expires after 90 days without use (`AADSTS700082`); scheduled refresh stops and the model goes stale silently. Re-enter the credential in the model settings, then refresh
-- An old app version (47 from 2024) could not serve DirectQuery at all. Update from Apps, Get apps, Template apps, Microsoft Fabric Capacity Metrics, "Update the workspace and the app". It updates in place (same workspace and model IDs) but appends a date to the workspace name; rename it back or fab and te paths break on the `/`
-- After the credential had been re-entered several times, DirectQuery stayed broken (`The credentials provided for the CapacityMetricsCES source are invalid`, `QueryUserError`) even with a passing connection test and working refreshes. Only deleting the app workspace and installing the app fresh fixed it: Get it now, Connect, `UTC_offset` in standard time, OAuth2, pick the capacity admin in the account window. A fresh install gets new workspace and model IDs
-- Saving the credential dialog with "Skip test connection" ticked stores a credential that refreshes fine but fails every DirectQuery with `The credentials provided for the CapacityMetricsCES source are invalid` (`QueryUserError`). Save again with the box unticked; open the settings page with `?alwaysPromptForContentProviderCreds=true` to force a fresh OAuth prompt and pick the capacity admin account explicitly when the browser holds several
-- Moving the workspace to Premium Per User to get XMLA did not help and broke nothing that was not already broken; keep it on shared capacity as Microsoft recommends
-- The account on the credential must be a capacity admin of every capacity queried
+- The data source OAuth token expires after 90 days without use (`AADSTS700082`); refresh stops silently. Re-enter the credential, then refresh
+- Saving the credential with "Skip test connection" ticked refreshes fine but fails every DirectQuery with `The credentials provided for the CapacityMetricsCES source are invalid` (`QueryUserError`). Save again with the box unticked; open the settings page with `?alwaysPromptForContentProviderCreds=true` to force a fresh OAuth prompt and choose the capacity admin account
+- If it still fails after several credential re-entries, delete the app workspace and install the app fresh (`UTC_offset` in standard time, OAuth2); a fresh install has new workspace and model IDs
+- Updating an old app version (47 from 2024 could not serve DirectQuery) keeps the IDs but appends a date to the workspace name; rename it back, since fab and te paths break on `/`
+- The credential account must be a capacity admin of every capacity queried. Keep the workspace on shared capacity; moving it to PPU for XMLA did not help
 
-## What usually fills a small capacity
+## Cost hazards
 
-- Preview Planning sessions: one Stakeholder session is 168 CU-h, billed at once (604,800 CU-s on an F2), drives the capacity into carry forward for days; see `fabric-cli` `capacity-cost.md`
-- SQL databases: one new rayfin app backend database took 3,584 CU-s in a single hour on an F2 (half the capacity) and held interactive utilization at 93 % for over an hour while its app was being tested. This includes the `__fabric_plan_sys` and `<name>_plan` databases Planning creates, and app backends' databases) consume CU continuously while awake
-- Background jobs are smoothed over 24 h, so a busy morning still counts at night
+Planning sessions and SQL databases of app backends can fill a small F SKU on their own; numbers and sources: `fabric-cli` `capacity-cost.md`.

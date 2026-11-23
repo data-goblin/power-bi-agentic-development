@@ -46,7 +46,7 @@ Treat this as a checklist of what tends to help, not a required template. A file
 
 Give a concise read on the context files: what's strong, what's stale or generic, what's missing, and what's bloated. Ground recommendations in how context actually behaves, not in a style preference. Worth reminding them:
 
-- Context quality is ambiguous without evals. Reusable prompts run several times are the only real way to know whether a context change helped; suggest `skill-creator`'s eval loop for anything they run often
+- Context quality is ambiguous without evals. Reusable prompts run several times are the only real way to know whether a context change helped; suggest `claude plugin eval` (with-without comparison for plugin skills) or `skill-creator`'s eval loop for anything they run often
 - AI-generated context has a high chance of being verbose, generic, or wrong. It reads plausible and drifts the agent off course
 - Watch for attractor basins: memory and training pull outputs toward a well-worn default, and a self-reinforcing context can funnel every answer down the same unproductive groove. Fresh eyes and evals break the loop
 - Good context is an iterative skill, not a one-time file. It is one of the highest-leverage things they own, and it compounds

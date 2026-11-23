@@ -10,13 +10,13 @@ SPN secret, or token file is ever needed.
 Uses the same Fabric path syntax as other fabric-cli skill scripts.
 
 Usage:
-    python3 query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \
+    uv run query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \
         -q "SELECT * FROM tbl LIMIT 10" -t regions_parq_table
 
-    python3 query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \
+    uv run query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \
         -q "SELECT count(*) FROM tbl" -t gold.orders
 
-    python3 query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \
+    uv run query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \
         --sql "SELECT count(*) FROM delta_scan('abfss://...') "
 
 Requirements:
@@ -217,19 +217,19 @@ def main():
         epilog="""
 Examples:
     # Query a table in the default schema (substitutes `tbl` with delta_scan)
-    python3 query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \\
+    uv run query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \\
         -q "SELECT * FROM tbl LIMIT 10" -t regions_parq_table
 
     # Query a table in a named schema
-    python3 query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \\
+    uv run query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \\
         -q "SELECT count(*) FROM tbl" -t gold.orders
 
     # Pass a raw SQL script with your own delta_scan() calls (multi-table joins)
-    python3 query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \\
+    uv run query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \\
         --sql "SELECT a.id FROM delta_scan('abfss://.../Tables/gold/orders') a"
 
     # CSV output, save to file
-    python3 query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \\
+    uv run query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \\
         -q "SELECT * FROM tbl" -t gold.orders --format csv -o orders.csv
         """
     )

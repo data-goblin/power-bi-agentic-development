@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#   "azure-identity==1.27.0",
+#   "azure-storage-file-datalake==12.26.1",
+# ]
+# ///
 """
 Download complete Fabric workspace including items and lakehouse files.
 
 Uses the same path syntax as fab CLI commands.
 
 Usage:
-    python3 download_workspace.py "Workspace.Workspace" [output_dir]
-    python3 download_workspace.py "Sales.Workspace" ./backup
-    python3 download_workspace.py "Production.Workspace" --no-lakehouse-files
+    uv run download_workspace.py "Workspace.Workspace" [output_dir]
+    uv run download_workspace.py "Sales.Workspace" ./backup
+    uv run download_workspace.py "Production.Workspace" --no-lakehouse-files
 
 Requirements:
     - fab CLI installed and authenticated
@@ -389,9 +396,9 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    python3 download_workspace.py "Sales.Workspace"
-    python3 download_workspace.py "Production.Workspace" ./backup
-    python3 download_workspace.py "dev.Workspace" --no-lakehouse-files
+    uv run download_workspace.py "Sales.Workspace"
+    uv run download_workspace.py "Production.Workspace" ./backup
+    uv run download_workspace.py "dev.Workspace" --no-lakehouse-files
         """
     )
 

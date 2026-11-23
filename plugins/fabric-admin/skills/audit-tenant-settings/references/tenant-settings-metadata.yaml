@@ -1,4 +1,5 @@
-# Reconciled metadata for 159 Fabric tenant settings.
+# Reconciled metadata for 189 Fabric tenant settings (every setting admin/tenantsettings returned on 2026-11-23).
+# Entries with recommended: null and needs_review: true have no curated posture yet; the audit reports them as unknown.
 # human_name, description, preview, source_url: sourced 1:1 from MS Learn tenant-settings-index.
 # recommended, risk, recommendation_nuance: opinionated posture for a typical enterprise audit.
 # default: Microsoft-documented factory default (on/off) where explicitly stated in the docs;
@@ -422,42 +423,6 @@ ArtifactDBTItemTenantSwitch:
   risk: low
   recommendation_nuance: Enable if your data teams use dbt and want Fabric-hosted execution.
 
-ArtifactGraphPreview:
-  human_name: User can create Graph (preview)
-  description: Users can create Graph items to visualize data for deeper insights and richer context.
-  preview: true
-  source_url: https://go.microsoft.com/fwlink/?linkid=2282471
-  recommended: "off"
-  default: null
-  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-microsoft-fabric-tenant-settings
-  risk: low
-  recommendation_nuance: Preview; leave off unless piloting.
-
-ArtifactOrgAppPreview:
-  human_name: Users can discover and create org apps (preview)
-  description: Lets users create org apps as first-class items that permitted viewers can browse, with
-    any existing org app items hidden if the setting is later turned off.
-  preview: true
-  source_url: https://learn.microsoft.com/en-us/power-bi/consumer/org-app-items/org-app-items
-  recommended: "on"
-  default: 'off'
-  default_source: https://learn.microsoft.com/en-us/power-bi/consumer/org-app-items/org-app-items
-  risk: low
-  recommendation_nuance: OrgApps are an improved way to distribute content in Fabric and recommended instead
-    of traditional workspace apps.
-
-ArtifactPlanningPreview:
-  human_name: Users can create Plan (preview) items
-  description: Lets users create a Plan item in Fabric and use no-code integrated planning on top of Power
-    BI semantic models, Fabric SQL, and OneLake.
-  preview: true
-  source_url: https://aka.ms/planningdocs
-  recommended: "off"
-  default: null
-  default_source: https://learn.microsoft.com/en-us/fabric/admin/service-admin-portal-microsoft-fabric-tenant-settings
-  risk: low
-  recommendation_nuance: Preview; enable when piloting planning workloads.
-
 ArtifactSearchTenant:
   human_name: Use global search for Power BI
   description: When on, users can use the global search bar at the top of the Power BI page.
@@ -504,19 +469,6 @@ AutomatedInsightsTenant:
   default_source: https://learn.microsoft.com/en-us/power-bi/create-reports/insights
   risk: low
   recommendation_nuance: Top insights are typically false signals.
-
-AutomaticallyUsePBIR:
-  human_name: Automatically convert and store reports using Power BI enhanced metadata format (PBIR) (preview)
-  description: When enabled, reports are automatically converted to the PBIR format when edited and saved
-    in the workspace, and new reports are also created in PBIR; PBIR offers source-control-friendly file
-    structures that improve co-development.
-  preview: true
-  source_url: https://go.microsoft.com/fwlink/?linkid=2263123
-  recommended: "on"
-  default: 'on'
-  default_source: https://learn.microsoft.com/en-us/fabric/admin/portal-workspace#automatically-convert-and-store-reports-using-power-bi-enhanced-metadata-format-pbir-preview
-  risk: low
-  recommendation_nuance: Enables source-control-friendly report format. Strongly recommend to turn on.
 
 AzureMaps:
   human_name: Users can use the Azure Maps visual
@@ -1110,19 +1062,6 @@ EnableEsriLibraries:
   default_source: https://learn.microsoft.com/en-us/fabric/data-engineering/spark-arcgis-geoanalytics
   risk: low
   recommendation_nuance: Only useful if you actively run spatial analytics in Spark; turn on per-need.
-
-EnableExcelYellowIntegration:
-  human_name: Allow Power BI featured tables in Excel organization data types
-  description: Lets users access and perform calculations on data from featured tables, which are defined
-    in Power BI Desktop's modeling view and surfaced through the Excel data types gallery.
-  preview: false
-  source_url: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-excel-featured-tables
-  recommended: "off"
-  default: null
-  default_source: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-excel-featured-tables
-  risk: low
-  recommendation_nuance: Only necessary for advanced Excel users; very niche and rare in practice. Only
-    enable it if there are specific user requets for analysts using and preferring Excel.
 
 EnableReassignDataDomainSwitch:
   human_name: Allow tenant and domain admins to override workspace assignments (preview)
@@ -1837,20 +1776,6 @@ RTHAnomalyDetectionTenantSwitch:
   risk: low
   recommendation_nuance: Preview; enable when piloting real-time analytics.
 
-RTHOperationalAgentsTenantSwitch:
-  human_name: Enable Operations Agents (Preview)
-  description: Lets users create operations agents that leverage Azure OpenAI to generate operations plans
-    and recommended actions from real-time data, with messages routed through the Azure AI Bot Service
-    inside the EU Data Boundary.
-  preview: true
-  source_url: https://go.microsoft.com/fwlink/?linkid=2338555
-  recommended: "on:sg"
-  default: null
-  default_source: https://learn.microsoft.com/en-us/fabric/real-time-intelligence/operations-agent
-  risk: medium
-  recommendation_nuance: Only enable if you have a specific use case and have undergone a proper pilot
-    experimenting with these types of agents.
-
 RedshiftSSO:
   human_name: Redshift SSO
   description: Enables single sign-on for Amazon Redshift; when on, user access token information including
@@ -2137,3 +2062,496 @@ WorkspaceCmk:
   recommendation_nuance: Required for BYOK compliance regimes. Enabling requires an Azure Key Vault, MI
     configuration, and a rotation plan. Enable if you have specific compliance or architecture requirements
     for this setup.
+
+AADSSOForVnetGateway:
+  human_name: Microsoft Entra single sign-on for virtual network (VNet) data gateway
+  description: Users can use Microsoft Entra single sign-on (SSO) to authenticate to virtual network (VNet)
+    data gateways and access data sources.With this setting on, user access token information, including
+    names and emails, is sent to data sources to authenticate to the virtual network data gateway service.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+AllowA365Observability:
+  human_name: Enable sending Operations Agents observability data to Agent 365 (preview)
+  description: Allow Microsoft Fabric Operation Agent data to be processed and stored by Agent 365, such
+    as information about the Fabric item for this agent, the user ID of the creator of the agent, the
+    Entra Agent ID that the agent is operating with, and the prompts and tools that it uses. This will
+    help Agent 365 administrators monitor what Fabric agents are being created, where they are being used
+    and more. When this setting is turned on, data sent to Agent 365 can be processed and/or stored outside
+    your capacity's geographic region, compliance boundary, or national cloud instance.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+AllowAnonymousAccessForStaticHostedFabricApps:
+  human_name: Allow public-facing Fabric apps (preview)
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+AllowMonitoringDataCollection:
+  human_name: Allow monitoring data collection
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+AllowOperatorInsightsTenantSwitch:
+  human_name: Insights for operations agents (preview)
+  description: Users can view operational insights for events generated by operations agents.These insights
+    help users understand what happened and why by showing summarized findings and key observations based
+    on agent activity and underlying data.Turning on this setting can help your organization improve issue
+    triage by identifying possible causes behind events, understand the context behind agent recommendations,
+    and increase transparency into how agents analyze and act on data.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+AllowSendOpenAISubprocessorDataToOtherRegions:
+  human_name: Data sent to OpenAI as a Microsoft Subprocessor can be processed outside your capacity's
+    geographic region, compliance boundary, or national cloud instance
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+AllowUpgradeToPlannerPersona:
+  human_name: Users can upgrade to a Planner persona
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+AllowUpgradeToStakeholderPersona:
+  human_name: Users can upgrade to a Stakeholder persona
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+AllowUserDataProcessedByAiServicesOutOfGeo:
+  human_name: Allow data processing outside geographic region for Azure AI services
+  description: This setting applies only to customers using prebuilt AI services in Fabric whose capacity
+    is in a region not covered by Azure AI services.When enabled, data sent to Azure AI services may be
+    processed outside your capacity's geographic region, compliance boundary, or national cloud instance.
+    Check the [documentation](https://aka.ms/Fabric/AI-Service/Data) for details about what data types
+    are affected. You can manage this setting at both tenant and capacity levels.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+ArtifactConsumerIQSharePreview:
+  human_name: Enable Share Subscription Item (preview)
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+ArtifactDeploymentPlanPreview:
+  human_name: Users can create deployment plan (preview) items
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+ArtifactIQSharePreview:
+  human_name: Enable Share Item (preview)
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+CMKForWorkspace_CrossTenantValidationBypass:
+  human_name: Allow cross-tenant customer-managed keys
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+CatalystTenantAdminSwitch:
+  human_name: Users can access Microsoft Copilot in Power BI and Microsoft Fabric
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+DatabaseAgentTenant:
+  human_name: Users can set up Database Agent (preview)
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+DatabaseHubTenant:
+  human_name: Users can access the Database hub (preview)
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+DenodoForPowerBISSO:
+  human_name: Enable Denodo SSO
+  description: Enable SSO capability for Denodo. By enabling, user access token information, including
+    name and email, will be sent to Denodo for authentication.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-query/connectors/denodo
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+EnableAnonymousDataAccessForFabricApps:
+  human_name: Enable anonymous data access for Fabric Apps (Preview)
+  description: This setting allows users to enable anonymous data access for Fabric Apps that are intended
+    for public consumption. Admins can limit this capability to specific users or security groups.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+EnableOneLakeStorage:
+  human_name: Store new Plan items in OneLake
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+EnableOpenAISubprocessor:
+  human_name: Users can use Copilot, AI Agents and other AI experiences powered by OpenAI as a Microsoft
+    Subprocessor
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+EnableOverConsumptionWarning:
+  human_name: Show Oversubscription Warning
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+EnforceStrictCspForStaticHostedFabricApps:
+  human_name: Enforce a strict content security policy for static-hosted Fabric Apps (preview)
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+EventDefinitionTenantSwitch:
+  human_name: Enable Event Schema Sets in Real-Time Hub (preview)
+  description: This setting allows users to define the structure and format of events through schemas,
+    enabling data quality and validation with group-level access control.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+FabricManagedIdentityTenantSetting:
+  human_name: Users can create Fabric managed identities (preview)
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+ForceEmbeddedOnlyForStaticHostedFabricApps:
+  human_name: Force embedded-only hosting for static-hosted Fabric Apps (preview)
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+InProductOutageNotification:
+  human_name: Receive In-product notifications for service outages or incidents
+  description: Mail-enabled security groups will receive In-product notifications if this tenant is impacted
+    by a service outage or incident.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+LoopIntegration:
+  human_name: Users can share Power BI visuals as Loop components (preview)
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+LyraDesktopTenantSwitch:
+  human_name: Users can use Power BI Desktop for Apps (preview)
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+MicrosoftFoundryTelemetry:
+  human_name: Fabric data agents can send operational metadata for observability in Microsoft Foundry
+  description: Agent creators can use operational metadata to monitor agent health, detect issues, and
+    understand how their published agents are used across applications and services. These insights help
+    agent creators improve agent reliability and performance.When this setting is turned on, operational
+    metadata from Fabric data agents is processed and stored in a configured Application Insights resource.
+    This data includes agent display names, data source names, reasoning step IDs, and conversation IDs.
+    The Application Insights resource that processes and stores this data may be located outside your
+    tenant's geographic region, compliance boundary, or national cloud instance.Accessing the operational
+    metadata requires a role with read permissions (such as Monitoring Reader or Log Analytics Reader)
+    on the configured Application Insights resource. Users with this access can view the data in Application
+    Insights. Users can also view the data through a Foundry project that connects to the configured Application
+    Insights resource. Access through Foundry requires role-based access to the Foundry project (Foundry
+    User or higher) in addition to read permissions on the Application Insights resource. Access to a
+    Foundry project alone doesn't include access to the telemetry data.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+MonitoringTenant:
+  human_name: Users can create Monitoring items (preview)
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+OneLakeCatalogSubItemDiscovery:
+  human_name: Users can find objects in search
+  description: Include objects such as tables and columns in the OneLake catalog and global search. Users
+    can find objects only if they have access to items that contain them. Disable to limit discovery to
+    top-level items, like lakehouses and reports.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+OracleSSO:
+  human_name: Enable Oracle SSO
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+PolicySetTenantSwitch:
+  human_name: Policies (preview)
+  description: Not described on the Learn tenant settings index as of 2026-11-23; the title comes from
+    the live admin API.
+  preview: true
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+RealTimeDashboardEmbeddedApp:
+  human_name: Allow Real-Time Dashboards to include embedded app visuals
+  description: Enabling this setting allows dashboards to accept embedded app visuals, which are external
+    apps embedded as iframes within Real-Time Dashboards
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+StarburstAadSSO:
+  human_name: Enable Starburst SSO
+  description: Enable SSO capability for Starburst. By enabling, user access token information, including
+    name and email, will be sent to Starburst for authentication.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/power-query/connectors/starburst
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true
+
+UseAdbcByDefault:
+  human_name: Users can connect to data sources by using Apache Arrow database connectivity (ADBC)
+  description: ADBC offers enhanced performance, security, and reliability compared to legacy connectivity
+    options. When enabled, data connections to supported data sources use ADBC by default.
+  preview: false
+  source_url: https://learn.microsoft.com/en-us/fabric/admin/tenant-settings-index
+  recommended: null
+  default: null
+  risk: null
+  recommendation_nuance: No curated recommendation yet. Read the Learn entry and the live state before
+    advising.
+  needs_review: true

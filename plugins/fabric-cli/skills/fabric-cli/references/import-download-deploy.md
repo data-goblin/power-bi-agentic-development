@@ -1,267 +1,98 @@
-# Import, Download, and Deploy
+# Import, download and promote
 
-How to get items out of Fabric, how to get them back in, and how to move them between workspaces for dev / test / prod promotion. Every Fabric item has a serializable definition and a stable GUID; everything below revolves around those two facts.
+Getting item definitions out of Fabric, back in, and between workspaces. Every item has a serializable definition and a stable GUID; the rest follows from those.
 
-## Download from Fabric (export)
+## Learn
 
-`fab export` pulls the definition of a single item to a local directory. `fab cp` with a local destination copies lakehouse Files instead, since Lakehouse items don't expose a real definition.
+```yaml
+item definitions: https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/item-management-overview
+Git integration: https://learn.microsoft.com/en-us/fabric/cicd/git-integration/intro-to-git-integration
+long-running operations: https://learn.microsoft.com/en-us/rest/api/fabric/articles/long-running-operation
+fab commands: https://microsoft.github.io/fabric-cli/
+```
+
+Options for every command: `fab export --help`, `fab import --help`, `fab cp --help`, `fab bulk-export --help`.
+
+## Export
 
 ```bash
-# Single item, default format
-mkdir -p /tmp/exports
-fab export "Production.Workspace/Sales.Report" -o /tmp/exports -f
-
-# Explicit format (see "Supported item types" below for format-by-type)
-fab export "ws.Workspace/ETL.Notebook" -o /tmp --format py -f
-
-# Entire workspace (all items at once)
-mkdir -p /tmp/backup
-fab export "Production.Workspace" -o /tmp/backup -a -f
+mkdir -p ./exports
+fab export "Production.Workspace/Sales.Report" -o ./exports -f
+fab export "ws.Workspace/ETL.Notebook" -o ./exports --format py -f
+fab export "Production.Workspace" -o ./backup -a -f
+fab bulk-export "Production.Workspace" -o ./backup --recursive
 ```
 
-**Always `mkdir -p` the output directory first.** `fab export` does not create intermediate directories and will fail with `[InvalidPath] No such file or directory` if the parent doesn't exist.
+- Create the output directory first; `fab export` does not and fails with `[InvalidPath] No such file or directory`
+- `-f` skips the sensitivity-label prompt and exports without the label; the warning "Item definition is exported without its sensitivity label and its data" is informational, the real error follows on the next line
+- `bulk-export` (1.7.0) keeps folder structure and bindings, and needs `--recursive` for workspace and folder targets; plain `export -a` flattens
+- Names with apostrophes work inside double quotes
+- Check which types round-trip with `fab desc .<ItemType>` (the command list includes `export`)
 
-**Names with apostrophes** (e.g. `Claude Code's Workspace`) work fine inside double quotes ; no shell escaping needed:
-
-```bash
-mkdir -p /tmp/exports
-fab export "Claude Code's Workspace.Workspace/Report.Report" -o /tmp/exports -f
+```yaml
+Report: PBIR folder (.platform, definition.pbir, definition/)
+SemanticModel: TMDL folder (.platform, definition/model.tmdl, tables/)
+Notebook: .py, .ipynb or folder, chosen with --format
+DataPipeline: JSON folder
+Lakehouse: metadata only; Files are not in the definition, copy them with fab cp
+Dashboard, SQLEndpoint: not exportable (use fab cp for dashboards; the SQL endpoint comes with its lakehouse)
 ```
 
-**`-f` flag behavior on export:** The `-f` (force) flag skips the sensitivity-label confirmation prompt AND exports the item definition without its sensitivity label. The warning `Item definition is exported without its sensitivity label and its data` is informational, not an error. The real error, if any, follows on the next line.
+- `.platform` is the manifest (display name, type, logical id); `definition/` is the editable source, which the `pbir-cli`, `pbir-format`, `tmdl` and `pbip` skills edit
+- Export skips lakehouse `Files` and `Tables`; for a full backup run `uv run ${CLAUDE_SKILL_DIR}/scripts/download_workspace.py "Production.Workspace" ./backup`, which also copies lakehouse files
 
-### Supported item types
-
-| Type | Local format | Notes |
-|---|---|---|
-| `.Report` | PBIR folder | Double-click `.pbir` to open in Power BI Desktop (Developer Mode). See the [pbir-cli](../../../../reports/skills/pbir-cli/SKILL.md) and [pbir-format](../../../../pbip/skills/pbir-format/SKILL.md) skills for editing. |
-| `.SemanticModel` | TMDL folder | Open with Power BI Desktop or Tabular Editor. See the [tmdl](../../../../pbip/skills/tmdl/SKILL.md) skill for authoring. |
-| `.Notebook` | `.py` / `.ipynb` / folder | Fabric notebook format; pass `--format py` for plain Python. |
-| `.DataPipeline` | JSON folder | Pipeline definition as nested JSON. |
-| `.Lakehouse` | Metadata only | **Files are not part of the definition.** Use `fab cp` to copy Files contents separately. |
-| `.Dashboard` | Not exportable | Tile-based dashboards; no definition surface. Use `fab cp` between workspaces. |
-| `.SQLEndpoint` | Not exportable | Auto-provisioned with its parent Lakehouse. |
-
-Check export support per item type with `fab desc .<ItemType>` ; the supported commands list includes `export` for every type that can round-trip.
-
-### Export output structure
-
-```
-output/
-  Report.Report/
-    .platform
-    definition.pbir
-    definition/
-      report.json
-      pages/
-  Model.SemanticModel/
-    .platform
-    definition/
-      model.tmdl
-      database.tmdl
-      tables/
-```
-
-The `.platform` file is the item manifest (display name, type, item ID). The `definition/` subdirectory holds the editable source. Paths inside `definition/` are what the pbip and pbir-cli skills operate on.
-
-### Full workspace snapshot (including lakehouse files)
-
-`fab export -a` skips Lakehouse Files and will miss anything stored in `Files/` or `Tables/` inside a Lakehouse. For a true backup, use the [`download_workspace.py`](../scripts/download_workspace.py) script, which walks every item in the workspace, exports each definition, and additionally `fab cp`'s all lakehouse files to disk:
-
-```bash
-python3 scripts/download_workspace.py "Production.Workspace" ./backup
-```
-
-### Semantic model as PBIP project
-
-`fab export` on a `.SemanticModel` produces a TMDL folder. Build a complete PBIP project with
-`fab` for the model and `pbir` for the report:
+### PBIP project from a model
 
 ```bash
 fab export "Production.Workspace/Sales.SemanticModel" -o ./sales-pbip -f
-pbir new report "./sales-pbip/Sales.Report" \
-  --connection "Production.Workspace/Sales.SemanticModel" --format pbir
-pbir report merge-to-thick "./sales-pbip/Sales.Report" \
-  "./sales-pbip/Sales.SemanticModel" --output ./sales-project
+pbir new report "./sales-pbip/Sales.Report" --connection "Production.Workspace/Sales.SemanticModel" --format pbir
+pbir report merge-to-thick "./sales-pbip/Sales.Report" "./sales-pbip/Sales.SemanticModel" --output ./sales-project
 ```
 
-This keeps report creation inside `pbir`; do not scaffold PBIR JSON manually. See the
-[pbip](../../../../pbip/skills/pbip/SKILL.md) skill for project structure.
+Create report files through `pbir`, never by hand-writing PBIR JSON.
 
-## Upload back to Fabric (import)
-
-`fab import` sends a local definition back to Fabric. If the destination already exists it is overwritten; if not, a new item is created.
+## Import
 
 ```bash
-# Create new or overwrite existing
-fab import "ws.Workspace/New.Notebook" -i ./local-path/Nb.Notebook -f
-
-# Import a report back to a specific workspace
-fab import "Production.Workspace/Sales.Report" -i /tmp/exports/Sales.Report -f
+fab import "ws.Workspace/New.Notebook" -i ./local/Nb.Notebook -f
+fab import "Production.Workspace/Sales.Report" -i ./exports/Sales.Report -f
 ```
 
-**Always pass `-f`** for non-interactive execution. Without it, `fab import` prompts for overwrite confirmation and will hang in scripts, CI, or anywhere stdin is not a terminal.
+- Creates the item or overwrites an existing one; always pass `-f` in scripts, because without it the overwrite prompt hangs when stdin is not a terminal
+- Definition create and update are long-running operations; on fab 1.7 or earlier `fab import` measured 25 to 60 s for one notebook because it polled at the server's `Retry-After: 20` while the work finished in about 1 s (F2 capacity, 40 KB notebook); fab 1.9.0 improved LRO polling, so re-measure there
+- For hand-rolled REST on definition-based items, poll create-with-definition and `updateDefinition` at about 0.3 s, and honour `Retry-After` on 429
+- `uv run ${CLAUDE_SKILL_DIR}/scripts/deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./ETL.Notebook` tight-polls (`--poll-interval`, default 0.3 s), auto-detects create versus update, takes a fab-export folder or a bare `.ipynb`, and supports `--update-only` and `--format json`
+- Import order matters when doing it by hand: Lakehouse or Warehouse, then SemanticModel, Report, Dashboard; pipelines order it for you
 
-### Fast definition changes: the poll interval is the biggest lever
+### Rebind thin reports
 
-`fab import` takes 25-60s to push a notebook definition, and `nb create` / `nb cell edit` are the same or worse. This is not the API being slow. Creating or updating an item definition is a long-running operation (LRO): the request returns `202 Accepted` with a `Retry-After: 20` header, and the CLIs wait roughly that long between status polls. The server actually finishes in about a second. Neither `fab` nor `nb` exposes a flag or env var to shorten that interval.
-
-Polling the operation every ~0.3s instead of every ~20s is the single biggest performance lever for any definition change. Measured on an F2 capacity, pushing the same notebook (a 40KB / ~1000-line cell):
-
-```yaml
-deploy_a_new_notebook:
-  fab import:                 ~29 s     # createItemWithDefinition, ~20s poll cadence
-  nb create:                  ~23 s     # empty notebook + metadata, same cadence
-  raw REST, 0.25s poll:       ~1.6 s    # POST /workspaces/{ws}/notebooks with the definition
-
-update_a_notebook_in_place:   # the edit / iterate loop
-  nb cell edit:               ~44 s     # getDefinition + edit + updateDefinition, two LROs
-  fab import (overwrite):     ~31 s
-  raw REST updateDefinition:  ~0.7 s    # POST /items/{id}/updateDefinition, 0.25s poll
-```
-
-Use [`scripts/deploy_notebook.py`](../scripts/deploy_notebook.py) for notebook definition changes. It auto-detects create vs update, tight-polls the LRO, and exposes `--poll-interval` (default 0.3s):
+A thin report points at a model by id. After import or copy into another workspace the id is still the source's:
 
 ```bash
-# Create or update in place (auto-detected); input is a fab-export folder or a bare .ipynb
-python3 scripts/deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./ETL.Notebook
-python3 scripts/deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./notebook-content.ipynb --update-only
-python3 scripts/deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./ETL.Notebook --poll-interval 0.2 --format json
+fab set "Production.Workspace/Sales.Report" -q semanticModelId -i "<target-model-id>"
 ```
 
-The same rule holds for any definition-based item (reports, semantic models, pipelines): if you hand-roll the REST call, poll `updateDefinition` / create-with-definition at ~0.3s, not the advertised 20s. The one caveat is throttling. On a busy or small capacity the API returns `429` with its own `Retry-After`, which you must honor; the script backs off on 429 automatically, so a genuinely throttled deploy can still take longer regardless of the poll interval.
+See [reports.md](./reports.md) for byPath and byConnection rebinding.
 
-### Reports imported without their model need rebinding
-
-A thin `.Report` is a pointer to a `.SemanticModel` via its ID. When you import a report to a different workspace than the original, the dataset ID in `definition.pbir` is still the source ID and must be rebound to the target:
+## Copy and move
 
 ```bash
-# After importing a report to the target workspace
-fab set "Production.Workspace/Sales.Report" \
-  -q semanticModelId \
-  -i "<target-model-id>"
-```
-
-See [reports.md](./reports.md) for alternative byPath / byConnection rebinding patterns and the full thin-report workflow.
-
-### Bulk import from a directory
-
-```bash
-# Import every item in a directory
-for item in ./exports/*; do
-  name=$(basename "$item")
-  fab import "Production.Workspace/$name" -i "$item" -f
-done
-```
-
-### Bulk export by type (round-trip prep)
-
-```bash
-# Export every semantic model in a workspace
-fab ls "ws.Workspace" | grep ".SemanticModel" | while read item; do
-  fab export "ws.Workspace/$item" -o ./models -f
-done
-
-# Export every report
-fab ls "ws.Workspace" | grep ".Report" | while read item; do
-  fab export "ws.Workspace/$item" -o ./reports -f
-done
-```
-
-The `fab ls` + `while read` pattern is fragile for names with spaces; prefer `fab ls -q "[].name" -o /tmp/names.json` and a Python loop for production automation.
-
-## Copy and move between workspaces
-
-`fab cp` copies an item directly between workspaces in the same tenant without a local round-trip. It's dramatically faster than export + import when you don't need to edit the definition in between.
-
-```bash
-# Copy a single item
 fab cp "Dev.Workspace/Pipeline.DataPipeline" "Production.Workspace" -f
-
-# Copy with rename
 fab cp "Dev.Workspace/Report.Report" "Production.Workspace/ProdReport.Report" -f
-
-# Copy an entire workspace (items + folder structure)
 fab cp "Dev.Workspace" "Production.Workspace" -r -f
-
-# Block the copy if an item with the same name exists in a different folder
 fab cp "Dev.Workspace/Report.Report" "Production.Workspace" -bpc -f
 ```
 
-`fab mv` has the same ergonomics but removes the source after a successful write. Always `fab ls` the source tree first to confirm exactly what will move.
+- `cp` works inside one tenant with no local round trip; it copies definitions, not data
+- `-r` copies a whole workspace with folders; `-bpc` blocks the copy when a same-name item exists in a different folder
+- `fab mv` removes the source after a successful write; `fab ls` the source first
 
-### After copying a thin report
+## Promoting between environments
 
-Thin reports copied with `fab cp` carry their original `semanticModelId`. If the target workspace has its own copy of the model, rebind:
+- Governed path: deployment pipelines or the config-file deploy subcommand (see [deployment-pipelines.md](./deployment-pipelines.md)); pipelines keep item ids, so thin reports need no rebinding
+- Manual path: export, import each item, rebind thin reports, refresh models
+- Cross-tenant: `fab cp` is tenant-scoped; export, `fab auth login` to the target tenant, import, then rebind reports and recreate connections and gateway references (connection ids are tenant-local)
 
-```bash
-fab set "Production.Workspace/Report.Report" -q semanticModelId -i "<prod-model-id>"
-```
+## Git and PBIP
 
-## Environment migration (Dev → Test → Prod)
-
-Two supported paths:
-
-1. **Deployment pipelines** (recommended for governed environments) ; see [deployment-pipelines.md](./deployment-pipelines.md) for the Fabric vs. Power BI pipelines API, selective deploy mechanics, `allowPurgeData` / `allowTakeOver` flags, and LRO polling. Pipelines preserve item IDs across stages, so thin reports don't need rebinding.
-2. **Manual export / import** (ad-hoc, dev work, or cross-tenant):
-
-   ```bash
-   # 1. Export dev
-   mkdir -p /tmp/migration
-   fab export "Dev.Workspace" -o /tmp/migration -a -f
-
-   # 2. Import to prod, item by item
-   fab import "Production.Workspace/Pipeline.DataPipeline" \
-     -i /tmp/migration/Pipeline.DataPipeline -f
-   fab import "Production.Workspace/Sales.SemanticModel" \
-     -i /tmp/migration/Sales.SemanticModel -f
-   fab import "Production.Workspace/Sales.Report" \
-     -i /tmp/migration/Sales.Report -f
-
-   # 3. Rebind thin reports (the model ID is different in prod)
-   fab set "Production.Workspace/Sales.Report" \
-     -q semanticModelId \
-     -i "<prod-model-id>"
-
-   # 4. Smoke-test the deployed items
-   fab api -A powerbi \
-     "groups/<prod-ws-id>/datasets/<prod-model-id>/refreshes" \
-     -X post -i '{"type":"Full"}'
-   ```
-
-**Order matters.** Deploy dependencies first (Lakehouse / Warehouse → Semantic Model → Report → Dashboard), otherwise the downstream item lands broken. Deployment pipelines handle the ordering for you; manual import does not.
-
-### Cross-tenant forks
-
-`fab cp` is tenant-scoped and cannot move items between tenants. For cross-tenant work:
-
-1. `download_workspace.py` or `fab export` into a local directory
-2. `fab auth login` to the target tenant
-3. `fab import` each item into the target workspace
-4. Rebind thin reports and re-establish gateway / connection references (connection IDs are tenant-local)
-
-## PBIP and git-integrated workflows
-
-PBIP is the local source-control format for semantic models and reports. Use PBIP when you want:
-
-- Multi-author editing via git branches
-- External editors (Tabular Editor, VS Code, Cursor) on the model and report source
-- CI validation via [`pbip`](../../../../pbip/skills/pbip/SKILL.md) + [`pbir-cli`](../../../../reports/skills/pbir-cli/SKILL.md) + [`tmdl`](../../../../pbip/skills/tmdl/SKILL.md) + [`pbir-format`](../../../../pbip/skills/pbir-format/SKILL.md) skills
-
-Typical flow:
-
-1. **Export or convert** ; use `fab export` for service items and `pbir download` or
-   `pbir report convert` for reports.
-2. **Work locally** ; use `te` for semantic models and `pbir` for reports. Never patch report JSON.
-3. **Commit to git** ; PBIP text files are diff-friendly and merge well.
-4. **Publish back** ; either `fab import` each item or, for workspaces connected to git, let the Fabric git integration sync the changes (see [workspaces.md](./workspaces.md#git-integration)).
-
-The pbip, pbir-cli, tmdl, and pbir-format skills are the authoritative references for everything inside a PBIP folder. `fab` owns the round-trip into and out of the Fabric service; the PBIP skills own what happens between the export and the import.
-
-## See also
-
-- [deployment-pipelines.md](./deployment-pipelines.md) ; CI/CD promotion via deployment pipelines
-- [reports.md](./reports.md) ; thin-report rebinding, PBIR format specifics
-- [semantic-models.md](./semantic-models.md) ; TMDL round-trips, Direct Lake / Import / DirectQuery migration
-- [workspaces.md](./workspaces.md) ; git integration, workspace-level operations
-- [`scripts/download_workspace.py`](../scripts/download_workspace.py) ; full workspace backup including lakehouse files
+PBIP is the local source-control format. Flow: `fab export` (or `pbir download`, `pbir report convert`), edit locally with `te` for models and `pbir` for reports, commit, then `fab import` or let Fabric Git integration sync (see [../../../wiki/workspaces.md](../../../wiki/workspaces.md)).

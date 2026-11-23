@@ -7,12 +7,12 @@ payloads and metadata shapes that can change, and is not an official supported
 Tabular Editor or Microsoft Fabric product feature.
 
 Primary usage:
-    python3 get_semantic_model_ai_metadata.py "Workspace.Workspace/Model.SemanticModel"
-    python3 get_semantic_model_ai_metadata.py "Workspace.Workspace/Model.SemanticModel" --instructions-out instructions.md --schema-out schema.json
+    uv run get_semantic_model_ai_metadata.py "Workspace.Workspace/Model.SemanticModel"
+    uv run get_semantic_model_ai_metadata.py "Workspace.Workspace/Model.SemanticModel" --instructions-out instructions.md --schema-out schema.json
 
 For offline parsing of a saved Fabric definition payload:
     fab get "Workspace.Workspace/Model.SemanticModel" -q "definition" -f > definition.json
-    python3 get_semantic_model_ai_metadata.py --definition-file definition.json
+    uv run get_semantic_model_ai_metadata.py --definition-file definition.json
 
 Source precedence: when multiple parts provide AI instructions or AI schemas,
 friendly Copilot definition files (e.g. Copilot/Instructions/instructions.md)

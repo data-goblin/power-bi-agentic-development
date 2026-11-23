@@ -1,13 +1,13 @@
 # Cloud and Fabric service tools
 
-For the `fabric-cli`, `fabric-admin`, and `etl` plugins, and the cloud operations of `semantic-models` and `reports`. Every tool here runs natively on Windows and macOS. Install the base layer (`references/foundation.md`) first, since these depend on `uv` and `az`.
+For the `fabric-cli`, `fabric-admin`, and `etl` plugins, and the cloud operations of `semantic-models` and `reports`. Every tool here runs natively on Windows, macOS and Linux. Install the base layer (`references/foundation.md`) first, since these depend on `uv` and `az`.
 
 ## fab (Fabric CLI)
 
 The workhorse for anything remote in Power BI or Fabric: workspaces, items, `fab api`, ACLs, jobs, export/import. It works on Power BI Pro, PPU, or Fabric; you do not need a Fabric SKU to use the CLI.
 
 ```bash
-# Windows and macOS (same package)
+# Any OS (same package)
 uv tool install ms-fabric-cli
 
 # keep it current
@@ -21,7 +21,7 @@ fab auth login
 fab auth status
 ```
 
-Discover the command surface with `fab --help` and `fab <command> --help` rather than assuming flags; it changes often. Docs: [microsoft.github.io/fabric-cli](https://microsoft.github.io/fabric-cli/).
+Discover the command surface with `fab --help` and `fab <command> --help` rather than assuming flags; it changes often. Newer item types need newer fab: Ontology and GraphModel from 1.8.0, Plan and WarehouseSnapshot from 1.9.0. Docs: [microsoft.github.io/fabric-cli](https://microsoft.github.io/fabric-cli/).
 
 ## az (Azure CLI)
 
@@ -33,7 +33,12 @@ winget install Microsoft.AzureCLI
 
 # macOS
 brew install azure-cli
+
+# Arch Linux
+sudo pacman -S azure-cli
 ```
+
+Debian and Ubuntu: follow https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux (adds Microsoft's apt repository).
 
 Authenticate:
 
@@ -47,7 +52,7 @@ Service principal login, for CI or unattended runs:
 az login --service-principal -u <appId> -t <tenantId> --password "$(az keyvault secret show ...)"
 ```
 
-Version note: `az fabric capacity` commands need Azure CLI 2.61.0 or later (`az version` to check). Tenant-settings security-group audits (fabric-admin) need Graph permissions `Group.Read.All`, `User.Read.All`, `Directory.Read.All`, `RoleManagement.Read.Directory`.
+Tenant-settings security-group audits (fabric-admin) need Graph permissions `Group.Read.All`, `User.Read.All`, `Directory.Read.All`, `RoleManagement.Read.Directory`.
 
 ### microsoft-fabric extension (optional)
 
@@ -60,11 +65,11 @@ az provider register --namespace Microsoft.Fabric   # first time only
 
 ## MCP servers
 
-The `fabric-cli` plugin ships no MCP servers; `fabric-sql` is optional and registered by hand. The `custom-visuals` plugin bundles `pbiviz`.
+The `fabric-cli` plugin ships no MCP servers; `fabric-sql` is optional and registered by hand. Microsoft also hosts Fabric MCP servers that can supersede it: check the connectors in the user's Claude account before registering this one. The `custom-visuals` plugin bundles `pbiviz`.
 
 ### fabric-sql (needs a bearer token)
 
-Server-side T-SQL against Fabric SQL endpoints. Interactive OAuth over `/mcp` does not work (Entra refuses dynamic client registration), so export a bearer token into `FABRIC_PBI_TOKEN` before launching the agent:
+Server-side T-SQL against Fabric SQL endpoints. Interactive OAuth over `/mcp` does not work (Unverified: Entra refused dynamic client registration when this was written), so export a bearer token into `FABRIC_PBI_TOKEN` before launching the agent:
 
 ```bash
 export FABRIC_PBI_TOKEN="$(az account get-access-token \
@@ -99,16 +104,18 @@ winget install DuckDB.cli
 
 # macOS
 brew install duckdb
+
+# Arch Linux
+sudo pacman -S duckdb
 ```
 
-One-time setup for OneLake access (uses your `az login`):
+Other Linux distributions: https://duckdb.org/install/. The `delta` and `azure` extensions autoload on first use. OneLake access uses your `az login`:
 
 ```sql
-INSTALL delta; INSTALL azure;
 CREATE SECRET (TYPE azure, PROVIDER credential_chain, CHAIN 'cli');
 ```
 
-DuckDB reads Delta; writes go through Spark.
+DuckDB 2.0 reads Delta and can create and append to Delta tables (UPDATE, DELETE and MERGE still go through Spark); see the `using-duckdb` skill.
 
 ## sqlcmd (go-sqlcmd)
 
@@ -121,6 +128,8 @@ winget install --id Microsoft.Sqlcmd
 # macOS
 brew install sqlcmd
 ```
+
+Linux: https://learn.microsoft.com/en-us/sql/tools/sqlcmd/go-sqlcmd-utility (install section).
 
 Auth reuses `az login` via `--authentication-method ActiveDirectoryAzCli`; endpoint discovery uses `fab auth login`. Needs at least Viewer on the workspace plus Read on the SQL object.
 
@@ -140,24 +149,18 @@ Rust toolchain, if building from source:
 
 ```bash
 winget install Rustlang.Rustup                                     # Windows
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh     # macOS/Linux
+see https://rustup.rs                                            # macOS/Linux
 ```
 
 `nb` needs `az login`. Verify: `nb --version`, `nb auth status`.
 
 ## Spark / Livy (etl)
 
-Nothing installs locally; this is a Fabric service endpoint for ephemeral PySpark/Python runs. It needs a Fabric capacity (F SKU or trial) and a lakehouse in the target workspace. Tokens come from `az`, and note that `fab` tokens do not work here:
-
-```bash
-az account get-access-token --resource https://api.fabric.microsoft.com --query accessToken -o tsv
-```
-
-Always delete Livy sessions when done so they stop consuming capacity units.
+Nothing installs locally; this is a Fabric service endpoint for ephemeral PySpark/Python runs. It needs a Fabric capacity (F SKU or trial), a lakehouse in the target workspace, and an Entra token with the `Lakehouse.*` and `Code.Access*` scopes (see the `executing-spark` skill). Delete Livy sessions when done so they stop consuming capacity units.
 
 ## fabric-admin extras
 
-The `fabric-admin` plugin reuses `fab` and `az` above and adds nothing new to install; its audit scripts run through `uv run` and auto-install their Python dependencies (`pyyaml`, `reportlab`). It requires the `fabric-cli` plugin, a Fabric/Power BI admin account for `fab`, and the Graph permissions listed under `az`.
+The `fabric-admin` plugin reuses `fab` and `az` above and adds nothing new to install; its audit scripts run through `uv run` and resolve their pinned Python dependencies (`pyyaml`, `reportlab`) from a PEP 723 header. It requires the `fabric-cli` plugin, a Fabric/Power BI admin account for `fab`, and the Graph permissions listed under `az`.
 
 ## fabric-cicd (optional)
 

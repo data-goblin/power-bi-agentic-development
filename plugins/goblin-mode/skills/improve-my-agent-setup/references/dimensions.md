@@ -24,7 +24,7 @@ Anti-patterns to flag:
 
 Do not flag high counts by themselves. Forty well-earned skills is a strength. Ask whether each earns its context, not whether there are many.
 
-Fixes: retire or disable overlapping and stale skills; tune the ones that don't fit; install `skill-creator` so they can author and tune their own; put the skills dir in a repo and symlink it (see `fix-catalog.md`).
+Fixes: read `/skill-doctor` first (context cost and use per skill); retire or disable overlapping and stale skills; tune the ones that don't fit; use `claude plugin eval` to prove a plugin's skills beat the baseline; install `skill-creator` so they can author and tune their own; put the skills dir in a repo and symlink it (see `fix-catalog.md`).
 
 ## memory-and-context
 
@@ -260,7 +260,7 @@ Anti-patterns to flag:
 
 Nuance: written rules are not worthless. For soft, judgment-heavy preferences (tone, when to ask, style) they are exactly right, because those cannot be encoded as a hook and are not catastrophic if occasionally missed. The flag is specifically for high-stakes, irreversible outcomes guarded only by a sentence. Match the enforcement strength to the cost of the rule being broken.
 
-Fixes: for each high-stakes naked rule, either add a hook (`hook-development`) or change the setup so the outcome is impossible (remove the access, block the network, inject secrets inline); reserve written rules for the judgment calls that genuinely need a human's or model's discretion. Pair this with permission-posture and execution-environment, since the same rule is worth very different amounts in different modes and on different rungs.
+Fixes: for each high-stakes naked rule, either add a hook (`/update-config`) or change the setup so the outcome is impossible (remove the access, block the network, inject secrets inline); reserve written rules for the judgment calls that genuinely need a human's or model's discretion. Pair this with permission-posture and execution-environment, since the same rule is worth very different amounts in different modes and on different rungs.
 
 ## supply-chain-defense
 
@@ -279,7 +279,7 @@ Anti-patterns to flag:
 
 Nuance: the 48-hour window is a heuristic, not a guarantee, and it trades a little freshness for a lot of safety. Someone who never lets an agent install anything, or who pins and vendors all dependencies, may not need the hook at all; the guard matters most when the agent installs packages semi-freely.
 
-Fixes: add a release-age guard hook on the install commands (the bun guard in this marketplace is the template; the `hook-development` skill helps generalize it to npm, uv, cargo); consolidate onto one package manager per ecosystem so the guard has a single choke point.
+Fixes: set a minimum release age in the package managers (bun, uv, mise, pnpm settings) and keep a hook only to block flags that disable it (`useful-stuff/hooks/block-release-age-bypass`); consolidate onto one package manager per ecosystem so the guard has a single choke point.
 
 ## secrets-hygiene
 

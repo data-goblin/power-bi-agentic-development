@@ -52,14 +52,14 @@ and creates one otherwise. `get` prints a flow as a spec that `apply` takes back
 
 Usage
 -----
-    python3 task_flow.py list  "Sales"                         # flows in a workspace (name or id)
-    python3 task_flow.py get   "Sales" > flow.json             # current flow as an apply-able spec
-    python3 task_flow.py get   "Sales" --raw                   # the backend JSON as stored
-    python3 task_flow.py apply "Sales" -s flow.json            # create or update from a spec
-    python3 task_flow.py apply "Sales" -s flow.json --dry-run  # print the body, send nothing
-    python3 task_flow.py rename "Sales" "Order to cash" [--description "..."]
-    python3 task_flow.py delete "Sales" --flow "Order to cash"
-    python3 task_flow.py types                                 # public item type -> artifactType
+    uv run task_flow.py list  "Sales"                         # flows in a workspace (name or id)
+    uv run task_flow.py get   "Sales" > flow.json             # current flow as an apply-able spec
+    uv run task_flow.py get   "Sales" --raw                   # the backend JSON as stored
+    uv run task_flow.py apply "Sales" -s flow.json            # create or update from a spec
+    uv run task_flow.py apply "Sales" -s flow.json --dry-run  # print the body, send nothing
+    uv run task_flow.py rename "Sales" "Order to cash" [--description "..."]
+    uv run task_flow.py delete "Sales" --flow "Order to cash"
+    uv run task_flow.py types                                 # public item type -> artifactType
 
 Exit codes: 0 done; 1 operational error (auth, HTTP, unknown item or task key).
 

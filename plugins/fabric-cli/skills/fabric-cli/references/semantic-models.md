@@ -1,605 +1,124 @@
-# Semantic Model Operations
+# Semantic models
 
-Comprehensive guide for working with semantic models (Power BI datasets) using the Fabric CLI.
+Definition read and write, refresh, copy and storage-mode checks for semantic models through `fab`. For model edits and DAX queries prefer the `te-cli` skill (tabular-editor plugin); this file covers what `fab` itself does.
 
-## Overview
+## Learn
 
-Semantic models in Fabric use TMDL (Tabular Model Definition Language) format for their definitions. This guide covers getting, updating, exporting, and managing semantic models.
+```yaml
+semantic model REST: https://learn.microsoft.com/en-us/rest/api/fabric/semanticmodel/items
+definition format: https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/semantic-model-definition
+TMDL: https://learn.microsoft.com/en-us/analysis-services/tmdl/tmdl-overview
+executeQueries: https://learn.microsoft.com/en-us/rest/api/power-bi/datasets/execute-queries
+refresh: https://learn.microsoft.com/en-us/power-bi/connect-data/asynchronous-refresh
+refresh REST: https://learn.microsoft.com/en-us/rest/api/power-bi/datasets/refresh-dataset
+```
 
-## Getting Model Information
+## Read the definition
 
-### Basic Model Info
+`fab get -q` is applied to the item itself (no `text.` prefix); `-q id` prints the bare value.
 
 ```bash
-# Check if model exists
-fab exists "Production.Workspace/Sales.SemanticModel"
-
-# Get model properties
-fab get "Production.Workspace/Sales.SemanticModel"
-
-# Get model with all details (verbose)
-fab get "Production.Workspace/Sales.SemanticModel" -v
-
-# Get only model ID
-fab get "Production.Workspace/Sales.SemanticModel" -q "id"
+fab get "ws.Workspace/Sales.SemanticModel" -q id
+fab get "ws.Workspace/Sales.SemanticModel" -q "definition.parts[].path"
+fab get "ws.Workspace/Sales.SemanticModel" -q "definition.parts[?path=='definition/tables/Sales.tmdl'].payload | [0]"
+fab get "ws.Workspace/Sales.SemanticModel" -q definition -o ./model-def.json
 ```
 
-### Get Model Definition
+```yaml
+model.tmdl / definition/model.tmdl: model properties, culture, compatibility level
+definition/database.tmdl: database properties
+definition/tables/<Table>.tmdl: columns, measures, hierarchies, partitions
+definition/relationships.tmdl: relationships
+definition/roles.tmdl: row-level security roles
+definition/expressions/*.tmdl: M queries and shared expressions
+definition/functions.tmdl: DAX user-defined functions
+.platform: Git metadata; omit from updates
+```
 
-The model definition contains all TMDL parts (tables, measures, relationships, etc.):
+- Raw API payloads are base64 (`InlineBase64`); decode before reading
+- Export to a TMDL folder with `fab export "ws.Workspace/Sales.SemanticModel" -o ./out -f`; for a PBIP project with a report use `pbir` (see [import-download-deploy.md](./import-download-deploy.md)); never hand-write report JSON
+
+## Update the definition
+
+Prefer `fab import` of an edited TMDL folder (see [import-download-deploy.md](./import-download-deploy.md)). Through the raw API:
 
 ```bash
-# Get full definition (all TMDL parts)
-fab get "Production.Workspace/Sales.SemanticModel" -q "definition"
-
-# Save definition to file
-fab get "Production.Workspace/Sales.SemanticModel" -q "definition" -o /tmp/model-def.json
+fab api -X post "workspaces/$WS/semanticModels/$MODEL/updateDefinition" -i update.json --show_headers
+fab api "operations/<operation-id>" -q "text.status"
 ```
 
-### Get Specific TMDL Parts
+- `update.json` is `{"definition": {"parts": [...]}}`; send every part, modified and unmodified, never `.platform`
+- The call is a long-running operation: the operation id is in the `Location` header (`.../operations/<id>`); a failed one carries `error` in the operation body
+- After any definition change, run a trivial query (`EVALUATE {1}`) to confirm the model still loads
+
+## DAX queries
 
 ```bash
-# Get model.tmdl (main model properties)
-fab get "Production.Workspace/Sales.SemanticModel" -q "definition.parts[?path=='model.tmdl'].payload | [0]"
-
-# Get specific table definition
-fab get "Production.Workspace/Sales.SemanticModel" -q "definition.parts[?path=='definition/tables/Customers.tmdl'].payload | [0]"
-
-# Get all table definitions
-fab get "Production.Workspace/Sales.SemanticModel" -q "definition.parts[?starts_with(path, 'definition/tables/')]"
-
-# Get relationships.tmdl
-fab get "Production.Workspace/Sales.SemanticModel" -q "definition.parts[?path=='definition/relationships.tmdl'].payload | [0]"
-
-# Get functions.tmdl (DAX functions)
-fab get "Production.Workspace/Sales.SemanticModel" -q "definition.parts[?path=='definition/functions.tmdl'].payload | [0]"
-
-# Get all definition part paths (for reference)
-fab get "Production.Workspace/Sales.SemanticModel" -q "definition.parts[].path"
+fab api -A powerbi "datasets/$MODEL/executeQueries" -X post -i '{"queries":[{"query":"EVALUATE TOPN(10, Sales, Sales[Amount], DESC)"}],"serializerSettings":{"includeNulls":false}}'
+uv run ${CLAUDE_SKILL_DIR}/scripts/execute_dax.py "ws.Workspace/Sales.SemanticModel" -q "EVALUATE VALUES('Date'[Year])"
 ```
 
-## Exporting Models
+- Results come back under `text.results[0].tables[0].rows`
+- executeQueries has hard limits (rows, values and requests per minute, one query per call historically); see the Learn page and use `te query` (te-cli skill) for anything large or repeated
+- Parameters use `"parameters": [{"name": "@Year", "value": "2024"}]` with `@Year` in the query
+- Needs Build permission on the model; with a service principal also the tenant setting that allows service principals to use Power BI APIs
 
-### Export as TMDL or PBIP
-
-Export the model definition with `fab`:
+## Refresh
 
 ```bash
-fab export "Production.Workspace/Sales.SemanticModel" -o /tmp/exports -f
+fab api -A powerbi "groups/$WS/datasets/$MODEL/refreshes" -X post -i '{"type":"Full"}'
+fab api -A powerbi "groups/$WS/datasets/$MODEL/refreshes" -P '$top=1' -q "text.value[0].{status:status,end:endTime}"
+fab api -A powerbi "groups/$WS/datasets/$MODEL/refreshes/$REFRESH_ID" -X delete
 ```
 
-For a full PBIP project, add a report with `pbir new report`, then use
-`pbir report merge-to-thick`; see `import-download-deploy.md`. Do not generate report JSON in a
-custom script.
+- The POST returns 202; the request id is in the `x-ms-request-id` response header (use `--show_headers`)
+- Refresh status values: `Unknown` means in progress, then `Completed`, `Failed`, `Disabled` or `Cancelled`
+- Enhanced refresh (per table, partition, commit mode, `applyRefreshPolicy`) takes extra body fields; see the Learn page
+- Shared capacity allows 8 refreshes per day through the API; Premium and Fabric capacities do not have that cap
+- Schedule: GET or PATCH `datasets/$MODEL/refreshSchedule` with `{"enabled": true, "days": [...], "times": ["02:00"], "localTimeZoneId": "UTC"}`; `{"enabled": false}` disables it
+- The `refresh-semantic-model` skill (semantic-models plugin) covers refresh strategy
 
-### Export Specific Parts Only
+## Copy and deploy
 
 ```bash
-# Export just tables
-fab get "Production.Workspace/Sales.SemanticModel" -q "definition.parts[?starts_with(path, 'definition/tables/')]" -o /tmp/tables.json
-
-# Export just measures (within tables)
-fab get "Production.Workspace/Sales.SemanticModel" -q "definition.parts[?contains(path, '/tables/')]" | grep -A 20 "measure"
+fab cp "Dev.Workspace/Sales.SemanticModel" "Prod.Workspace/Sales.SemanticModel" -f
 ```
 
-## Listing Model Contents
+- `cp` copies the definition only, not data; refresh the target afterward, and rebind reports and credentials as needed
+- Stage promotion belongs to deployment pipelines (see [deployment-pipelines.md](./deployment-pipelines.md))
+- `fab set "ws.Workspace/Sales.SemanticModel" -q displayName -i "New name"` renames; `-q description` sets the description
+
+## Storage mode
+
+Read the partition mode from a table part:
 
 ```bash
-# List all items in model (if OneLake enabled)
-fab ls "Production.Workspace/Sales.SemanticModel"
-
-# Query model structure via API
-fab api workspaces -q "value[?displayName=='Production'].id | [0]" | xargs -I {} \
-  fab api "workspaces/{}/items" -q "value[?type=='SemanticModel']"
-
-# Native alternative for listing:
-fab ls "ws.Workspace" -q "[?contains(name, '.SemanticModel')]"
+fab get "ws.Workspace/Sales.SemanticModel" -q "definition.parts[?contains(path,'tables/Sales')].payload | [0]"
 ```
 
-## Updating Model Definitions
-
-**CRITICAL**: When updating semantic models, you must:
-1. Get the full definition
-2. Modify the specific parts you want to change
-3. Include ALL parts in the update request (modified + unmodified)
-4. Never include `.platform` file
-5. Test immediately
-
-### Update Workflow
-
-```bash
-# 1. Get workspace and model IDs
-WS_ID=$(fab get "Production.Workspace" -q "id")
-MODEL_ID=$(fab get "Production.Workspace/Sales.SemanticModel" -q "id")
-
-# 2. Get current definition
-fab get "Production.Workspace/Sales.SemanticModel" -q "definition" -o /tmp/current-def.json
-
-# 3. Modify definition (edit JSON file or use script)
-# ... modify /tmp/current-def.json ...
-
-# 4. Wrap definition in update request
-cat > /tmp/update-request.json <<EOF
-{
-  "definition": $(cat /tmp/current-def.json)
-}
-EOF
-
-# 5. Update via API
-fab api -X post "workspaces/$WS_ID/semanticModels/$MODEL_ID/updateDefinition" \
-  -i /tmp/update-request.json \
-  --show_headers
-
-# 6. Extract operation ID from Location header and poll status
-OPERATION_ID="<extracted-from-Location-header>"
-fab api "operations/$OPERATION_ID"
+```yaml
+Direct Lake: partition Sales = entity, mode: directLake, source with entityName, schemaName, expressionSource
+Import: partition Sales = m, mode: import, source is an M expression
+DirectQuery: mode: directQuery
 ```
 
-### Example: Add a Measure
+## Find reports bound to a model
 
-```python
-# Python script to add measure to definition
-import json
+A report's `definition.pbir` holds `datasetReference.byConnection.connectionString` with `semanticmodelid=<guid>`. Match that against the model id from `fab get -q id`. `uv run ${CLAUDE_SKILL_DIR}/scripts/get-downstream-reports.py` does it across a workspace.
 
-with open('/tmp/current-def.json', 'r') as f:
-    definition = json.load(f)
+## Access
 
-# Find the table's TMDL part
-for part in definition['parts']:
-    if part['path'] == 'definition/tables/Sales.tmdl':
-        # Decode base64 content
-        import base64
-        tmdl_content = base64.b64decode(part['payload']).decode('utf-8')
+`fab acl` does not work on a semantic model (workspace, connection and gateway only). Workspace members: `fab acl ls "ws.Workspace"`. Model-level users: `fab api -A powerbi "groups/$WS/datasets/$MODEL/users"` (Unverified on current service behaviour); see [permissions.md](./permissions.md).
 
-        # Add measure (simplified - real implementation needs proper TMDL syntax)
-        measure_tmdl = """
-measure 'Total Revenue' = SUM(Sales[Amount])
-    formatString: #,0.00
-    displayFolder: "KPIs"
-"""
-        tmdl_content += measure_tmdl
+## Source data checks
 
-        # Re-encode
-        part['payload'] = base64.b64encode(tmdl_content.encode('utf-8')).decode('utf-8')
+To diagnose freshness or quality, query the lakehouse Delta tables directly instead of going through the model; see [querying-data.md](./querying-data.md).
 
-# Save modified definition
-with open('/tmp/modified-def.json', 'w') as f:
-    json.dump(definition, f)
+## Scripts
+
+```yaml
+scripts/create_direct_lake_model.py: create a Direct Lake model from a lakehouse table
+scripts/execute_dax.py: run DAX against a model
+scripts/get-downstream-reports.py: reports bound to a model
+scripts/get_semantic_model_ai_metadata.py: AI metadata for a model
 ```
-
-## Executing DAX Queries
-
-Use Power BI API to execute DAX queries against semantic models:
-
-```bash
-# Get model ID
-MODEL_ID=$(fab get "Production.Workspace/Sales.SemanticModel" -q "id")
-
-# Execute simple DAX query
-fab api -A powerbi "datasets/$MODEL_ID/executeQueries" -X post -i '{
-  "queries": [{
-    "query": "EVALUATE VALUES(Date[Year])"
-  }]
-}'
-
-# Execute TOPN query
-fab api -A powerbi "datasets/$MODEL_ID/executeQueries" -X post -i '{
-  "queries": [{
-    "query": "EVALUATE TOPN(10, Sales, Sales[Amount], DESC)"
-  }]
-}'
-
-# Execute multiple queries
-fab api -A powerbi "datasets/$MODEL_ID/executeQueries" -X post -i '{
-  "queries": [
-    {"query": "EVALUATE VALUES(Date[Year])"},
-    {"query": "EVALUATE SUMMARIZE(Sales, Date[Year], \"Total\", SUM(Sales[Amount]))"}
-  ],
-  "serializerSettings": {
-    "includeNulls": false
-  }
-}'
-
-# Execute query with parameters
-fab api -A powerbi "datasets/$MODEL_ID/executeQueries" -X post -i '{
-  "queries": [{
-    "query": "EVALUATE FILTER(Sales, Sales[Year] = @Year)",
-    "parameters": [
-      {"name": "@Year", "value": "2024"}
-    ]
-  }]
-}'
-```
-
-#### Using the DAX query script
-
-```bash
-python3 scripts/execute_dax.py \
-  --workspace "Production.Workspace" \
-  --model "Sales.SemanticModel" \
-  --query "EVALUATE TOPN(10, Sales)" \
-  --output /tmp/results.json
-```
-
-## Refreshing Models
-
-```bash
-# Get workspace and model IDs
-WS_ID=$(fab get "Production.Workspace" -q "id")
-MODEL_ID=$(fab get "Production.Workspace/Sales.SemanticModel" -q "id")
-
-# Trigger full refresh
-fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/refreshes" -X post -i '{"type":"Full"}'
-
-# Check latest refresh status
-fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/refreshes?\$top=1"
-
-# Get refresh history
-fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/refreshes"
-
-# Cancel refresh
-REFRESH_ID="<refresh-request-id>"
-fab api -A powerbi "groups/$WS_ID/datasets/$MODEL_ID/refreshes/$REFRESH_ID" -X delete
-```
-
-## Model Refresh Schedule
-
-```bash
-MODEL_ID=$(fab get "Production.Workspace/Sales.SemanticModel" -q "id")
-
-# Get current schedule
-fab api -A powerbi "datasets/$MODEL_ID/refreshSchedule"
-
-# Update schedule (daily at 2 AM)
-fab api -A powerbi "datasets/$MODEL_ID/refreshSchedule" -X patch -i '{
-  "enabled": true,
-  "days": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-  "times": ["02:00"],
-  "localTimeZoneId": "UTC"
-}'
-
-# Disable schedule
-fab api -A powerbi "datasets/$MODEL_ID/refreshSchedule" -X patch -i '{
-  "enabled": false
-}'
-```
-
-## Copying Models
-
-```bash
-# Copy semantic model between workspaces (full paths required)
-fab cp "Dev.Workspace/Sales.SemanticModel" "Production.Workspace/Sales.SemanticModel" -f
-
-# Copy with new name
-fab cp "Dev.Workspace/Sales.SemanticModel" "Production.Workspace/SalesProduction.SemanticModel" -f
-
-# Note: Both source and destination must include workspace.Workspace/model.SemanticModel
-# This copies the definition, not data or refreshes
-```
-
-## Model Deployment Workflow
-
-### Dev to Production
-
-```bash
-#!/bin/bash
-
-DEV_WS="Development.Workspace"
-PROD_WS="Production.Workspace"
-MODEL_NAME="Sales.SemanticModel"
-
-# 1. Export from dev
-fab export "$DEV_WS/$MODEL_NAME" -o /tmp/deployment
-
-# 2. Test locally (optional - requires Power BI Desktop)
-# Open /tmp/deployment/Sales/*.pbip in Power BI Desktop
-
-# 3. Import to production
-fab import "$PROD_WS/$MODEL_NAME" -i /tmp/deployment/$MODEL_NAME
-
-# 4. Trigger refresh in production
-PROD_MODEL_ID=$(fab get "$PROD_WS/$MODEL_NAME" -q "id")
-fab api -A powerbi "datasets/$PROD_MODEL_ID/refreshes" -X post -i '{"type": "Full"}'
-
-# 5. Monitor refresh
-sleep 10
-fab api -A powerbi "datasets/$PROD_MODEL_ID/refreshes" -q "value[0]"
-```
-
-## Working with Model Metadata
-
-### Update Display Name
-
-```bash
-fab set "Production.Workspace/Sales.SemanticModel" -q displayName -i "Sales Analytics Model"
-```
-
-### Update Description
-
-```bash
-fab set "Production.Workspace/Sales.SemanticModel" -q description -i "Primary sales analytics semantic model for production reporting"
-```
-
-## Advanced Patterns
-
-### Extract All Measures
-
-```bash
-# Get all table definitions containing measures
-fab get "Production.Workspace/Sales.SemanticModel" -q "definition.parts[?contains(path, '/tables/')]" -o /tmp/tables.json
-
-# Process with script to extract measures
-python3 << 'EOF'
-import json
-import base64
-
-with open('/tmp/tables.json', 'r') as f:
-    parts = json.load(f)
-
-measures = []
-for part in parts:
-    if 'tables' in part['path']:
-        content = base64.b64decode(part['payload']).decode('utf-8')
-        # Extract measure definitions (simple regex - real parser needed for production)
-        import re
-        measure_blocks = re.findall(r'measure\s+[^\n]+\s*=.*?(?=\n\s*(?:measure|column|$))', content, re.DOTALL)
-        measures.extend(measure_blocks)
-
-for i, measure in enumerate(measures, 1):
-    print(f"\n--- Measure {i} ---")
-    print(measure)
-EOF
-```
-
-### Compare Models (Diff)
-
-```bash
-# Export both models
-fab get "Production.Workspace/Sales.SemanticModel" -q "definition" -o /tmp/model1-def.json
-fab get "Dev.Workspace/Sales.SemanticModel" -q "definition" -o /tmp/model2-def.json
-
-# Use diff tool
-diff <(jq -S . /tmp/model1-def.json) <(jq -S . /tmp/model2-def.json)
-
-# jq -S sorts keys for consistent comparison
-```
-
-### Backup Model Definition
-
-```bash
-#!/bin/bash
-
-WORKSPACE="Production.Workspace"
-MODEL="Sales.SemanticModel"
-BACKUP_DIR="/backups/$(date +%Y%m%d)"
-
-mkdir -p "$BACKUP_DIR"
-
-# Export as multiple formats for redundancy
-fab get "$WORKSPACE/$MODEL" -q "definition" -o "$BACKUP_DIR/definition.json"
-
-# Export the local TMDL definition
-fab export "$WORKSPACE/$MODEL" -o "$BACKUP_DIR/model" -f
-
-# Save metadata
-fab get "$WORKSPACE/$MODEL" -o "$BACKUP_DIR/metadata.json"
-
-echo "Backup completed: $BACKUP_DIR"
-```
-
-## TMDL Structure Reference
-
-A semantic model's TMDL definition consists of these parts:
-
-```
-model.tmdl                          # Model properties, culture, compatibility
-.platform                           # Git integration metadata (exclude from updates)
-definition/
-├── model.tmdl                     # Alternative location for model properties
-├── database.tmdl                  # Database properties
-├── roles.tmdl                     # Row-level security roles
-├── relationships.tmdl             # Relationships between tables
-├── functions.tmdl                 # DAX user-defined functions
-├── expressions/                   # M queries for data sources
-│   ├── Source1.tmdl
-│   └── Source2.tmdl
-└── tables/                        # Table definitions
-    ├── Customers.tmdl             # Columns, measures, hierarchies
-    ├── Sales.tmdl
-    ├── Products.tmdl
-    └── Date.tmdl
-```
-
-### Common TMDL Parts to Query
-
-```bash
-MODEL="Production.Workspace/Sales.SemanticModel"
-
-# Model properties
-fab get "$MODEL" -q "definition.parts[?path=='model.tmdl'].payload | [0]"
-
-# Roles and RLS
-fab get "$MODEL" -q "definition.parts[?path=='definition/roles.tmdl'].payload | [0]"
-
-# Relationships
-fab get "$MODEL" -q "definition.parts[?path=='definition/relationships.tmdl'].payload | [0]"
-
-# Data source expressions
-fab get "$MODEL" -q "definition.parts[?starts_with(path, 'definition/expressions/')]"
-
-# All tables
-fab get "$MODEL" -q "definition.parts[?starts_with(path, 'definition/tables/')].path"
-```
-
-## Troubleshooting
-
-### Model Not Found
-
-```bash
-# Verify workspace exists
-fab exists "Production.Workspace"
-
-# List semantic models in workspace
-WS_ID=$(fab get "Production.Workspace" -q "id")
-fab api "workspaces/$WS_ID/items" -q "value[?type=='SemanticModel']"
-
-# Native alternative:
-fab ls "Production.Workspace" -l -q "[?contains(name, '.SemanticModel')]"
-```
-
-### Update Definition Fails
-
-Common issues:
-1. **Included `.platform` file**: Never include this in updates
-2. **Missing parts**: Must include ALL parts, not just modified ones
-3. **Invalid TMDL syntax**: Validate TMDL before updating
-4. **Encoding issues**: Ensure base64 encoding is correct
-
-```bash
-# Debug update operation
-fab api "operations/$OPERATION_ID" -q "error"
-```
-
-### DAX Query Errors
-
-```bash
-# Check model is online
-fab get "Production.Workspace/Sales.SemanticModel" -q "properties"
-
-# Try simple query first
-MODEL_ID=$(fab get "Production.Workspace/Sales.SemanticModel" -q "id")
-fab api -A powerbi "datasets/$MODEL_ID/executeQueries" -X post -i '{
-  "queries": [{"query": "EVALUATE {1}"}]
-}'
-```
-
-## Storage Mode
-
-Check table partition mode to determine if model is Direct Lake, Import, or DirectQuery.
-
-```bash
-# Get table definition and check partition mode
-fab get "ws.Workspace/Model.SemanticModel" -q "definition.parts[?contains(path, 'tables/TableName')].payload | [0]"
-```
-
-Output shows partition type:
-
-```
-# Direct Lake
-partition TableName = entity
-    mode: directLake
-    source
-        entityName: table_name
-        schemaName: schema
-        expressionSource: DatabaseQuery
-
-# Import
-partition TableName = m
-    mode: import
-    source =
-        let
-            Source = Sql.Database("connection", "database"),
-            Data = Source{[Schema="schema",Item="table"]}[Data]
-        in
-            Data
-```
-
-## Workspace Access
-
-```bash
-# Native (preferred):
-fab acl ls "ws.Workspace"                              # List users
-fab acl set "ws.Workspace" -I <objectId> -R Member     # Grant access
-fab acl rm "ws.Workspace" -I <upn-or-clientId> -f      # Revoke access
-
-# Via API (if needed):
-fab get "ws.Workspace" -q "id"
-fab api -A powerbi "groups/<workspace-id>/users"
-```
-
-Output:
-
-```json
-{
-  "value": [
-    {
-      "emailAddress": "user@domain.com",
-      "groupUserAccessRight": "Admin",
-      "displayName": "User Name",
-      "principalType": "User"
-    }
-  ]
-}
-```
-
-Access rights: `Admin`, `Member`, `Contributor`, `Viewer`
-
-## Find Reports Using a Model
-
-Check report's `definition.pbir` for `byConnection.semanticmodelid`:
-
-```bash
-# Get model ID
-fab get "ws.Workspace/Model.SemanticModel" -q "id"
-
-# Check a report's connection
-fab get "ws.Workspace/Report.Report" -q "definition.parts[?contains(path, 'definition.pbir')].payload | [0]"
-```
-
-Output:
-
-```json
-{
-  "datasetReference": {
-    "byConnection": {
-      "connectionString": "...semanticmodelid=bee906a0-255e-..."
-    }
-  }
-}
-```
-
-To find all reports using a model, check each report's definition.pbir for matching `semanticmodelid`.
-
-## Performance Tips
-
-1. **Cache model IDs**: Don't repeatedly query for the same ID
-2. **Use JMESPath filtering**: Get only what you need
-3. **Batch DAX queries**: Combine multiple queries in one request
-4. **Export during off-hours**: Large model exports can be slow
-5. **Use Power BI API for queries**: It's optimized for DAX execution
-
-## Security Considerations
-
-1. **Row-Level Security**: Check roles before exposing data
-2. **Credentials in data sources**: Don't commit data source credentials
-3. **Sensitive measures**: Review calculated columns/measures for sensitive logic
-4. **Export restrictions**: Ensure exported models don't contain sensitive data
-
-## Investigating Source Data
-
-When diagnosing data issues (freshness, quality, missing records) or planning semantic model design, query the underlying lakehouse or warehouse tables directly with DuckDB rather than through the semantic model. This avoids DAX complexity and lets you inspect the raw data:
-
-```bash
-WS_ID=$(fab get "ws.Workspace" -q "id" | tr -d '"')
-LH_ID=$(fab get "ws.Workspace/LH.Lakehouse" -q "id" | tr -d '"')
-
-duckdb -c "
-LOAD delta; LOAD azure;
-CREATE SECRET (TYPE azure, PROVIDER credential_chain, CHAIN 'cli');
-
--- Check freshness of source data
-SELECT max(modified_date) as latest, count(*) as rows
-FROM delta_scan('abfss://${WS_ID}@onelake.dfs.fabric.microsoft.com/${LH_ID}/Tables/gold/orders');
-
--- Profile columns before adding to a model
-SELECT column_name, column_type, approx_count_distinct, null_percentage
-FROM (SUMMARIZE delta_scan('abfss://${WS_ID}@onelake.dfs.fabric.microsoft.com/${LH_ID}/Tables/gold/customers'));
-"
-```
-
-For full DuckDB querying patterns, see [querying-data.md](./querying-data.md).
-
-## Related Scripts
-
-- `scripts/create_direct_lake_model.py` - Create Direct Lake model from lakehouse table
-- `scripts/execute_dax.py` - Execute DAX queries

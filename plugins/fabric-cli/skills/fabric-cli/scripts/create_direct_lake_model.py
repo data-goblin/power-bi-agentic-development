@@ -3,7 +3,7 @@
 Create a Direct Lake semantic model from lakehouse tables.
 
 Usage:
-    python3 create_direct_lake_model.py "src.Workspace/LH.Lakehouse" "dest.Workspace/Model.SemanticModel" -t schema.table
+    uv run create_direct_lake_model.py "src.Workspace/LH.Lakehouse" "dest.Workspace/Model.SemanticModel" -t schema.table
 
 Requirements:
     - fab CLI installed and authenticated

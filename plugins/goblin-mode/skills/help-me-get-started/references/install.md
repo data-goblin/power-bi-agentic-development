@@ -1,12 +1,12 @@
 # Set up agentic Power BI and Fabric development
 
-A prescriptive workflow to get a machine ready to work these plugins. It maps each plugin to the external tools it needs, gives Windows and macOS install commands for each tool, and ends with authentication and a verification pass.
+A prescriptive workflow to get a machine ready to work these plugins. It maps each plugin to the external tools it needs, gives Windows, macOS and Linux install commands for each tool, and ends with authentication and a verification pass.
 
 The guiding principle, echoed in the marketplace README: install only what the task needs. Each installed tool and skill competes for the agent's attention and context. Install the small base layer everyone shares, then add the tools for the plugins actually in use; skip the rest.
 
 ## How to use this install workflow
 
-1. Confirm the target OS (Windows or macOS) and whether the user drives Power BI Desktop locally, since that decides several Windows-only paths
+1. Confirm the target OS (Windows, macOS or Linux) and whether the user drives Power BI Desktop locally, since that decides several Windows-only paths. On Linux skip every `windows-only` tool
 2. Install the base layer (everyone needs it); see `foundation.md`
 3. Look up the plugins in the map below, collect the union of tools, and install them from the matching reference file
 4. Authenticate the cloud tools and any MCP servers
@@ -19,10 +19,10 @@ Do not install tools the user has no plugin for. If unsure which plugins they wa
 Install once regardless of which plugins follow. Details and commands: `foundation.md`.
 
 ```
-coding agent      Claude Code CLI (or GitHub Copilot CLI) + add this marketplace
+marketplace       claude plugin marketplace add (the agent itself is already running)
 uv                Python tool installer and runner; how most CLIs here install
 git               required; on Windows also enable long paths (repo has long TMDL paths)
-python 3.10+      most helper scripts run under uv / python3
+python 3.10+      helper scripts run under uv, which can provide Python
 shared CLIs       jq (nearly every hook + script), plus gh and ripgrep where noted
 ```
 
@@ -91,15 +91,26 @@ fabric-cli:
   mcp: [fabric-sql (optional, register yourself; needs FABRIC_PBI_TOKEN)]
   install: fabric.md
 
+databricks-cli:
+  needs: [Databricks CLI]                          # the plugin ships only a pane (mod); it parses `databricks` calls
+  install: https://docs.databricks.com/aws/en/dev-tools/cli/install
+
+fabric-data-app:
+  needs: [Node.js, rayfin (npx rayfin)]            # Fabric Apps is in preview; the plugin ships only a pane
+  install: https://learn.microsoft.com/en-us/fabric/apps/cli-reference
+
+goblin-mode:
+  needs: []                                        # this plugin: onboarding and setup audit; nothing to install
+
 fabric-admin:
   needs: [fab (admin account), az (with Graph permissions)]
   requires: fabric-cli plugin installed
-  python: [pyyaml, reportlab]                     # auto-installed via uv run
+  python: [pyyaml, reportlab]                     # pinned in the scripts' PEP 723 headers; uv run resolves them
   install: fabric.md
 
 etl:
-  needs: [fab, az, DuckDB]
-  capacity: Spark/Livy needs Fabric capacity (F SKU or trial) + a lakehouse
+  needs: [fab, az, DuckDB (2.0 reads and can append to Delta)]
+  capacity: Spark/Livy needs Fabric capacity (F SKU or trial) + a lakehouse + an Entra token with the Lakehouse and Code.Access scopes
   install: fabric.md
 ```
 

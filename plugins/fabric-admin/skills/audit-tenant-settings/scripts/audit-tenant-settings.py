@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["pyyaml==6.0.3"]
+# ///
 """Audit Fabric tenant settings against a curated recommendation baseline.
 
 Fetches live tenant settings via `fab api admin/tenantsettings`, merges them
@@ -12,7 +16,7 @@ Usage:
     uv run scripts/audit-tenant-settings.py -o audit.md      # write to file
     uv run scripts/audit-tenant-settings.py --drift-only     # only non-compliant
 
-Requires: fab CLI, pyyaml.
+Requires: fab CLI. pyyaml is declared in the script header, so run it with uv run.
 """
 
 # region Imports

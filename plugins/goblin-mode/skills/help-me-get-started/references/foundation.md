@@ -1,156 +1,62 @@
-# Foundation: the base layer everyone needs
+# Foundation: the base layer
 
-Install this first, on any machine, before the domain tools. Windows commands assume [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/) (ships with Windows 10/11); run them in PowerShell. macOS commands assume [Homebrew](https://brew.sh); install it first if missing:
+Install this before the domain tools, and only what the user's plugins need. Windows commands use [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/) in PowerShell, macOS uses [Homebrew](https://brew.sh), Linux uses the distribution's package manager (Arch commands below; Debian and Ubuntu use `apt` with the same package names unless noted). The user is already inside Claude Code, so the agent itself is not installed here.
 
-```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-
-## 1. The coding agent + this marketplace
-
-Pick one agent. Claude Code is the primary target; GitHub Copilot CLI reads the same marketplace manifest.
-
-### Claude Code CLI
-
-```bash
-# macOS (native installer, recommended)
-curl -fsSL https://claude.ai/install.sh | bash
-
-# Windows (PowerShell)
-irm https://claude.ai/install.ps1 | iex
-
-# Either OS, if you already run Node 18+ and prefer npm
-npm install -g @anthropic-ai/claude-code
-```
-
-Then add the marketplace and install the plugins in scope:
+## 1. Add the marketplace
 
 ```bash
 claude plugin marketplace add data-goblin/power-bi-agentic-development
-claude plugin install fabric-cli@power-bi-agentic-development
-# ...repeat per plugin, or install interactively with /plugin
+claude plugin install fabric-cli@power-bi-agentic-development      # repeat per plugin, or use /plugin
 ```
 
-Verify: `claude --version`, then `claude doctor` to diagnose a broken install.
+Check with `claude --version` and `claude doctor`. GitHub Copilot CLI reads the same manifest (`copilot plugin marketplace add ...`); hooks need Copilot CLI 1.0.26 or newer.
 
-### GitHub Copilot CLI (alternative)
-
-See the [Copilot CLI docs](https://docs.github.com/en/copilot/how-tos/copilot-cli) for the install. Then either register the marketplace and install a child plugin, or install one plugin straight from its subdirectory:
+## 2. git and Windows long paths
 
 ```bash
-copilot plugin marketplace add data-goblin/power-bi-agentic-development
-copilot plugin install fabric-cli@power-bi-agentic-development
-
-# or, no marketplace registration:
-copilot plugin install data-goblin/power-bi-agentic-development:plugins/pbip
+winget install Git.Git            # Windows
+brew install git                  # macOS
+sudo pacman -S git                # Arch
+sudo apt install git              # Debian, Ubuntu
 ```
 
-Hooks need Copilot CLI 1.0.26 or newer (it sets `CLAUDE_PLUGIN_ROOT`); run `copilot update` if hooks misfire.
+Windows only: long TMDL paths need long path support in the OS and in git; run the repo's `useful-stuff/agent-scripts/enable-windows-longpaths.ps1` elevated, then reboot. macOS and Linux need nothing.
 
-## 2. git + Windows long paths
+## 3. uv
 
-git is required for cloning the marketplace and for the file-based hooks. Install if missing:
+Most CLIs and scripts here install or run through [uv](https://docs.astral.sh/uv/) (`uv tool install`, `uv run`, `uv run --with`). Scripts declare their own dependencies in a PEP 723 header; use `uv`, not `pip`.
 
 ```bash
-# Windows
-winget install Git.Git
-
-# macOS (usually preinstalled via Xcode CLT; otherwise)
-brew install git
+winget install --id astral-sh.uv  # Windows
+brew install uv                   # macOS
+sudo pacman -S uv                 # Arch
 ```
 
-Windows only, and important: this marketplace ships TMDL files whose repo-relative paths exceed the legacy 260-character `MAX_PATH`. Without long-path support, `git clone` (and any plugin install that wraps a clone) aborts with `Filename too long`. Enable it once, from an elevated PowerShell, then reboot:
+On Debian or Ubuntu use the standalone installer from https://docs.astral.sh/uv/getting-started/installation/ (download it, read it, then run it). `uv python install 3.12` provides Python when the system one is older than 3.10.
 
-```powershell
-# Registry (OS level) + git (both are needed)
-Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name LongPathsEnabled -Value 1
-git config --system core.longpaths true
-```
+## 4. Node.js and bun (custom-visuals only)
 
-The repo ships a self-checking, idempotent helper that does exactly this: `useful-stuff/agent-scripts/enable-windows-longpaths.ps1` (run elevated). macOS and Linux have no `MAX_PATH` limit; nothing to do there.
-
-## 3. uv (Python tool installer and runner)
-
-Nearly every CLI and helper script in these plugins installs or runs through [uv](https://docs.astral.sh/uv/): `uv tool install <cli>`, `uv run script.py`, `uv run --with <pkg>` for ephemeral dependencies. Install it first because `fab`, `pbir`, and others depend on it.
+`pbiviz` needs Node.js 20.19 or later. bun is preferred over npm because it skips install scripts by default.
 
 ```bash
-# Windows
-winget install --id astral-sh.uv
-
-# macOS
-brew install uv
-
-# Either OS, official script fallback
-curl -LsSf https://astral.sh/uv/install.sh | sh          # macOS/Linux
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"  # Windows
+winget install OpenJS.NodeJS.LTS ; winget install Oven-sh.Bun    # Windows
+brew install node bun                                            # macOS
+sudo pacman -S nodejs bun                                        # Arch
 ```
 
-Verify: `uv --version`.
+## 5. Shared helpers
 
-## 4. Python
-
-The helper scripts target Python 3.10+ (report/model scripts) and the Service pins 3.11 for Python visuals. uv can manage Python for you (`uv python install 3.11`), or install it directly:
+`jq` is needed by nearly every hook and script. `gh` (theme schema lookups, daxlib registry) and `rg` (renames) are optional.
 
 ```bash
-# Windows
-winget install Python.Python.3.12
-
-# macOS
-brew install python@3.12
+winget install jqlang.jq ; winget install GitHub.cli ; winget install BurntSushi.ripgrep.MSVC   # Windows
+brew install jq gh ripgrep                                                                      # macOS
+sudo pacman -S jq github-cli ripgrep                                                            # Arch
+sudo apt install jq gh ripgrep                                                                  # Debian, Ubuntu
 ```
 
-You rarely install Python packages by hand; scripts declare their own dependencies and uv resolves them. When a script asks for one explicitly, use `uv pip install <pkg>` rather than `pip`.
+## Tools with no native Linux or macOS build
 
-## 5. Node.js and bun (only for custom-visuals)
+Power BI Desktop, `TabularEditor.exe` (TE2), the NuGet TOM/ADOMD.NET stack and Windows PowerShell run on Windows only. On a Mac the `pbi-desktop` plugin drives a Windows VM through Parallels (`prlctl` at `/usr/local/bin/prlctl`, shared folders on); see `models.md`. On Linux use the cloud and CLI paths: `te`, `pbir`, `fab`, `az` and DuckDB all run natively on Linux, and `pbi-desktop` has no Linux path.
 
-`pbiviz` and its MCP server need Node.js 20.19 or later. Skip this unless the custom-visuals plugin is in scope.
-
-```bash
-# Windows
-winget install OpenJS.NodeJS.LTS
-
-# macOS
-brew install node
-```
-
-The marketplace convention prefers [bun](https://bun.com) over npm for speed and safer installs (bun skips post-install scripts by default). Optional:
-
-```bash
-# Windows
-winget install Oven-sh.Bun
-
-# macOS
-brew install bun
-```
-
-Verify: `node --version` (expect 20.19+).
-
-## 6. Shared command-line helpers
-
-Small tools several hooks and scripts rely on. `jq` is the one to install proactively; the others are per-plugin.
-
-```bash
-# jq: required by nearly every hook and JSON-handling script
-winget install jqlang.jq          # Windows
-brew install jq                   # macOS
-
-# gh: GitHub CLI; theme schema lookups, daxlib registry (optional, degrades to curl)
-winget install GitHub.cli         # Windows
-brew install gh                   # macOS
-
-# ripgrep (rg): fast reference search when renaming model objects (optional)
-winget install BurntSushi.ripgrep.MSVC   # Windows
-brew install ripgrep                      # macOS
-```
-
-`curl` ships with Windows 10+ and macOS, so no install is needed for the scripts that shell out to it.
-
-## Mac via a Windows VM
-
-A few tools have no native macOS build: Power BI Desktop, `TabularEditor.exe` (TE2), the NuGet-based TOM/ADOMD.NET stack, and Windows PowerShell. On a Mac, those run inside a Windows VM. The `pbi-desktop` plugin automates this through [Parallels Desktop](https://www.parallels.com/) and its `prlctl` CLI (expects `prlctl` at `/usr/local/bin/prlctl`, a licensed Windows VM with Power BI Desktop open, and shared folders on so `~` maps to `\\Mac\Home\`). See `references/models.md` for the details.
-
-Everything cloud-facing (`fab`, `az`, `te`, `pbir`, DuckDB, sqlcmd) runs natively on macOS; the VM is only for the local-Desktop path.
-
-## What to do next
-
-Return to `SKILL.md`, take the union of tools for the plugins in scope, and install them from `references/fabric.md`, `references/models.md`, and `references/reports-and-visuals.md`. Then run the verification pass.
+Next: take the union of tools for the plugins in scope and install them from `fabric.md`, `models.md` and `reports-and-visuals.md`, then run the verification pass in `install.md`.

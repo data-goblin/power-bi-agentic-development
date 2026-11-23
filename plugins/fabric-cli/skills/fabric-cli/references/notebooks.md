@@ -1,623 +1,145 @@
-# Notebook Operations
+# Notebooks
 
-Guide for working with Fabric notebooks via `fab` and [`nb`](https://github.com/data-goblin/nb-cli). Covers both Python and PySpark kernels, metadata formats, data item attachments, reading/writing from OneLake, and interactive execution with cell output.
+Create, import, run, schedule and read results from Fabric notebooks with `fab`. Two notebook kinds exist (Python and PySpark); the `.ipynb` metadata decides which one you get.
 
-## The `nb` CLI
+## Learn
 
-The [`nb` CLI](https://github.com/data-goblin/nb-cli) (`cargo install nb-fabric`) extends `fab` with capabilities that `fab` does not have: **interactive execution with output retrieval**, cell-level CRUD, and proper Python/PySpark notebook creation with correct metadata.
+```yaml
+notebook REST: https://learn.microsoft.com/en-us/rest/api/fabric/notebook/items
+job scheduler REST: https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler
+notebook definition: https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/notebook-definition
+notebookutils: https://learn.microsoft.com/en-us/fabric/data-engineering/notebook-utilities
+Livy API: https://learn.microsoft.com/en-us/fabric/data-engineering/api-livy-overview
+```
 
-The key differentiator: `fab job run` executes a notebook as a batch job but never returns cell output. `nb exec` creates a session, submits code, and returns the output directly to the terminal.
+- `fab job run` runs a notebook as a batch job and never returns cell output
+- To run code and see output without a notebook, use Livy sessions (see [querying-data.md](./querying-data.md)) or the separate `nb` CLI (data-goblin/nb-cli, not part of fab)
+- Examples: `examples/python-notebook.ipynb`, `examples/pyspark-notebook.ipynb`
+
+## Choosing a kernel
+
+```yaml
+python notebook: single node (2 vCores by default), starts in about 5 s, DuckDB and Polars preinstalled, Delta via delta-rs, T-SQL to warehouses via notebookutils.data; use for data that fits in memory and quick agent work
+pyspark notebook: Spark cluster (4+ vCores), starter pool 5 to 10 s, cold start up to minutes, native Delta, distributed; use for large data and Spark SQL
+livy sessions: always Spark compute with a `spark` session; there is no lightweight Python runtime through Livy
+```
+
+- Spark runtime: GA default is Runtime 2.0 (Spark 4.1); 1.3 is end-of-support-announced and 1.2 is retired, so do not set `runtimeVersion` to 1.2
+- `notebookutils.data` (T-SQL: Warehouse and SQL database read/write, Lakehouse and mirrored database read-only) works in Python notebooks only, not PySpark
+- The Spark warehouse connector `synapsesql` needs Runtime 1.3 or later and fails with opaque errors through `fab job run`; use `fab open` to read the Spark log in the portal
+
+## Metadata that selects the kernel
+
+Wrong or missing fields give the wrong kernel or a silent import failure.
+
+```yaml
+python:
+  kernel_info: {name: jupyter, jupyter_kernel_name: python3.11}
+  language_info: {name: python}
+  microsoft: {language: python, language_group: jupyter_python}
+  kernelspec: {name: jupyter, display_name: Jupyter}
+pyspark:
+  kernel_info: {name: synapse_pyspark}
+  language_info: {name: python}
+  microsoft: {language: python, language_group: synapse_pyspark}
+cells: each cell repeats microsoft.language_group in its own metadata
+```
+
+Unverified: `jupyter_kernel_name` values for newer Python versions; copy the block from a notebook exported out of the portal.
+
+### Attaching data items
+
+Without a `dependencies` block, lakehouse paths and `notebookutils.data` calls fail.
+
+```yaml
+lakehouse: {default_lakehouse: <guid>, default_lakehouse_name: <name>, default_lakehouse_workspace_id: <ws guid>, known_lakehouses: [{id: <guid>}]}
+warehouse: {default_warehouse: <guid>, known_warehouses: [{id: <guid>, type: Datawarehouse}]}
+warehouse type: Datawarehouse (warehouse) | Lakewarehouse (lakehouse SQL endpoint) | MountedWarehouse (SQL database)
+```
+
+Get the GUIDs with `fab get "ws.Workspace/Item.Type" -q id`; lakehouse and warehouse may coexist.
+
+## Import and run
+
+```yaml
+MyNotebook.Notebook/:
+  .platform: required; metadata.displayName must match the item name; metadata.type Notebook
+  notebook-content.ipynb: required
+```
 
 ```bash
-# Run code directly against a lakehouse (no notebook needed)
-nb exec code "My Workspace/MainLH.Lakehouse" "print('hello')"
-nb exec code "My Workspace/MainLH.Lakehouse" "spark.sql('SHOW TABLES').show()"
-
-# Execute a specific notebook cell by index
-nb exec cell "My Workspace/Analytics" 0 --lakehouse MainLH
-
-# Pipe code via stdin (for agents)
-echo "spark.sql('SELECT count(*) FROM gold.orders').show()" | nb exec code "WS/LH.Lakehouse" -
+fab import "ws.Workspace/MyNotebook.Notebook" -i ./MyNotebook.Notebook -f
+fab job run "ws.Workspace/MyNotebook.Notebook" --timeout 600
 ```
 
-### `nb` Command Reference
+- `fab import` on fab 1.7 or earlier took 25 to 60 s because it polled the create LRO at the server's `Retry-After: 20`, though the work itself finishes in about 1 s; fab 1.9.0 release notes say LRO polling was improved, so re-measure there
+- `uv run ${CLAUDE_SKILL_DIR}/scripts/deploy_notebook.py` tight-polls (about 0.3 s, `--poll-interval`) and deploys in 1 to 2 s; it detects create versus update (see [import-download-deploy.md](./import-download-deploy.md))
 
-```
-nb auth status                                Check Azure CLI authentication
-
-nb list <workspace>                           List notebooks
-nb create <ws/name>                           Create notebook
-  --kernel python|pyspark                       Kernel type (default: python)
-  --lakehouse <name>                            Attach lakehouse
-  --warehouse <name>                            Attach warehouse
-
-nb cells <ws/name>                            List all cells (index, type, preview)
-nb cell view <ws/name> <index>                View single cell source
-nb cell add <ws/name> --code "..."            Add a cell
-  --markdown                                    Markdown cell (default: code)
-  --at <index>                                  Insert position (default: append)
-nb cell edit <ws/name> <index> --code "..."   Replace cell source
-nb cell rm <ws/name> <index>                  Remove a cell
-
-nb exec code <ws/lakehouse> <code>            Run code against a lakehouse (no notebook)
-nb exec cell <ws/notebook> <index>            Execute a notebook cell interactively
-  --lakehouse <name>                            Lakehouse (auto-detected from notebook)
-
-nb job run <ws/name> [--wait --timeout]       Batch execution
-nb job list <ws/name>                         List run history
-
-nb session <ws/name>                          Show active sessions
-
-nb schedule list <ws/name>                    List schedules
-nb schedule create <ws/name>                  Create schedule
-  --type Cron|Daily|Weekly                      Schedule type (default: Cron)
-  --interval <n>                                Interval (minutes for Cron)
-  --start <datetime> --enable                   Start time + enable
-nb schedule update <ws/name> <id>             Update schedule
-nb schedule delete <ws/name> <id>             Delete schedule
-
-nb export <ws/name> -o <path>                 Download .ipynb
-nb open <ws/name>                             Open in browser
-nb delete <ws/name> --force                   Delete notebook
+```yaml
+"Not supported language": language_info.name missing
+"failed without detail error", instant: bad metadata or missing attachment
+"failed without detail error", about 40 s: code error; open in the portal (fab open) for the traceback
+NameError spark: no default lakehouse attached (PySpark)
+module has no attribute: wrong notebookutils API name; call notebookutils.data.help()
 ```
 
-### How `nb exec` Works
-
-`nb exec` creates an interactive session, submits code, and returns output:
-
-1. **`exec code`**: Resolves workspace and lakehouse directly; code is a positional arg
-2. **`exec cell`**: Resolves workspace, notebook, and lakehouse; auto-detects kernel from notebook metadata
-3. Both: create a session, wait for idle, submit code, poll for result, print output, clean up session
-
-Sessions are always cleaned up, even on Ctrl+C (signal handler). Exit code is non-zero when code fails. Structured metadata (session ID, runtime, duration, status) is printed to stderr.
-
-#### Python vs PySpark in Livy sessions
-
-Fabric's Livy API always runs against Spark compute attached to a lakehouse. There is no lightweight "pure Python" runtime via the Livy API. A full `spark` (SparkSession) variable is always available, giving you `spark.sql()`, DataFrames, and full lakehouse read/write.
-
-The Python vs PySpark distinction is only meaningful in **Fabric Notebooks** (the UI experience), not in `nb exec code`:
-
-| Aspect | Python Notebook (UI) | PySpark Notebook (UI) |
-|--------|---------------------|----------------------|
-| Compute | 2-core lightweight container | Spark cluster |
-| Startup | Seconds | Seconds (starter pool) to minutes |
-| Cost | Min 2 vCores | Min 4 vCores |
-| Delta Lake | Partial (via delta-rs) | Fully native |
-| Distributed compute | No | Yes |
-
-### Install
-
-**Option 1: Download a prebuilt binary** (no Rust needed)
-
-Download the binary for your platform from [GitHub Releases](https://github.com/data-goblin/nb-cli/releases) and add it to your PATH.
-
-**Option 2: Install via Cargo** (requires Rust toolchain)
+## Run options
 
 ```bash
-# Install Rust if not already installed
-# macOS/Linux:
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-# Windows:
-winget install Rustlang.Rustup
-
-# Install nb
-cargo install nb-fabric
-```
-
-**Verify:**
-
-```bash
-nb --version
-nb auth status
-```
-
-`nb` requires Azure CLI (`az`) for authentication. Run `az login` before first use.
-
-### Notebook-less Execution
-
-`nb exec code` runs Python on Fabric Spark compute without creating a notebook. The session is created, used, and cleaned up automatically. The `spark` variable (SparkSession) is always available for querying lakehouse tables.
-
-```bash
-# Simple Python
-nb exec code "MyWorkspace/MyLH.Lakehouse" "print('hello')"
-
-# Query lakehouse tables via Spark SQL
-nb exec code "MyWorkspace/MyLH.Lakehouse" "spark.sql('SELECT count(*) FROM gold.orders').show()"
-
-# Multi-line ETL
-nb exec code "MyWorkspace/MyLH.Lakehouse" "
-df = spark.sql('SELECT category, COUNT(*) as n FROM products GROUP BY category')
-df.write.mode('overwrite').saveAsTable('product_summary')
-print('Done')
-"
-
-# Pipe from file or script
-cat transform.py | nb exec code "MyWorkspace/MyLH.Lakehouse" -
-```
-
-Use this when: agent-driven ephemeral ETL, one-off transforms, data validation, or any scenario where a persistent notebook artifact adds unnecessary overhead.
-
-For the direct API approach (without the `nb` CLI), see [querying-data.md](./querying-data.md#using-the-api-directly).
-
-### When to Use `nb` vs `fab` vs Livy API
-
-| Task | Use `nb` | Use `fab` | Use Livy API directly |
-|------|---------|-----------|----------------------|
-| Execute code and see output | `nb exec` | Not possible | Submit statements, poll results |
-| View/edit individual cells | `nb cell view/add/edit/rm` | Not possible | Not applicable |
-| Create notebook with correct metadata | `nb create` | `fab mkdir` (no metadata) | Not applicable |
-| Run notebook as batch job | `nb run` or `fab job run` | `fab job run` | Not applicable (use session statements) |
-| Ephemeral ETL; no artifact | Not applicable | Not applicable | Create session, submit, delete |
-| Schedule notebooks | `nb schedule` | `fab job run-sch` | Not applicable |
-| Export/import notebook files | `nb export` or `fab export` | `fab export/import` | Not applicable |
-| Upload files, manage lakehouses | Not applicable | `fab cp`, `fab table` | Not applicable |
-
-## Choosing a Kernel
-
-Fabric notebooks support two runtime types. **Prefer Python for agent work**; it starts in seconds, has DuckDB/Polars/delta-rs pre-installed, and can run T-SQL against warehouses via `notebookutils.data`.
-
-| | Python Notebook | PySpark Notebook |
-|---|---|---|
-| Startup | ~5 seconds | 5s-5min (cold start) |
-| Compute | Single-node container (2 vCores) | Spark cluster (4+ vCores) |
-| Delta Lake | via delta-rs (< v1.0.0) | Native; full support |
-| T-SQL (warehouse/SQL DB) | `notebookutils.data.connect_to_artifact()` | Not available |
-| DuckDB/Polars | Pre-installed | Not pre-installed |
-| Use when | Data fits in memory; T-SQL; quick tasks | Distributed compute; large data; Spark SQL |
-
-## Notebook Metadata Format
-
-The kernel type is determined by metadata fields in the `.ipynb` file. Getting these wrong causes silent failures or the wrong kernel.
-
-### Python Notebook
-
-```json
-{
-  "kernel_info": { "name": "jupyter", "jupyter_kernel_name": "python3.11" },
-  "language_info": { "name": "python" },
-  "microsoft": { "language": "python", "language_group": "jupyter_python" },
-  "kernelspec": { "name": "jupyter", "display_name": "Jupyter" }
-}
-```
-
-### PySpark Notebook
-
-```json
-{
-  "kernel_info": { "name": "synapse_pyspark" },
-  "language_info": { "name": "python" },
-  "microsoft": { "language": "python", "language_group": "synapse_pyspark" }
-}
-```
-
-### Key Differentiators
-
-| Field | Python | PySpark |
-|---|---|---|
-| `kernel_info.name` | `"jupyter"` | `"synapse_pyspark"` |
-| `kernel_info.jupyter_kernel_name` | `"python3.11"` or `"python3.10"` | not present |
-| `microsoft.language_group` | `"jupyter_python"` | `"synapse_pyspark"` |
-| `kernelspec.name` | `"jupyter"` | `"python3"` |
-
-### Cell Metadata
-
-Each cell carries `cell_type` (`"code"` or `"markdown"`) and its own `microsoft.language_group`:
-
-```json
-{
-  "cell_type": "code",
-  "source": ["print('hello')"],
-  "outputs": [],
-  "execution_count": null,
-  "metadata": {
-    "microsoft": { "language": "python", "language_group": "jupyter_python" }
-  }
-}
-```
-
-Markdown cells use `"cell_type": "markdown"` with the same metadata structure.
-
-## Attaching Data Items
-
-Data items (lakehouse, warehouse, SQL database) are attached via the `dependencies` field in notebook metadata. Without attachments, lakehouse paths and `notebookutils.data` calls may fail.
-
-### Lakehouse Attachment
-
-```json
-"dependencies": {
-  "lakehouse": {
-    "default_lakehouse": "<lakehouse-guid>",
-    "default_lakehouse_name": "<LakehouseName>",
-    "default_lakehouse_workspace_id": "<workspace-guid>",
-    "known_lakehouses": [{ "id": "<lakehouse-guid>" }]
-  }
-}
-```
-
-### Warehouse Attachment
-
-```json
-"dependencies": {
-  "warehouse": {
-    "default_warehouse": "<warehouse-guid>",
-    "known_warehouses": [
-      { "id": "<warehouse-guid>", "type": "Datawarehouse" }
-    ]
-  }
-}
-```
-
-Warehouse types: `Datawarehouse` (warehouse), `Lakewarehouse` (lakehouse SQL endpoint), `MountedWarehouse` (SQL database).
-
-### Combined Attachments
-
-Lakehouse and warehouse can coexist:
-
-```json
-"dependencies": {
-  "lakehouse": { ... },
-  "warehouse": { ... }
-}
-```
-
-Get the GUIDs with `fab get "ws.Workspace/Item.Type" -q "id"`.
-
-## Creating and Importing Notebooks
-
-### Directory Structure
-
-```
-MyNotebook.Notebook/
-  .platform                    # Required; displayName must match item name
-  notebook-content.ipynb       # Required; .ipynb JSON format
-```
-
-### .platform File
-
-```json
-{
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
-  "metadata": { "type": "Notebook", "displayName": "MyNotebook" },
-  "config": { "version": "2.0", "logicalId": "00000000-0000-0000-0000-000000000001" }
-}
-```
-
-### Import and Run
-
-```bash
-mkdir -p /tmp/MyNotebook.Notebook
-# Create .platform and notebook-content.ipynb files (see examples/)
-fab import "ws.Workspace/MyNotebook.Notebook" -i /tmp/MyNotebook.Notebook -f
-fab job run "ws.Workspace/MyNotebook.Notebook"
-```
-
-`fab import` takes 25-60s here because it polls the create/update LRO at the server's `Retry-After: 20`, not because the work is slow (it finishes in ~1s). For any notebook definition change, prefer [`scripts/deploy_notebook.py`](../scripts/deploy_notebook.py), which tight-polls (~0.3s, tunable via `--poll-interval`) and deploys in ~1-2s; it auto-detects create vs update. The poll interval is the single biggest performance lever for definition changes. See [import-download-deploy.md](./import-download-deploy.md#fast-definition-changes-the-poll-interval-is-the-biggest-lever).
-
-### Common Import Failures
-
-| Error | Cause | Fix |
-|---|---|---|
-| "Not supported language" | Missing `language_info.name` | Add `"language_info": {"name": "python"}` |
-| "failed without detail error" (instant) | Bad metadata or missing attachment | Check `kernel_info`, `language_group`, `dependencies` |
-| "failed without detail error" (~40s) | Code error; no detail via CLI | Open in portal (`fab open`) to see Spark/Python traceback |
-| `NameError: spark` | No lakehouse attached (PySpark only) | Add `default_lakehouse` to dependencies |
-| `module has no attribute` | Wrong API name | Check `notebookutils.data.help()` for correct methods |
-
-## Reading and Writing Data
-
-### PySpark: Lakehouse Tables
-
-```python
-# Read with three-part naming
-df = spark.sql("SELECT * FROM LakehouseName.schema.table")
-
-# Write to lakehouse table
-df.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable("LakehouseName.schema.table")
-```
-
-### Python: Lakehouse with delta-rs
-
-```python
-from deltalake import DeltaTable
-
-# Local path (attached lakehouse)
-dt = DeltaTable('/lakehouse/default/Tables/my_table')
-df = dt.to_pandas()
-
-# ABFS path (any lakehouse; no attachment needed)
-access_token = notebookutils.credentials.getToken('storage')
-storage_options = {'bearer_token': access_token, 'use_fabric_endpoint': 'true'}
-dt = DeltaTable(
-    'abfss://<ws-guid>@onelake.dfs.fabric.microsoft.com/<lh-guid>/Tables/schema/table',
-    storage_options=storage_options
-)
-df = dt.to_pandas()
-```
-
-### Python: Lakehouse with DuckDB
-
-```python
-import duckdb
-from deltalake import DeltaTable
-
-access_token = notebookutils.credentials.getToken('storage')
-storage_options = {'bearer_token': access_token, 'use_fabric_endpoint': 'true'}
-dt = DeltaTable('abfss://...', storage_options=storage_options)
-arrow_ds = dt.to_pyarrow_dataset()
-
-# DuckDB queries Arrow datasets with filter pushdown
-result = duckdb.sql("SELECT count(*) FROM arrow_ds").df()
-```
-
-### Python: Write to Lakehouse with delta-rs
-
-```python
-from deltalake.writer import write_deltalake
-write_deltalake('/lakehouse/default/Tables/output', df, mode='overwrite')
-```
-
-### Python: T-SQL via notebookutils.data (Warehouse, SQL Database, Lakehouse)
-
-```python
-# connect_to_artifact supports: Warehouse (full DML), Lakehouse (read-only),
-# SQLDatabase (full DML), MirroredDatabase (read-only)
-with notebookutils.data.connect_to_artifact('WarehouseName') as conn:
-    conn.query('CREATE TABLE dbo.test (id INT, name VARCHAR(100))')
-    conn.query("INSERT INTO dbo.test VALUES (1, 'hello')")
-    df = conn.query('SELECT * FROM dbo.test')
-    print(df)
-
-# Cross-workspace
-conn = notebookutils.data.connect_to_artifact(
-    'warehouse_name', workspace='<workspace-guid>', artifact_type='Warehouse'
-)
-```
-
-`notebookutils.data` is Python notebook only; not available in PySpark.
-
-### PySpark: Write to Warehouse (synapsesql connector)
-
-```python
-import com.microsoft.spark.fabric
-from com.microsoft.spark.fabric.Constants import Constants
-
-df.write.synapsesql("WarehouseName.dbo.table", mode="overwrite")
-df = spark.read.synapsesql("WarehouseName.dbo.table")
-```
-
-Requires Runtime 1.3+. Known to fail with opaque errors from `fab job run`; use `fab open` to check Spark logs in the portal.
-
-## Running Notebooks
-
-```bash
-# Synchronous (wait for completion)
-fab job run "ws.Workspace/ETL.Notebook"
-
-# With timeout
-fab job run "ws.Workspace/ETL.Notebook" --timeout 600
-
-# Asynchronous
+fab job run "ws.Workspace/ETL.Notebook" -P date:string=2025-01-01,batch:int=500
+fab job run "ws.Workspace/ETL.Notebook" -C '{"defaultLakehouse": {"name": "MainLH", "id": "<lh-id>", "workspaceId": "<ws-id>"}, "conf": {"spark.sql.shuffle.partitions": "200"}}'
 fab job start "ws.Workspace/ETL.Notebook"
 fab job run-status "ws.Workspace/ETL.Notebook" --id <job-id>
-
-# With parameters
-fab job run "ws.Workspace/ETL.Notebook" -P date:string=2025-01-01,batch:int=500
-
-# With Spark configuration (PySpark only)
-fab job run "ws.Workspace/ETL.Notebook" -C '{
-  "defaultLakehouse": {"name": "MainLH", "id": "<lh-id>", "workspaceId": "<ws-id>"},
-  "conf": {"spark.sql.shuffle.partitions": "200"}
-}'
+fab job run-cancel "ws.Workspace/ETL.Notebook" --id <job-id> --wait
 ```
 
-A `Completed` status means the process finished, **not** that the ETL succeeded -- a notebook can catch its own exception and exit a failure payload while still reporting `Completed`. Read the notebook's exit value to get its real verdict (see [The notebook's exit value](#the-notebooks-exit-value-the-only-reliable-success-signal)), or run it through [`scripts/run_notebook_checked.py`](../scripts/run_notebook_checked.py).
+- Parameter types for notebooks: `string`, `int`, `float`, `bool`; `-C` Spark configuration applies to PySpark only
+- `fab job start` is async only in 1.7.0; 1.9.0 adds `--wait`, `--timeout` and `--polling_interval`
+- Python notebooks default to 2 vCores and 16 GB; scale in the first cell with `%%configure -f` and `{"vCores": 8, ...}` (4, 8, 16, 32 or 64, 8 GB per vCore)
+- Startup: starter pool 5 to 10 s; custom libraries need a custom pool with a Full-mode environment (about 5 s with a Live Pool); several notebooks sharing config can use High Concurrency mode; Private Link or managed VNet forces a custom pool and 2 to 5 min startup
 
-## Getting Notebook Run Outputs
+## Reading results
 
-Two different things get conflated here. Keep them apart.
+Rendered cell output (stdout, `df.show()`) of a finished run is not available from any REST API; `fab export` returns source only. Write results to a lakehouse table or file inside the notebook and read them back with DuckDB or `fab cp`.
 
-### Arbitrary cell output (stdout, `df.show()`, print): not retrievable
+### The exit value is the only real success signal
 
-Rendered cell output from a completed run is **not available via any REST API**. `fab export` and `fab get -q definition` return cell *source* only; outputs live in portal-only snapshots. Workaround unchanged: write results to a lakehouse table or file, then read them back with DuckDB or `fab cp`:
-
-```python
-# In notebook: write results to lakehouse instead of just printing
-import pandas as pd
-from deltalake.writer import write_deltalake
-
-results = pd.DataFrame({'metric': ['latest_date', 'row_count'], 'value': ['2025-10-14', '541']})
-write_deltalake('/lakehouse/default/Tables/notebook_results', results, mode='overwrite')
-```
+`Completed` means the process ended, not that the ETL worked: a notebook that catches its own exception and calls `notebookutils.notebook.exit(json.dumps({"ok": False, ...}))` still reports `Completed`. The exit value comes from the notebook job-instance route, which is documented but Beta and needs `beta=true`:
 
 ```bash
-# From CLI: read results with DuckDB
-duckdb -c "
-LOAD delta; LOAD azure;
-CREATE SECRET (TYPE azure, PROVIDER credential_chain, CHAIN 'cli');
-SELECT * FROM delta_scan('abfss://<ws-id>@onelake.../<lh-id>/Tables/notebook_results');
-"
+fab api "workspaces/$WS/notebooks/$NB/jobs/execute/instances/$RUN" -P beta=true -q "text.properties.exitValue"
 ```
 
-### The notebook's exit value: the only reliable success signal
-
-`fab job run` and the job status report `Completed` whenever the notebook **process** finished. A notebook that catches its own exception and returns `notebookutils.notebook.exit(json.dumps({"ok": false, ...}))` instead of raising still shows `Completed`. So job status alone lies about ETL success.
-
-The structured value the notebook passed to `notebookutils.notebook.exit(...)` / `mssparkutils.notebook.exit(...)` **is** retrievable, from the notebook-specific job-instance endpoint:
-
-```
-GET /v1/workspaces/{ws}/notebooks/{nb}/jobs/execute/instances/{run}?beta=true
-    -> properties.exitValue      (a string; parse it if it is JSON)
-```
-
-The GA status route (`items/{id}/jobs/instances/{run}`, where the run's `Location` header points) returns `status` + `failureReason` but has no `properties` and **no** `exitValue`. The `?beta=true` notebook route is the only source. It is an **officially documented but Beta** API (Microsoft marks it "not recommended for production use, may change based on feedback"), and `beta=true` is a required query parameter, not an optional flag.
-
-```bash
-# fab-native (audience defaults to fabric; -P carries the query param)
-fab api "workspaces/$WS/notebooks/$NB/jobs/execute/instances/$RUN" -P beta=true -q "properties.exitValue"
-
-# az rest equivalent (reuses the same az login)
-az rest --method get --resource "https://api.fabric.microsoft.com" \
-  --url "https://api.fabric.microsoft.com/v1/workspaces/$WS/notebooks/$NB/jobs/execute/instances/$RUN?beta=true" \
-  --query "properties.exitValue" -o tsv
-```
-
-Get `$RUN` (the job instance id) from `fab job run-list "ws/Nb.Notebook"` (latest run) or the `--id` you passed to `fab job run-status`. The same beta response carries monitoring links under `properties.computeDetails.monitoringInfo`: `executionSnapshotUrl` (the portal notebook-run snapshot with the traceback) for every compute type, plus `sparkUiUrl`, `driverLogUrl`, and `activityDetails.sparkApplicationId` for Spark notebooks -- direct links for debugging a failed run.
-
-`status: "Deduped"` means the run was skipped because another run of the same job was already in flight: the notebook did **not** execute. Treat it as "did not run", distinct from `Completed`/`Failed`/`Cancelled`.
-
-**Prefer the wrapper** [`scripts/run_notebook_checked.py`](../scripts/run_notebook_checked.py): it starts the run, polls to a terminal status, reads the exit value, and exits non-zero when the notebook's own `{ok:false}` verdict fails despite a `Completed` status (exit `2`), a job Failed/Cancelled (exit `1`), or a `Deduped` skip (exit `3`). For this to work, end the notebook with `notebookutils.notebook.exit(json.dumps({"ok": True, "summary": "..."}))`. The `executing-spark` skill (in the `etl` plugin) covers the contrasting case -- Livy statements return output directly, with no exit-value indirection.
-
-## Reducing Startup Times
-
-| Scenario | Approach | Startup |
-|----------|----------|---------|
-| No custom libs | Starter pool (default) | 5-10s |
-| Need T-SQL, DuckDB, or quick tasks | Python notebook | ~5s |
-| Custom libs, scheduled work | Custom Live Pool + Full mode env | ~5s |
-| Multiple notebooks, same config | High Concurrency Mode | First: normal; rest: instant |
-| Private Link / Managed VNet | Custom pool (unavoidable) | 2-5 min |
-
-**Custom Live Pools**: Workspace Settings > Spark > Pool > New Pool; attach Environment with Full mode publish; enable Live Pool schedule.
-
-**High Concurrency Mode**: Multiple notebooks share one Spark session. Enable in Workspace Settings > Spark > High Concurrency. Use session tags in pipelines to group notebooks.
-
-**Python notebooks**: Skip Spark entirely. DuckDB, Polars, and delta-rs handle most single-node workloads.
-
-## Python %%configure (Scale Up)
-
-Python notebooks default to 2 vCores / 16GB. Scale up with `%%configure` in the first cell:
-
-```json
-%%configure -f
-{
-    "vCores": 8,
-    "defaultLakehouse": {
-        "name": "MyLH",
-        "id": "<lakehouse-guid>",
-        "workspaceId": "<workspace-guid>"
-    },
-    "mountPoints": [
-        {
-            "mountPoint": "/myMount",
-            "source": "abfss://<container>@<account>.dfs.core.windows.net/<path>"
-        }
-    ]
-}
-```
-
-Supported vCores: 4, 8, 16, 32, 64 (8GB RAM per vCore).
+- `exitValue` is a string; parse it when it is JSON
+- The GA route `items/{id}/jobs/instances/{run}` returns `status` and `failureReason` only, no `exitValue`
+- Get `$RUN` from `fab job run-list "ws.Workspace/Nb.Notebook"` or from the `--id` you passed to `fab job run-status`
+- The same beta response has `properties.computeDetails.monitoringInfo` with `executionSnapshotUrl` (portal snapshot with the traceback) and, for Spark, `sparkUiUrl`, `driverLogUrl`, `activityDetails.sparkApplicationId`
+- Status `Deduped` means the same job was already running and the notebook did not execute; treat it as not run
+- `uv run ${CLAUDE_SKILL_DIR}/scripts/run_notebook_checked.py` starts the run, polls, reads the exit value and exits 2 when the notebook says `ok: false` despite `Completed`, 1 for Failed or Cancelled, 3 for Deduped; end notebooks with `notebookutils.notebook.exit(json.dumps({"ok": True, "summary": "..."}))`
+- The `executing-spark` skill (etl plugin) covers Livy statements, which return output directly
 
 ## Scheduling
 
-`fab job run-sch` creates per-item schedules. Schedules survive workspace git sync and deployment-pipeline promotion as long as the item keeps its ID.
-
 ```bash
-# Daily at 02:00 (single time)
-fab job run-sch "ws.Workspace/ETL.Notebook" \
-  --type daily \
-  --interval 02:00 \
-  --enable
-
-# Daily at two times (comma-separated) starting from an explicit datetime
-fab job run-sch "ws.Workspace/Pipeline.DataPipeline" \
-  --type daily \
-  --interval 10:00,16:00 \
-  --start 2024-11-15T09:00:00 \
-  --enable
-
-# Weekly on specific days
-fab job run-sch "ws.Workspace/Pipeline.DataPipeline" \
-  --type weekly \
-  --interval 10:00 \
-  --days Monday,Friday \
-  --enable
-
-# Cron-style: every 5 minutes
-fab job run-sch "ws.Workspace/Nb.Notebook" \
-  --type cron \
-  --interval 5 \
-  --enable
-```
-
-**Timezone gotcha**: in the underlying scheduler API, `startDateTime`/`endDateTime` are UTC, but `localTimeZoneId` is a **Windows** time-zone id (`"Central Standard Time"`), not an IANA name (`America/Chicago`). Getting this wrong shifts every run. Max 20 schedules per item.
-
-### On-demand run vs schedule
-
-An on-demand run is `POST items/{id}/jobs/{jobType}/instances` (notebook `jobType` is `RunNotebook`; the legacy `?jobType=` query form still works) -- this is what `fab job run`/`fab job start` call. A `Deduped` result on an on-demand run means it was skipped because the same job was already running: it did not execute. This is separate from schedules, which use the `.../schedules` sub-resource below.
-
-### Update or disable an existing schedule
-
-Each schedule has its own ID; list with `fab job run-list --schedule` or read from `fab api "workspaces/<ws-id>/items/<item-id>/jobs/.../schedules"`.
-
-```bash
-# Disable without deleting (pauses runs; preserves the schedule record)
-fab job run-update "ws.Workspace/Pipeline.DataPipeline" \
-  --id <schedule-id> \
-  --disable
-
-# Switch a daily schedule to cron-every-5-minutes in place
-fab job run-update "ws.Workspace/Pipeline.DataPipeline" \
-  --id <schedule-id> \
-  --type cron \
-  --interval 5 \
-  --enable
-
-# Remove a schedule entirely
-fab job run-rm "ws.Workspace/Pipeline.DataPipeline" \
-  --id <schedule-id> -f
-```
-
-### List execution history
-
-```bash
-# All runs (manual + scheduled)
-fab job run-list "ws.Workspace/ETL.Notebook"
-
-# Scheduled runs only
+fab job run-sch "ws.Workspace/ETL.Notebook" --type daily --interval 02:00 --enable
+fab job run-sch "ws.Workspace/Nb.Notebook" --type weekly --interval 10:00 --days Monday,Friday --enable
+fab job run-sch "ws.Workspace/Nb.Notebook" --type cron --interval 5 --enable
 fab job run-list "ws.Workspace/ETL.Notebook" --schedule
+fab job run-update "ws.Workspace/ETL.Notebook" --id <schedule-id> --disable
+fab job run-rm "ws.Workspace/ETL.Notebook" --id <schedule-id> -f
 ```
 
-## Monitoring and Management
+- `--start` and `--end` are UTC; in the raw scheduler JSON `localTimeZoneId` is a Windows time-zone id (`Central Standard Time`), not an IANA name; the wrong one shifts every run
+- Maximum 20 schedules per item
+- Schedules survive git sync and deployment-pipeline promotion while the item keeps its id
+- An on-demand run is `POST items/{id}/jobs/{jobType}/instances` (notebook jobType `RunNotebook`), which `fab job run` and `fab job start` call
+
+## Export, copy, delete
 
 ```bash
-# Cancel running job
-fab job run-cancel "ws.Workspace/ETL.Notebook" --id <job-id>
-
-# Cancel and wait for the cancellation to complete
-fab job run-cancel "ws.Workspace/ETL.Notebook" --id <job-id> --wait
-
-# Export / import
-fab export "ws.Workspace/ETL.Notebook" -o /tmp/notebooks -f
-fab import "ws.Workspace/ETL.Notebook" -i /tmp/notebooks/ETL.Notebook -f
-
-# Choose export format: .ipynb (default; preserves cell structure) or .py (flat source)
-fab export "ws.Workspace/ETL.Notebook" -o /tmp/notebooks --format ipynb -f
-fab export "ws.Workspace/ETL.Notebook" -o /tmp/notebooks --format py -f
-
-# Copy between workspaces
+fab export "ws.Workspace/ETL.Notebook" -o ./out --format py -f
 fab cp "Dev.Workspace/ETL.Notebook" "Prod.Workspace" -f
-
-# Delete (recovery depends on tenant Item Recovery setting; see reference.md)
-fab rm "ws.Workspace/Old.Notebook" -f
-
-# Open in browser
-fab open "ws.Workspace/ETL.Notebook"
-
-# Open in VS Code (Synapse extension required)
-# vscode://SynapseVSCode.synapse?workspaceId=<ws-id>&artifactId=<nb-id>&tenantId=<tenant-id>
 ```
 
-## Example Notebooks
-
-Working examples in `examples/`:
-
-- **`examples/python-notebook.ipynb`** -- Python kernel with delta-rs, DuckDB, and `notebookutils.data` T-SQL patterns
-- **`examples/pyspark-notebook.ipynb`** -- PySpark kernel with Spark SQL read and `saveAsTable` write patterns
-
-## Related
-
-- [querying-data.md](./querying-data.md) -- running code against a lakehouse without a notebook (`nb exec`, Livy sessions), and reading results back
-- [lakehouses.md](./lakehouses.md) -- attaching lakehouses, table ops, and the SQL-endpoint metadata sync that a notebook write triggers
-- [semantic-models.md](./semantic-models.md) -- refreshing a model after a notebook loads its source tables
-- [`scripts/run_notebook_checked.py`](../scripts/run_notebook_checked.py) -- run a notebook and fail loudly on its exit-value verdict
-- `executing-spark` and `using-duckdb` skills (in the `etl` plugin) -- ephemeral Spark execution and local Delta querying, the notebook-less alternatives
+- `--format ipynb` (default) keeps cell structure; `py` is flat source
+- `fab rm` is permanent unless the tenant has item recovery on (see [commands.md](./commands.md))
