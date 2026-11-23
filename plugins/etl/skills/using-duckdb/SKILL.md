@@ -5,12 +5,12 @@ description: "Query Fabric lakehouse or warehouse Delta tables in OneLake with D
 
 # DuckDB over OneLake
 
-DuckDB is 2.0 (2.0.1 on PyPI, 2026-11); docs live under https://duckdb.org/docs/2.0/. Not run against OneLake in this audit: every OneLake-specific statement below is from the DuckDB docs or earlier use, marked Unverified where it matters. Install on Linux with your package manager or from duckdb.org, on macOS `brew install duckdb`, on Windows `winget install DuckDB.cli`; ask before installing.
+DuckDB is 2.0 (2.0.1 on PyPI, 2026-11); docs live under https://duckdb.org/docs/2.0/. Not run against OneLake in this audit: OneLake-specific statements below come from the DuckDB docs or earlier use. Install on Linux with your package manager or from duckdb.org, on macOS `brew install duckdb`, on Windows `winget install DuckDB.cli`; ask before installing.
 
 ## Rules
 
 - The `delta` and `azure` extensions autoload on first use from the official repository; no `INSTALL` step
-- Local auth: `az login`, then `CREATE SECRET (TYPE azure, PROVIDER credential_chain, CHAIN 'cli');`. In a Fabric Python notebook use a `PROVIDER ACCESS_TOKEN` secret from `notebookutils.credentials.getToken('storage')` (the DuckDB docs show it with `ACCOUNT_NAME`; the OneLake form is Unverified on 2.0) and recreate it before the 60 minute expiry, since the extension does not refresh tokens
+- Local auth: `az login`, then `CREATE SECRET (TYPE azure, PROVIDER credential_chain, CHAIN 'cli');`. In a Fabric Python notebook use a `PROVIDER ACCESS_TOKEN` secret from `notebookutils.credentials.getToken('storage')` (the DuckDB docs show it with `ACCOUNT_NAME`, which is optional with fully qualified paths; [azure extension](https://duckdb.org/docs/2.0/core_extensions/azure.html)) and recreate it before the 60 minute expiry, since the extension does not refresh tokens
 - OneLake path uses GUIDs, not names (names with spaces break it): `abfss://<workspace-id>@onelake.dfs.fabric.microsoft.com/<item-id>/Tables/<schema>/<table>` and `.../Files/<path>`. Get ids with `fab get "ws.Workspace/LH.Lakehouse" -q id`. Warehouses and SQL databases use the same form
 - Use the wrapper instead of rebuilding the path and secret: the `fabric-cli` skill's `scripts/query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" -q "SELECT * FROM tbl LIMIT 10" -t gold.orders` (run with `uv run`; needs the fabric-cli plugin and the duckdb CLI)
 - Prefer the SQL endpoint (`fabric-cli` `querying-data.md`) when you need `INFORMATION_SCHEMA`, `sys.*` or T-SQL behaviour
@@ -28,7 +28,7 @@ COPY (query) TO 'path' (FORMAT delta): writes a new Delta table
 not supported: UPDATE, DELETE, MERGE INTO, ALTER TABLE, DROP TABLE
 ```
 
-Whether these writes succeed against `abfss://` OneLake paths is Unverified; test on a scratch table first. For overwrite, merge or schema changes write through Spark (`executing-spark` or a notebook). A SQL-endpoint metadata sync may lag after an external write.
+The Delta extension page documents writes to S3 and local paths and shows no Azure example, so treat `abfss://` OneLake writes as untested and try a scratch table first. For overwrite, merge or schema changes write through Spark (`executing-spark` or a notebook). A SQL-endpoint metadata sync may lag after an external write.
 
 ## Reading gotchas (from the Delta extension docs)
 

@@ -8,6 +8,7 @@ sources:
   - url: https://learn.microsoft.com/en-us/fabric/data-engineering/get-started-api-livy-session
   - url: https://learn.microsoft.com/en-us/fabric/data-engineering/get-started-api-livy-batch
   - url: https://learn.microsoft.com/en-us/fabric/data-engineering/high-concurrency-livy
+  - url: https://learn.microsoft.com/en-us/fabric/data-engineering/runtime-2-0
 tools:
   fab: 1.7.0
 last_updated: 2026-11-23
@@ -18,7 +19,7 @@ skills: [etl/executing-spark]
 
 # Livy API for Fabric lakehouses
 
-Learn covers the endpoints and a full session walkthrough: https://learn.microsoft.com/en-us/fabric/data-engineering/get-started-api-livy-session. This page keeps what Learn leaves out. Nothing here was run in this audit: a session consumes capacity, so run-time claims are from earlier use and marked where Unverified.
+Learn covers the endpoints and a full session walkthrough: https://learn.microsoft.com/en-us/fabric/data-engineering/get-started-api-livy-session. This page keeps what Learn leaves out. Nothing here was run in this audit: a session consumes capacity, so run-time claims are from earlier use.
 
 ## Endpoint
 
@@ -40,7 +41,7 @@ Get the ids with `fab get "ws.Workspace" -q id` and `fab get "ws.Workspace/LH.La
 ## States
 
 ```yaml
-session: not_started, starting, idle, busy, dead, error, killed   # cold start 30-90 s (observed, Unverified on runtime 2.0)
+session: not_started, starting, idle, busy, dead, error, killed
 statement: waiting, running, available, error, cancelling, cancelled
 statement result: output.status ok | error; on error read ename, evalue, traceback
 ```
@@ -61,7 +62,7 @@ optional: Code.AccessAzureKeyvault.All, Code.AccessAzureDataLake.All, Code.Acces
 
 A service principal token uses audience `https://analysis.windows.net/powerbi/api/.default` (Learn shows certificate authentication).
 
-Earlier use of this skill found that a token from `az account get-access-token --resource https://api.fabric.microsoft.com` created sessions but failed reading OneLake with `REQUEST_INVALID_RESOURCE_NONRETRIABLE` or `MetaException: Unable to fetch mwc token`, and that a `fab` token failed the same way. Unverified: the likely cause is the missing `Code.AccessStorage.All` scope on those tokens, as Learn lists it as required for reading and writing lakehouse data. Use an app registration that requests all four scopes.
+Earlier use of this skill found that a token from `az account get-access-token --resource https://api.fabric.microsoft.com` created sessions but failed reading OneLake with `REQUEST_INVALID_RESOURCE_NONRETRIABLE` or `MetaException: Unable to fetch mwc token`, and that a `fab` token failed the same way. Learn lists `Code.AccessStorage.All` as required for reading and writing lakehouse data, so use an app registration that requests all four scopes.
 
 ## Lifecycle rules
 
@@ -70,12 +71,12 @@ Earlier use of this skill found that a token from `az account get-access-token -
 - Prefer a batch for unattended work: no idle session to forget. A batch takes a file in OneLake, not inline code
 - For concurrent statements Learn recommends high concurrency sessions, a separate Livy job type: https://learn.microsoft.com/en-us/fabric/data-engineering/high-concurrency-livy
 - Pass an environment with `"conf": {"spark.fabric.environmentDetails": "{\"id\": \"<environment-id>\"}"}`; default is the workspace starter pool
-- Runtime: new workspaces default to Runtime 2.0 (Spark 4.1, Python 3.13). Unverified on 2.0: `deltalake` (delta-rs) was not pre-installed and `notebookutils` had no FUSE mount at `/lakehouse/default/` on older runtimes
+- Runtime: new workspaces default to Runtime 2.0 (Spark 4.1, Python 3.13; [Runtime 2.0](https://learn.microsoft.com/en-us/fabric/data-engineering/runtime-2-0))
 
 ## Errors
 
 ```yaml
-REQUEST_INVALID_RESOURCE_NONRETRIABLE: token lacks storage scope; see Tokens
-"MetaException: Unable to fetch mwc token": same cause
+REQUEST_INVALID_RESOURCE_NONRETRIABLE: seen with az and fab tokens; see Tokens
+"MetaException: Unable to fetch mwc token": seen in the same case
 session dead right after create: bad config or no capacity; check the Monitoring hub
 ```
