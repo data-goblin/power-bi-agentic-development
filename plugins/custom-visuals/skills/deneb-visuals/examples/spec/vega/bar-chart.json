@@ -1,14 +1,24 @@
 {
-  "$schema": "https://vega.github.io/schema/vega/v5.json",
-  "data": [{"name": "dataset"}],
+  "data": [
+    {
+      "name": "dataset"
+    }
+  ],
   "padding": 5,
-  "width": {"signal": "pbiContainerWidth - 25"},
-  "height": {"signal": "pbiContainerHeight - 27"},
+  "width": {
+    "signal": "denebContainer.width - 25"
+  },
+  "height": {
+    "signal": "denebContainer.height - 27"
+  },
   "scales": [
     {
       "name": "xscale",
       "type": "band",
-      "domain": {"data": "dataset", "field": "Category"},
+      "domain": {
+        "data": "dataset",
+        "field": "Category"
+      },
       "range": "width",
       "padding": 0.1,
       "round": true
@@ -16,34 +26,65 @@
     {
       "name": "yscale",
       "type": "linear",
-      "domain": {"data": "dataset", "field": "Sales"},
+      "domain": {
+        "data": "dataset",
+        "field": "Sales"
+      },
       "range": "height",
       "nice": true,
       "zero": true
     }
   ],
   "axes": [
-    {"orient": "bottom", "scale": "xscale"},
-    {"orient": "left", "scale": "yscale"}
+    {
+      "orient": "bottom",
+      "scale": "xscale"
+    },
+    {
+      "orient": "left",
+      "scale": "yscale"
+    }
   ],
   "marks": [
     {
       "type": "rect",
-      "from": {"data": "dataset"},
+      "from": {
+        "data": "dataset"
+      },
       "encode": {
         "enter": {
-          "x": {"scale": "xscale", "field": "Category"},
-          "width": {"scale": "xscale", "band": 1},
-          "y": {"scale": "yscale", "field": "Sales"},
-          "y2": {"scale": "yscale", "value": 0},
-          "cornerRadiusTopLeft": {"value": 4},
-          "cornerRadiusTopRight": {"value": 4}
+          "x": {
+            "scale": "xscale",
+            "field": "Category"
+          },
+          "width": {
+            "scale": "xscale",
+            "band": 1
+          },
+          "y": {
+            "scale": "yscale",
+            "field": "Sales"
+          },
+          "y2": {
+            "scale": "yscale",
+            "value": 0
+          },
+          "cornerRadiusTopLeft": {
+            "value": 4
+          },
+          "cornerRadiusTopRight": {
+            "value": 4
+          }
         },
         "update": {
-          "fill": {"signal": "pbiColor(0)"}
+          "fill": {
+            "signal": "pbiColor(0)"
+          }
         },
         "hover": {
-          "fill": {"signal": "pbiColor(0, -0.3)"}
+          "fill": {
+            "signal": "pbiColor(0, -0.3)"
+          }
         }
       }
     }
