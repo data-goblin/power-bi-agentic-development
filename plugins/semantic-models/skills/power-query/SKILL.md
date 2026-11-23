@@ -15,7 +15,7 @@ description: Run and test Power Query M partition expressions against real data 
 
 `POST https://api.fabric.microsoft.com/v1/workspaces/{ws}/dataflows/{df}/executeQuery` with `{"queryName": "Result", "customMashupDocument": "<section document>"}`. Learn: https://learn.microsoft.com/en-us/rest/api/fabric/dataflow/query-execution/execute-query
 
-- Needs a Dataflow Gen2 you may execute, with the source connection bound to it (the runner). Scope `Dataflow.Execute.All` or `Item.Execute.All`. Creating and binding the runner is portal work; Unverified whether `fab` can do it
+- Needs a Dataflow Gen2 you may execute, with the source connection bound to it (the runner). Scope `Dataflow.Execute.All` or `Item.Execute.All`. `fab mkdir` creates a `.Connection` ([mkdir docs](https://github.com/microsoft/fabric-cli/blob/main/docs/commands/fs/mkdir.md)) and the fab-cli test suite creates `.Dataflow` items with it, but no fab 1.7.0 command binds a connection to a dataflow, so bind it in the portal
 - Maximum run time is 230 seconds; the response may be 202 (long running operation, poll `Location`) or 429 (honour `Retry-After`)
 - `Accept: application/vnd.apache.arrow.stream;pq-arrow-version=1` (version 2 is not supported through an on-premises gateway). Errors arrive in an extra column named `PQ Arrow Metadata`
 - The document is a section: `section Section1; shared SqlEndpoint = "..."; shared Result = let ... in ...;` with model parameters inlined as `shared` values and `RangeStart`/`RangeEnd` as concrete datetimes. The `shared` name must equal `queryName`

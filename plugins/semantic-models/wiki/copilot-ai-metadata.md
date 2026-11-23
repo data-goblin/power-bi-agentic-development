@@ -5,6 +5,8 @@ kind: reference
 status: current
 sources:
   - url: https://learn.microsoft.com/en-us/power-bi/create-reports/copilot-prepare-data-ai
+  - url: https://learn.microsoft.com/en-us/power-bi/create-reports/copilot-prepare-data-ai-instructions
+  - url: https://learn.microsoft.com/en-us/power-bi/create-reports/copilot-prepare-data-ai-data-schema
   - url: https://learn.microsoft.com/en-us/power-bi/create-reports/copilot-evaluate-data
 tools:
   te: 0.8.1.1
@@ -19,10 +21,10 @@ skills: [semantic-models/semantic-model]
 Learn (preview, updated 2026-11): Prep data for AI has an AI data schema, verified answers and AI instructions, plus object descriptions. All are saved on the semantic model, never the report. Authoring works in Desktop and the service; Desktop supports Import, DirectQuery and local composite models only. Q&A must be enabled on the model. AI instructions and the AI data schema save to the model's LSDL (linguistic schema).
 
 ```yaml
-descriptions: object property; only the first 200 characters are used by Copilot (Unverified here: the figure comes from earlier notes, not from the page above)
-ai data schema: selects the fields Copilot prioritises; hiding a field does not remove it from Copilot (Unverified), the schema is the supported way to narrow the surface
+descriptions: object property; Learn gives no length limit that Copilot applies
+ai data schema: selects the fields Copilot prioritises; fields hidden in the model start excluded from a new schema, but creating report pages, data search and DAX queries ignore the schema and use the whole model
 verified answers: trigger phrases mapped to a pinned visual
-ai instructions: free text, steering rather than binding; 10,000 character limit (Unverified)
+ai instructions: free text, steering rather than binding; limited to 10,000 characters
 after a Git or pipeline deployment: refresh the model in the service to sync the LSDL (Direct Lake and DirectQuery: once a day)
 ```
 
