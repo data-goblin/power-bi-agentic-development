@@ -1,6 +1,12 @@
 ---
 name: fabric-cli
 description: "Operate the Fabric and Power BI service from the terminal with `fab` and `fab api` (workspaces, items, jobs, export/import, capacities, OneLake, admin REST), and estimate the capacity units an operation will cost before running it. Use for cloud items, not for local PBIP/TMDL/PBIR files."
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "bash ${CLAUDE_SKILL_DIR}/hooks/fab-guard.sh"
 ---
 
 # Fabric CLI (`fab`)
@@ -21,6 +27,7 @@ description: "Operate the Fabric and Power BI service from the terminal with `fa
 - `fab api` has no `-o`; redirect with `>`. `fab ls` takes only `-l -a -q`. `fab job run-status` has no `-q`
 - `fab export` does not create parent directories; `mkdir -p` the target first or it fails with `[InvalidPath]`
 - Do not write `.claude/rules` files or other memory unasked
+- While this skill is active, `hooks/fab-guard.sh` asks before fab commands that change the tenant or consume capacity and denies invocations known to fail (`fab api -o`, `fab desc all`, `fab acl` on an item). It needs `jq` and says so on stderr when it is missing
 
 ## Versions
 
