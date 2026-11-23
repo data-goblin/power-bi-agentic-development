@@ -9,10 +9,10 @@ description: Maintains and migrates Python script visuals (pythonVisual, matplot
 
 - Python and R visuals retire in May 2027: published reports stop rendering them in the service, including already published ones, and future Desktop versions drop them. Say this before building one. Source and migration options: [retirement page](../../wiki/script-visuals-retirement.md). Python in Power Query is not affected
 - Build a new Python visual only to maintain a report that already has them; otherwise use `deneb-visuals`, `svg-visuals`, a built-in visual or `powerbi-custom-visuals`
-- Find affected visuals: `grep -rlE '"visualType": "pythonVisual"' --include=visual.json .`; R visuals are `scriptVisual`; R-powered AppSource visuals match neither
+- Finding affected visuals in PBIP sources (`visualType` values, and what the search misses) is on the [retirement page](../../wiki/script-visuals-retirement.md)
 - The script must end with `plt.show()` (only the default display device renders); `dataset` is a pandas DataFrame injected by Power BI, never created; columns keep their original names
 - The service has no network, Python 3.11 and a fixed package list: [Learn package list](https://learn.microsoft.com/en-us/power-bi/connect-data/service-python-packages-support). plotly, bokeh and altair are not on it and the output is a static image anyway
-- Timeout is 5 minutes in Desktop and 1 minute in the service; 150,000 rows, 250 MB input, strings cut at 32,766 characters, 72 DPI. Rows are grouped like a table visual, so identical rows collapse: bind a unique key to get one row per record. Details: [dataset and limits](../../wiki/script-visual-dataset-and-limits.md)
+- 150,000 rows, 250 MB input, strings cut at 32,766 characters, 72 DPI, and shorter timeouts in the service than in Desktop. Row grouping and the other caps: [dataset and limits](../../wiki/script-visual-dataset-and-limits.md)
 - Not supported: cross-filtering from the visual, tooltips, Publish to web, app-owns-data embedding (ended May 2026), an unlicensed viewer outside Premium or Fabric capacity
 
 ## Commands (pbir 0.9.33)
