@@ -1,134 +1,38 @@
 ---
 name: using-duckdb
-description: Query Fabric lakehouse and warehouse data using DuckDB, either locally or inside a Fabric notebook. Automatically invoke when the user mentions "DuckDB", "query Delta tables locally", or asks to "attach DuckDB to a lakehouse", "query OneLake data", "explore lakehouse data", "data freshness check", "validate data quality", "use DuckDB in Fabric".
+description: "Query Fabric lakehouse or warehouse Delta tables in OneLake with DuckDB, locally with az login or inside a Fabric Python notebook with a storage token. Use for 'attach DuckDB to a lakehouse', 'query OneLake Delta locally', 'use DuckDB in Fabric', and for the DuckDB 2.0 Delta write support."
 ---
 
-# Using DuckDB with Fabric
+# DuckDB over OneLake
 
-Query Delta Lake tables and raw files in OneLake using DuckDB. Works both locally (CLI/Python) and inside Fabric notebooks. Read-only; for writes, use the `executing-spark` skill.
+DuckDB is 2.0 (2.0.1 on PyPI, 2026-11); docs live under https://duckdb.org/docs/2.0/. Not run against OneLake in this audit: every OneLake-specific statement below is from the DuckDB docs or earlier use, marked Unverified where it matters. Install on Linux with your package manager or from duckdb.org, on macOS `brew install duckdb`, on Windows `winget install DuckDB.cli`; ask before installing.
 
-## Two Modes
+## Rules
 
-| Mode | Where it runs | Auth | Best for |
-|------|--------------|------|----------|
-| **Local** | Developer machine | Azure CLI (`az login`) | Exploration, validation, ad-hoc analysis |
-| **In-notebook** | Fabric Spark container | `notebookutils.credentials.getToken('storage')` | Combining DuckDB speed with Spark write-back |
+- The `delta` and `azure` extensions autoload on first use from the official repository; no `INSTALL` step
+- Local auth: `az login`, then `CREATE SECRET (TYPE azure, PROVIDER credential_chain, CHAIN 'cli');`. In a Fabric notebook: `notebookutils.credentials.getToken('storage')` into `CREATE OR REPLACE SECRET ... (TYPE AZURE, PROVIDER ACCESS_TOKEN, ACCESS_TOKEN '<token>')`. The extension does not refresh tokens: storage tokens last about 60 minutes, so recreate the secret before then in long sessions ([in-notebook-setup.md](./references/in-notebook-setup.md))
+- OneLake path uses GUIDs, not names (names with spaces break it): `abfss://<workspace-id>@onelake.dfs.fabric.microsoft.com/<item-id>/Tables/<schema>/<table>` and `.../Files/<path>`. Get ids with `fab get "ws.Workspace/LH.Lakehouse" -q id`. Warehouses and SQL databases use the same form
+- Use the wrapper instead of rebuilding the path and secret: the `fabric-cli` skill's `scripts/query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" -q "SELECT * FROM tbl LIMIT 10" -t gold.orders` (run with `uv run`; needs the fabric-cli plugin and the duckdb CLI)
+- Prefer the SQL endpoint (`fabric-cli` `querying-data.md`) when you need `INFORMATION_SCHEMA`, `sys.*` or T-SQL behaviour
+- Cross-item joins work in one query with different `abfss://` paths
 
-## Local: Prerequisites
+## Writes
 
-- DuckDB installed (`brew install duckdb` on macOS)
-- Azure CLI authenticated (`az login`)
-- Extensions installed: `INSTALL delta; INSTALL azure;` (one-time)
+DuckDB 2.0 can write Delta (https://duckdb.org/docs/2.0/core_extensions/delta.html):
 
-## Local: Querying Delta Tables
-
-```bash
-WS_ID=$(fab get "Workspace.Workspace" -q "id" | tr -d '"')
-LH_ID=$(fab get "Workspace.Workspace/LH.Lakehouse" -q "id" | tr -d '"')
-
-duckdb -c "
-LOAD delta; LOAD azure;
-CREATE SECRET (TYPE azure, PROVIDER credential_chain, CHAIN 'cli');
-
-SELECT * FROM delta_scan(
-  'abfss://${WS_ID}@onelake.dfs.fabric.microsoft.com/${LH_ID}/Tables/schema/table'
-) LIMIT 10;
-"
+```yaml
+CREATE TABLE: since 2.0
+INSERT INTO an attached table (ATTACH 'path' AS t (TYPE delta)): append only
+CREATE TABLE AS SELECT: since 2.0.1
+COPY (query) TO 'path' (FORMAT delta): writes a new Delta table
+not supported: UPDATE, DELETE, MERGE INTO, ALTER TABLE, DROP TABLE
 ```
 
-The `CHAIN 'cli'` parameter uses Azure CLI credentials. Without it, DuckDB tries managed identity first (fails on local machines).
+Whether these writes succeed against `abfss://` OneLake paths is Unverified; test on a scratch table first. For overwrite, merge or schema changes write through Spark (`executing-spark` or a notebook). A SQL-endpoint metadata sync may lag after an external write.
 
-## Local: Querying Raw Files
+## Reading gotchas (from the Delta extension docs)
 
-```bash
-BASE="abfss://${WS_ID}@onelake.dfs.fabric.microsoft.com/${LH_ID}/Files"
-
-duckdb -c "
-LOAD azure;
-CREATE SECRET (TYPE azure, PROVIDER credential_chain, CHAIN 'cli');
-
-SELECT * FROM read_csv('${BASE}/data.csv') LIMIT 10;
-SELECT * FROM read_parquet('${BASE}/facts.parquet') LIMIT 10;
-SELECT * FROM read_json('${BASE}/events/*.json');
-"
-```
-
-Glob patterns (`*`, `**`) work for reading multiple files.
-
-## In-Notebook: Attaching DuckDB to a Lakehouse
-
-Inside a Fabric notebook, DuckDB can query lakehouse Delta tables directly using a storage token. This approach is faster than Spark SQL for analytical queries on single-node data.
-
-```python
-import duckdb
-import time
-
-# Get storage token from notebook context
-token = notebookutils.credentials.getToken('storage')
-
-# Create DuckDB connection
-con = duckdb.connect(f'temp_{time.time_ns()}.duckdb')
-con.sql('SET enable_object_cache=true')
-
-# Register OneLake secret
-con.sql(f"""
-    CREATE OR REPLACE SECRET onelake (
-        TYPE AZURE,
-        PROVIDER ACCESS_TOKEN,
-        ACCESS_TOKEN '{token}'
-    )
-""")
-
-# Query Delta tables
-workspace = "<workspace-id>"
-lakehouse = "<lakehouse-name>"
-path = f"abfss://{workspace}@onelake.dfs.fabric.microsoft.com/{lakehouse}.Lakehouse/Tables"
-
-df = con.sql(f"""
-    SELECT * FROM delta_scan('{path}/schema/table_name') LIMIT 100
-""").df()
-print(df)
-```
-
-### Auto-Discovering Tables
-
-Dynamically find all Delta tables in a lakehouse:
-
-```python
-tables = con.sql(f"""
-    SELECT DISTINCT split_part(file, '_delta_log', 1) as table_path
-    FROM glob('{path}/*/*/*_delta_log/*.json')
-""").df()['table_path'].tolist()
-
-for t in tables:
-    view_name = t.split('/')[-1]
-    con.sql(f"CREATE OR REPLACE VIEW {view_name} AS SELECT * FROM delta_scan('{t}')")
-    print(f"Created view: {view_name}")
-```
-
-## OneLake Path Format
-
-```
-abfss://<workspace-id>@onelake.dfs.fabric.microsoft.com/<item-id>/Tables/<schema>/<table>
-abfss://<workspace-id>@onelake.dfs.fabric.microsoft.com/<item-id>/Files/<path>
-```
-
-| Item type | ID source |
-|-----------|-----------|
-| Lakehouse | `fab get "ws/LH.Lakehouse" -q "id"` |
-| Warehouse | `fab get "ws/WH.Warehouse" -q "id"` |
-| SQL Database | `fab get "ws/DB.SQLDatabase" -q "id"` |
-
-Cross-item joins work in a single DuckDB query; use different `abfss://` paths.
-
-## Common Patterns
-
-For data freshness checks, quality validation, schema discovery, cross-table joins, and row count audits, see **`references/common-patterns.md`**.
-
-## References
-
-- **`references/common-patterns.md`** -- Data freshness, quality, schema discovery, cross-joins
-- **`references/in-notebook-setup.md`** -- Full notebook setup with auto-discovery and write-back patterns
-- [DuckDB Azure Extension](https://duckdb.org/docs/extensions/azure.html)
-- [DuckDB Delta Extension](https://duckdb.org/docs/extensions/delta.html)
-- [djouallah/Fabric_Notebooks_Demo](https://github.com/djouallah/Fabric_Notebooks_Demo/blob/main/Attach_LH/Attach_Lakehouse_v2.ipynb) -- Original notebook-attachment approach
+- Tables with `interval`, `geometry` or `geography` columns cannot be read (per the docs); read those tables with Spark
+- `delta_column_mapping_policy` defaults to `strict` in 2.0 (it was `lenient` in 1.5): an id-mode column-mapped table written without Parquet field IDs errors; set `lenient` to match by name
+- Deletion vectors are supported
+- Schema-enabled lakehouses have `Tables/<schema>/<table>`; a lakehouse without schemas has `Tables/<table>`
