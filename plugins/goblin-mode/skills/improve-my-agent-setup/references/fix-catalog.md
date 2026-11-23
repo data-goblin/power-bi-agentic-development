@@ -1,6 +1,6 @@
 # Fix catalog
 
-The concrete fixes to offer in Step 4, with the commands and the reasoning. Offer them one at a time, apply on confirmation, and never force a fix through a hook or a blocked action. Anything that installs software needs an explicit yes first. Pick fixes by leverage, not by how many you can list.
+The concrete fixes to offer in Step 6, with the commands and the reasoning. Offer them one at a time, apply on confirmation, and never force a fix through a hook or a blocked action. Anything that installs software needs an explicit yes first. Pick fixes by leverage, not by how many you can list.
 
 ## Statusline: make git and cost state visible
 
@@ -44,9 +44,9 @@ When two skills trigger on the same intent, or a skill has gone stale or pins an
 - Update skills pinned to an old marketplace version
 - For vendor skills run untouched that don't fit the person's workflow, tune them (which means owning a copy) rather than living with the misfit
 
-## Install skill-creator so they own their skills
+## Own and measure skills: skill-creator, `claude plugin eval`, `/skill-doctor`
 
-When the setup is mostly untouched vendor and community skills. `skill-creator` lets the person write, tune, and eval their own skills instead of renting someone else's defaults. Owning skills is how a setup stops being generic. It is already available in this environment in many cases; if not, point them at installing it. Pair this with the knowledge-system fixes; a person who authors their own skills is building a compounding asset.
+When the setup is mostly untouched vendor and community skills. `skill-creator` lets the person write, tune, and eval their own skills instead of renting someone else's defaults. Two built-in measurements come first and need no install: `/skill-doctor` reports the context cost and invocation frequency of every skill (Claude Code 2.1.252 or newer), which settles the skills-and-ownership and usage themes with data; `claude plugin eval <plugin-dir>` runs a plugin's eval cases with and without the plugin and reports the difference, so a skill that scores the same without it is dead weight. A per-user skill can be silenced with `skillOverrides`. Pair this with the knowledge-system fixes; a person who authors their own skills is building a compounding asset.
 
 ## Version and share the skills dir
 
@@ -60,7 +60,7 @@ Confirm before moving directories; back up first.
 
 ## Convert a load-bearing memory rule into a hook
 
-When the person relies on remembering a rule that a hook could enforce. A rule in memory is a suggestion the model may miss; a hook is deterministic. Good candidates: blocking a dangerous command, validating output shape, refreshing metadata after a change, enforcing a naming or path convention. Use the `hook-development` skill to write it. The win is that the guardrail no longer depends on the model paying attention.
+When the person relies on remembering a rule that a hook could enforce. A rule in memory is a suggestion the model may miss; a hook is deterministic. Good candidates: blocking a dangerous command, validating output shape, refreshing metadata after a change, enforcing a naming or path convention. Write it with the built-in `/update-config` skill (hooks in settings.json); for a hook shipped in a plugin use the `plugin-authoring` skill. The win is that the guardrail no longer depends on the model paying attention.
 
 ## Reduce permission prompts
 
@@ -78,9 +78,9 @@ When the person described doing something on a clean interval by hand. `/loop` r
 
 Three linked fixes that decide the blast radius when something goes wrong. Offer them together, because they only make sense as a set.
 
-- Permission mode: set `permissions.defaultMode` to `auto` so edits flow but dangerous and outward-facing actions still gate. If they run the plain prompt-on-everything default, this is the single easiest quality-of-life and safety win. If they want `bypassPermissions`, do not just flip it on; make it conditional on isolation first
+- Permission mode: set `permissions.defaultMode` to `auto` in user settings (project-level settings ignore `auto` and `bypassPermissions`; recent builds already start in auto on the terminal) so edits flow but dangerous and outward-facing actions still gate. If they run the plain prompt-on-everything default, this is the single easiest quality-of-life and safety win. If they want `bypassPermissions`, do not just flip it on; make it conditional on isolation first
 - Isolation: for bypass or heavy unattended autonomy, move the work into a container or a disposable VM. The point is that a prompt-injection, a poisoned dependency, or a bad generated command hits a sandbox instead of the host with the real SSH keys, cloud tokens, and files. On the bare host, keep a gating mode. Detection of the current environment is best-effort, so confirm with the person rather than asserting it
-- Supply-chain guard: add a hook that blocks installing a package version published in roughly the last 48 hours. The dangerous window is right after a malicious publish and before the ecosystem notices; waiting it out dodges most recent npm and PyPI incidents. This marketplace ships a bun release-age guard as the template; use the `hook-development` skill to generalize it to npm, uv, cargo, or whichever managers the agent actually uses, and consolidate onto one manager per ecosystem so the guard has a single choke point
+- Supply-chain guard: set a minimum release age in the package manager itself, so a version published in the last day or two is not installed. The dangerous window is right after a malicious publish and before the ecosystem notices. Settings, not hooks: `minimumReleaseAge` in bunfig.toml, `exclude-newer` for uv, `minimum_release_age` for mise (check each tool's docs for the exact key and unit). A hook is only needed to stop the agent passing a flag that disables the guard (this marketplace's `useful-stuff/hooks/block-release-age-bypass` does that). Consolidate onto one manager per ecosystem so there is one choke point
 
 The reasoning to convey: autonomy and safety are a dial, not a switch. More autonomy is fine, but it has to be bought with more isolation and more guardrails, so that the worst a bad step can do stays bounded.
 
@@ -99,7 +99,7 @@ The move to recommend most often is the separate-user one, because it's low-fric
 
 When memory carries high-stakes "never X" rules that nothing actually enforces, especially in auto or bypass mode. Walk the specific rules the scan surfaced and, for each, decide what should back it.
 
-- If the outcome is catastrophic and irreversible (exfiltration, destructive commands, pushing to production), a written rule is not enough. Add a hook that blocks the action deterministically (`hook-development`), or better, remove the possibility: take away the access, block the network path, inject secrets inline so there is nothing on disk to leak
+- If the outcome is catastrophic and irreversible (exfiltration, destructive commands, pushing to production), a written rule is not enough. Add a hook that blocks the action deterministically (`/update-config`), or better, remove the possibility: take away the access, block the network path, inject secrets inline so there is nothing on disk to leak
 - The enforcement ladder, weakest to strongest: written instruction → LLM-as-judge → gating-mode pause → deterministic hook → impossible by construction. Move each high-stakes rule as far right as is practical
 - Leave written rules in place for what they're good at: judgment calls, tone, when-to-ask, style. Those can't be hooks and aren't catastrophic if occasionally missed
 - Do not add blocks for everything; that just makes ordinary work painful. Target the rules whose violation you actually can't afford
@@ -133,7 +133,7 @@ The durable fix behind the one above: make it so the agent can use secrets witho
 
 - Use a 1Password service account (a scoped, non-interactive token) so retrieval needs no desktop unlock and works in headless and cron runs. Keep the service-account token itself in the OS keychain, loaded into an env var in memory, never on disk
 - Resolve secrets inline with `op run` / `op inject`, referencing them as `op://vault/item/field`. The value materializes only inside that one subprocess: `op run -- some-command --token op://...`. The agent composes the command; the plaintext never lands in its context or on disk
-- Block the read verb with a hook. A PreToolUse hook that denies `op read` (and any bare `echo $SECRET`-style dump) means the retrieval path can inject but not reveal. Use the `hook-development` skill to write it. Now the guarantee is structural, not a matter of the agent behaving
+- Block the read verb with a hook. A PreToolUse hook that denies `op read` (and any bare `echo $SECRET`-style dump) means the retrieval path can inject but not reveal. Write it with `/update-config`. Now the guarantee is structural, not a matter of the agent behaving
 - The same shape works for cloud tokens: `az account get-access-token ... --query accessToken -o tsv` piped straight into the consuming command, never captured to a variable the agent prints
 
 The principle: the agent should orchestrate secrets, not hold them. Retrieval inline, reading blocked. This is the setup that lets someone hand real credentials to an agentic workflow without handing it the ability to leak them.

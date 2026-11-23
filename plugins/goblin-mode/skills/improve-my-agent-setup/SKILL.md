@@ -1,6 +1,6 @@
 ---
 name: improve-my-agent-setup
-description: Audit and improve an entire agentic-development setup, including skills, context, memory, tools, models, permissions, hooks, workflow habits, and secrets hygiene. Invoke for setup reviews, workflow grading, Goblin Mode, or questions about what to improve. Supports shallow, deep, ultra, and yolo modes. Use domain-specific skills for a single model, report, or tenant.
+description: "Audit an agentic-development setup (skills, memory, tools, permissions, hooks, secrets, habits), score each theme, write a report and fix the weak spots with consent. Use for setup reviews, workflow grading, Goblin Mode, or what to improve. Modes: shallow, deep, ultra, yolo. Not for a single model, report or tenant."
 ---
 
 # Improve my agent setup
@@ -48,11 +48,11 @@ Before an `ultra` or `yolo` run, do two things `modes.md` describes in full: che
 Map the mode to the scan's `--scope`: shallow and deep use `user`; ultra and yolo use `deep`. For ultra and yolo, also go machine-wide beyond cwd, enumerating the user's project dirs (the transcripts signal lists them) and sampling across them; yolo additionally reads a sample of `~/.claude/projects/*.jsonl` for patterns. Pass a project path to target one repo.
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/skills/improve-my-agent-setup/scripts/scan_setup.py" --scope=<user|project|deep> [project-path] \
+python3 "${CLAUDE_SKILL_DIR}/scripts/scan_setup.py" --scope=<user|project|deep> [project-path] \
   > .claude/scratchpads/setup-scan.json
 ```
 
-Pass a project path to target a specific repo; with no path it uses the current git root. The script is stdlib-only and reads metadata only. It is built so no secret material ever reaches disk: env vars and connection strings come back as keys, and the secrets sweep reports only a file path, a line number, a rule name, and a match length; never the matched value. Keep that contract; when you write the report, describe where a secret is, never what it is. If `${CLAUDE_PLUGIN_ROOT}` is not set, use the script's path under this skill directly.
+Pass a project path to target a specific repo; with no path it uses the current git root. The script is stdlib-only and reads metadata only. It is built so no secret material ever reaches disk: env vars and connection strings come back as keys, and the secrets sweep reports only a file path, a line number, a rule name, and a match length; never the matched value. Keep that contract; when you write the report, describe where a secret is, never what it is.
 
 The JSON has these sections: `skills`, `memory`, `settings`, `tools`, `mcp`, `git`, `transcripts`, `clients`, `secrets`. Notable ones:
 
@@ -153,7 +153,7 @@ This is where the value lands. For each item on the suggested-fixes list, offer 
 - Trim memory that restates what the model already knows (directory trees, generic advice) or duplicates across scopes
 - Swap a redundant path for the better tool (drive PBIR edits through `pbir` instead of hand-editing JSON; use `fab` instead of an overlapping MCP where the CLI is better)
 - Remove or disable skills that overlap or have gone stale, and update ones pinned to an old version
-- Install `skill-creator` so they can write and tune their own skills instead of running vendor skills as-is
+- Run `/skill-doctor` to see which skills cost context and never fire; point them at `claude plugin eval` to test a plugin's skills with and without the plugin; install `skill-creator` so they can write and tune their own skills instead of running vendor skills as-is
 - Put `~/.claude/skills` under version control and symlink it, so skills are shared across machines and agents
 - Add a hook where they are relying on themselves to remember a rule that a hook could enforce
 - Point them at `/loop` and `/schedule` for the recurring work they described doing by hand

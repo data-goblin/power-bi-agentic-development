@@ -4,7 +4,7 @@ For `reports`, `custom-visuals`, `paginated-reports`, and the PBIR side of `pbip
 
 ## pbir (Power BI report CLI)
 
-The engine for the `reports` plugin and the PBIR-editing custom-visuals skills: create, explore, format, validate, and publish reports, serialize/build themes, and drive the Power BI Desktop bridge. Same package on Windows and macOS.
+The engine for the `reports` plugin and the PBIR-editing custom-visuals skills: create, explore, format, validate, and publish reports, serialize/build themes, and drive the Power BI Desktop bridge. Same package on Windows, macOS and Linux (the Desktop bridge is Windows only).
 
 ```bash
 uv tool install pbir-cli
@@ -12,7 +12,7 @@ uv tool install pbir-cli
 pip install pbir-cli
 ```
 
-Verify: `pbir --version`. Optional one-time setup: `pbir setup --claude-code` installs the companion skills; `pbir schema fetch` downloads report schemas.
+Verify: `pbir --version`. `pbir schema fetch` downloads report schemas.
 
 Auth: thin-report and workspace operations rely on `fab` auth (see `references/fabric.md`); `pbir usage` uses your `az login` token.
 
