@@ -235,7 +235,9 @@ def check_page(path: pathlib.Path, today: dt.date) -> list[Finding]:
 
 def wiki_pages() -> list[pathlib.Path]:
     return sorted(
-        p for p in (ROOT / "plugins").glob("*/wiki/**/*.md") if p.name != "README.md"
+        p
+        for p in (ROOT / "plugins").glob("*/wiki/**/*.md")
+        if p.name != "README.md" and "examples" not in p.relative_to(ROOT).parts
     )
 
 
