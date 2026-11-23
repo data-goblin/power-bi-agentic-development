@@ -19,4 +19,4 @@ Livy sessions and batches run Spark code against a lakehouse and leave no item b
 
 ## Persisting code as a notebook
 
-That is a definition change, not Livy. `fab import` polled the long-running operation slowly on fab 1.7.0; see `fabric-cli` for `scripts/deploy_notebook.py` and the note to re-measure on fab 1.9.0.
+That is a definition change, not Livy. `fab import` polled the long-running operation slowly when observed on fab 1.7.0; fab 1.9.0 release notes say LRO polling was improved. See `fabric-cli` for `scripts/deploy_notebook.py` and the note to re-measure.
