@@ -30,6 +30,7 @@ examples/report-eval/
     fixture.sh                        writes a small Bikes report and model into the empty workspace
     graders/gate-*.md                 4 graders, pass or fail
     graders/q-<dimension>-ok|full.md  10 graders, two per dimension
+  add-bar-reference/                  the same graders without gate-validate-ran, scored on the reference solution
 ```
 
 ## The gate
@@ -64,9 +65,13 @@ Plugin eval scores a run as the weighted fraction of graders passed, so a failed
 ## What was checked
 
 ```yaml
-load:       claude plugin eval loads the case with no grader warning (--max-cost-usd 0 launches nothing and exits 2)
-gate:       check-gate.py passes on the reference solution and fails on the untouched fixture
-real run:   one run, Sonnet, scored 0 on every grader and cost about 0.10 USD (Unverified beyond that)
+load:        claude plugin eval loads both cases with no grader warning
+gate:        check-gate.py passes on the reference solution and fails on the untouched fixture
+reference:   add-bar-reference, 1 run: 3 of 3 gate graders pass, quality 7 of 10 (polish 0, style 1), judge cost about 0.06 USD
+fixture:     add-bar-two-measures with the visual missing: every grader fails
+agent run:   add-bar-two-measures cannot run in claude plugin eval 2.1.330 on a machine where pbir is installed under the home directory (see below)
 ```
 
-In the real run the Bash tool had no `pbir` on its `PATH` and could not write to the workspace, so the agent changed nothing and the gate failed closed. The rubric graders were never scored on a real artifact, so their thresholds are Unverified. Before trusting a score, run a case once with `--keep-temp` and read the trace.
+`add-bar-reference` calibrates the graders. Its fixture builds the report, adds the reference visual with the released `pbir`, and saves `validate.log`; the prompt tells Claude to change nothing, so the graders score the reference itself. The reference has no number formats, so the polish graders fail, as they should. Two rubric graders split 2 to 1 between judge votes on the same file, so read one point of quality as noise.
+
+Claude Code runs Bash in an OS sandbox during `claude plugin eval`. In that sandbox, Bash cannot write to the workspace and cannot read files under the home directory, so a `pbir` installed with `uv tool install` there is not found. Fixture scripts run outside the sandbox, so `add-bar-reference` works. The agent case needs Bash to run `pbir` and write files; run it as a normal Claude Code session in a scratch copy of the fixture, and grade that copy with `check-gate.py` and the rubric graders.
