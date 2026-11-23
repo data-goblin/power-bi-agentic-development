@@ -37,4 +37,4 @@ For ordinary CRUD, prefer `te --local` (Windows): `te add`, `te set`, `te valida
 - Bash eats `$` variables: single-quote the `-Command` argument or write a `.ps1` and use `-File`
 - Always `-ExecutionPolicy Bypass`; give calls 60 s or more
 - `Get-WmiObject` does not exist in PowerShell 7; use `Get-CimInstance Win32_Process`
-- Port discovery and thin-report handling are in `scripts/connect-and-enumerate.ps1`
+- Port discovery and thin-report handling are in `scripts/find-desktop.ps1` in the connect-pbid skill

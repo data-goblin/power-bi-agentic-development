@@ -16,3 +16,4 @@ package-lock.json
 package.json
 plugins/pbi-desktop/hooks/bin/
 plugins/pbi-desktop/skills/connect-pbid/bin/
+plugins/*/evals/results/

@@ -27,6 +27,10 @@ import yaml
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 EVIDENCE = ROOT / "wiki" / "_evidence"
 TOOLS = ("pbir", "te", "fab")
+HIDDEN = {"pbir": [], "te": [], "fab": ["deploy"]}
+PATH_SPAN = re.compile(
+    r"`((?:\.{1,2}/|references/|scripts/|plugins/|wiki/)[\w./-]+\.(?:md|py|sh|ps1|json|csx|yaml))`"
+)
 MAX_SKILL_LINES = 500
 MAX_DESCRIPTION = 1024
 MAX_NAME = 64
@@ -80,6 +84,26 @@ def check_links(path: pathlib.Path, text: str) -> list[Finding]:
             out.append(
                 Finding(
                     "error", path, line_of(text, m.start()), f"broken link {target}"
+                )
+            )
+    return out
+
+
+SKILL_DIRS = [*(ROOT / "plugins").glob("*/skills/*"), *(ROOT / "plugins").glob("*")]
+
+
+def check_paths(path: pathlib.Path, text: str) -> list[Finding]:
+    out: list[Finding] = []
+    for m in PATH_SPAN.finditer(text):
+        target = m.group(1)
+        bases = [path.parent, ROOT, *path.parents, *SKILL_DIRS]
+        if not any((b / target).exists() for b in bases):
+            out.append(
+                Finding(
+                    "error",
+                    path,
+                    line_of(text, m.start()),
+                    f"path {target} does not exist",
                 )
             )
     return out
@@ -291,6 +315,9 @@ def capture(tool: str, depth: int = 3) -> tuple[dict[str, object], int]:
                 walk([*path, sub])
 
     walk([])
+    for hidden in HIDDEN[tool]:
+        if hidden not in commands:
+            walk([hidden])
     version = subprocess.run(
         [binary(tool), "--version"],
         check=False,
@@ -422,7 +449,9 @@ def main() -> int:
         if "/evals/" in d.as_posix():
             continue
         findings += check_links(d, d.read_text(encoding="utf-8"))
-        found = check_commands(d, evidence)
+        found = check_paths(d, d.read_text(encoding="utf-8")) + check_commands(
+            d, evidence
+        )
         if d in vendored:
             found = [
                 Finding("warning", f.path, f.line, f"upstream text: {f.message}")

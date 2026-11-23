@@ -52,10 +52,9 @@ pbi-desktop:                                     # fallback path; skip it if you
   install: models.md
 
 pbip:
-  needs: [pbir CLI, jq]
-  bundled: [tmdl-validate binary (ships in the plugin; no install)]
+  needs: [pbir CLI, jq, te CLI for the TMDL hook]
   optional: [Gemini API deps (google-genai, pillow, keyring) for AI report backgrounds]
-  install: reports-and-visuals.md   # pbir CLI + Gemini; tmdl-validate is bundled
+  install: reports-and-visuals.md   # pbir CLI and Gemini; the te install is in models.md
 
 semantic-models:
   needs: [te CLI, fab (Fabric CLI), az (Azure CLI)]   # te is the primary path for every model change
@@ -130,7 +129,7 @@ fabric.md                Cloud and service tools: fab, az (+ microsoft-fabric),
 
 models.md                Semantic model tools: te CLI, TE2, Power BI
                                     Desktop + PowerShell + TOM/ADOMD.NET (NuGet) + .NET 8,
-                                    daxlib, the bundled tmdl-validate, and Mac-via-Parallels.
+                                    daxlib, the TMDL hook, and Mac-via-Parallels.
                                     For tabular-editor, pbi-desktop, pbip (TMDL), semantic-models
 
 reports-and-visuals.md   Report and visual tools: pbir CLI (+ Desktop bridge and

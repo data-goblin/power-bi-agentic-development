@@ -32,5 +32,5 @@ Well-formedness, 2016 namespace, `ReportID` GUID, top-level order, unique names,
 ## References
 
 - Real samples to copy constructs from (charts, matrix, sparklines): [example reports](../../wiki/paginated-example-reports.md)
-- REST surface beyond publish and export (data source binding, gateways, RLS, admin): `references/paginated-reports.md` in the fabric-cli skill
+- REST surface beyond publish and export (data source binding, gateways, RLS, admin): the fabric-cli plugin's wiki page `wiki/paginated-reports.md`
 - Author DAX for `PBIDATASET` datasets with the `dax` skill of the semantic-models plugin before pasting it into `<CommandText>`

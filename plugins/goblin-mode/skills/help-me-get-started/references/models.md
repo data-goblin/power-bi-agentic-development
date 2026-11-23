@@ -17,18 +17,9 @@ Expand-Archive -Force "$env:TEMP\te.zip" -DestinationPath $dir
 & "$dir\te.exe" --version
 ```
 
-```bash
-# macOS / Linux
-os=$(uname -s | tr 'A-Z' 'a-z'); [ "$os" = darwin ] && os=osx
-arch=$(uname -m); case "$arch" in arm64|aarch64) arch=arm64 ;; x86_64|amd64) arch=x64 ;; esac
-mkdir -p "$HOME/.local/bin"
-curl -fsSL "https://cdn.tabulareditor.com/files/latest/cli/te-$os-$arch.tar.gz" | tar xz -C "$HOME/.local/bin" te
-chmod +x "$HOME/.local/bin/te"
-export PATH="$HOME/.local/bin:$PATH"   # add to ~/.zshrc or ~/.bashrc to persist
-te --version
-```
+Install steps for macOS, Linux and Windows are in the tabular-editor plugin's te-cli skill, `references/get-te-cli.md`: download the archive to a file, record its SHA-256 (the CDN publishes no checksum or signature), then unpack.
 
-Authenticate with `te auth login` (browser, cached); check `te auth status`. CI or unattended runs use `te --auth env` with `AZURE_CLIENT_ID` / `AZURE_CLIENT_SECRET` / `AZURE_TENANT_ID`. Self-update with `te --update`; share a session across calls with `TE_SESSION=<name>`.
+Authenticate with `te auth login` (browser, cached); check `te auth status`. CI or unattended runs use `te --auth env` with `AZURE_CLIENT_ID` / `AZURE_CLIENT_SECRET` / `AZURE_TENANT_ID`.
 
 Two caveats worth stating up front: cloud deploy/refresh/query needs an XMLA-write-capable SKU (Premium, PPU, Fabric, or Trial); `fab import` is the non-XMLA fallback. And this is a limited public preview whose builds stop working after 2026-09-30, with no license required during preview.
 
@@ -101,9 +92,9 @@ Verify: `dotnet --version` (expect 8.x). Official downloads: [dotnet.microsoft.c
 
 The `daxlib` CLI is a bundled bash script in the plugin (`plugins/pbi-desktop/skills/connect-pbid/daxlib.sh`); nothing to install. It browses and installs DAX UDF packages from [daxlib.org](https://daxlib.org). Its prerequisites are `jq`, `bash` 3.2+, optionally `gh` (registry browsing, else `curl`), the .NET 8 SDK for model ops, and Power BI Desktop open.
 
-## tmdl-validate (bundled)
+## TMDL checks
 
-The `pbip` plugin's TMDL syntax hook uses a prebuilt Rust binary that ships in `plugins/pbip/hooks/bin/` (per-OS variants for macOS arm64/x64, Linux x64, Windows x64). No install. It is unsigned, so Windows Defender or corporate AV may false-positive; whitelist it, or disable the check with `tmdl_syntax: false` in the hook `config.yaml`. It is a stopgap slated for replacement by `te validate`.
+The `pbip` plugin's TMDL hook runs `te validate` on the edited model. Without `te` it says so once per session and lets the edit through; nothing is bundled.
 
 ## Mac: running the Windows-only stack in a VM
 
