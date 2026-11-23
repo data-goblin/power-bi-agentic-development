@@ -5,6 +5,7 @@ kind: reference
 status: current
 sources:
   - url: https://www.sqlbi.com/articles/creating-custom-visuals-in-power-bi-with-dax/
+  - url: https://learn.microsoft.com/en-us/power-bi/visuals/power-bi-visualization-card
 last_updated: 2026-11-23
 last_verified: 2026-11-23
 review_cadence_days: 60
@@ -52,7 +53,7 @@ A graphic on its own goes in an image visual that reads the measure through "Sel
 
 ## New card (`cardVisual`)
 
-The card's own image area is the `image` object; the callout image is `cardImage`. The classic `card` does not render SVG (Unverified).
+The card's own image area is the `image` object; the callout image is `cardImage`. Learn documents data-driven SVG images for this card visual, in the Image section and under Callout > Image ([card visual](https://learn.microsoft.com/en-us/power-bi/visuals/power-bi-visualization-card)).
 
 ```json
 "image": [{
