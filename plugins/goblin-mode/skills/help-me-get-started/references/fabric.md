@@ -69,7 +69,7 @@ The `fabric-cli` plugin ships no MCP servers; `fabric-sql` is optional and regis
 
 ### fabric-sql (needs a bearer token)
 
-Server-side T-SQL against Fabric SQL endpoints. Interactive OAuth over `/mcp` does not work (Unverified: Entra refused dynamic client registration when this was written), so export a bearer token into `FABRIC_PBI_TOKEN` before launching the agent:
+Server-side T-SQL against Fabric SQL endpoints. Interactive OAuth over `/mcp` needs a pre-registered Entra client id, because Entra ID has no dynamic client registration ([Learn](https://learn.microsoft.com/en-us/azure/app-service/configure-authentication-mcp)); the quick route is to export a bearer token into `FABRIC_PBI_TOKEN` before launching the agent:
 
 ```bash
 export FABRIC_PBI_TOKEN="$(az account get-access-token \
