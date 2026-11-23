@@ -1,0 +1,15 @@
+DEFINE
+    VAR _LastDate = CALCULATE ( MAX ( 'Sales'[OrderDate] ), REMOVEFILTERS ( ) )
+    VAR _Window = DATESBETWEEN ( 'Date'[Date], EOMONTH ( _LastDate, -24 ) + 1, _LastDate )
+
+EVALUATE
+    SUMMARIZECOLUMNS (
+        'Date'[Year Month],
+        'Date'[Year],
+        'Date'[Month Number],
+        _Window,
+        "Total Sales", [Total Sales],
+        "Total Sales PY", [Total Sales PY],
+        "Sales Target", [Sales Target]
+    )
+ORDER BY 'Date'[Year], 'Date'[Month Number]

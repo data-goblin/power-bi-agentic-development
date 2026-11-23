@@ -1,0 +1,19 @@
+DEFINE
+    VAR _Final = TREATAS ( { FALSE }, 'Sales'[Is Provisional] )
+    VAR _Last = CALCULATE ( MAX ( 'Sales'[OrderDate] ), _Final )
+    VAR _Windows = DATATABLE ( "Window", STRING, "Days", INTEGER, { { "30d", 30 }, { "90d", 90 }, { "All", 100000 } } )
+
+EVALUATE
+    GENERATE (
+        _Windows,
+        CALCULATETABLE (
+            ROW (
+                "Total Sales", [Total Sales],
+                "Gross Margin %", [Gross Margin %],
+                "Orders", [Order Count]
+            ),
+            DATESBETWEEN ( 'Date'[Date], _Last - [Days] + 1, _Last ),
+            _Final
+        )
+    )
+ORDER BY [Days]

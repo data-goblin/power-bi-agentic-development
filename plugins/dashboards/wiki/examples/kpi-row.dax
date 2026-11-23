@@ -1,0 +1,14 @@
+DEFINE
+    VAR _LastDate = CALCULATE ( MAX ( 'Sales'[OrderDate] ), REMOVEFILTERS ( ) )
+    VAR _ThisYear = TREATAS ( { YEAR ( _LastDate ) }, 'Date'[Year] )
+
+EVALUATE
+    CALCULATETABLE (
+        ROW (
+            "Total Sales", [Total Sales],
+            "Sales Target", [Sales Target],
+            "Sales vs Target %", [Sales vs Target %],
+            "Total Sales PY", [Total Sales PY]
+        ),
+        _ThisYear
+    )
