@@ -1,0 +1,3 @@
+function 'Finance.AddTax' = ( amount : NUMERIC, taxRate : NUMERIC = 0.1 ) => amount * ( 1 + taxRate )
+	lineageTag: 33ba7231-b81a-45a1-aa7f-bf6f30a541ba
+
