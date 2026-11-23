@@ -28,7 +28,7 @@ Learn: [Connections REST API](https://learn.microsoft.com/en-us/rest/api/fabric/
 - `fab get ".connections/<Name>.Connection"` and `-q connectionDetails` read one; `fab set ".connections/<Name>.Connection" -q displayName -i "New Name"` renames. `fab set` accepts the properties the Update Connection API documents ([fab set](https://microsoft.github.io/fabric-cli/commands/fs/set/)), and that API takes `credentialDetails`, so `fab set -q credentialDetails` updates credentials ([Update Connection](https://learn.microsoft.com/en-us/rest/api/fabric/core/connections/update-connection)).
 - `fab rm ".connections/<Name>.Connection" -f` deletes it permanently.
 - `fab acl` works on connections: roles `Owner`, `User`, `UserWithReshare`; `fab acl set -I` takes an Entra objectId.
-- Create has no native fab command; use `fab api -X post connections` with the body below. It needs scope `Connection.ReadWrite.All`; a service principal needs the tenant setting that lets it create connections.
+- Create with `fab mkdir ".connections/<Name>.Connection" -P connectionDetails.type=...,credentialDetails.type=...`. fab 1.7.0 requires `connectionDetails.type`, `connectionDetails.parameters.*`, `credentialDetails.type` and the matching `credentialDetails.*` keys, and takes `gateway` or `gatewayId` for a gateway connection. For a body that is easier to write as JSON, use `fab api -X post connections` with the body below. It needs scope `Connection.ReadWrite.All`; a service principal needs the tenant setting that lets it create connections.
 
 ## Credential types
 
