@@ -14,3 +14,6 @@ One line per check: `YYYY-MM-DD <page> <what was checked against what>`.
 2026-11-23 plugins/pbip/wiki/pbir-filters.md semanticQuery 1.4.0, filterConfiguration 1.3.0, page 2.1.0 schemas read; pbir 0.9.33 help
 2026-11-23 plugins/pbip/wiki/pbir-page-json.md semanticQuery 1.4.0, filterConfiguration 1.3.0, page 2.1.0 schemas read; pbir 0.9.33 help
 2026-11-23 plugins/pbip/wiki/pbir-theme-cascade.md semanticQuery 1.4.0, filterConfiguration 1.3.0, page 2.1.0 schemas read; pbir 0.9.33 help
+2026-11-23 plugins/tabular-editor/wiki/bpa-rule-format.md te 0.8.1.1 bpa run on Bikes and embedded examples; docs bpa.md read
+2026-11-23 plugins/tabular-editor/wiki/bpa-dynamic-linq.md te 0.8.1.1 bpa run on Bikes and embedded examples; docs bpa.md read
+2026-11-23 plugins/tabular-editor/wiki/bpa-model-annotations.md te 0.8.1.1 bpa run on Bikes and embedded examples; docs bpa.md read

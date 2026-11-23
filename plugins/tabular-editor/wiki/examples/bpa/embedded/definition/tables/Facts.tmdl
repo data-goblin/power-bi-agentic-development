@@ -1,0 +1,24 @@
+table Facts
+	lineageTag: 9a1b2c3d-4e5f-4061-8a72-b3c4d5e6f701
+
+	/// Number of rows in Facts
+	measure 'Row Count' = COUNTROWS ( Facts )
+		formatString: #,0
+		lineageTag: 9a1b2c3d-4e5f-4061-8a72-b3c4d5e6f702
+
+	measure Undocumented_Total = SUM ( Facts[Amount] )
+		formatString: #,0
+		lineageTag: 9a1b2c3d-4e5f-4061-8a72-b3c4d5e6f703
+
+	column Amount
+		dataType: decimal
+		summarizeBy: sum
+		sourceColumn: Amount
+
+	partition Facts = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Amount"}, {{1}, {2}})
+				in
+				    Source

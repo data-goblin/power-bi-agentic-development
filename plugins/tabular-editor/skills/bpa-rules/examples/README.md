@@ -1,118 +1,14 @@
-# BPA Rule Examples
+# BPA rule example files
 
-This directory contains example BPA rule sets for Tabular Editor.
-
-## Important: Tabular Editor Compatibility
-
-### Line Endings (CRLF)
-
-Tabular Editor on Windows requires **CRLF line endings** (`\r\n`). Files with Unix line endings (LF only) may fail to load or show empty rule collections.
-
-To convert a file to CRLF:
-```bash
-# macOS/Linux
-sed -i 's/$/\r/' rules.json
-
-# Or use the validation script with --fix flag
-python validate_rules.py --fix rules.json
-```
-
-### File Paths
-
-When adding rule files in Tabular Editor:
-- **Use absolute paths** (e.g., `C:\BPARules\my-rules.json`)
-- **Avoid relative paths** with `..\..\..` - TE may fail to resolve these
-- URLs work fine (e.g., `https://raw.githubusercontent.com/...`)
-
-### JSON Format Requirements
-
-- No `_comment` fields - TE's JSON parser doesn't allow extra properties
-- Avoid `null` values for optional fields - omit the field entirely instead
-- Use standard JSON encoding (UTF-8, no BOM)
-
-## Files
-
-### power-query-operations-rules.json
-
-Comprehensive BPA rules for detecting Power Query anti-patterns:
-
-**Duplicate Detection (3 rules):**
-- `PQ_AVOID_TABLE_DISTINCT` - Detects Table.Distinct operations
-- `PQ_AVOID_REMOVE_DUPLICATES` - Detects Table.RemoveDuplicates operations
-- `PQ_DUPLICATE_DETECTION_COMPREHENSIVE` - Comprehensive rule covering all duplicate removal
-
-**Join/Merge Operations (4 rules):**
-- `PQ_AVOID_TABLE_NESTEDJOIN` - Detects Table.NestedJoin (severity 3)
-- `PQ_AVOID_TABLE_JOIN` - Detects Table.Join (severity 3)
-- `PQ_AVOID_FUZZY_JOINS` - Detects fuzzy join operations (severity 3)
-- `PQ_MERGE_OPERATIONS_COMPREHENSIVE` - Comprehensive rule covering all join/merge patterns
-
-**Advanced Patterns (3 rules):**
-- `PQ_TABLE_COMBINE_WITH_DISTINCT` - Detects Table.Combine + duplicate removal patterns
-- `PQ_BUFFER_BEFORE_JOINS` - Detects Table.Buffer usage before joins
-- `PQ_EXPAND_AFTER_NESTEDJOIN` - Detects expand column operations after nested joins
-
-### course-3-business-case-bpa-rules.json
-
-Business case example rules from training materials demonstrating various BPA patterns including:
-- Table naming conventions
-- Duplicate removal detection
-- Auto-DateTime table detection
-- Column count limits
-- Relationship best practices
-- Data type recommendations
-- Redundant column detection
-- Display folder organization
-- Format string requirements
-
-### comprehensive-rules.json
-
-Complete reference set of BPA rules covering:
-- DAX expressions
-- Metadata
-- Performance
-- Model layout
-- Naming conventions
-- Formatting
-- Governance
-
-### microsoft-analysis-services-rules.json
-
-**77 official BPA rules** from the Microsoft Analysis Services repository, maintained by Michael Kovalsky (Fabric CAT team). This is the industry-standard rule set used by Power BI developers worldwide.
-
-**Source:** [microsoft/Analysis-Services/BestPracticeRules](https://github.com/microsoft/Analysis-Services/tree/master/BestPracticeRules)
-
-**Categories covered:**
-- **Performance (25 rules):** Data types, relationships, aggregations, query folding, Direct Query optimization
-- **DAX Expressions (17 rules):** Column/measure references, DIVIDE function, IFERROR avoidance, filter syntax
-- **Error Prevention (9 rules):** Source columns, expressions, data type mismatches, invalid characters
-- **Maintenance (9 rules):** Unused columns/measures, referential integrity, descriptions
-- **Naming Conventions (4 rules):** Object names, partition names, special characters
-- **Formatting (18 rules):** Format strings, data categories, hiding conventions, primary/foreign keys
-
-**Note:** Some rules require Vertipaq Analyzer annotations. Run the script at [elegantbi.com/post/vertipaqintabulareditor](https://www.elegantbi.com/post/vertipaqintabulareditor) first to enable cardinality-based rules.
-
-## Usage
-
-Import these rule sets into Tabular Editor via:
-1. Tools -> Manage BPA Rules
-2. Click "Add..."
-3. Enter the **absolute file path** or URL
-4. Click "OK"
-
-Or reference them in your `BPARules.json` file in the model directory.
-
-## Validation
-
-Use the validation script to check rules before loading in TE:
+Every file loads and evaluates with `te bpa run` against a model with 0 rule errors (checked on te 0.8.1.1):
 
 ```bash
-# Validate rules
-python scripts/validate_rules.py examples/my-rules.json
-
-# Validate and fix line endings
-python scripts/validate_rules.py --fix examples/my-rules.json
-
-# Schema validation only
-python scripts/validate_rules.py --schema-only examples/my-rules.json
+te bpa run --model <model folder> -r <file> --no-defaults --no-model-rules --non-interactive --output-format json
 ```
+
+- `comprehensive-rules.json`: 31 rules over DAX, metadata, performance, layout, naming, formatting and governance
+- `microsoft-analysis-services-rules.json`: 71 rules from [microsoft/Analysis-Services BestPracticeRules](https://github.com/microsoft/Analysis-Services/tree/master/BestPracticeRules), maintained by the Fabric CAT team; fetch the upstream file for the current set
+- `power-query-operations-rules.json`: 10 rules that flag Power Query operations known to break folding or cost memory
+- `course-3-business-case-bpa-rules.json`: 10 training-material rules
+
+Rule format, scopes and expression gotchas: [bpa-rule-format](../../../wiki/bpa-rule-format.md) and [bpa-dynamic-linq](../../../wiki/bpa-dynamic-linq.md).

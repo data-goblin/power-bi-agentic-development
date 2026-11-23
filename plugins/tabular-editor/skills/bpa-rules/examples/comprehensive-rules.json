@@ -167,7 +167,7 @@
         "Description": "Calculated columns are computed during processing and stored in memory. Consider using measures instead.",
         "Severity": 2,
         "Scope": "Table",
-        "Expression": "Columns.Count(ObjectType = \"CalculatedColumn\") > 10"
+        "Expression": "Columns.Count(Type = \"Calculated\") > 10"
     },
     {
         "ID": "LAYOUT_HIDE_FK_COLUMNS",
