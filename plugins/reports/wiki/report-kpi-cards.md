@@ -43,7 +43,7 @@ Label what the goal is (`goals.goalText`: "1YP", "Budget", "3M avg"); "Target" a
 
 ## Display units
 
-Auto display units fail when a measure carries a custom format string such as `#,##0`: the format string wins and the raw number shows. Query the value under the report's filters (`pbir model -q`), choose the unit per visual and set precision:
+Query the value under the report's filters (`pbir model -q`), choose the unit per visual and set precision:
 
 ```bash
 pbir set "R.Report/P.Page/RevenueKPI.Visual.indicator.indicatorDisplayUnits" --value 1000000

@@ -29,14 +29,11 @@ Results are capped by `maxRows` and by some connectors' response size (both flag
 
 ## Measures that need a selection
 
-Many enterprise models return BLANK unless a slicer table has one value selected (reporting currency, value unit, scenario); their expressions start with `HASONEVALUE`, `SELECTEDVALUE` or `IF.EAGER ( HASONEVALUE ( ... ) )`. A measure like `MAX ( 'Exchange Rate'[Rate] )` instead returns a number several times too high with no selection and no warning.
+Many enterprise models return BLANK unless a slicer table has one value selected (reporting currency, value unit, scenario). A measure like `MAX ( 'Exchange Rate'[Rate] )` instead returns a number several times too high, with no selection and no warning.
 
 - Read the expression and description of every measure you use, and look for disconnected tables (`Selected Unit`, `Exchange Rate`, `Selected Period`)
-- Pass the selection as a filter such as `TREATAS ( { "EUR" }, 'Exchange Rate'[Currency] )` and show the choice in the dashboard (a switch or a label)
-- Ask the user for the default when the model documents none
 - `get_model_schema` returns empty expressions when the user may not read them: rely on names, descriptions and format strings, and test the measure at a known grain first
-
-When the model lacks a needed metric, say so, name the closest measures and suggest adding it to the model. Only if the user still wants it in the dashboard, compute it from existing measures and label it a dashboard-only calculation.
+- When the model lacks a needed metric, say so, name the closest measures and suggest adding it to the model; if the user still wants it in the dashboard, compute it from existing measures and label it a dashboard-only calculation
 
 ## Query-shape rules (benchmarked once)
 

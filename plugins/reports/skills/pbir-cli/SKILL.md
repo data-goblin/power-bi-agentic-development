@@ -29,8 +29,7 @@ On macOS and Linux every `pbir desktop` command fails. Instead, ask permission, 
 
 ## Gotchas
 
-- **Global flags go before the subcommand**: `pbir -q --skip fields set ...`. `--skip` takes `structure, schema, schema-version, fields, enums, qa` (comma-separated or repeated); `--rawdog` skips all. Prefer fixing the cause.
-- **`pbir pages rename` is a dry run** until `-f`; it renames folder and displayName (`--to` for a single page).
+- **`--skip`** (a global flag) takes `structure, schema, schema-version, fields, enums, qa` (comma-separated or repeated); `--rawdog` skips all. Prefer fixing the cause.
 - **`pbir cat` does not read filters or bookmarks**: use `pbir filters json` or `pbir bookmarks json`.
 - **`pbir publish` takes positional arguments**: `pbir publish "R.Report" "WS.Workspace/R.Report" -f`; with no destination it overwrites the saved link (`pbir report link`). Publish a `.pbix` as a `.pbix`; never convert and then publish the PBIR folder.
 - **`pbir add filter <Table> <Field>`** takes two positional arguments and validates the field against the model; it fails closed when the model is unreachable.

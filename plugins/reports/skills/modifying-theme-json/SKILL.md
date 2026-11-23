@@ -15,7 +15,7 @@ Command syntax is in `pbir theme --help`; schema facts, the cascade and the limi
 4. **Put repeated formatting in the theme** (wildcard, then visual-type defaults); keep visual overrides for content-specific exceptions and conditional formatting.
 5. **Clearing overrides is destructive.** Confirm with the user, `--dry-run` first, and keep conditional formatting with `--keep-cf` unless the user wants it gone.
 6. **Validate after each batch**: `pbir theme validate` then `pbir validate --all`.
-7. **Desktop does not reload theme resources on refresh.** Close and reopen the report before judging a theme change. Without Desktop, ask before publishing to a sandbox to check the render.
+7. Without Desktop, ask before publishing to a sandbox to check the render.
 
 ## Workflow
 
