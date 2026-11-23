@@ -15,7 +15,7 @@ deploy subcommand docs: https://microsoft.github.io/fabric-cli/commands/fs/deplo
 fabric-cicd: https://github.com/microsoft/fabric-cicd
 ```
 
-## The deploy subcommand (fab 1.7.0)
+## The deploy subcommand
 
 Config-file driven; run the subcommand's `--help` for flags: `--config`, `-tenv/--target_env`, `-P` (JSON parameters), `-f`, `--bulk_publish` (experimental). Example shape: `deploy --config config.yml --target_env prod -P '[{"param1":"value1"}]' -f`.
 
@@ -47,7 +47,7 @@ fab bulk-export "ws.Workspace" -o ./out --recursive
 fab bulk-export "ws.Workspace/folder1.Folder" -o ./out --recursive
 ```
 
-- Added in 1.7.0; keeps folder structure and item bindings
+- Keeps folder structure and item bindings
 - `--recursive` is required for workspace and folder targets; `-f` overwrites a non-empty output and exports without sensitivity label
 - Pairs with the deploy subcommand: export from dev, commit, deploy the folder to test and prod
 

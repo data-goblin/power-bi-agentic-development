@@ -114,6 +114,6 @@ All three token variables must be set (the docs also list `FAB_TENANT_ID`) or `f
 ## Related references
 
 - [Permissions](./permissions.md) - `fab acl` scope and roles, SP-based embedding
-- [fab vs az](./fab-vs-az.md) - when to reach for `az` vs `fab`; Azure CLI as an auth source since fab 1.8.0
+- [fab vs az](./fab-vs-az.md) - when to reach for `az` vs `fab`; Azure CLI as an auth source (`fab auth login --azure-cli`)
 - [Admin APIs](./admin.md) - reading and updating tenant settings at scale
 - [Commands](./commands.md) - auth modes (certificate, federated token, managed identity, environment variables)

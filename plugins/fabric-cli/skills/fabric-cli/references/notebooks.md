@@ -70,7 +70,7 @@ fab import "ws.Workspace/MyNotebook.Notebook" -i ./MyNotebook.Notebook -f
 fab job run "ws.Workspace/MyNotebook.Notebook" --timeout 600
 ```
 
-- `fab import` on fab 1.7 or earlier took 25 to 60 s because it polled the create LRO at the server's `Retry-After: 20`, though the work itself finishes in about 1 s; fab 1.9.0 release notes say LRO polling was improved, so re-measure there
+- `fab import` took 25 to 60 s on fab 1.7.0 (observed) because it polled the create LRO at the server's `Retry-After: 20`, though the work itself finishes in about 1 s; fab 1.9.0 release notes say LRO polling was improved without a number, so re-measure there
 - `uv run ${CLAUDE_SKILL_DIR}/scripts/deploy_notebook.py` tight-polls (about 0.3 s, `--poll-interval`) and deploys in 1 to 2 s; it detects create versus update (see [import-download-deploy.md](./import-download-deploy.md))
 
 ```yaml
@@ -92,7 +92,7 @@ fab job run-cancel "ws.Workspace/ETL.Notebook" --id <job-id> --wait
 ```
 
 - Parameter types for notebooks: `string`, `int`, `float`, `bool`; `-C` Spark configuration applies to PySpark only
-- `fab job start` is async only in 1.7.0; 1.9.0 adds `--wait`, `--timeout` and `--polling_interval`
+- `fab job start` returns once the job is queued; `--wait` blocks until it finishes, with `--timeout` and `--polling_interval` (both require `--wait`)
 - Python notebooks default to 2 vCores and 16 GB; scale in the first cell with `%%configure -f` and `{"vCores": 8, ...}` (4, 8, 16, 32 or 64, 8 GB per vCore)
 - Startup: starter pool 5 to 10 s; custom libraries need a custom pool with a Full-mode environment (about 5 s with a Live Pool); several notebooks sharing config can use High Concurrency mode; Private Link or managed VNet forces a custom pool and 2 to 5 min startup
 

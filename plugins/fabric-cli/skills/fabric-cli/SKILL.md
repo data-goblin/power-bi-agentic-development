@@ -30,20 +30,23 @@ hooks:
 
 ## Versions
 
-Installed here: fab 1.7.0; PyPI had 1.9.0 on 2026-11-04. Check `fab --version` and upgrade with `uv tool upgrade ms-fabric-cli` unless the user pinned a version. Release notes: https://microsoft.github.io/fabric-cli/release-notes
+This skill documents fab 1.9.0. Check `fab --version` and upgrade with `uv tool upgrade ms-fabric-cli` unless the user pinned a version. Release notes: https://microsoft.github.io/fabric-cli/release-notes
+
+Version floor (feature: minimum fab version):
 
 ```yaml
-1.7.0: bulk-export (folder structure and bindings kept; --recursive required for a workspace or folder), config-file deploy subcommand
-1.8.0: Ontology and GraphModel items, Azure CLI as an auth source
-1.9.0: Plan, WarehouseSnapshot and more item types, --json, job start --wait/--timeout/--polling_interval, faster LRO polling
+bulk-export, deploy --bulk_publish, job id as a structured field of job run and job start: 1.7.0
+Ontology and GraphModel items, fab auth login --azure-cli: 1.8.0
+Plan, OrgApp, OrgAppAudience, WarehouseSnapshot items: 1.9.0
+--json shorthand, job start --wait/--timeout/--polling_interval: 1.9.0
 ```
 
-An item type missing from the `fab desc` element list (Plan, Ontology, GraphModel on 1.7.0) means the installed fab is too old for it.
+An item type missing from the `fab desc` element list means the installed fab is too old for it; tell the user which version to upgrade to.
 
 ## Paths, auth, output
 
 - Paths: `"Workspace Name.Workspace/Item Name.ItemType"`; quote them when they hold spaces or punctuation. Lakehouse data: `ws.Workspace/LH.Lakehouse/Tables/<schema>/<table>` and `.../Files/<file>`. Capacities: `fab ls .capacities` (names end in `.Capacity`)
-- `--output_format json` works on every command and wraps the result in `{status, command, result.data}`
+- `--output_format json` (shorthand `--json`) works on every command and wraps the result in `{status, command, result.data}`
 - API audiences (`fab api -A`): `fabric` (default), `powerbi`, `storage`, `azure`. Power BI endpoints (`groups/<ws>/datasets/...`, `admin/capacities`) need `-A powerbi`
 - `fab get ".capacities/<name>.Capacity" -q properties.state` prints `Active` or `Paused` followed by `\r`; strip it before comparing. `fab ls .capacities -l` shows `Inactive` for a paused one
 
@@ -55,7 +58,7 @@ inspect an item: fab get "ws.Workspace/Model.SemanticModel" -q definition -f
 list data: fab ls "ws.Workspace/LH.Lakehouse/Tables"; fab table schema "<path>"
 query data: scripts below (they resolve ids, hosts and auth); route priority in querying-data.md
 refresh a model: fab api -A powerbi "groups/<ws-id>/datasets/<model-id>/refreshes" -X post -i '{"type":"Full"}'   # 409 while one runs; costs CU
-run a notebook or pipeline: fab job run | fab job start; check the real outcome (see gotchas)
+run a notebook or pipeline: fab job run | fab job start --wait; check the real outcome (see gotchas)
 export/import: fab export | fab import | fab cp; whole workspace with folders: fab bulk-export "ws.Workspace" -o ./out --recursive
 promote dev to prod: deployment-pipelines.md (pipelines API, or the config-file deploy subcommand)
 service principal for automation: service-principals.md
@@ -64,7 +67,7 @@ service principal for automation: service-principals.md
 ## Gotchas
 
 - A job `Completed` only means the process finished. A notebook can catch its own exception and exit a failure payload; read the exit value or run `scripts/run_notebook_checked.py` ([notebooks.md](./references/notebooks.md))
-- Creating or updating a definition is a long-running operation (202 plus `Retry-After`). On fab 1.7.0 `import` took 25-60s for a notebook the server finished in about 1s because of the poll cadence; `scripts/deploy_notebook.py` polls every 0.3s. Re-measure on 1.9.0 before relying on this, since its LRO polling was improved
+- Creating or updating a definition is a long-running operation (202 plus `Retry-After`). On fab 1.7.0 `import` took 25-60s for a notebook the server finished in about 1s because of the poll cadence (observed on 1.7.0); `scripts/deploy_notebook.py` polls every 0.3s. fab 1.9.0 release notes say LRO polling was improved and not by how much, so re-measure on 1.9.0 before relying on this
 - `fab ls` browses workspaces, items and lakehouse or warehouse data; on other items read the definition with `fab get`
 - `fab api` is for operations no command covers. Admin endpoints need the admin role; admin writes: 25 per minute, honour `Retry-After` on 429, print the exact command and wait for approval
 - Never put a secret in an argument, file or echoed variable; see [service-principals.md](./references/service-principals.md) and [fab-vs-az.md](./references/fab-vs-az.md)

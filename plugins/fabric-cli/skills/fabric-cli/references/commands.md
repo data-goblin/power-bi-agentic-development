@@ -14,13 +14,10 @@ item recovery: https://learn.microsoft.com/en-us/fabric/admin/recycle-bin
 
 ## Versions
 
-```yaml
-1.7.0: installed; bulk-export, deploy --bulk_publish, job run and job start return the job id as a structured field
-1.8.0: Ontology and GraphModel items; Azure CLI auth source; fish completion; Python 3.14
-1.9.0: Plan, OrgApp, OrgAppAudience, WarehouseSnapshot and more item types; --json shorthand; job start --wait/--timeout/--polling_interval; faster LRO polling
-```
+Minimum versions per feature are in the Version floor list of [SKILL.md](../SKILL.md).
 
-- `fab job start` in 1.7.0 is async only; `fab job run` is the synchronous form (`--timeout`, `--polling_interval`)
+- `fab job start` returns once the job is queued; add `--wait` (with `--timeout`, `--polling_interval`) to block. `fab job run` is the synchronous form
+- `--json` is shorthand for `--output_format json` on every command
 - Interactive mode (`fab` with no arguments, or `fab config set mode interactive`) breaks scripted I/O; use one-shot calls in automation
 
 ## rm and recovery
@@ -89,7 +86,7 @@ federated token: fab auth login -u <client_id> --federated-token <token> --tenan
 managed identity: fab auth login --identity (user-assigned: add -u <client_id>)
 environment SPN: FAB_SPN_CLIENT_ID plus FAB_SPN_CLIENT_SECRET (or FAB_SPN_CERT_PATH, FAB_SPN_FEDERATED_TOKEN) plus FAB_TENANT_ID; FAB_MANAGED_IDENTITY=true for managed identity
 environment tokens: FAB_TOKEN, FAB_TOKEN_ONELAKE, FAB_TOKEN_AZURE and FAB_TENANT_ID, all four, same principal and tenant; ignored under SPN, managed identity or Azure CLI auth; you refresh them
-Azure CLI: auth source since fab 1.8.0
+Azure CLI: fab auth login --azure-cli (needs an existing az login session)
 ```
 
 - One method at a time; SPN setup and a non-destructive test: [service-principals.md](./service-principals.md); `fab auth status` shows the principal

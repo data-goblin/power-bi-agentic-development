@@ -40,7 +40,7 @@ fab table vacuum "ws.Workspace/LH.Lakehouse/Tables/temp_data" --retain_n_hours 4
 ```
 
 - `fab export` and `fab import` move the lakehouse definition (schemas, shortcuts, properties), not `Files/` or `Tables/` content; use `fab cp` for files and `fab table load` for table data
-- `table load` is not supported on schema-enabled lakehouses; `--mode` defaults to overwrite in 1.7.0 help (earlier text of this file said append), so pass `--mode append` explicitly; `--format` default is `format=csv,header=true,delimiter=','`
+- `table load` is not supported on schema-enabled lakehouses; `--mode` defaults to overwrite (`fab table load --help`), so pass `--mode append` explicitly; `--format` default is `format=csv,header=true,delimiter=','`
 - `table optimize` and `table vacuum` are lakehouse only; vacuum retention default is 168 hours (7 days)
 
 ## OneLake shortcuts

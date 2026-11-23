@@ -25,7 +25,7 @@ fab bulk-export "Production.Workspace" -o ./backup --recursive
 
 - Create the output directory first; `fab export` does not and fails with `[InvalidPath] No such file or directory`
 - `-f` skips the sensitivity-label prompt and exports without the label; the warning "Item definition is exported without its sensitivity label and its data" is informational, the real error follows on the next line
-- `bulk-export` (1.7.0) keeps folder structure and bindings, and needs `--recursive` for workspace and folder targets; plain `export -a` flattens
+- `bulk-export` keeps folder structure and bindings, and needs `--recursive` for workspace and folder targets; plain `export -a` flattens
 - Names with apostrophes work inside double quotes
 - Check which types round-trip with `fab desc .<ItemType>` (the command list includes `export`)
 
@@ -59,7 +59,7 @@ fab import "Production.Workspace/Sales.Report" -i ./exports/Sales.Report -f
 ```
 
 - Creates the item or overwrites an existing one; always pass `-f` in scripts, because without it the overwrite prompt hangs when stdin is not a terminal
-- Definition create and update are long-running operations; on fab 1.7 or earlier `fab import` measured 25 to 60 s for one notebook because it polled at the server's `Retry-After: 20` while the work finished in about 1 s (F2 capacity, 40 KB notebook); fab 1.9.0 improved LRO polling, so re-measure there
+- Definition create and update are long-running operations; `fab import` measured 25 to 60 s for one notebook on fab 1.7.0 because it polled at the server's `Retry-After: 20` while the work finished in about 1 s (F2 capacity, 40 KB notebook); fab 1.9.0 release notes say LRO polling was improved without a number, so re-measure there
 - For hand-rolled REST on definition-based items, poll create-with-definition and `updateDefinition` at about 0.3 s, and honour `Retry-After` on 429
 - `uv run ${CLAUDE_SKILL_DIR}/scripts/deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./ETL.Notebook` tight-polls (`--poll-interval`, default 0.3 s), auto-detects create versus update, takes a fab-export folder or a bare `.ipynb`, and supports `--update-only` and `--format json`
 - Import order matters when doing it by hand: Lakehouse or Warehouse, then SemanticModel, Report, Dashboard; pipelines order it for you
