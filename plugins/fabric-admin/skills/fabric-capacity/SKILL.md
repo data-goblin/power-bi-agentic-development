@@ -15,10 +15,10 @@ live (DirectQuery, CapacityMetricsCES connector):
   Timepoint CU Detail:       same, per timepoint detail page
   Metrics By Item [And Day|And Hour|And Operation]: CU (s), Duration (s), Operations, Users per item
   System Events:             pause, resume, state changes
-import (fresh only after a model refresh; a Pro workspace allows 8 scheduled refreshes a day, Unverified for this workspace):
+import (fresh only after a model refresh; a model on shared capacity allows 8 scheduled refreshes a day, on Premium, PPU or Fabric capacity 48; [data refresh](https://learn.microsoft.com/en-us/power-bi/connect-data/refresh-data)):
   Capacities, Items, Workspaces, Timepoints/Dates calendars
   Average utilization (last 1 hour | last 24 hours | last 7 days): measures on the Health page
-not available:               Azure Monitor metrics for Microsoft.Fabric/capacities (Unverified; not found in the Azure Monitor supported-metrics index)
+not available:               Azure Monitor metrics for Microsoft.Fabric/capacities (Microsoft.Fabric is not in the [Azure Monitor supported-metrics index](https://learn.microsoft.com/en-us/azure/azure-monitor/reference/metrics-index))
 ```
 
 Anything that must be current (a status bar, "what is using the capacity now") needs the DirectQuery tables.
