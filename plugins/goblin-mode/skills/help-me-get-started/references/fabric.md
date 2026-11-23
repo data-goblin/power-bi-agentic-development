@@ -21,7 +21,7 @@ fab auth login
 fab auth status
 ```
 
-Discover the command surface with `fab --help` and `fab <command> --help` rather than assuming flags; it changes often. Newer item types need newer fab: Ontology and GraphModel from 1.8.0, Plan and WarehouseSnapshot from 1.9.0. Docs: [microsoft.github.io/fabric-cli](https://microsoft.github.io/fabric-cli/).
+Discover the command surface with `fab --help` and `fab <command> --help` rather than assuming flags; it changes often. These docs target fab 1.9.0. Older fab lacks Ontology, GraphModel and `fab auth login --azure-cli` (before 1.8.0), and Plan, OrgApp, WarehouseSnapshot, `--json` and `fab job start --wait` (before 1.9.0). Docs: [microsoft.github.io/fabric-cli](https://microsoft.github.io/fabric-cli/).
 
 ## az (Azure CLI)
 
