@@ -1,0 +1,29 @@
+[
+  {
+    "ID": "PBID_MEASURE_NO_DESCRIPTION",
+    "Name": "Visible measure without a description",
+    "Category": "Documentation",
+    "Severity": 1,
+    "Scope": "Measure",
+    "Expression": "not IsHidden and string.IsNullOrWhiteSpace(Description)",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "PBID_MEASURE_NO_DISPLAY_FOLDER",
+    "Name": "Visible measure without a display folder",
+    "Category": "Documentation",
+    "Severity": 1,
+    "Scope": "Measure",
+    "Expression": "not IsHidden and string.IsNullOrWhiteSpace(DisplayFolder)",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "PBID_MEASURE_NO_FORMAT_STRING",
+    "Name": "Visible measure without a format string",
+    "Category": "Formatting",
+    "Severity": 1,
+    "Scope": "Measure",
+    "Expression": "not IsHidden and string.IsNullOrWhiteSpace(FormatString)",
+    "CompatibilityLevel": 1200
+  }
+]

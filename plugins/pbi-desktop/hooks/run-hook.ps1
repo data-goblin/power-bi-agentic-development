@@ -32,10 +32,10 @@ try {
         if ($p -and (Test-Path -LiteralPath $p)) { $candidates += $p }
     }
     $bash = $candidates | Select-Object -First 1
-    if (-not $bash) { exit 0 }
+    if (-not $bash) { [Console]::Error.WriteLine('pbi-desktop hooks are OFF: Git Bash was not found. Install Git for Windows to enable them.'); exit 0 }
 
     $target = Join-Path $PSScriptRoot $Script
-    if (-not (Test-Path -LiteralPath $target)) { exit 0 }
+    if (-not (Test-Path -LiteralPath $target)) { [Console]::Error.WriteLine("pbi-desktop hooks are OFF: $target does not exist."); exit 0 }
     $posix = $target -replace '\\', '/'
 
     # Windows PowerShell pipes to native commands in the console code page by
