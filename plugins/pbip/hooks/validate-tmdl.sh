@@ -1,15 +1,7 @@
 #!/bin/bash
 #
-# PostToolUse hook: validate the semantic model a .tmdl edit belongs to with `te validate`.
 #
-# Tabular Editor's parser is Microsoft's TOM TmdlSerializer plus a DAX analyzer, so it
-# catches what a line linter cannot: bad indentation, "//" comments outside an expression,
-# a blank line after "///", unknown properties, duplicate members, unresolved references,
-# DAX syntax and unresolved columns.
 #
-# Blocks (exit 2) on a parse error. Reference errors and DAX errors are reported as
-# advisory context, because a multi-file refactor is legitimately invalid half-way.
-# Without `te` the hook says so once per session and lets the edit through.
 
 set -o pipefail
 INPUT=$(cat 2>/dev/null || printf '%s' '{}')

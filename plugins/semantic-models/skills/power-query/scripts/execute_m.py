@@ -14,17 +14,14 @@ Usage:
         --dataflow <dataflow-id> \
         --mashup 'section Section1; shared Result = #table({"A"}, {{"hello"}});'
 
-    # Or pipe mashup from stdin:
     echo 'section Section1; shared Result = ...' | \
         uv run --with pyarrow python3 execute_m.py -w <ws-id> -d <df-id> --stdin
 
-    # Output to CSV:
     uv run --with pyarrow python3 execute_m.py -w <ws-id> -d <df-id> \
         --mashup '...' --output result.csv
 """
 
 
-# region Imports
 
 import argparse
 import io
@@ -36,10 +33,8 @@ import urllib.error
 
 import pyarrow.ipc as ipc
 
-# endregion
 
 
-# region Functions
 
 def get_token():
     """Get a Fabric API access token from az CLI.
@@ -111,7 +106,6 @@ def execute_m(ws_id, df_id, token, mashup, query_name="Result"):
     table = ipc.open_stream(io.BytesIO(resp.read())).read_all()
     df = table.to_pandas()
 
-    # Check for mashup engine errors in metadata column
     if "PQ Arrow Metadata" in df.columns:
         meta = df["PQ Arrow Metadata"].dropna()
 
@@ -124,10 +118,8 @@ def execute_m(ws_id, df_id, token, mashup, query_name="Result"):
 
     return df
 
-# endregion
 
 
-# region Main
 
 def main():
     parser = argparse.ArgumentParser(description="Execute Power Query M via Fabric API")
@@ -170,4 +162,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-# endregion

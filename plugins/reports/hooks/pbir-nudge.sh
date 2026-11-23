@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# PreToolUse hook: steer hand edits of PBIR report files toward pbir. Advice only, never a block;
-# Microsoft documents PBIR as hand-editable, but pbir validates its own writes.
 INPUT=$(cat 2>/dev/null || true)
 FILE=$(printf '%s' "$INPUT" | sed -n 's/.*"file_path"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)
 FILE="${FILE//\\\\//}"

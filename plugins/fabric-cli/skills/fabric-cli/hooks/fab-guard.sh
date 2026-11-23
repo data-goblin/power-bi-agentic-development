@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# PreToolUse hook for Bash while the fabric-cli skill is active.
-# Asks before fab commands that change a live tenant and denies fab invocations that
-# are known to fail on fab 1.7.0. Fails open, with a message on stderr, when jq is missing.
 set -u
 
 if ! command -v jq >/dev/null 2>&1; then

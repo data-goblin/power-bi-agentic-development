@@ -27,8 +27,6 @@
 #                                               get-te-cli.md + pointer, no network
 #   scripts/sync-te-cli-skill.sh --install-hook install a post-merge git hook so
 #                                               every `git pull` runs this sync
-#   scripts/sync-te-cli-skill.sh --check        exit 1 when upstream HEAD differs from the
-#                                               commit recorded in UPSTREAM.txt (no clone)
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -41,7 +39,6 @@ POINTER='To get the `te` CLI yourself (as the agent), see [references/get-te-cli
 write_get_ref() {
   mkdir -p "$DEST/references"
   cat > "$GETREF" <<'GETREF_EOF'
-# Get the `te` CLI binary
 
 Install `te` only when the user asks for it. Official install and update notes: https://docs.tabulareditor.com/en/cli/
 
@@ -216,7 +213,6 @@ for f in "$SRC/references/"*.md; do
   cp "$f" "$DEST/references/"
 done
 
-# Record which upstream release is vendored (read before the version line is stripped).
 UP_VERSION="$(sed -n 's/^version:[[:space:]]*//p' "$SRC/SKILL.md" | head -1)"
 UP_COMMIT="$(git -C "$tmp" rev-parse HEAD 2>/dev/null)"
 UP_DATE="$(git -C "$tmp" log -1 --format=%cs 2>/dev/null)"

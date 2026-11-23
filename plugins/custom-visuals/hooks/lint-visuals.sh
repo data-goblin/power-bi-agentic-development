@@ -1,15 +1,4 @@
 #!/bin/bash
-#
-# PostToolUse hook: lint Deneb spec files (*.vl.json, *.vega.json) and DAX SVG
-# measures (*.dax) after Write or Edit by running lint_visuals.py in --hook mode.
-#
-# Errors exit 2 with the findings on stderr; warnings come back as
-# additionalContext. Needs python3 (3.8 or later) or python. When it is missing
-# the hook prints one line to stderr and lets the edit through; it never blocks
-# on its own failure. No jq is required.
-#
-# Toggle via config.yaml in this directory (deneb_spec_lint: false,
-# svg_measure_lint: false, or all_hooks_enabled: false).
 
 SELF="${BASH_SOURCE[0]:-$0}"
 HOOK_DIR="$(cd "${SELF%/*}" 2>/dev/null && pwd)" || exit 0

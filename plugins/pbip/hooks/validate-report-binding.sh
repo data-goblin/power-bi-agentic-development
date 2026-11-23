@@ -1,10 +1,6 @@
 #!/bin/bash
 #
-# PostToolUse hook: check the datasetReference in a report's definition.pbir.
 #
-# Local checks only (no network): byPath or byConnection must be present, byPath must point at an
-# existing folder. The optional fab_exists check (off by default) asks Fabric whether a byConnection
-# model exists; it needs `fab` and a signed-in session and runs a network call.
 
 set -o pipefail
 INPUT=$(cat 2>/dev/null || printf '%s' '{}')

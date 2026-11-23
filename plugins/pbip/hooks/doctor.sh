@@ -1,7 +1,4 @@
 #!/bin/bash
-#
-# SessionStart hook: say which pbip checks are on. Prints one block to stdout (the model sees it);
-# never installs anything and never runs the te wrapper (it self-updates).
 
 INPUT=$(cat 2>/dev/null || printf '%s' '{}')
 # shellcheck source=lib.sh

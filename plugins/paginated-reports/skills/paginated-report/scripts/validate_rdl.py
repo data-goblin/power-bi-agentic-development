@@ -249,9 +249,6 @@ class Report:
         self._check_query_parameters(root)
 
     def _check_page_width(self, root: ET.Element) -> None:
-        # The PDF width trap: the section body width plus both side margins must fit
-        # the page, or hard renderers (PDF, Image, Word) put the overflow on extra
-        # pages to the right of every page. HTML preview never shows it.
         for section in descendants(root, "ReportSection"):
             page = first(section, "Page")
             width = size_inches(child_text(section, "Width"))

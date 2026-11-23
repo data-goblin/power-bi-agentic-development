@@ -1,10 +1,4 @@
 #!/bin/bash
-#
-# PostToolUse hook: compile a .csx or .cs script after the agent writes it, with `te script --validate`.
-#
-# Advisory only. TE3 Desktop scripts use WinForms and Selected, which do not compile under `te script`
-# by design, so a failure is reported to the model as context and never blocks the edit.
-# Without `te` the hook says so once per session and does nothing.
 
 set -o pipefail
 INPUT=$(cat 2>/dev/null || printf '%s' '{}')

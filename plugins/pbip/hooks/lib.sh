@@ -1,5 +1,4 @@
 #!/bin/bash
-# Shared helpers for the pbip hooks. Sourced, never run directly.
 
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd)"
 HOOK_CONFIG="$HOOK_DIR/config.yaml"
@@ -15,8 +14,6 @@ hooks_disabled() {
     return 1
 }
 
-# note_once <key> <message>: tell the model once per session that a check did
-# not run. Stdout JSON reaches the model on exit 0; stderr is for the terminal.
 note_once() {
     local key="$1" msg="$2" sid marker
     sid=$(printf '%s' "$INPUT" | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
@@ -27,13 +24,10 @@ note_once() {
     printf '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":"%s"}}\n' "$msg"
 }
 
-# warn <message>: advisory finding, exit 0, visible to the model.
 warn() {
     jq -cn --arg m "$1" '{hookSpecificOutput:{hookEventName:"PostToolUse",additionalContext:$m}}'
 }
 
-# te_ready: true when `te` runs without first downloading itself. The Unix
-# wrapper installs and self-updates on use, which a hook must never trigger.
 te_ready() {
     local p
     p=$(command -v te 2>/dev/null) || return 1
@@ -43,13 +37,11 @@ te_ready() {
     return 0
 }
 
-# run_limited <seconds> <command...>
 run_limited() {
     local secs="$1"; shift
     if command -v timeout >/dev/null 2>&1; then timeout "$secs" "$@"; else "$@"; fi
 }
 
-# edited_path: the file a Write/Edit hook payload touched, with / separators.
 edited_path() {
     local tool p
     tool=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)

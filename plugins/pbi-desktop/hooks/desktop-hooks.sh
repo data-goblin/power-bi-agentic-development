@@ -1,9 +1,4 @@
 #!/usr/bin/env bash
-# Hooks for Power BI Desktop work. Windows only: Desktop and its local engine do not exist elsewhere.
-#   desktop-hooks.sh session   SessionStart: say which checks are off and why (silent when everything is on)
-#   desktop-hooks.sh post      PostToolUse on Bash: after a command that saves model changes, run `te validate --local`
-# Fails open: a missing dependency or a te failure never blocks; only a te validation error does (exit 2).
-# PBI_DESKTOP_HOOKS_FORCE=1 skips the Windows gate (used to test the logic on other systems).
 
 set -u
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# PostToolUse hook: lint a .dax file the agent just wrote with the querying-fabric lint script.
-# Warn only: findings go to the model as context, nothing blocks. A missing interpreter is reported on stderr.
 set -o pipefail
 
 PYTHON=""

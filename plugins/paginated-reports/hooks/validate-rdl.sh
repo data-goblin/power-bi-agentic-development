@@ -1,26 +1,14 @@
 #!/bin/bash
 #
-# PostToolUse hook: validate a paginated report (.rdl) after Write or Edit.
 #
-# Hands the hook JSON on stdin to the bundled validate_rdl.py in --hook mode,
-# which picks the written file path out of it, runs the structural checks
-# (element order, names, tablix counts, references, units, the PDF width trap,
-# Fields! and Parameters! references) and exits 2 with the errors on stderr when
-# the file fails. It does not check DAX, SQL or render output; render to confirm.
 #
 # Not wired to Bash: a PostToolUse hook cannot tell whether a Bash command wrote
-# or only displayed an .rdl, so blocking there would interrupt cat, grep and rm.
-# Run validate_rdl.py directly on a file that a Bash command created.
 #
-# Needs python3 (3.8 or later) or python. When it is missing the hook prints
-# one line to stderr and lets the edit through; it never blocks on its own
-# failure. No jq is required.
 #
 # Toggle via config.yaml in this directory (rdl_validation: false, or
 # all_hooks_enabled: false as a master kill-switch).
 #
 # Exit codes:
-#   0 - OK, not applicable, or the validator could not run (stderr says why)
 #   2 - Blocking: RDL validation error detected
 #
 

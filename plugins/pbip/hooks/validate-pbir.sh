@@ -1,15 +1,7 @@
 #!/bin/bash
 #
-# PostToolUse hook: validate a file the agent just wrote inside a *.Report/ folder.
 #
-# Order:
-#   1. JSON syntax and the page/visual folder and name rule (jq, always)
-#   2. pbir validate on the whole report when `pbir` is on PATH (schemas, required
-#      fields, enums, core visual catalog); only errors located in the edited file block
-#   3. Without pbir: a small jq fallback for required fields and the $schema prefix
 #
-# Exit 0 = fine or not applicable; exit 2 + stderr = blocking error in the edited file.
-# A missing tool never blocks; it is reported once per session.
 
 set -o pipefail
 INPUT=$(cat 2>/dev/null || printf '%s' '{}')

@@ -1,6 +1,3 @@
-# Captures the DAX queries Desktop sends to its engine, event-driven (QueryEnd), with elapsed and CPU time.
-# Usage: powershell.exe -NoProfile -ExecutionPolicy Bypass -File trace-queries.ps1 [-Port <port>] [-Seconds 60] [-Out queries.txt]
-# Interact with the report while it runs. Not for thin reports: they have no local engine.
 
 param(
     [int]$Port = 0,

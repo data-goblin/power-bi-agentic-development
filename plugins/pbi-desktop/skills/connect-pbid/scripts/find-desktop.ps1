@@ -1,7 +1,3 @@
-# Lists the local Analysis Services ports of running Power BI Desktop instances and the database each hosts.
-# A port that hosts 0 databases belongs to a thin report (live connection to a remote model): skip it.
-# Usage: powershell.exe -NoProfile -ExecutionPolicy Bypass -File find-desktop.ps1
-# Dot-source it to get Get-DesktopPorts: . .\find-desktop.ps1
 
 function Get-DesktopPorts {
     $procs = @(Get-Process msmdsrv -ErrorAction SilentlyContinue)
