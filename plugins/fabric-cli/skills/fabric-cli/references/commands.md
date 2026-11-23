@@ -1,6 +1,6 @@
 # fab commands: what `--help` does not say
 
-Flags and examples live in `fab <command> --help` (check there first; fab 1.7.0 is installed). This file keeps only behaviour the help omits. Item types: run `fab desc` for the element types and `fab desc .<ItemType>` for the commands one supports.
+Flags and examples live in `fab <command> --help` (check there first; fab 1.7.0 is installed). This file keeps only behaviour the help omits. Item types: `fab desc .x` prints the valid element types and `fab desc .<ItemType>` for the commands one supports.
 
 ## Learn
 
