@@ -49,5 +49,5 @@ Style the two card states differently in the theme with the `$id` discriminator 
 
 ## Pitfalls
 
-- Publish-to-web does not show the filter pane (Unverified against Learn): put essential filters in canvas slicers
+- Publish-to-web does not show the filter pane ([Learn](https://learn.microsoft.com/en-us/power-bi/create-reports/power-bi-report-filter#considerations-and-limitations)): put essential filters in canvas slicers
 - Renaming a card does not rename slicers on the same field

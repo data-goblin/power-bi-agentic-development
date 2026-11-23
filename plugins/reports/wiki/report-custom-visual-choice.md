@@ -5,6 +5,7 @@ kind: decision
 status: current
 sources:
   - url: https://learn.microsoft.com/en-us/power-bi/developer/visuals/power-bi-custom-visuals
+  - url: https://learn.microsoft.com/en-us/fabric/admin/organizational-visuals
   - url: https://learn.microsoft.com/en-us/power-bi/connect-data/service-python-packages-support
   - url: https://learn.microsoft.com/en-us/power-bi/connect-data/service-r-packages-support
 tools:
@@ -42,4 +43,4 @@ An AppSource visual is a dependency on a third party's code and on three tenant 
 
 - Prefer the org store to ad-hoc AppSource (one approved version, one admin toggle) and certified to uncertified visuals
 - Record the dependency in a PBIR annotation: name, source, certification, approver (`pbir add annotation`)
-- Licensed visuals do not enforce or report licensing in Report Server, app-owns-data embedding or publish-to-web, and org-store and AppSource visuals are unavailable in Report Server; those distribution paths make an AppSource dependency a portability blocker (Unverified against Learn; check the visual's own docs)
+- Licensed visuals are not supported in Report Server, app-owns-data embedding, sovereign or government clouds and publish-to-web: Power BI cannot tell the publisher whether the user is licensed, and does not block the visual ([Learn](https://learn.microsoft.com/en-us/power-bi/developer/visuals/power-bi-custom-visuals)). Organizational visuals are not supported in Report Server ([Fabric admin](https://learn.microsoft.com/en-us/fabric/admin/organizational-visuals)); those paths make a licensed AppSource dependency a portability blocker

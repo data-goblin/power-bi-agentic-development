@@ -5,6 +5,7 @@ kind: reference
 status: current
 sources:
   - url: https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report
+  - url: https://pypi.org/project/pbir-cli/0.9.33/
 tools:
   pbir: 0.9.33
 last_updated: 2026-11-23
@@ -41,7 +42,7 @@ pbir desktop screenshot "Report.Report" --all --output-dir shots --settle 500
 
 ## Limits and failures
 
-- **Themes**: refresh reloads pages and visuals, not StaticResources. Theme changes made through pbir show only after closing and reopening the file (observed, not documented by Microsoft: Unverified)
+- **Themes**: refresh reloads pages and visuals, not StaticResources. pbir itself prints "Theme changes aren't applied by reload; close and reopen the report in Power BI Desktop to pick up theme edits", so close and reopen the file after a theme change
 - **Dirty instance**: refresh on a report with unsaved edits makes Desktop save first and rewrite the whole definition (re-indent, schema bumps, active page). Commit or back up first
 - **PBIX**: readable and screenshot-able; `refresh` is rejected by Desktop and all writes are rejected with a conversion hint. Convert to PBIP to edit
 - **Local model queries**: for a thick (`byPath`) report open in Desktop, `pbir model -q` and `-d` use Desktop's local engine through an ADOMD client library; pbir finds one from DAX Studio or Desktop, or set `PBIR_ADOMD_DIR` to the folder holding `Microsoft.AnalysisServices.AdomdClient.dll`

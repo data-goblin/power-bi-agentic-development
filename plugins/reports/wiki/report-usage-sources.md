@@ -5,6 +5,7 @@ kind: reference
 status: current
 sources:
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/admin/get-activity-events
+  - url: https://learn.microsoft.com/en-us/fabric/enterprise/powerbi/service-admin-auditing
   - url: https://learn.microsoft.com/en-us/power-bi/collaborate-share/service-modern-usage-metrics
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/admin/reports-get-report-subscriptions-as-admin
 tools:
@@ -43,7 +44,7 @@ Tiers 1 to 3 are internal Microsoft surfaces that can change without notice: lab
 [Learn: Get Activity Events](https://learn.microsoft.com/en-us/rest/api/power-bi/admin/get-activity-events), page last updated 2025-10-08:
 
 - `startDateTime` and `endDateTime` must fall in the same UTC day, within the last 28 days, wrapped in single quotes; follow the continuation token
-- At most 200 requests per hour; events can take 30 to 60 minutes to appear (Unverified against Learn)
+- At most 200 requests per hour; most events show up within 30 minutes and can lag up to 60 ([Learn: track user activities](https://learn.microsoft.com/en-us/fabric/enterprise/powerbi/service-admin-auditing))
 - `ExportReport` covers visual data export and report export (PDF, PPTX, PNG), `DownloadReport` covers PBIX download, and `AnalyzeInExcel` is a live connection, not an export; the list is on [Learn: operation list](https://learn.microsoft.com/en-us/fabric/admin/operation-list)
 - Frequent Excel exports from a report mean it does not answer its users' questions; PDF and PPTX exports are usually benign snapshots
 
