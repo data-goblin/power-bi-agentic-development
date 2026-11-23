@@ -1,6 +1,6 @@
 ---
 name: pbi-report-design
-description: Use for Power BI report design judgement before laying out, formatting or reviewing a report: committing a design identity (tone and signature), routing each page to one intent, layout and spacing, colour and theme discipline, KPI and table design, filter pane, tooltips, phone layout, accessibility and which visual to pick. Load alongside create-pbi-report, pbir-cli, review-report or modifying-theme-json. Not for pbir command syntax and not for building custom visuals.
+description: Use for Power BI report design judgement before laying out, formatting or reviewing a report, including committing a design identity (tone and signature), routing each page to one intent, layout and spacing, colour and theme discipline, KPI and table design, filter pane, tooltips, phone layout, accessibility and which visual to pick. Load alongside create-pbi-report, pbir-cli, review-report or modifying-theme-json. Not for pbir command syntax and not for building custom visuals.
 ---
 
 # Power BI report design
