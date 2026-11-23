@@ -9,9 +9,9 @@ description: Maintains and migrates R script visuals (scriptVisual, ggplot2) in 
 
 - R and Python visuals, including R-powered custom visuals from AppSource, retire in May 2027: the service stops rendering them in published reports and future Desktop versions drop them. Say this before building one. Source and migration options: [retirement page](../../wiki/script-visuals-retirement.md)
 - Build a new R visual only to maintain a report that already has them; otherwise use `deneb-visuals`, `svg-visuals`, a built-in visual or `powerbi-custom-visuals`
-- Find affected visuals: `grep -rlE '"visualType": "scriptVisual"' --include=visual.json .`; Python visuals are `pythonVisual`; R-powered AppSource visuals match neither
+- Finding affected visuals in PBIP sources (`visualType` values, and what the search misses) is on the [retirement page](../../wiki/script-visuals-retirement.md)
 - `dataset` is a data.frame injected by Power BI; ggplot objects must be printed (`print(p)`); the service supports one fixed CRAN list on R 4.3.3: [Learn package list](https://learn.microsoft.com/en-us/power-bi/connect-data/service-r-packages-support)
-- Desktop passes but the service is blank: check, in order, the missing `powerbi_rEnableShowText = 1` first line (text labels), a `Time` column (use Date/Time), a package outside the list or one needing the network, the 60 second timeout, and HTML/XML-based packages (out of memory in the service; Learn says to move those to a custom visual). Details: [service traps](../../wiki/r-visual-service-traps.md)
+- Desktop passes but the service is blank: check, in order, the missing `powerbi_rEnableShowText = 1` first line (text labels), a package outside the list or one needing the network, the 60 second timeout, and HTML/XML-based packages (out of memory in the service; Learn says to move those to a custom visual); the rest is on the traps page. Details: [service traps](../../wiki/r-visual-service-traps.md)
 - Same limits as Python visuals: 150,000 rows, 250 MB input, grouped rows, 72 DPI, no cross-filter source, no tooltips, no Publish to web; Desktop output is capped at 2 MB. See [dataset and limits](../../wiki/script-visual-dataset-and-limits.md)
 - Not supported: DirectQuery for Analysis Services, printing with the report
 
