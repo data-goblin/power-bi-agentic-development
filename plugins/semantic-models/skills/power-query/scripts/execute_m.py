@@ -5,8 +5,8 @@ as a pandas DataFrame. Handles Arrow response parsing and error detection.
 
 Requires:
     - pyarrow (uv run --with pyarrow)
-    - az CLI authenticated (az login)
-    - A runner dataflow with data source connections bound
+    - az CLI authenticated (az login) with Dataflow.Execute.All or Item.Execute.All
+    - A Dataflow Gen2 in the workspace you may execute, with the needed connections bound (queries run at most 230 seconds)
 
 Usage:
     uv run --with pyarrow python3 execute_m.py \
@@ -87,14 +87,19 @@ def execute_m(ws_id, df_id, token, mashup, query_name="Result"):
 
     req = urllib.request.Request(url, data=body, method="POST", headers={
         "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Accept": "application/vnd.apache.arrow.stream;pq-arrow-version=1"
     })
 
     try:
-        resp = urllib.request.urlopen(req, timeout=95)
+        resp = urllib.request.urlopen(req, timeout=235)
     except urllib.error.HTTPError as e:
         error_body = e.read().decode()[:500]
         print(f"HTTP {e.code}: {error_body}", file=sys.stderr)
+        return None
+
+    if resp.status == 202:
+        print("Query still running (202, long running operation): poll the Location header", file=sys.stderr)
         return None
 
     content_type = resp.headers.get("Content-Type", "")
