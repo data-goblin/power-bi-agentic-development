@@ -1,1 +1,29 @@
-{ "modules": ["./register.tsx"] }
+{
+  "modules": ["./register.tsx"],
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbir-nudge.sh\"",
+            "timeout": 5,
+            "if": "Write(**/*.Report/**)"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/pbir-nudge.sh\"",
+            "timeout": 5,
+            "if": "Edit(**/*.Report/**)"
+          }
+        ]
+      }
+    ]
+  }
+}

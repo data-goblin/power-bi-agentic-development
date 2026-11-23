@@ -238,16 +238,17 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 
 | Type | Name | Description |
 |------|------|-------------|
-| Skill | [`create-pbi-report`](plugins/reports/skills/create-pbi-report/) | Step-by-step workflow for building a complete report from scratch via the `pbir` CLI: model discovery, pages, theme, visuals, field binding, filtering, formatting, validation, publishing |
-| Skill | [`pbi-report-design`](plugins/reports/skills/pbi-report-design/) | The Power BI report design canon: design identity, visual hierarchy, layout, color discipline, chart selection, KPI/table design, accessibility. Shared reference used by the other report skills |
-| Skill | [`modifying-theme-json`](plugins/reports/skills/modifying-theme-json/) | Design, enforce, audit, and validate report themes through the `pbir` CLI |
-| Skill | [`review-report`](plugins/reports/skills/review-report/) | Actionable feedback on report quality, usage, and effectiveness; usage analysis, health checks |
-| Skill | [`pbir-cli`](plugins/reports/skills/pbir-cli/) | Programmatic report manipulation via the [`pbir` CLI](https://github.com/maxanatsko/pbir.tools), including live Power BI Desktop refresh and page screenshots |
-| Mod | [`/report-pane`](plugins/reports/hooks/) | Report pane: pages, visuals, bookmarks, filters and report measures of the `.Report` folder as a tree that follows `pbir`, with live highlights of what Claude reads or changes. Optional arg: a path to a `.Report` folder. Icons: [FabricSymbols NF](https://github.com/data-goblin/fabric-nf) |
+| Skill | [`create-pbi-report`](plugins/reports/skills/create-pbi-report/) | Owns the new-report workflow via the `pbir` CLI: brief, model discovery, page and visual placement checked with `pbir validate --qa`, interactivity, validation, sandbox publishing |
+| Skill | [`pbi-report-design`](plugins/reports/skills/pbi-report-design/) | Report design judgement: design identity, page intent, layout, colour and theme discipline, KPIs, accessibility, phone layout. Shared by the other report skills |
+| Skill | [`modifying-theme-json`](plugins/reports/skills/modifying-theme-json/) | Create, standardise, audit and validate report themes through the `pbir` CLI, checked against theme schema 2.159 |
+| Skill | [`review-report`](plugins/reports/skills/review-report/) | Report review: runs `pbir validate`, `pbir bpa`, `pbir usage` and `pbir access` first, then interprets usage, performance, accessibility and governance |
+| Skill | [`pbir-cli`](plugins/reports/skills/pbir-cli/) | Rules and gotchas for the [`pbir` CLI](https://github.com/maxanatsko/pbir.tools); Windows-only Power BI Desktop refresh and screenshots |
+| Hook | [`pbir-nudge`](plugins/reports/hooks/README.md) | Advice (never a block) to use `pbir` instead of hand-editing PBIR JSON; says so on stderr when `pbir` is missing |
+| Mod | [`/report-pane`](plugins/reports/hooks/README.md) | Report pane: pages, visuals, bookmarks, filters and report measures of the `.Report` folder as a tree that follows `pbir`, with live highlights of what Claude reads or changes. Optional arg: a path to a `.Report` folder. Icons: [FabricSymbols NF](https://github.com/data-goblin/fabric-nf) |
 | Agent | [`deneb-reviewer`](plugins/reports/agents/deneb-reviewer.agent.md) | Review Deneb visual specs for Vega/Vega-Lite syntax and conventions |
 | Agent | [`svg-reviewer`](plugins/reports/agents/svg-reviewer.agent.md) | Review SVG DAX measures for syntax and design quality |
-| Agent | [`r-reviewer`](plugins/reports/agents/r-reviewer.agent.md) | Review R visual scripts (ggplot2) for Power BI conventions |
-| Agent | [`python-reviewer`](plugins/reports/agents/python-reviewer.agent.md) | Review Python visual scripts (matplotlib/seaborn) for Power BI conventions |
+| Agent | [`r-reviewer`](plugins/reports/agents/r-reviewer.agent.md) | Review R visual scripts for Power BI conventions; flags that R visuals retire in May 2027 |
+| Agent | [`python-reviewer`](plugins/reports/agents/python-reviewer.agent.md) | Review Python visual scripts for Power BI conventions; flags that Python visuals retire in May 2027 |
 
 </details>
 
@@ -334,8 +335,10 @@ Reviewer agents for these visual types (`deneb-reviewer`, `svg-reviewer`, `r-rev
 
 | Type | Name | Description |
 |------|------|-------------|
-| Skill | [`querying-fabric`](plugins/dashboards/skills/querying-fabric/) | DAX (and T-SQL) queries through a Fabric connector or MCP server for Claude Dashboards: reuse the model's measures instead of writing new ones, give every KPI a target and a trend, crossfilter every visual through query parameters, plus DAX query syntax, time intelligence and an execute-inspect-fix test loop. Derived from the `dax-authoring` skill that Microsoft ships with Fabric Apps |
-| Skill | [`creating-good-dashboards`](plugins/dashboards/skills/creating-good-dashboards/) | Dashboard comment etiquette (never resolve comments yourself; reply in a few short bullets) and visual style after Stephen Few and Edward Tufte: one screen, KPIs with target and trend, data-ink, one accent colour, direct labels, crossfiltering |
+| Skill | [`querying-fabric`](plugins/dashboards/skills/querying-fabric/) | DAX (and T-SQL) queries through a Fabric connector or MCP server for Claude Dashboards: reuse the model's measures, give every KPI a target and a trend, crossfilter through query parameters, lint and test every query. Derived from the MIT `dax-authoring` skill in microsoft/rayfin |
+| Hook | [`lint-dax`](plugins/dashboards/hooks/lint-dax.sh) | Lints `.dax` files after Write or Edit with `lint_dax.py`; findings are advice to the model, never a block; says so on stderr when Python is missing |
+| Skill | [`creating-good-dashboards`](plugins/dashboards/skills/creating-good-dashboards/) | Dashboard comment etiquette (never resolve comments yourself; reply in a few short bullets) and restyling that reuses the user's own visual system first |
+| Hook | [`ask-before-resolve`](plugins/dashboards/hooks/ask-before-resolve.sh) | Asks the user to confirm before Claude resolves a dashboard comment thread |
 
 </details>
 
