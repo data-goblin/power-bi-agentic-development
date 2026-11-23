@@ -1,0 +1,52 @@
+{
+  "description": "Lints .dax files written with Write, Edit or MultiEdit against the querying-fabric query rules (advice, never a block), and asks before Claude resolves a dashboard comment thread",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/lint-dax.sh\"",
+            "timeout": 10,
+            "if": "Write(**/*.dax)"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/lint-dax.sh\"",
+            "timeout": 10,
+            "if": "Edit(**/*.dax)"
+          }
+        ]
+      },
+      {
+        "matcher": "MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/lint-dax.sh\"",
+            "timeout": 10,
+            "if": "MultiEdit(**/*.dax)"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "ArtifactComments",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/ask-before-resolve.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
