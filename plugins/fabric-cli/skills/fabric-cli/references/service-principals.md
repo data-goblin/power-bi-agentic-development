@@ -5,7 +5,7 @@ End-to-end guide for creating an Entra service principal (SP), giving it Fabric 
 An SP for Fabric automation needs **three separate grants**, not one. Missing any of them produces a working login that still fails on every real call:
 
 1. An Entra app registration + service principal (identity)
-2. A workspace or item role via `fab acl set` (authorization on the content)
+2. A workspace role via `fab acl set` (items have no `fab acl`) (authorization on the content)
 3. Membership in whichever Entra security group scopes the "service principals can use Fabric APIs" tenant setting (authorization on the API surface itself)
 
 Skip step 3 and every `fab` call as the SP returns `[Unauthorized] Access is unauthorized`, even though the SP has a valid workspace role and a valid token. This is the single most common way SP setups fail, because it looks identical to a permissions problem on the workspace when it's actually a tenant-level gate.
@@ -32,9 +32,9 @@ Two different IDs come out of this and they are not interchangeable:
 
 `fab acl ls` displays the app ID in the `identity` column even though the ACL was set against the object ID underneath - don't let that make you think they're the same value, they aren't, and passing the wrong one to `az ad group member add` fails with a not-found error.
 
-Never write the secret to a file. Pull it straight into 1Password, a Key Vault, or an env var at the point of use - see the vault/secret patterns in [fab-vs-az-cli.md](./fab-vs-az-cli.md#azure-key-vault-integration) if the target is Key Vault.
+Never write the secret to a file. Pull it straight into 1Password, a Key Vault, or an env var at the point of use.
 
-## 2. Grant workspace/item access
+## 2. Grant workspace access
 
 Same `fab acl set` used for human identities, just pointed at the SP's object ID:
 
@@ -43,7 +43,7 @@ fab acl set "ws.Workspace" -I "$SP_OBJECT_ID" -R Viewer -f
 # or Contributor / Admin depending on what the SP needs to do
 ```
 
-See [permissions.md](./permissions.md#managing-workspace-access-via-fab-acl) for the full role capability matrix (Admin/Member/Contributor/Viewer).
+See [permissions.md](./permissions.md) for what `fab acl` covers and the role names.
 
 ## 3. Clear the tenant-setting gate
 
@@ -74,7 +74,7 @@ Two different methods, for two different situations.
 fab auth login -u "$APP_ID" -p "$CLIENT_SECRET" -t <tenant-id>
 ```
 
-This is what a deployed automation/agent should actually use day to day. Also supports certificate (`--certificate`), federated/OIDC token (`--federated-token`), and managed identity (`-I`) - see the Authentication Issues section in [reference.md](./reference.md#common-error-scenarios) for the full flag set.
+This is what a deployed automation/agent should actually use day to day. Also supports certificate (`--certificate`), federated/OIDC token (`--federated-token`), and managed identity (`-I`) - see [commands.md](./commands.md) for the full list of auth modes.
 
 ### Env-token method (testing the SP without touching your own session)
 
@@ -96,9 +96,7 @@ fab auth status   # should show Logged In: True, Principal ID = the SP's object 
 fab ls "ws.Workspace"
 ```
 
-All three env vars must be set or `fab` aborts immediately with `[UnexpectedError] FAB_TOKEN_AZURE` (or whichever var is missing) before it even tries a network call.
-
-This is the right tool for a one-off "does this SP actually work" check run from an interactive session, precisely because it's scoped to the current process's env and doesn't persist or clobber anything.
+All three token variables must be set (the docs also list `FAB_TENANT_ID`) or `fab` aborts immediately with `[UnexpectedError] FAB_TOKEN_AZURE` (or whichever is missing) before any network call. This is scoped to the process env, so it is the right one-off "does this SP work" check. From fab 1.8.0 the Azure CLI is also an auth source, so an `az login` as the SP can back `fab` instead; Unverified how it is selected, and the env tokens are ignored when it is in use.
 
 ## Gotchas
 
@@ -106,30 +104,16 @@ This is the right tool for a one-off "does this SP actually work" check run from
 - **Freshly created client secrets need roughly 60-75 seconds to propagate** through Entra before the token endpoint accepts them. A token request failing or returning empty right after `az ad app credential reset` is propagation delay, not a bad secret - wait and retry rather than immediately regenerating.
 - **`fab auth login` under a HOME override fails on macOS** with a keychain error (`-25307`) because fab's credential storage expects the real login keychain to be reachable. Don't try to sandbox a test login by faking `$HOME` - use the env-token method above instead, which has no keychain dependency.
 - **A valid workspace role is not sufficient on its own.** Skipping the tenant-setting group membership (step 3) is the single most common cause of `[Unauthorized] Access is unauthorized` on an SP that otherwise looks correctly configured - the workspace ACL says it should work and the token is valid, so it's easy to burn time double-checking the wrong thing.
-- **`az ad app credential reset --append`** adds a new secret without invalidating existing ones, which is the right call when testing a secret without breaking whatever is already using the app in production. Clean up test secrets afterward: `az ad app credential list --id "$APP_ID" --query "[].keyId" -o tsv`, then `az ad app credential delete --id "$APP_ID" --key-id <keyId>` for each one you no longer need.
 
 ## SP lifecycle management
 
-```bash
-# List an app's current secrets (id + display name + expiry, never the secret value itself)
-az ad app credential list --id "$APP_ID" --query "[].{name:displayName,keyId:keyId,end:endDateTime}"
-
-# Rotate: add a new secret before revoking the old one, so nothing goes down mid-rotation
-NEW_SECRET=$(az ad app credential reset --id "$APP_ID" --append --display-name "<rotation-tag>" --years 1 --query password -o tsv)
-# ... switch consumers over to $NEW_SECRET ...
-az ad app credential delete --id "$APP_ID" --key-id <old-keyId>
-
-# Remove from a security group (e.g. offboarding, scope reduction)
-az ad group member remove --group <group-object-id> --member-id "$SP_OBJECT_ID"
-
-# Full teardown
-az ad sp delete --id "$APP_ID"     # removes the service principal object
-az ad app delete --id "$APP_ID"    # removes the app registration itself
-```
+- List secrets (no values): `az ad app credential list --id "$APP_ID" --query "[].{name:displayName,keyId:keyId,end:endDateTime}"`
+- Rotate: add the new secret with `--append`, switch consumers, then `az ad app credential delete --id "$APP_ID" --key-id <old-keyId>`; this also covers cleaning up test secrets
+- Offboard: `az ad group member remove --group <group-object-id> --member-id "$SP_OBJECT_ID"`, then `az ad sp delete --id "$APP_ID"` and `az ad app delete --id "$APP_ID"`
 
 ## Related references
 
-- [Permissions](./permissions.md) - workspace role matrix, `fab acl` usage, the "Power BI Embedded specifics" section on SP-based embedding
-- [fab vs az CLI](./fab-vs-az-cli.md) - Key Vault patterns for storing the secret, when to reach for `az` vs `fab`
+- [Permissions](./permissions.md) - `fab acl` scope and roles, SP-based embedding
+- [fab vs az](./fab-vs-az.md) - when to reach for `az` vs `fab`; Azure CLI as an auth source since fab 1.8.0
 - [Admin APIs](./admin.md) - reading and updating tenant settings at scale
-- [Full Command Reference](./reference.md#common-error-scenarios) - `fab auth login` flag reference (certificate, federated token, managed identity)
+- [Commands](./commands.md) - auth modes (certificate, federated token, managed identity, environment variables)

@@ -1,88 +1,24 @@
-# Warehouse Operations
+# Warehouses
 
-Guide for managing Fabric warehouses; creating, browsing, querying via DuckDB, and loading data.
+Warehouse basics through `fab`; T-SQL access and queries are in [querying-data.md](./querying-data.md).
 
-## Creating a Warehouse
+## Learn
+
+```yaml
+warehouse REST: https://learn.microsoft.com/en-us/rest/api/fabric/warehouse/items
+warehouse overview: https://learn.microsoft.com/en-us/fabric/data-warehouse/data-warehousing
+```
 
 ```bash
 fab mkdir "ws.Workspace/MyWarehouse.Warehouse"
-```
-
-## Properties
-
-```bash
-fab get "ws.Workspace/MyWarehouse.Warehouse" -q "properties"
-```
-
-Returns `connectionInfo` (SQL endpoint), `connectionString`, `createdDate`, `collationType`.
-
-## Browsing Contents
-
-```bash
-fab ls "ws.Workspace/MyWarehouse.Warehouse"           # Top-level (Tables, Files)
-fab ls "ws.Workspace/MyWarehouse.Warehouse/Tables/dbo" # Tables in schema
+fab get "ws.Workspace/MyWarehouse.Warehouse" -q properties
+fab ls "ws.Workspace/MyWarehouse.Warehouse/Tables/dbo"
 fab table schema "ws.Workspace/MyWarehouse.Warehouse/Tables/dbo/orders"
 ```
 
-## Querying with DuckDB
-
-Warehouse tables are stored as Delta Lake in OneLake:
-
-```bash
-WS_ID=$(fab get "ws.Workspace" -q "id" | tr -d '"')
-WH_ID=$(fab get "ws.Workspace/MyWarehouse.Warehouse" -q "id" | tr -d '"')
-
-duckdb -c "
-LOAD delta; LOAD azure;
-CREATE SECRET (TYPE azure, PROVIDER credential_chain, CHAIN 'cli');
-SELECT * FROM delta_scan('abfss://${WS_ID}@onelake.dfs.fabric.microsoft.com/${WH_ID}/Tables/dbo/orders') LIMIT 10;
-"
-```
-
-## Loading Data
-
-Warehouses do not support `fab cp` to Files or `fab table load`. Load via:
-
-### T-SQL (SSMS or Fabric Portal)
-
-```sql
-CREATE TABLE dbo.orders AS
-SELECT * FROM OPENROWSET(BULK 'https://storage.blob.core.windows.net/data/orders.parquet');
-```
-
-### Python Notebook via notebookutils.data
-
-```python
-with notebookutils.data.connect_to_artifact('WarehouseName') as conn:
-    conn.query('CREATE TABLE dbo.test (id INT, name VARCHAR(100))')
-    conn.query("INSERT INTO dbo.test VALUES (1, 'hello')")
-    df = conn.query('SELECT * FROM dbo.test')
-```
-
-### PySpark Notebook via synapsesql
-
-```python
-import com.microsoft.spark.fabric
-from com.microsoft.spark.fabric.Constants import Constants
-df.write.synapsesql("WarehouseName.dbo.table", mode="overwrite")
-```
-
-Requires Runtime 1.3+. Known to produce opaque errors from `fab job run`; use `fab open` to check Spark logs.
-
-## Key Differences from Lakehouse
-
-| Feature | Lakehouse | Warehouse |
-|---------|-----------|-----------|
-| File upload (`fab cp`) | Supported | Not supported |
-| `fab table load` | Supported | Not supported |
-| Shortcuts (`fab ln`) | Supported | Not supported |
-| T-SQL DDL/DML | Read-only (SQL endpoint) | Full support |
-| DuckDB `delta_scan` | Yes | Yes |
-
-## Deleting
-
-```bash
-fab rm "ws.Workspace/MyWarehouse.Warehouse" -f
-```
-
-Recovery depends on the tenant Item Recovery setting; see [reference.md > Recovering deleted items](reference.md#recovering-deleted-items).
+- `properties` carries `connectionInfo`, `connectionString`, `createdDate`, `collationType`
+- Tables are Delta in OneLake, so DuckDB `delta_scan` over `.../MyWarehouse.Warehouse/Tables/dbo/orders` works (read-only)
+- `fab cp` to Files and `fab table load` do not work on warehouses; load with T-SQL (`CREATE TABLE ... AS SELECT * FROM OPENROWSET(BULK ...)` or `COPY INTO`), a Python notebook via `notebookutils.data.connect_to_artifact`, or Spark `synapsesql` (Runtime 1.3 or later; opaque errors through `fab job run`, so check the Spark log with `fab open`)
+- Unlike a lakehouse SQL endpoint, a warehouse accepts full T-SQL DDL and DML
+- Unverified: whether warehouses support shortcuts (earlier text said no); check Learn before relying on it
+- `fab rm` is permanent unless tenant item recovery is on (see [commands.md](./commands.md)); `WarehouseSnapshot` items need fab 1.9.0 or later

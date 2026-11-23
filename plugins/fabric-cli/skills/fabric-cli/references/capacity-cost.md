@@ -2,6 +2,8 @@
 
 Bursting hides cost. An operation finishes fast, the bill arrives as smoothed usage afterwards, and on a small F SKU one operation can put the capacity into days of throttling. Estimate first, then act.
 
+Learn: https://learn.microsoft.com/en-us/fabric/enterprise/throttling | https://learn.microsoft.com/en-us/fabric/enterprise/fabric-operations | https://learn.microsoft.com/en-us/fabric/enterprise/enable-capacity-overage | Plan billing: https://learn.microsoft.com/en-us/fabric/iq/plan/resources/billing-fabric-plan | Ontology usage: https://learn.microsoft.com/en-us/fabric/iq/ontology/resources-capacity-usage
+
 ## Budget math
 
 ```yaml
@@ -21,6 +23,7 @@ overage protection:     up to 10 minutes of future capacity, no throttling
 interactive delay:      10 to 60 minutes of future capacity used; new interactive requests wait 20 s
 interactive rejection:  60 minutes to 24 hours; new interactive requests fail
 background rejection:   over 24 hours; every new request fails
+exception:              Real-Time Intelligence skips the 20 s delay stage; on-demand Spark billing sits outside smoothing (per Learn throttling page, 2026-11)
 error:                  CapacityLimitExceeded, "Your organization's Fabric compute capacity has exceeded its limits"
 ```
 
@@ -51,7 +54,7 @@ A user asking for a feature by name is not consent to its cost.
 
 ```yaml
 Plan (preview):
-  model:     30-day sessions per user, per capacity; cannot be ended early; billed even if the plan or capacity is deleted
+  model:     30-day sessions per user, per capacity (Learn: billed per tenant, user and capacity); cannot be ended early; billed even if the plan or capacity is deleted
   Planner:   847 CU-h per session (59 percent of an F2 month)
   Stakeholder: 168 CU-h
   Viewer:    37 CU-h

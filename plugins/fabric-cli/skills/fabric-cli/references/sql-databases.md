@@ -1,85 +1,25 @@
-# SQL Database Operations
+# SQL databases
 
-Guide for managing Fabric SQL databases; creating, browsing, and querying via DuckDB.
+Fabric SQL database basics through `fab`; T-SQL access is in [querying-data.md](./querying-data.md).
 
-## Creating
+## Learn
+
+```yaml
+SQL database REST: https://learn.microsoft.com/en-us/rest/api/fabric/sqldatabase/items
+SQL database overview: https://learn.microsoft.com/en-us/fabric/database/sql/overview
+```
 
 ```bash
 fab mkdir "ws.Workspace/MyDB.SQLDatabase"
-```
-
-## Properties
-
-```bash
-fab get "ws.Workspace/MyDB.SQLDatabase" -q "properties" -f
-```
-
-Returns `connectionInfo`, `databaseName`, `serverFqdn`, `collation`. The SQL endpoint uses `.database.fabric.microsoft.com`.
-
-## Browsing
-
-```bash
-fab ls "ws.Workspace/MyDB.SQLDatabase"            # Top-level (Audit, Code, Files, Tables)
-fab ls "ws.Workspace/MyDB.SQLDatabase/Tables/dbo"  # Tables
+fab get "ws.Workspace/MyDB.SQLDatabase" -q properties -f
+fab ls "ws.Workspace/MyDB.SQLDatabase/Tables/dbo"
 fab table schema "ws.Workspace/MyDB.SQLDatabase/Tables/dbo/customers"
 ```
 
-## Querying with DuckDB
-
-SQL databases auto-replicate their tables to OneLake as Delta Lake. Query them once replication completes:
-
-```bash
-WS_ID=$(fab get "ws.Workspace" -q "id" | tr -d '"')
-DB_ID=$(fab get "ws.Workspace/MyDB.SQLDatabase" -q "id" | tr -d '"')
-
-duckdb -c "
-LOAD delta; LOAD azure;
-CREATE SECRET (TYPE azure, PROVIDER credential_chain, CHAIN 'cli');
-SELECT * FROM delta_scan('abfss://${WS_ID}@onelake.dfs.fabric.microsoft.com/${DB_ID}/Tables/dbo/customers') LIMIT 10;
-"
-```
-
-Mirrored Delta tables include an internal `MSSQL_System_Uniquifier` column; exclude it in SELECT if needed.
-
-## Loading Data
-
-SQL databases support full T-SQL DDL/DML via SSMS, Fabric portal, or notebooks.
-
-### Python Notebook via notebookutils.data
-
-```python
-with notebookutils.data.connect_to_artifact('SQLDatabaseName') as conn:
-    conn.query('CREATE TABLE dbo.test (id INT, name VARCHAR(100))')
-    conn.query("INSERT INTO dbo.test VALUES (1, 'hello')")
-```
-
-### T-SQL (Fabric Portal or SSMS)
-
-```sql
-CREATE TABLE dbo.customers (customer_id INT PRIMARY KEY, name VARCHAR(100), region VARCHAR(50));
-INSERT INTO dbo.customers VALUES (1, 'Contoso', 'Europe');
-```
-
-## Auto-Mirroring
-
-SQL database tables are automatically mirrored to OneLake as Delta tables:
-- Changes via T-SQL are reflected after a short replication delay (~15 seconds)
-- DuckDB queries read the replicated snapshot, not real-time
-- The SQL analytics endpoint provides read-only T-SQL access to the OneLake copy
-
-## Cross-Database Queries
-
-SQL databases support three-part naming within the same workspace:
-
-```sql
-SELECT * FROM MyWarehouse.dbo.orders o
-JOIN MyLakehouse.dbo.customers c ON o.customer_id = c.customer_id;
-```
-
-## Deleting
-
-```bash
-fab rm "ws.Workspace/MyDB.SQLDatabase" -f
-```
-
-Recovery depends on the tenant Item Recovery setting; see [reference.md > Recovering deleted items](reference.md#recovering-deleted-items).
+- `properties` carries `connectionInfo`, `databaseName`, `serverFqdn`, `collation`; the host ends in `.database.fabric.microsoft.com`
+- fab 1.7.0 added optional creation parameters including `creationMode` values New, Restore and RestoreDeletedDatabase; list them with `fab mkdir "ws.Workspace/MyDB.SQLDatabase" -P`
+- `fab ls` on the item shows Audit, Code, Files and Tables
+- Tables auto-mirror to OneLake as Delta with about 15 s delay; DuckDB `delta_scan` reads that snapshot (not real time) and sees an extra `MSSQL_System_Uniquifier` column; the SQL analytics endpoint on the copy is read-only
+- Full T-SQL DDL and DML works from the portal, SSMS, or a Python notebook with `notebookutils.data.connect_to_artifact('SQLDatabaseName')`
+- Unverified: cross-database three-part-name queries from a SQL database (earlier text claimed them within a workspace)
+- `fab rm` is permanent unless tenant item recovery is on (see [commands.md](./commands.md))
