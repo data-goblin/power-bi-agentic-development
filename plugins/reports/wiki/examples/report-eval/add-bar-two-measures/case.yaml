@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: add-bar-two-measures
+context:
+  scaffold_script: fixture.sh

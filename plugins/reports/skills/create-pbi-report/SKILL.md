@@ -63,3 +63,4 @@ This skill owns the new-report flow; `pbir-cli` holds command rules, `pbi-report
 
 - `pbir-cli`, `pbi-report-design`, `modifying-theme-json`
 - `custom-visuals` plugin: `deneb-visuals`, `svg-visuals`
+- Scoring an agent's report with a gate and a 0-2 rubric in `claude plugin eval`: [wiki/report-eval-gate-and-rubric.md](../../wiki/report-eval-gate-and-rubric.md)
