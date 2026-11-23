@@ -1,215 +1,53 @@
 ---
 name: pbip
-description: Guidance for Power BI Project (PBIP) structure, thick and thin reports, project renames, forks, and validation. Use for .pbip, .pbism, .platform, definition.pbir, PBIP vs PBIX, or cross-cutting project operations.
+description: Power BI Project (PBIP) structure and gotchas. Use for .pbip, .pbism, .platform and definition.pbir files, thick vs thin reports, byPath vs byConnection, page folder names that vanish in Desktop, Desktop not picking up external edits (Apply external changes), unappliedChanges.json, PBIX to PBIP conversion, forking or renaming a project, and project-level validation.
 ---
 
-# PBIP Project Format
+# PBIP projects
 
-PBIP (Power BI Project) is the developer-mode file format for Power BI. It decomposes a `.pbix` binary into human-readable text files organized in folders, enabling source control, external editing, and multi-author collaboration.
+Learn: [PBIP overview](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-overview), [semantic model folder](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-dataset), [report folder](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report), [external editing](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-external-editing). This skill holds the gotchas and the validators. Semantic model edits go through `te` (tmdl skill), report edits through `pbir` (pbir-cli skill); `pbir-format` is read-only context.
 
-## General, critical guidance
+## Rules
 
-- **This skill covers project structure, not report editing.** Use `te` for the semantic model and
-  `pbir` for every report mutation. Never hand-edit PBIR JSON.
-- **PBIX is a black box; PBIP is transparent.** PBIX is a single binary that cannot be diffed or edited externally. PBIP splits the same content into text files. Convert between them with File > Save As in PBI Desktop.
-- **Thick vs thin reports:** A thick report bundles `.Report/` + `.SemanticModel/` in the same project (`definition.pbir` uses `byPath`). A thin report has `.Report/` only, connecting to a remote model via `byConnection`. Thin reports are preferred for managed/shared BI.
-- **A project can contain multiple items.** Multiple `.Report/` and `.SemanticModel/` folders can coexist. The `.pbip` file is optional -- open `definition.pbir` directly.
-- **UTF-8 without BOM.** All files must be saved as UTF-8 without BOM. A BOM prefix causes parse errors in some tools.
-- **Git line endings:** PBI Desktop writes CRLF. Configure `core.autocrlf` or `* text=auto` in `.gitattributes` to normalize.
-- **260-char Windows path limit.** Use short root paths. Deep nesting of page/visual GUIDs can exceed this limit.
-- **Desktop reload is selective.** Use `pbir desktop refresh` for supported report/model changes;
-  close and reopen Desktop for theme changes.
-- **Rename cascades are cross-cutting.** Rename model objects with `te mv --save`, then update each
-  report with `pbir fields replace` or `replace-table` and validate both sides.
-- **SparklineData metadata** selectors embed Entity references in compact strings that do not follow the standard `SourceRef.Entity` JSON structure. Easy to miss.
-- **DAX query files exist in TWO locations:** `<Name>.SemanticModel/DAXQueries/` and `<Name>.Report/DAXQueries/`. Always check both during renames.
+- A PBIX cannot be converted by script. Only Desktop, File > Save as > Power BI Project, converts it. Do not unzip a PBIX or rebuild PBIR from it; ask for a PBIP source instead
+- Page, visual and bookmark folder names must be letters, digits, underscore or hyphen, at most 50 characters (the `name` property in the schemas). Desktop silently ignores anything else: no error, the page just vanishes. Rename with `pbir pages rename`, never by renaming the folder
+- `definition.pbir` `byConnection` only reaches a Fabric-hosted semantic model. For any other Analysis Services model use `byPath` to a semantic model folder that holds `modelReference.json` (schema `fabric/item/semanticModel/modelReference`)
+- Desktop does not reload external edits unless the preview feature "Detect and reload external PBIP changes" is on (Desktop August 2026 or later); then it shows an Apply external changes banner. Renaming a PBIR folder still needs a restart. Without the feature, close and reopen Desktop
+- Not editable externally: `definition.pbir`, `report.json` (PBIR-Legacy), `mobileState.json`, `semanticModelDiagramLayout.json`. `cache.abf` is never reloaded
+- `.pbi/unappliedChanges.json` holds pending Power Query edits made in Desktop; applying them overwrites expression edits made outside. Apply or discard them in Desktop and save before editing M expressions in TMDL
+- On a composite or Direct Lake model, editing a synced object needs `changedProperty` entries and the `PBI_RemovedChildren` annotation in TMDL
+- PBIR is the default and generally available; Desktop converts PBIR-Legacy (`report.json` at the report root) to PBIR when it saves. Sensitivity labels, report linguistic schema and saving to OneDrive or SharePoint are not supported in a PBIP
+- `pagesMetadata` 1.1.0: `pageOrder` entries without a folder are ignored, folders missing from `pageOrder` are appended, an invalid `activePageName` is a non-blocking error Desktop fixes, and `landingPageName` beats `activePageName`
+- UTF-8 without BOM everywhere. Windows path limit is 260 characters, so keep project roots short (page and visual folders are 20-character ids by default)
+- Rename cascade: `te mv --save` on the model, then `pbir fields replace` or `pbir fields replace-table` per report, then validate both sides. By hand-search only what those tools skip: [rename gaps](../../wiki/pbip-rename-gaps.md)
 
-## Working with PBIX Files
-
-Treat PBIX as an opaque Desktop artifact. Do not unzip it, patch its internals, reconstruct PBIR from
-its contents, or invoke an unapproved extraction engine. Microsoft licensing/EULA questions around
-third-party engine redistribution are unresolved for this project.
-
-Use Power BI Desktop **File > Save As > Power BI Project (.pbip)**, then work on the resulting
-`.Report` folder with `pbir` and on the semantic model with `te`. If Desktop conversion is not
-available, stop and ask for a PBIP/PBIR source artifact rather than inventing a conversion path.
-## PBIX vs PBIP
-
-| Aspect | PBIX | PBIP |
-|--------|------|------|
-| Format | Single binary file | Folder of text files |
-| Source control | Not diff-friendly | Git-ready, human-readable diffs |
-| Collaboration | Single author at a time | Multiple authors, merge-friendly |
-| External editing | Not supported | VS Code, Tabular Editor, scripts |
-| Deployment | File > Publish | Git integration, Fabric APIs, fabric-cicd |
-| Data | Contains cached data | `cache.abf` is gitignored; metadata only in Git |
-| Convert | File > Save As > PBIP | File > Save As > PBIX |
-
-## Project Structure
-
-The `.Report/` folder is required in a PBIP. The `.SemanticModel/` folder is optional — a thin report has only `.Report/` and points at a remote semantic model via `definition.pbir` `byConnection`.
-
-The `.pbi/` subfolders in both items (`localSettings.json`, `editorSettings.json`, `cache.abf`, etc.) are **all optional** — they are per-user/per-machine runtime state generated by Power BI Desktop. A freshly authored PBIP from an external tool may not have any of them, and the project still opens fine in Desktop.
-
-```
-<ProjectName>/
-+-- <Name>.pbip                              # Entry point (references .Report folder) — optional
-+-- .gitignore                               # Recommended; excludes .pbi/localSettings.json and cache.abf
-+-- <Name>.SemanticModel/                    # OPTIONAL — absent for thin reports
-|   +-- .pbi/                                # All contents OPTIONAL, per-user runtime state
-|   |   +-- localSettings.json               # User-specific (gitignored)
-|   |   +-- editorSettings.json              # Editor settings (committed)
-|   |   +-- cache.abf                        # Data cache (gitignored)
-|   |   +-- unappliedChanges.json            # Pending Power Query changes
-|   |   +-- daxQueries.json                  # DAX query view tab settings
-|   |   +-- tmdlscripts.json                 # TMDL view script tab settings
-|   +-- definition.pbism                     # SM entry point (required if .SemanticModel exists)
-|   +-- definition/                          # TMDL format (preferred) — see tmdl skill
-|   +-- model.bim                            # TMSL format (legacy alt to definition/, mutually exclusive)
-|   +-- diagramLayout.json                   # SM diagram (no external edit)
-|   +-- DAXQueries/                          # .dax files from DAX query view
-|   +-- TMDLScripts/                         # .tmdl files from TMDL view
-|   +-- Copilot/                             # Copilot tooling metadata
-|   +-- .platform                            # Fabric identity (displayName, logicalId)
-+-- <Name>.Report/                           # REQUIRED
-|   +-- .pbi/                                # OPTIONAL runtime state
-|   |   +-- localSettings.json               # User-specific (gitignored)
-|   +-- definition.pbir                      # Report entry point (required for PBIR format)
-|   +-- definition/                          # PBIR format — see pbir-format skill
-|   |   +-- report.json
-|   |   +-- version.json
-|   |   +-- pages/
-|   |   |   +-- pages.json
-|   |   |   +-- <page-slug>/                 # See "Page folder naming" below
-|   |   |   |   +-- page.json
-|   |   |   |   +-- visuals/...
-|   +-- report.json                          # PBIR-Legacy format (legacy alt to definition/)
-|   +-- mobileState.json                     # Mobile layout (no external edit)
-|   +-- semanticModelDiagramLayout.json      # Diagram positions (table renames)
-|   +-- CustomVisuals/                       # Private custom visual metadata
-|   +-- StaticResources/
-|   |   +-- SharedResources/                 # Base themes, shared resources
-|   |   |   +-- BaseThemes/<name>.json       # Resolution path: <report>/StaticResources/SharedResources/<item.path>
-|   |   +-- RegisteredResources/             # Custom themes, images, .pbiviz files
-|   +-- DAXQueries/                          # .dax files from report DAX query view
-|   +-- .platform                            # Fabric identity
-```
-
-## Page folder naming
-
-Power BI Desktop uses opaque 20-character hex slugs for new page, visual, bookmark, and filter folders by default (e.g. `847663d71e27e0840063`). Per Microsoft docs, these can be **renamed to friendly names** but the replacement must satisfy:
-
-- **Regex:** `^[\w-]+$` — word characters (letters, digits, underscore) or hyphen only.
-- **No spaces, no dots, no other punctuation.** Names outside this set are **silently ignored** by Power BI Desktop and the page/visual vanishes from the loaded report. This is the hardest bug class to diagnose because there is no error dialog.
-- **Folder name and `name` field must match exactly (case-sensitive).** The folder may be bare (`<slug>/`) or suffixed (`<slug>.Page/`) — both forms are valid on disk. pbir-cli uses the `.Page` suffix in its CLI path syntax; current Desktop saves omit the suffix.
-- **`pages.json.pageOrder` entries must reference the slug**, not the display name. `activePageName` must be one of the entries in `pageOrder`.
-- **Restart Desktop after external rename.** PBI Desktop does not detect file changes while open.
-
-Rename pages with `pbir pages rename`; it owns the cross-report reference updates. Do not rename a
-folder or patch the related JSON by hand.
-
-## SharedResources path resolution
-
-Items listed in `resourcePackages[]` are resolved relative to:
-
-```
-<Report>/StaticResources/<package_type>/<item.path>
-```
-
-For a `SharedResources` package with an item `{ "path": "BaseThemes/Fluent2-CY26SU03.json" }`, Power BI Desktop looks for:
-
-```
-<Report>/StaticResources/SharedResources/BaseThemes/Fluent2-CY26SU03.json
-```
-
-**Missing resource files are a common blocking error.** If `report.json` declares `themeCollection.baseTheme.type = "SharedResources"` and points at a resource that doesn't exist on disk, the report will not open. `validate_pbip.py` checks this explicitly.
-
-## What to Read for Common Tasks
-
-| Task | Read |
-|------|------|
-| Convert a PBIX source | **Working with PBIX Files** above -- use Desktop Save As; no extraction |
-| Understand entry point file structure | **`references/pbip-file-types.md`** -- `.pbip`, `.pbir`, `.pbism`, `.platform` JSON structure, version properties, byPath vs byConnection |
-| Rename a table, measure, or column | `te mv --save`, then `pbir fields replace` or `replace-table`; use the references only to understand validation coverage |
-| Fork / duplicate a PBIP project | **`references/pbip-file-types.md`** -- update `.pbip` path, `.pbir` byPath, `.platform` logicalId and displayName |
-| Work with Copilot tooling files | **`references/copilot-folder.md`** -- AI instructions, verified answers, schema, example prompts |
-| Edit TMDL model files | **`tmdl`** skill -- syntax, authoring, column properties, naming conventions |
-| Change a PBIR report | **`pbir-cli`** skill -- all report mutations; `pbir-format` is read-only schema context |
-| Verify no broken references after rename | Grep commands below |
-
-## Forking a PBIP Project
-
-1. **Copy the project folder** -- duplicate the entire root folder with a new name.
-2. **Rename artifact folders** -- rename `.Report/` and `.SemanticModel/` subfolders to match the new project name.
-3. **Rename and update `.pbip`** -- rename the `.pbip` file and update `artifacts[].report.path` to point to the renamed `.Report` folder.
-4. **Update `.pbir`** -- if the report uses `byPath`, update the path to point to the renamed `.SemanticModel` folder.
-5. **Update `.platform` files** -- set `displayName` to the new project name in each `.platform` file. Regenerate `logicalId` (new GUID) if deploying as a separate Fabric item.
-
-## Verification
-
-Two tools for validation, used together:
-
-1. **`scripts/validate_pbip.py`** — project-level validator for cross-cutting concerns: `.pbip` root file, `.platform` identity, semantic model format (TMDL vs TMSL), `datasetReference` resolution, theme resource resolution on disk, **orphan page folders**, and the **silent-ignore page name regex rule** (page names outside `^[\w-]+$` are silently ignored by Power BI Desktop). Delegates deep `.Report` schema validation to `pbir validate` if it is on PATH.
-
-   ```bash
-   python3 scripts/validate_pbip.py <path-to-.pbip-or-project>           # validate
-   python3 scripts/validate_pbip.py <path> --fix                         # scaffold .gitignore
-   python3 scripts/validate_pbip.py <path> --json                        # machine-readable
-   python3 scripts/validate_pbip.py <path> --no-pbir-cli                 # skip delegation
-   ```
-
-   Exit codes: `0` clean, `1` warnings only, `2` errors, `3` usage error.
-
-2. **`pbir validate <Report.Report>`** (from the `pbir-cli` skill) — canonical JSON schema + PBIR structure validator for the `.Report` folder. Covers JSON syntax, schema compliance, required fields, and optional `--qa` / `--fields` / `--strict` checks.
-
-3. **`pbip-validator`** agent — use for interactive, LLM-driven checking of orphaned references after renames, when you need reasoning over the whole project rather than a deterministic report.
-
-**Known gotcha with `pbir validate`:** if the project's `.pbi/localSettings.json` uses a schema version newer than the one bundled in pbir-cli, `pbir validate` returns `SCHEMA_UNSUPPORTED`. Pass `--allow-download-schemas` to let it fetch the missing schema on demand, or ignore `.pbi/` files (they are per-user runtime state and not part of the committed definition).
-
-After any rename or fork operation, verify no old references remain.
+## Validate
 
 ```bash
-# Search for old name across all project files
-grep -r "Old Name" "Project.Report/" "Project.SemanticModel/" --include="*.json" --include="*.tmdl" --include="*.dax"
-
-# Search with word boundaries to avoid partial matches
-grep -rP "\bOld Name\b" "Project.Report/" "Project.SemanticModel/"
-
-# Look for old name in single-quoted DAX references
-grep -r "'Old Name'" --include="*.tmdl" --include="*.dax"
+te validate --model <Name>.SemanticModel --errors-only --non-interactive
+pbir validate <Name>.Report --fields --strict
+python3 scripts/validate_pbip.py <project folder> --no-pbir-cli
 ```
 
-Common missed locations:
-1. SparklineData metadata -- compact string format outside standard JSON structure
-2. Conditional formatting expressions -- `Entity` refs nested in `Conditional.Cases`
-3. Filter config -- page-level and visual-level filters in `filterConfig` sections
-4. Sort definitions -- `sortDefinition` blocks in visual JSON
-5. DAX queries in Report folder -- the second DAX query location
-6. Culture file linguisticMetadata -- `ConceptualEntity` and `ConceptualProperty` inside embedded JSON
+- `te validate` takes the `.SemanticModel` folder (needs `definition.pbism`) or its `definition` folder
+- `pbir validate` checks schemas, required fields and (with `--fields`) that every field exists in a local `byPath` model. If it returns `SCHEMA_UNSUPPORTED` for a `.pbi` file, pass `--allow-download-schemas` or ignore `.pbi/`, which is per-user state
+- `scripts/validate_pbip.py` covers what those two skip: `.pbip`, `.platform`, `byPath` resolution, theme resource files on disk, orphan page folders, page-name rule, `.gitignore`. Exit 0 clean, 1 warnings, 2 errors. `--fix` scaffolds a `.gitignore`
+- The pbip hooks run the same tools after each edit; the pbip-validator agent triages the findings of a whole project
 
-## Related Skills
+## Where things live
 
-**Within this plugin:**
-- **`tmdl`** -- TMDL syntax, authoring, and editing rules for direct `.tmdl` file editing
-- **`pbir-format`** -- PBIR JSON format, visual.json, theme, filters, report extensions
+```yaml
+thick report: .Report + .SemanticModel in one project, definition.pbir byPath
+thin report: .Report only, definition.pbir byConnection (Fabric model)
+.pbip: optional entry point; definition.pbir opens directly
+DAXQueries/: in .SemanticModel (DAX query view); one beside the report is unverified, so search both on renames
+TMDLScripts/: in .SemanticModel
+.gitignore: **/.pbi/localSettings.json and **/.pbi/cache.abf
+fork a project: rename folders and .pbip, fix byPath, set displayName and a new logicalId in each .platform
+```
 
-**Other plugins:**
-- **`semantic-models`** plugin -- tooling and workflows for semantic model development (naming conventions, model quality). Use for working with the actual model content, not just its file format.
-- **`pbi-desktop`** plugin -- connecting to Power BI Desktop's local Analysis Services instance via TOM/ADOMD.NET
-- **`tabular-editor`** plugin -- Tabular Editor CLI, C# scripting, BPA rules, documentation search
+## Wiki
 
-## References
-
-**Project structure:**
-- **`references/pbip-file-types.md`** -- Entry point file structures (`.pbip`, `.pbir`, `.pbism`, `.platform`), `.pbi/` subfolder, `DAXQueries/`, `TMDLScripts/`, `model.bim`, `.gitignore`, version properties, JSON examples
-- **`references/copilot-folder.md`** -- Copilot/ folder structure (AI instructions, verified answers, schema, example prompts)
-
-**Rename operations:**
-- **`references/rename-cascade.md`** -- Detailed before/after examples for each rename cascade location (TMDL + report files)
-
-**Fetching Docs:** To retrieve current PBIP reference docs, search https://learn.microsoft.com and fetch the relevant pages. Search based on the user's request and run multiple searches as needed to ensure sufficient context before proceeding.
-
-**External references:**
-- [PBIP overview (Microsoft Learn)](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-overview)
-- [Semantic model folder (Microsoft Learn)](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-dataset)
-- [Report folder (Microsoft Learn)](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report)
+- [Entry files with schema-checked examples](../../wiki/pbip-entry-files.md): `.pbip`, `.platform` 2.1.0, `definition.pbir`, `definition.pbism`
+- [Rename cascade gaps](../../wiki/pbip-rename-gaps.md)
+- [The Copilot folder](../../wiki/pbip-copilot-folder.md)

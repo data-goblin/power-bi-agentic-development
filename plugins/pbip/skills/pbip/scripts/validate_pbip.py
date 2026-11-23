@@ -26,7 +26,7 @@ Notes:
   - The `.SemanticModel` folder is optional (thin reports have only `.Report`).
     The `.Report` folder is required for anything called a PBIP.
   - Semantic model format can be TMDL (`definition/` folder, preferred) or
-    TMSL (`model.bim`, legacy). The two are mutually exclusive.
+    TMSL (`model.bim`, legacy).
   - Page folder names can be opaque 20-char slugs or readable names, but the
     name MUST match ^[\\w-]+$ (word chars or hyphen). Names with spaces,
     dots, or other punctuation are silently ignored by Power BI Desktop.
@@ -336,7 +336,7 @@ def validate_pages(pages_dir: Path, pages_json_path: Path, result: Result) -> No
     for name in page_order:
         if not PAGE_NAME_RE.match(name):
             result.add(ERROR, "page_name_invalid_chars",
-                       f"page name '{name}' contains characters outside [A-Za-z0-9_-]. "
+                       f"page name '{name}' is not letters, digits, underscore or hyphen. "
                        f"Power BI Desktop will SILENTLY IGNORE this page folder.",
                        pages_json_path)
 
@@ -350,9 +350,10 @@ def validate_pages(pages_dir: Path, pages_json_path: Path, result: Result) -> No
     for name in page_order:
         folder = on_disk.get(name)
         if not folder:
-            result.add(ERROR, "page_folder_missing",
+            result.add(WARN, "page_folder_missing",
                        f"pageOrder lists '{name}' but no matching folder exists "
-                       f"(looked for {pages_dir / name} and {pages_dir / (name + '.Page')})",
+                       f"(looked for {pages_dir / name} and {pages_dir / (name + '.Page')}); "
+                       f"the pagesMetadata schema says Desktop ignores such entries",
                        pages_dir)
             continue
         page_json_path = folder / "page.json"
@@ -543,11 +544,11 @@ def check_m_table_name_collisions(def_dir: Path, result: Result) -> None:
     collisions = sorted(expr_names & table_names)
     for name in collisions:
         result.add(
-            ERROR,
+            WARN,
             "m_table_name_collision",
             (f"M expression '{name}' collides with table '{name}'. "
-             f"PBI Desktop will fail to load the model with "
-             f"'duplicate member {name}'. Rename the M expression "
+             f"te validate accepts this; Desktop has been reported to fail the load with "
+             f"'duplicate member {name}' (unverified). Rename the M expression "
              f"(e.g. '{name} Query') and update dependent partitions "
              f"to reference it via #\"{name} Query\"."),
             expressions_file,
