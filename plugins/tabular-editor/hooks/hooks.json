@@ -1,0 +1,29 @@
+{
+  "description": "Compiles C# scripts with te script --validate after an edit; says so when te is missing",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-csx.sh\"",
+            "timeout": 30,
+            "if": "Edit(**/*.csx)"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-csx.sh\"",
+            "timeout": 30,
+            "if": "Write(**/*.csx)"
+          }
+        ]
+      }
+    ]
+  }
+}

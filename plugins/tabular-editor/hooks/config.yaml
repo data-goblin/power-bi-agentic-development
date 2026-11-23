@@ -1,0 +1,7 @@
+# tabular-editor hook configuration. Every check is on unless set to false here.
+
+# Master switch for every hook in this plugin
+all_hooks_enabled: true
+
+# Compile .csx and .cs scripts with te script --validate (advisory, never blocks)
+csx_validate: true

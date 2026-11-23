@@ -13,13 +13,13 @@ Scripts for applying number and date format strings to measures and columns.
 
 ### Execute Inline
 ```bash
-te script "model.bim" -e 'foreach(var m in Model.AllMeasures.Where(m => m.Name.Contains("Amount"))) { m.FormatString = "$#,0.00"; }' --save
+te script --model "model.bim" --inline 'foreach(var m in Model.AllMeasures.Where(m => m.Name.Contains("Amount"))) { m.FormatString = "$#,0.00"; }' --save
 ```
 
 ### Execute Script File
 ```bash
-te script "model.bim" -S samples/format-strings/apply_format_by_pattern.csx --save
-te script -s "Production" -d "Sales" -S samples/format-strings/custom_format_millions.csx --save
+te script --model "model.bim" --file examples/format-strings/apply_format_by_pattern.csx --save
+te script -s "Production" -d "Sales" --file examples/format-strings/custom_format_millions.csx --save
 ```
 
 ### With Fabric CLI Workflow
@@ -28,7 +28,7 @@ te script -s "Production" -d "Sales" -S samples/format-strings/custom_format_mil
 fab export "Workspace/Model.SemanticModel" -o ./model -f
 
 # Apply format strings
-te script "./model/Model.SemanticModel/definition" -S samples/format-strings/apply_format_by_pattern.csx --save
+te script --model "./model/Model.SemanticModel/definition" --file examples/format-strings/apply_format_by_pattern.csx --save
 
 # Import back
 fab import "Workspace/Model.SemanticModel" -i ./model/Model.SemanticModel -f

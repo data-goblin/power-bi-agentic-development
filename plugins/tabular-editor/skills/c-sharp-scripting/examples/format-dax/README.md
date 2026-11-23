@@ -13,13 +13,13 @@ Scripts for formatting DAX expressions using built-in formatter.
 
 ### Execute Script File
 ```bash
-te script "model.bim" -S samples/format-dax/format-measures.csx --save
-te script -s "Production" -d "Sales" -S samples/format-dax/format-calculated-columns.csx --save
+te script --model "model.bim" --file examples/format-dax/format-measures.csx --save
+te script -s "Production" -d "Sales" --file examples/format-dax/format-calculated-columns.csx --save
 ```
 
 ### Execute Inline
 ```bash
-te script "model.bim" -e 'foreach(var m in Model.AllMeasures) { m.Expression = FormatDax(m.Expression); }' --save
+te script --model "model.bim" --inline 'foreach(var m in Model.AllMeasures) { m.Expression = FormatDax(m.Expression); }' --save
 ```
 
 ### With Fabric CLI Workflow
@@ -28,8 +28,8 @@ te script "model.bim" -e 'foreach(var m in Model.AllMeasures) { m.Expression = F
 fab export "Workspace/Model.SemanticModel" -o ./model -f
 
 # Format all DAX
-te script "./model/Model.SemanticModel/definition" -S samples/format-dax/format-measures.csx --save
-te script "./model/Model.SemanticModel/definition" -S samples/format-dax/format-calculated-columns.csx --save
+te script --model "./model/Model.SemanticModel/definition" --file examples/format-dax/format-measures.csx --save
+te script --model "./model/Model.SemanticModel/definition" --file examples/format-dax/format-calculated-columns.csx --save
 
 # Import back
 fab import "Workspace/Model.SemanticModel" -i ./model/Model.SemanticModel -f
