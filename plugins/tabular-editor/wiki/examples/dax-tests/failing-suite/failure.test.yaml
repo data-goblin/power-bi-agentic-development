@@ -1,0 +1,7 @@
+suite: Deliberate regression
+description: One assertion that must fail, to prove the gate rejects a wrong expectation.
+tests:
+  - name: Invoice lines cannot be negative
+    query: EVALUATE ROW("Lines", [Invoice Lines])
+    expect:
+      Lines: {lt: 0}

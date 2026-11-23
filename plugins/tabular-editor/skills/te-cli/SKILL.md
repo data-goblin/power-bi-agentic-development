@@ -195,6 +195,8 @@ Bundled (load as needed):
 - `references/get-te-cli.md` - agent self-service install of the `te` binary from the public CDN
 - `references/command-reference.md` - object path grammar, global options, all command families, authentication, connections/profiles/sessions
 - `references/testing.md` - authoring `.test.yaml` suites (assertions, tolerance, tags, matrix), snapshot regression, A/B compare across workspaces
+- `wiki/te-test-reconciliation-suite.md` - a four-test suite that reconciles measures to fact rows, with a failing suite and recorded output: [page](../../wiki/te-test-reconciliation-suite.md)
+- `wiki/tmdl-model-ci-workflow.md` - a SHA-pinned GitHub Actions workflow running `te validate`, `te bpa run` and `te test`: [page](../../wiki/tmdl-model-ci-workflow.md)
 - `references/dax-test-patterns.md` - what to test: measure contracts (additivity, time shift, blank, safe division, bounds), integrity and schema checks, verified suite examples, CI tagging
 - `references/semantic-modeling-practices.md` - modeling best practices tied to `te` commands, with sources
 - `references/workflows.md` - multi-step recipes (table + M partition, format conversions, deploy, refresh, perspectives, translations, incremental refresh, field parameters)

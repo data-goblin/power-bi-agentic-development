@@ -1,0 +1,26 @@
+suite: Invoice measure regression
+description: Reconcile deployed invoice measures against fact data, including product filter context.
+tests:
+  - name: Invoice data is present
+    query: EVALUATE ROW("Lines", [Invoice Lines])
+    expect:
+      Lines: {gt: 0}
+  - name: Invoice lines reconcile to fact rows
+    query: EVALUATE ROW("Difference", [Invoice Lines] - COUNTROWS(Invoices))
+    expect:
+      Difference: 0
+  - name: Turnover quantity reconciles to fact quantity
+    query: EVALUATE ROW("Difference", [Turnover (Quantity)] - SUM(Invoices[Net Invoice Quantity]))
+    tolerance_abs: 0.000001
+    expect:
+      Difference: 0
+  - name: Measures reconcile within every product type
+    query: |
+      EVALUATE
+      FILTER(
+        SUMMARIZECOLUMNS(Products[Type],
+          "LinesDifference", [Invoice Lines] - COUNTROWS(Invoices),
+          "QuantityDifference", [Turnover (Quantity)] - SUM(Invoices[Net Invoice Quantity])),
+        [LinesDifference] <> 0 || ABS([QuantityDifference]) > 0.000001)
+    expect:
+      empty: true

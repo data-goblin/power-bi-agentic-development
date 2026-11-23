@@ -1,0 +1,105 @@
+name: Model CI
+
+on:
+  pull_request:
+    paths:
+      - 'model/**'
+      - 'rules/**'
+      - '.te-tests/**'
+      - '.github/workflows/model-ci.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'model/**'
+      - 'rules/**'
+      - '.te-tests/**'
+      - '.github/workflows/model-ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: model-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  TE_URL: https://cdn.tabulareditor.com/files/latest/cli/te-linux-x64.tar.gz
+  TE_SHA256: 18f02ec145b33ecb13d6e9d8e80245084b2d89fa563e0fa2c70f9c01b51b6064
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Install te
+        run: |
+          curl -fsSL "$TE_URL" -o te.tar.gz
+          echo "$TE_SHA256  te.tar.gz" | sha256sum --check --strict
+          mkdir -p "$RUNNER_TEMP/te"
+          tar xzf te.tar.gz -C "$RUNNER_TEMP/te" te
+          echo "$RUNNER_TEMP/te" >> "$GITHUB_PATH"
+
+      - name: Validate model
+        run: te validate --model model --errors-only --ci github --trx validate.trx --non-interactive
+
+      - name: BPA gate
+        run: te bpa run --model model --rules rules/model-rules.json --no-defaults --no-model-rules --fail-on error --ci github --trx bpa.trx --non-interactive
+
+      - name: Parse test suites
+        run: te test list --suite .te-tests
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: te-results
+          path: '*.trx'
+          if-no-files-found: ignore
+
+  deploy-test:
+    needs: gate
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: dev
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Install te
+        run: |
+          curl -fsSL "$TE_URL" -o te.tar.gz
+          echo "$TE_SHA256  te.tar.gz" | sha256sum --check --strict
+          mkdir -p "$RUNNER_TEMP/te"
+          tar xzf te.tar.gz -C "$RUNNER_TEMP/te" te
+          echo "$RUNNER_TEMP/te" >> "$GITHUB_PATH"
+
+      - name: Deploy
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          WORKSPACE: ${{ vars.WORKSPACE }}
+          SEMANTIC_MODEL: ${{ vars.SEMANTIC_MODEL }}
+        run: te deploy --model model --target-server "$WORKSPACE" --target-database "$SEMANTIC_MODEL" --auth env --execute --force --ci github --non-interactive
+
+      - name: Regression tests
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          WORKSPACE: ${{ vars.WORKSPACE }}
+          SEMANTIC_MODEL: ${{ vars.SEMANTIC_MODEL }}
+        run: te test run --suite .te-tests -s "$WORKSPACE" -d "$SEMANTIC_MODEL" --auth env --ci github --trx test.trx --non-interactive
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: te-test-results
+          path: test.trx
+          if-no-files-found: ignore
