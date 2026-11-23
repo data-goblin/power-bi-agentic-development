@@ -1,0 +1,32 @@
+table Sales
+
+	column Quantity
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: [Quantity]
+
+	column Weight
+		dataType: double
+		isHidden
+		summarizeBy: none
+		sourceColumn: [Weight]
+
+	measure 'Total Quantity' = SUM ( Sales[Quantity] )
+		formatStringDefinition = DaxLib.FormatString.Basic.Numbers ()
+
+	measure 'Total Weight' = SUM ( Sales[Weight] )
+		formatStringDefinition =
+				DaxLib.FormatString.Component.DecimalPlaces ( "#,##0", 1 )
+				    & " "
+				    & DaxLib.FormatString.Component.MakeStringSafe ( "kg" )
+
+	measure 'Quantity Rank' = 22
+		formatStringDefinition = DaxLib.FormatString.Basic.Ordinals ()
+
+	measure 'Share' = 0.256
+		formatStringDefinition = DaxLib.FormatString.Basic.Percents ()
+
+	partition Sales = calculated
+		mode: import
+		source = DATATABLE ( "Quantity", INTEGER, "Weight", DOUBLE, { { 3, 1.5 }, { 7, 2.25 } } )

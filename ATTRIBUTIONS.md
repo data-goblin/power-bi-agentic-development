@@ -11,3 +11,4 @@ Community contributions and suggestions that shaped this project.
   - [@microsoft/powerbi-core-visual-schema](https://www.npmjs.com/package/@microsoft/powerbi-core-visual-schema)
   - [@microsoft/powerbi-modeling-mcp](https://www.npmjs.com/package/@microsoft/powerbi-modeling-mcp)
 - **Claude Dashboards plugin; querying-fabric skill:** Derived from the `dax-authoring` skill in [microsoft/rayfin](https://github.com/microsoft/rayfin/tree/main/samples/data-app/.agents/skills/dax-authoring) (`samples/data-app/.agents/skills/dax-authoring`, MIT license; the npm package `@microsoft/fabric-app-data-cli` no longer carries it), adapted for Fabric MCP tools, measure reuse, KPI targets and trends, and crossfiltering.
+- **DAX UDF format strings example:** Five functions from [DaxLib.FormatString](https://github.com/daxlib/dev-daxlib-formatstring) by Kurt Buhler, MIT license.

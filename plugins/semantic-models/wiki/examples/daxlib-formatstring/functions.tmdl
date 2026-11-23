@@ -1,0 +1,94 @@
+/// Appends a decimal point and zeros to a base format string, up to nine places
+function 'DaxLib.FormatString.Component.DecimalPlaces' = 
+
+		// Returns a 0 string repeated a number of times equal to the number of decimal places
+		(
+		    // Base format string
+		    // Expects a valid format string base, i.e. "#,##0"
+		    base_format: STRING,
+
+		    // Number of decimal places
+		    // Expects an integer value from 0-9
+		    decimal_places: INT64
+		)
+		=>
+		    base_format
+		    &
+		    IF (
+		        decimal_places > 0,
+		        "."
+		            & REPT ( "0", MIN ( decimal_places, 9 ) ),
+		        ""
+		    )
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 0.1.2
+
+/// Wraps text in double quotes so a format string treats it literally
+function 'DaxLib.FormatString.Component.MakeStringSafe' = 
+
+		// Wraps strings in double-quotes to avoid issues with format string interpretation
+		(
+		    // The value you want to put in the format string
+		    unsafe_string : STRING
+		)
+		=>
+		    """" & unsafe_string & """"
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 0.1.2
+
+/// Format string "#,##0" built with Component.DecimalPlaces
+function 'DaxLib.FormatString.Basic.Numbers' = 
+
+		// Generic number format function with configurable decimal places.
+		// Centralizes number formatting logic for consistency across the model.
+		//
+		// Recommended: Use for all numeric measures where decimal precision needs to be standardized.
+		( ) => DaxLib.FormatString.Component.DecimalPlaces ( "#,##0", 0 )
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 0.1.2
+
+/// Format string "#,##0%" built with Component.DecimalPlaces
+function 'DaxLib.FormatString.Basic.Percents' = 
+
+		// Generic number format function with configurable decimal places.
+		// Centralizes number formatting logic for consistency across the model.
+		//
+		// Recommended: Use for all numeric measures where decimal precision needs to be standardized.
+		( ) => DaxLib.FormatString.Component.DecimalPlaces ( "#,##0", 0 ) & "%"
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 0.1.2
+
+/// Format string that appends st, nd, rd or th to the selected measure value
+function 'DaxLib.FormatString.Basic.Ordinals' = 
+
+		// Convert numbers to ordinal format
+		// Returns ordinal numbers like "1st", "2nd", "3rd", "21st"
+		() =>
+		    VAR _Num = ABS( SELECTEDMEASURE () )
+		    VAR _LastDigit = MOD( _Num, 10 )
+		    VAR _LastTwoDigits = MOD( _Num, 100 )
+
+		    VAR _Suffix =
+		        SWITCH (
+		            TRUE (),
+		            _LastTwoDigits >= 11 && _LastTwoDigits <= 13, "th",
+		            _LastDigit = 1, "st",
+		            _LastDigit = 2, "nd",
+		            _LastDigit = 3, "rd",
+		            "th"
+		        )
+
+		    RETURN
+		       "#,##0" & _Suffix
+
+	annotation DAXLIB_PackageId = DaxLib.FormatString
+
+	annotation DAXLIB_PackageVersion = 0.1.2
