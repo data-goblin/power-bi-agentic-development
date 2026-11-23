@@ -1,0 +1,1598 @@
+{
+ "commands": {
+  "": [
+   "--debug",
+   "--error-format",
+   "--install-completion",
+   "--interactive",
+   "--output-format",
+   "--quiet",
+   "--rawdog",
+   "--show-completion",
+   "--show-legacy",
+   "--skip",
+   "--tree",
+   "--upgrade",
+   "--version"
+  ],
+  "access": [
+   "--help",
+   "--output",
+   "--report",
+   "--workspace"
+  ],
+  "add": [
+   "--help",
+   "--list",
+   "--name",
+   "--title",
+   "--value"
+  ],
+  "add annotation": [
+   "--author",
+   "--category",
+   "--help",
+   "--name",
+   "--text",
+   "--value"
+  ],
+  "add bookmark": [
+   "--help",
+   "--no-current-page",
+   "--no-data",
+   "--no-display"
+  ],
+  "add filter": [
+   "--by-field",
+   "--by-table",
+   "--direction",
+   "--help",
+   "--n",
+   "--no-validate",
+   "--operator",
+   "--page",
+   "--period",
+   "--rawdog",
+   "--report",
+   "--type",
+   "--values",
+   "--visual"
+  ],
+  "add image": [
+   "--help",
+   "--name"
+  ],
+  "add page": [
+   "--display-name",
+   "--display-option",
+   "--from-template",
+   "--height",
+   "--help",
+   "--list-templates",
+   "--no-title",
+   "--width"
+  ],
+  "add subtitle": [
+   "--help",
+   "--width"
+  ],
+  "add title": [
+   "--help",
+   "--width"
+  ],
+  "add visual": [
+   "--data",
+   "--force",
+   "--from-json",
+   "--height",
+   "--help",
+   "--image",
+   "--list",
+   "--name",
+   "--title",
+   "--width",
+   "--x",
+   "--y"
+  ],
+  "annotations": [
+   "--all-reports",
+   "--help"
+  ],
+  "annotations list": [
+   "--all-reports",
+   "--help",
+   "--json"
+  ],
+  "annotations rename": [
+   "--help"
+  ],
+  "annotations update": [
+   "--help"
+  ],
+  "auth": [
+   "--help"
+  ],
+  "auth login": [
+   "--certificate",
+   "--device-code",
+   "--federated-token",
+   "--help",
+   "--identity",
+   "--password",
+   "--tenant",
+   "--username"
+  ],
+  "auth logout": [
+   "--help"
+  ],
+  "auth show": [
+   "--help"
+  ],
+  "auth status": [
+   "--help"
+  ],
+  "backup": [
+   "--force",
+   "--help",
+   "--keep",
+   "--list",
+   "--message",
+   "--prune"
+  ],
+  "batch": [
+   "--help",
+   "--plan-digest",
+   "--root",
+   "--version"
+  ],
+  "batch example": [
+   "--help"
+  ],
+  "batch examples": [
+   "--help"
+  ],
+  "batch plan": [
+   "--help",
+   "--json",
+   "--root",
+   "--verbose-json"
+  ],
+  "batch run": [
+   "--dry-run",
+   "--help",
+   "--json",
+   "--plan-digest",
+   "--root"
+  ],
+  "batch schema": [
+   "--help",
+   "--version"
+  ],
+  "batch validate": [
+   "--help",
+   "--json"
+  ],
+  "bookmarks": [
+   "--all",
+   "--all-reports",
+   "--help",
+   "--off"
+  ],
+  "bookmarks current-page": [
+   "--help",
+   "--off",
+   "--on"
+  ],
+  "bookmarks data": [
+   "--help",
+   "--off",
+   "--on"
+  ],
+  "bookmarks display": [
+   "--help",
+   "--off",
+   "--on"
+  ],
+  "bookmarks json": [
+   "--help"
+  ],
+  "bookmarks list": [
+   "--all-reports",
+   "--help",
+   "--json"
+  ],
+  "bookmarks page": [
+   "--help"
+  ],
+  "bookmarks rename": [
+   "--help"
+  ],
+  "bookmarks visuals": [
+   "--all",
+   "--help"
+  ],
+  "bpa": [
+   "--fail-on",
+   "--fix",
+   "--help",
+   "--save"
+  ],
+  "bpa rules": [
+   "--category",
+   "--help",
+   "--page"
+  ],
+  "bpa rules ignore": [
+   "--help",
+   "--page",
+   "--visual"
+  ],
+  "bpa rules ignored": [
+   "--help"
+  ],
+  "bpa rules list": [
+   "--all",
+   "--category",
+   "--help",
+   "--rules-file",
+   "--scope",
+   "--severity"
+  ],
+  "bpa rules unignore": [
+   "--help",
+   "--page",
+   "--visual"
+  ],
+  "bpa run": [
+   "--category",
+   "--dry-run",
+   "--fail-on",
+   "--fix",
+   "--help",
+   "--no-defaults",
+   "--no-report-rules",
+   "--output",
+   "--page",
+   "--rule",
+   "--rules",
+   "--save",
+   "--severity"
+  ],
+  "capabilities": [
+   "--help"
+  ],
+  "capabilities check": [
+   "--help"
+  ],
+  "capabilities describe": [
+   "--help",
+   "--json"
+  ],
+  "capabilities fetch": [
+   "--help",
+   "--no-regenerate",
+   "--regenerate",
+   "--yes"
+  ],
+  "capabilities regenerate": [
+   "--help"
+  ],
+  "capabilities roles": [
+   "--help",
+   "--json",
+   "--report"
+  ],
+  "capabilities status": [
+   "--help"
+  ],
+  "capabilities types": [
+   "--containers",
+   "--help",
+   "--json",
+   "--selectors",
+   "--vco"
+  ],
+  "capabilities upgrade": [
+   "--force",
+   "--help",
+   "--yes"
+  ],
+  "cat": [
+   "--help"
+  ],
+  "color": [
+   "--from",
+   "--help",
+   "--theme",
+   "--to"
+  ],
+  "color list": [
+   "--help",
+   "--json",
+   "--report",
+   "--theme"
+  ],
+  "color replace": [
+   "--force",
+   "--from",
+   "--help",
+   "--json",
+   "--report",
+   "--theme",
+   "--to"
+  ],
+  "config": [
+   "--help"
+  ],
+  "config init": [
+   "--force",
+   "--help"
+  ],
+  "config paths": [
+   "--help",
+   "--json"
+  ],
+  "config set": [
+   "--help"
+  ],
+  "config show": [
+   "--help",
+   "--json"
+  ],
+  "connect": [
+   "--backup",
+   "--clear",
+   "--desktop",
+   "--help",
+   "--output",
+   "--profile"
+  ],
+  "cp": [
+   "--force",
+   "--format",
+   "--format-only",
+   "--help",
+   "--measures",
+   "--table",
+   "--viscalcs"
+  ],
+  "dax": [
+   "--help"
+  ],
+  "dax measures": [
+   "--all",
+   "--help",
+   "--measure"
+  ],
+  "dax measures add": [
+   "--data-category",
+   "--data-type",
+   "--description",
+   "--expression",
+   "--format",
+   "--help",
+   "--name",
+   "--no-validate",
+   "--rawdog",
+   "--table"
+  ],
+  "dax measures clear": [
+   "--dry-run",
+   "--force",
+   "--help",
+   "--table"
+  ],
+  "dax measures json": [
+   "--help"
+  ],
+  "dax measures list": [
+   "--all-reports",
+   "--help",
+   "--json",
+   "--name-contains",
+   "--verbose"
+  ],
+  "dax measures migrate": [
+   "--all",
+   "--dry-run",
+   "--help",
+   "--map",
+   "--measure",
+   "--no-verify",
+   "--table",
+   "--verify",
+   "--yes"
+  ],
+  "dax measures rename": [
+   "--help"
+  ],
+  "dax measures update": [
+   "--data-category",
+   "--data-type",
+   "--description",
+   "--display-folder",
+   "--expression",
+   "--expression-file",
+   "--format",
+   "--help"
+  ],
+  "dax viscalcs": [
+   "--help",
+   "--viscalc"
+  ],
+  "dax viscalcs add": [
+   "--expression",
+   "--help",
+   "--name",
+   "--query-ref"
+  ],
+  "dax viscalcs clear": [
+   "--dry-run",
+   "--force",
+   "--help"
+  ],
+  "dax viscalcs json": [
+   "--help"
+  ],
+  "dax viscalcs list": [
+   "--all-reports",
+   "--help",
+   "--json",
+   "--name-contains",
+   "--verbose"
+  ],
+  "dax viscalcs rename": [
+   "--help"
+  ],
+  "dax viscalcs update": [
+   "--expression",
+   "--help"
+  ],
+  "desktop": [
+   "--all",
+   "--help",
+   "--model"
+  ],
+  "desktop list": [
+   "--help",
+   "--json",
+   "--pid"
+  ],
+  "desktop refresh": [
+   "--help",
+   "--model",
+   "--pid",
+   "--wait-seconds"
+  ],
+  "desktop reload": [
+   "--help",
+   "--model",
+   "--pid",
+   "--wait-seconds"
+  ],
+  "desktop screenshot": [
+   "--all",
+   "--help",
+   "--json",
+   "--output",
+   "--output-dir",
+   "--pid",
+   "--scale",
+   "--settle"
+  ],
+  "desktop status": [
+   "--help",
+   "--json",
+   "--pid"
+  ],
+  "download": [
+   "--auto-deploy",
+   "--format",
+   "--help",
+   "--in-place",
+   "--open",
+   "--output"
+  ],
+  "fields": [
+   "--all-reports",
+   "--fields",
+   "--from",
+   "--help",
+   "--to"
+  ],
+  "fields add": [
+   "--bucket",
+   "--dry-run",
+   "--field",
+   "--help",
+   "--name",
+   "--skip-validation",
+   "--type"
+  ],
+  "fields find": [
+   "--help",
+   "--json",
+   "--table",
+   "--threshold",
+   "--type"
+  ],
+  "fields list": [
+   "--all-reports",
+   "--help",
+   "--json"
+  ],
+  "fields rename": [
+   "--clear",
+   "--dry-run",
+   "--field",
+   "--help",
+   "--list",
+   "--visual"
+  ],
+  "fields replace": [
+   "--dry-run",
+   "--from",
+   "--help",
+   "--skip-validation",
+   "--to"
+  ],
+  "fields replace-table": [
+   "--dry-run",
+   "--from",
+   "--help",
+   "--skip-validation",
+   "--to"
+  ],
+  "fields where-used": [
+   "--contains",
+   "--help",
+   "--json"
+  ],
+  "filters": [
+   "--bg-color",
+   "--help",
+   "--type",
+   "--width"
+  ],
+  "filters clear": [
+   "--all",
+   "--help"
+  ],
+  "filters hide": [
+   "--all",
+   "--help",
+   "--show"
+  ],
+  "filters json": [
+   "--help"
+  ],
+  "filters list": [
+   "--all-reports",
+   "--help",
+   "--json"
+  ],
+  "filters lock": [
+   "--all",
+   "--help",
+   "--unlock"
+  ],
+  "filters pane-card": [
+   "--bg-color",
+   "--border",
+   "--border-color",
+   "--fg-color",
+   "--font-family",
+   "--help",
+   "--input-color",
+   "--selector",
+   "--text-size",
+   "--transparency"
+  ],
+  "filters pane-collapse": [
+   "--help"
+  ],
+  "filters pane-get": [
+   "--help",
+   "--json"
+  ],
+  "filters pane-hide": [
+   "--help"
+  ],
+  "filters pane-set": [
+   "--bg-color",
+   "--border",
+   "--border-color",
+   "--checkbox-color",
+   "--fg-color",
+   "--font-family",
+   "--header-size",
+   "--help",
+   "--input-color",
+   "--search-size",
+   "--title-size",
+   "--transparency",
+   "--width"
+  ],
+  "filters rename": [
+   "--help"
+  ],
+  "filters set": [
+   "--display-name",
+   "--help",
+   "--ordinal",
+   "--type",
+   "--values"
+  ],
+  "filters unlock": [
+   "--all",
+   "--help"
+  ],
+  "find": [
+   "--count",
+   "--help",
+   "--json",
+   "--type"
+  ],
+  "fonts": [
+   "--from",
+   "--help",
+   "--size",
+   "--to",
+   "--weight"
+  ],
+  "fonts available": [
+   "--help"
+  ],
+  "fonts clear": [
+   "--all",
+   "--decimals",
+   "--display-units",
+   "--family",
+   "--force",
+   "--format",
+   "--help",
+   "--json",
+   "--size",
+   "--style",
+   "--weight"
+  ],
+  "fonts list": [
+   "--help",
+   "--json",
+   "--report",
+   "--theme"
+  ],
+  "fonts replace": [
+   "--force",
+   "--from",
+   "--help",
+   "--json",
+   "--report",
+   "--theme",
+   "--to"
+  ],
+  "fonts reset": [
+   "--all",
+   "--decimals",
+   "--display-units",
+   "--family",
+   "--force",
+   "--format",
+   "--help",
+   "--json",
+   "--size",
+   "--style",
+   "--weight"
+  ],
+  "get": [
+   "--help",
+   "--json",
+   "--structured"
+  ],
+  "ls": [
+   "--all",
+   "--alphabetical",
+   "--help",
+   "--images",
+   "--json",
+   "--tree",
+   "--verbose"
+  ],
+  "model": [
+   "--cache",
+   "--clear-cache",
+   "--definition",
+   "--format",
+   "--help",
+   "--json",
+   "--output",
+   "--query",
+   "--table",
+   "--use-cache",
+   "--verbose"
+  ],
+  "mv": [
+   "--force",
+   "--help"
+  ],
+  "new": [
+   "--connection",
+   "--from-template",
+   "--help",
+   "--list-templates"
+  ],
+  "new report": [
+   "--connection",
+   "--format",
+   "--from-template",
+   "--help",
+   "--list-templates",
+   "--no-title",
+   "--open",
+   "--thick"
+  ],
+  "open": [
+   "--help"
+  ],
+  "pages": [
+   "--color",
+   "--height",
+   "--help",
+   "--image",
+   "--to",
+   "--type",
+   "--width"
+  ],
+  "pages active-page": [
+   "--help"
+  ],
+  "pages background": [
+   "--clear",
+   "--color",
+   "--help",
+   "--image",
+   "--scaling",
+   "--show",
+   "--transparency"
+  ],
+  "pages conform": [
+   "--dry-run",
+   "--force",
+   "--help",
+   "--json",
+   "--no-dry-run",
+   "--properties"
+  ],
+  "pages display": [
+   "--help",
+   "--option"
+  ],
+  "pages drillthrough": [
+   "--clear",
+   "--cross-report",
+   "--field",
+   "--help",
+   "--show",
+   "--table"
+  ],
+  "pages hide": [
+   "--help",
+   "--show"
+  ],
+  "pages interactions": [
+   "--clear",
+   "--disable-from",
+   "--disable-to",
+   "--help",
+   "--source",
+   "--target",
+   "--type"
+  ],
+  "pages json": [
+   "--help"
+  ],
+  "pages move": [
+   "--help",
+   "--to"
+  ],
+  "pages rename": [
+   "--force",
+   "--help",
+   "--pattern",
+   "--separator",
+   "--to"
+  ],
+  "pages resize": [
+   "--height",
+   "--help",
+   "--width"
+  ],
+  "pages set-tooltip": [
+   "--clear",
+   "--height",
+   "--help",
+   "--width"
+  ],
+  "pages type": [
+   "--height",
+   "--help",
+   "--list",
+   "--type",
+   "--width"
+  ],
+  "pages wallpaper": [
+   "--color",
+   "--help",
+   "--image",
+   "--scaling",
+   "--transparency"
+  ],
+  "profile": [
+   "--description",
+   "--help"
+  ],
+  "profile list": [
+   "--help"
+  ],
+  "profile remove": [
+   "--help"
+  ],
+  "profile save": [
+   "--description",
+   "--help"
+  ],
+  "profile show": [
+   "--help"
+  ],
+  "publish": [
+   "--force",
+   "--help",
+   "--open"
+  ],
+  "report": [
+   "--help",
+   "--target"
+  ],
+  "report clear-diagram": [
+   "--help"
+  ],
+  "report convert": [
+   "--force",
+   "--format",
+   "--help",
+   "--name",
+   "--open",
+   "--validate"
+  ],
+  "report link": [
+   "--help",
+   "--no-input",
+   "--output",
+   "--relink",
+   "--report",
+   "--workspace"
+  ],
+  "report locate": [
+   "--fuzzy",
+   "--help",
+   "--output",
+   "--report",
+   "--workspace"
+  ],
+  "report merge": [
+   "--force",
+   "--help",
+   "--output"
+  ],
+  "report merge-to-thick": [
+   "--help",
+   "--output"
+  ],
+  "report rebind": [
+   "--help",
+   "--local",
+   "--model-id"
+  ],
+  "report rename": [
+   "--help",
+   "--no-rename-folder",
+   "--rename-folder"
+  ],
+  "report split-from-thick": [
+   "--force",
+   "--format",
+   "--help",
+   "--output",
+   "--target"
+  ],
+  "report split-pages": [
+   "--format",
+   "--help",
+   "--output"
+  ],
+  "report unlink": [
+   "--help"
+  ],
+  "restore": [
+   "--backup-id",
+   "--force",
+   "--help",
+   "--list"
+  ],
+  "rm": [
+   "--all",
+   "--annotations",
+   "--dry-run",
+   "--fields",
+   "--force",
+   "--help",
+   "--image",
+   "--measure",
+   "--measures",
+   "--theme",
+   "--viscalc"
+  ],
+  "schema": [
+   "--help"
+  ],
+  "schema check": [
+   "--help"
+  ],
+  "schema describe": [
+   "--help",
+   "--json"
+  ],
+  "schema fetch": [
+   "--help",
+   "--no-regenerate",
+   "--regenerate",
+   "--yes"
+  ],
+  "schema regenerate": [
+   "--help"
+  ],
+  "schema roles": [
+   "--help",
+   "--json",
+   "--report"
+  ],
+  "schema status": [
+   "--help"
+  ],
+  "schema types": [
+   "--containers",
+   "--help",
+   "--json",
+   "--selectors",
+   "--vco"
+  ],
+  "schema upgrade": [
+   "--force",
+   "--help",
+   "--yes"
+  ],
+  "set": [
+   "--clear",
+   "--dry-run",
+   "--force",
+   "--help",
+   "--json",
+   "--no-validate",
+   "--property",
+   "--rawdog",
+   "--remove",
+   "--value",
+   "--where"
+  ],
+  "theme": [
+   "--dry-run",
+   "--font-size",
+   "--good",
+   "--help",
+   "--image",
+   "--value"
+  ],
+  "theme apply-template": [
+   "--force",
+   "--help"
+  ],
+  "theme background": [
+   "--clear",
+   "--help",
+   "--image",
+   "--show"
+  ],
+  "theme build": [
+   "--clean",
+   "--force",
+   "--help",
+   "--output"
+  ],
+  "theme colors": [
+   "--apply",
+   "--dry-run",
+   "--from",
+   "--help",
+   "--hex",
+   "--in",
+   "--include-conditional",
+   "--include-gradients",
+   "--json",
+   "--max-distance",
+   "--normalize",
+   "--replace",
+   "--scope",
+   "--to",
+   "--type",
+   "--used-only",
+   "--visuals"
+  ],
+  "theme create-template": [
+   "--author",
+   "--description",
+   "--help",
+   "--name",
+   "--new-template",
+   "--recommended",
+   "--update-template"
+  ],
+  "theme fonts": [
+   "--all",
+   "--color",
+   "--font-face",
+   "--font-size",
+   "--help"
+  ],
+  "theme icons": [
+   "--add",
+   "--description",
+   "--help",
+   "--remove",
+   "--set",
+   "--url"
+  ],
+  "theme list-templates": [
+   "--help",
+   "--refresh"
+  ],
+  "theme push-visual": [
+   "--components",
+   "--dry-run",
+   "--help",
+   "--include-selectors",
+   "--preset"
+  ],
+  "theme rename": [
+   "--help",
+   "--theme-file"
+  ],
+  "theme serialize": [
+   "--help",
+   "--output"
+  ],
+  "theme set-colors": [
+   "--accent",
+   "--background",
+   "--background-dark",
+   "--background-light",
+   "--background-neutral",
+   "--bad",
+   "--center",
+   "--data-colors",
+   "--data-colors-limit",
+   "--disabled-text",
+   "--first-level-elements",
+   "--foreground",
+   "--foreground-button",
+   "--foreground-dark",
+   "--foreground-light",
+   "--foreground-neutral-dark",
+   "--foreground-neutral-light",
+   "--foreground-neutral-secondary",
+   "--foreground-neutral-tertiary",
+   "--foreground-neutral-tertiary-",
+   "--foreground-selected",
+   "--fourth-level-elements",
+   "--good",
+   "--help",
+   "--hyperlink",
+   "--map-pushpin",
+   "--maximum",
+   "--minimum",
+   "--neutral",
+   "--null",
+   "--second-level-elements",
+   "--shape-stroke",
+   "--table-accent",
+   "--third-level-elements",
+   "--visited-hyperlink"
+  ],
+  "theme set-fonts": [
+   "--bold",
+   "--color",
+   "--font-face",
+   "--font-size",
+   "--help",
+   "--italic",
+   "--underline"
+  ],
+  "theme set-formatting": [
+   "--help",
+   "--json",
+   "--value"
+  ],
+  "theme validate": [
+   "--help"
+  ],
+  "usage": [
+   "--help",
+   "--model",
+   "--no-datahub",
+   "--no-input",
+   "--output",
+   "--region",
+   "--report",
+   "--top",
+   "--workspace",
+   "--yes"
+  ],
+  "validate": [
+   "--all",
+   "--allow-download-sche",
+   "--allow-download-schemas",
+   "--contrast-against",
+   "--fields",
+   "--help",
+   "--json",
+   "--no-structure",
+   "--output",
+   "--qa",
+   "--semantic",
+   "--strict",
+   "--structure",
+   "--tree",
+   "--update-schemas",
+   "--verbose"
+  ],
+  "visuals": [
+   "--from-json",
+   "--height",
+   "--help",
+   "--script-file",
+   "--spec-file",
+   "--width",
+   "--x",
+   "--y"
+  ],
+  "visuals action": [
+   "--clear",
+   "--help",
+   "--show",
+   "--target",
+   "--tooltip",
+   "--type"
+  ],
+  "visuals align": [
+   "--help"
+  ],
+  "visuals axis": [
+   "--bold",
+   "--fontColor",
+   "--fontFamily",
+   "--fontSize",
+   "--gridlines",
+   "--help",
+   "--italic",
+   "--max",
+   "--min",
+   "--no-bold",
+   "--no-italic",
+   "--no-show",
+   "--no-showTitle",
+   "--show",
+   "--showTitle",
+   "--title",
+   "--where"
+  ],
+  "visuals background": [
+   "--color",
+   "--help",
+   "--no-show",
+   "--show",
+   "--transparency",
+   "--where"
+  ],
+  "visuals bind": [
+   "--add",
+   "--clear",
+   "--dry-run",
+   "--help",
+   "--list-roles",
+   "--no-validate",
+   "--rawdog",
+   "--remove",
+   "--show",
+   "--type"
+  ],
+  "visuals border": [
+   "--color",
+   "--help",
+   "--no-show",
+   "--radius",
+   "--show",
+   "--where",
+   "--width"
+  ],
+  "visuals card-reference": [
+   "--actual",
+   "--detail",
+   "--detail-color",
+   "--help",
+   "--target",
+   "--title"
+  ],
+  "visuals cf": [
+   "--copy-from",
+   "--data-bars",
+   "--field",
+   "--gradient",
+   "--help",
+   "--icons",
+   "--image",
+   "--image-position",
+   "--image-size",
+   "--max-color",
+   "--measure",
+   "--mid-color",
+   "--mid-value",
+   "--min-color",
+   "--negative-color",
+   "--on",
+   "--positive-color",
+   "--remove",
+   "--rule",
+   "--rules",
+   "--target-field",
+   "--theme-colors",
+   "--to-measure"
+  ],
+  "visuals clear-formatting": [
+   "--dry-run",
+   "--force",
+   "--help",
+   "--keep-cf",
+   "--only-containers",
+   "--only-objects"
+  ],
+  "visuals deneb": [
+   "--config-file",
+   "--help",
+   "--provider",
+   "--spec-file",
+   "--spec-inline"
+  ],
+  "visuals divider": [
+   "--color",
+   "--help",
+   "--no-show",
+   "--show",
+   "--style",
+   "--where",
+   "--width"
+  ],
+  "visuals error-bars": [
+   "--help",
+   "--lower",
+   "--series",
+   "--upper"
+  ],
+  "visuals error-bars add": [
+   "--help",
+   "--lower",
+   "--relative",
+   "--series",
+   "--upper"
+  ],
+  "visuals error-bars list": [
+   "--help"
+  ],
+  "visuals error-bars remove": [
+   "--all",
+   "--help",
+   "--series"
+  ],
+  "visuals field-hidden": [
+   "--field",
+   "--help",
+   "--role",
+   "--show"
+  ],
+  "visuals format": [
+   "--help",
+   "--json",
+   "--property",
+   "--verbose"
+  ],
+  "visuals general": [
+   "--altText",
+   "--help",
+   "--keepLayerOrder",
+   "--responsive",
+   "--where"
+  ],
+  "visuals group": [
+   "--add",
+   "--create",
+   "--help",
+   "--list",
+   "--mode",
+   "--remove",
+   "--ungroup"
+  ],
+  "visuals header": [
+   "--foregroundColor",
+   "--help",
+   "--no-show",
+   "--show",
+   "--transparency",
+   "--where"
+  ],
+  "visuals hide": [
+   "--help",
+   "--show"
+  ],
+  "visuals json": [
+   "--help"
+  ],
+  "visuals labels": [
+   "--backgroundColor",
+   "--bold",
+   "--fontColor",
+   "--fontFamily",
+   "--fontSize",
+   "--help",
+   "--italic",
+   "--labelDisplayUnits",
+   "--labelOrientation",
+   "--labelPosition",
+   "--labelPrecision",
+   "--no-bold",
+   "--no-italic",
+   "--no-show",
+   "--no-underline",
+   "--show",
+   "--underline",
+   "--where"
+  ],
+  "visuals legend": [
+   "--bold",
+   "--fontColor",
+   "--fontFamily",
+   "--fontSize",
+   "--help",
+   "--italic",
+   "--no-bold",
+   "--no-italic",
+   "--no-show",
+   "--no-showTitle",
+   "--no-underline",
+   "--position",
+   "--show",
+   "--showTitle",
+   "--titleText",
+   "--underline",
+   "--where"
+  ],
+  "visuals mobile": [
+   "--height",
+   "--help",
+   "--remove",
+   "--show",
+   "--tab-order",
+   "--width",
+   "--x",
+   "--y",
+   "--z"
+  ],
+  "visuals padding": [
+   "--bottom",
+   "--help",
+   "--left",
+   "--right",
+   "--top",
+   "--where"
+  ],
+  "visuals position": [
+   "--dry-run",
+   "--force",
+   "--height",
+   "--help",
+   "--tab-order",
+   "--where",
+   "--width",
+   "--x",
+   "--y",
+   "--z"
+  ],
+  "visuals preset": [
+   "--help",
+   "--list",
+   "--name"
+  ],
+  "visuals properties": [
+   "--help",
+   "--json",
+   "--registry",
+   "--search",
+   "--threshold",
+   "--verbose",
+   "--visual-type"
+  ],
+  "visuals python": [
+   "--help",
+   "--script-file",
+   "--script-inline"
+  ],
+  "visuals query": [
+   "--execute",
+   "--help",
+   "--json",
+   "--output"
+  ],
+  "visuals r": [
+   "--help",
+   "--script-file",
+   "--script-inline"
+  ],
+  "visuals reference-line": [
+   "--help",
+   "--id",
+   "--value"
+  ],
+  "visuals reference-line add": [
+   "--axis",
+   "--help",
+   "--value"
+  ],
+  "visuals reference-line list": [
+   "--help"
+  ],
+  "visuals reference-line remove": [
+   "--all",
+   "--help",
+   "--id"
+  ],
+  "visuals rename": [
+   "--force",
+   "--help",
+   "--pattern",
+   "--separator",
+   "--to",
+   "--where"
+  ],
+  "visuals resize": [
+   "--dry-run",
+   "--force",
+   "--height",
+   "--help",
+   "--where",
+   "--width"
+  ],
+  "visuals shadow": [
+   "--angle",
+   "--blur",
+   "--color",
+   "--distance",
+   "--help",
+   "--no-show",
+   "--position",
+   "--show",
+   "--transparency",
+   "--where"
+  ],
+  "visuals show-all": [
+   "--help",
+   "--off",
+   "--role"
+  ],
+  "visuals snap": [
+   "--dimensions",
+   "--grid",
+   "--help"
+  ],
+  "visuals sort": [
+   "--direction",
+   "--field",
+   "--help",
+   "--remove",
+   "--where"
+  ],
+  "visuals spacing": [
+   "--customizeSpacing",
+   "--help",
+   "--no-customizeSpac",
+   "--spaceBelowSubTitl",
+   "--spaceBelowTitle",
+   "--where"
+  ],
+  "visuals subtitle": [
+   "--alignment",
+   "--bold",
+   "--fontColor",
+   "--fontFamily",
+   "--fontSize",
+   "--help",
+   "--italic",
+   "--no-bold",
+   "--no-italic",
+   "--no-show",
+   "--no-underline",
+   "--show",
+   "--text",
+   "--underline",
+   "--where"
+  ],
+  "visuals table-density": [
+   "--dry-run",
+   "--fit-columns-to-co",
+   "--help",
+   "--image-height",
+   "--image-width",
+   "--no-fit-columns-t",
+   "--no-stretch-colum",
+   "--preset",
+   "--row-padding",
+   "--stretch-columns",
+   "--where"
+  ],
+  "visuals test": [
+   "--help",
+   "--json"
+  ],
+  "visuals title": [
+   "--alignment",
+   "--bold",
+   "--fontColor",
+   "--fontFamily",
+   "--fontSize",
+   "--help",
+   "--italic",
+   "--no-bold",
+   "--no-italic",
+   "--no-show",
+   "--no-titleWrap",
+   "--no-underline",
+   "--show",
+   "--text",
+   "--titleWrap",
+   "--underline",
+   "--where"
+  ],
+  "visuals tooltip": [
+   "--bold",
+   "--fontFamily",
+   "--fontSize",
+   "--help",
+   "--italic",
+   "--no-bold",
+   "--no-italic",
+   "--no-show",
+   "--no-underline",
+   "--show",
+   "--transparency",
+   "--type",
+   "--underline",
+   "--where"
+  ],
+  "visuals z-order": [
+   "--back",
+   "--down",
+   "--front",
+   "--help",
+   "--up",
+   "--value"
+  ]
+ },
+ "tool": "pbir",
+ "version": "0.9.33"
+}

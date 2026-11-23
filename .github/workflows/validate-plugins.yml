@@ -7,6 +7,9 @@ on:
       - 'releases/**'
     paths:
       - 'plugins/**'
+      - 'wiki/**'
+      - 'scripts/**'
+      - 'README.md'
       - '.claude-plugin/**'
       - '.github/workflows/validate-plugins.yml'
   pull_request:
@@ -15,22 +18,46 @@ on:
       - 'releases/**'
     paths:
       - 'plugins/**'
+      - 'wiki/**'
+      - 'scripts/**'
+      - 'README.md'
       - '.claude-plugin/**'
       - '.github/workflows/validate-plugins.yml'
 
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d
+        with:
+          enable-cache: false
+      - name: Check skills, wiki pages and cited commands
+        run: uv run scripts/check.py
+
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: vars.ENABLE_PLUGIN_CI == 'true'
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: '22'
-
+          package-manager-cache: false
       - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
-
+        run: npm install -g @anthropic-ai/claude-code@2.1.330
       - name: Validate plugins
         run: bash scripts/validate-plugins.sh

@@ -1,0 +1,278 @@
+{
+ "commands": {
+  "": [
+   "--help",
+   "--version"
+  ],
+  "acl": [
+   "--help"
+  ],
+  "acl get": [
+   "--output",
+   "--output_format",
+   "--query"
+  ],
+  "acl ls": [
+   "--long",
+   "--output_format",
+   "--query"
+  ],
+  "acl rm": [
+   "--force",
+   "--identity",
+   "--output_format"
+  ],
+  "acl set": [
+   "--force",
+   "--identity",
+   "--output_format",
+   "--role"
+  ],
+  "api": [
+   "--audience",
+   "--headers",
+   "--input",
+   "--method",
+   "--output_format",
+   "--params",
+   "--query",
+   "--show_headers"
+  ],
+  "assign": [
+   "--force",
+   "--output_format",
+   "--workspace"
+  ],
+  "auth": [
+   "--help"
+  ],
+  "auth login": [
+   "--certificate",
+   "--federated-token",
+   "--identity",
+   "--output_format",
+   "--password",
+   "--tenant",
+   "--username"
+  ],
+  "auth logout": [
+   "--output_format"
+  ],
+  "auth status": [
+   "--output_format"
+  ],
+  "bulk-export": [
+   "--force",
+   "--output",
+   "--output_format",
+   "--recursive"
+  ],
+  "cd": [
+   "--output_format"
+  ],
+  "config": [
+   "--help"
+  ],
+  "config clear-cache": [
+   "--output_format"
+  ],
+  "config get": [
+   "--output_format"
+  ],
+  "config ls": [
+   "--output_format"
+  ],
+  "config set": [
+   "--output_format"
+  ],
+  "cp": [
+   "--block_on_path_collision",
+   "--force",
+   "--output_format",
+   "--recursive"
+  ],
+  "desc": [
+   "--output_format"
+  ],
+  "exists": [
+   "--output_format"
+  ],
+  "export": [
+   "--all",
+   "--force",
+   "--format",
+   "--output",
+   "--output_format"
+  ],
+  "find": [
+   "--long",
+   "--output_format",
+   "--params",
+   "--query"
+  ],
+  "get": [
+   "--force",
+   "--output",
+   "--output_format",
+   "--query",
+   "--verbose"
+  ],
+  "import": [
+   "--force",
+   "--format",
+   "--input",
+   "--output_format"
+  ],
+  "job": [
+   "--help"
+  ],
+  "job run": [
+   "--config",
+   "--input",
+   "--output_format",
+   "--params",
+   "--polling_interval",
+   "--timeout"
+  ],
+  "job run-cancel": [
+   "--id",
+   "--output_format",
+   "--wait"
+  ],
+  "job run-list": [
+   "--output_format",
+   "--schedule"
+  ],
+  "job run-rm": [
+   "--force",
+   "--id",
+   "--output_format"
+  ],
+  "job run-sch": [
+   "--days",
+   "--enable",
+   "--end",
+   "--id",
+   "--input",
+   "--interval",
+   "--output_format",
+   "--start",
+   "--type"
+  ],
+  "job run-status": [
+   "--id",
+   "--output_format",
+   "--schedule"
+  ],
+  "job run-update": [
+   "--days",
+   "--disable",
+   "--disabled",
+   "--enable",
+   "--end",
+   "--id",
+   "--input",
+   "--interval",
+   "--output_format",
+   "--start",
+   "--type"
+  ],
+  "job start": [
+   "--config",
+   "--input",
+   "--output_format",
+   "--params"
+  ],
+  "label": [
+   "--help"
+  ],
+  "label list-local": [
+   "--output_format"
+  ],
+  "label rm": [
+   "--force",
+   "--output_format"
+  ],
+  "label set": [
+   "--force",
+   "--name",
+   "--output_format"
+  ],
+  "ln": [
+   "--force",
+   "--input",
+   "--output_format",
+   "--target",
+   "--type"
+  ],
+  "ls": [
+   "--all",
+   "--long",
+   "--output_format",
+   "--query"
+  ],
+  "mkdir": [
+   "--output_format",
+   "--params"
+  ],
+  "mv": [
+   "--force",
+   "--output_format",
+   "--recursive"
+  ],
+  "open": [
+   "--output_format"
+  ],
+  "pwd": [
+   "--output_format"
+  ],
+  "rm": [
+   "--force",
+   "--hard",
+   "--output_format"
+  ],
+  "set": [
+   "--force",
+   "--input",
+   "--output_format",
+   "--query"
+  ],
+  "start": [
+   "--force",
+   "--output_format"
+  ],
+  "stop": [
+   "--force",
+   "--output_format"
+  ],
+  "table": [
+   "--help"
+  ],
+  "table load": [
+   "--extension",
+   "--file",
+   "--format",
+   "--mode",
+   "--output_format"
+  ],
+  "table optimize": [
+   "--output_format",
+   "--vorder",
+   "--zorder"
+  ],
+  "table schema": [
+   "--output_format"
+  ],
+  "table vacuum": [
+   "--output_format",
+   "--retain_n_hours"
+  ],
+  "unassign": [
+   "--force",
+   "--output_format",
+   "--workspace"
+  ]
+ },
+ "tool": "fab",
+ "version": "1.7.0"
+}
