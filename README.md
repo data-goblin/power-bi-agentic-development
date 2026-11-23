@@ -171,7 +171,7 @@ The repo contains skills, agents, and hooks.
 
 Hook checks can be individually toggled via config files. Set any check to `false` to disable it:
 - `plugins/pbip/hooks/config.yaml` -- PBIR, TMDL, and report binding validation
-- `plugins/pbi-desktop/hooks/config.yaml` -- DAX references, measure metadata, referential integrity, metadata cache
+- `plugins/pbi-desktop/hooks/config.yaml` -- Windows only: `te validate --local` after model saves and a measure-metadata note; the hooks say at session start when they are off
 
 ### Power BI and Fabric skills, agents, and hooks: available plugins
 
@@ -208,8 +208,8 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 
 | Type | Name | Description |
 |------|------|-------------|
-| Skill | [`connect-pbid`](plugins/pbi-desktop/skills/connect-pbid/) | Explore, query, and modify a model in Power BI Desktop, and reload/screenshot the report canvas via the Desktop Bridge |
-| Agent | [`query-listener`](plugins/pbi-desktop/agents/query-listener.agent.md) | Capture DAX queries from Power BI Desktop visuals in real time |
+| Skill | [`connect-pbid`](plugins/pbi-desktop/skills/connect-pbid/) | Windows only: traces, port discovery, TOM, and the Desktop Bridge for a running Power BI Desktop; `te --local` covers ordinary model edits |
+| Agent | [`query-listener`](plugins/pbi-desktop/agents/query-listener.agent.md) | Capture DAX queries from Power BI Desktop visuals with a trace subscription |
 | Hook | DAX reference validation | Validates table, column, and measure references against the connected model; suggests corrections |
 | Hook | Measure metadata enforcement | Blocks adding measures without DisplayFolder, Description, and FormatString |
 | Hook | Referential integrity check | Reports unmatched many-side keys after relationship or column changes |
@@ -281,13 +281,13 @@ Reviewer agents for these visual types (`deneb-reviewer`, `svg-reviewer`, `r-rev
 
 | Type | Name | Description |
 |------|------|-------------|
-| Skill | [`semantic-model`](plugins/semantic-models/skills/semantic-model/) | Design, build, refresh, and review semantic models through a `te`-first tool cascade |
-| Skill | [`organize-semantic-model`](plugins/semantic-models/skills/organize-semantic-model/) | Organize a model end to end: names, folders, hierarchies, descriptions, formats, UDFs, perspectives, translations, roles |
-| Skill | [`refresh-semantic-model`](plugins/semantic-models/skills/refresh-semantic-model/) | Trigger or troubleshoot refreshes |
-| Skill | [`lineage-analysis`](plugins/semantic-models/skills/lineage-analysis/) | Trace downstream reports from a semantic model across workspaces |
-| Skill | [`power-query`](plugins/semantic-models/skills/power-query/) | Write M expressions, debug query folding, execute M locally or via Fabric API |
-| Skill | [`dax`](plugins/semantic-models/skills/dax/) | Write, debug, and optimize DAX in semantic models. Contributed by [Justin Martin](https://daxnoob.blog) |
-| Agent | [`semantic-model-auditor`](plugins/semantic-models/agents/semantic-model-auditor.agent.md) | Audit semantic models for quality, memory, DAX, and design issues |
+| Skill | [`semantic-model`](plugins/semantic-models/skills/semantic-model/) | Build, change and review models with verified `te` commands, a BPA rule file and gotcha pages; owns the DAX object-reference convention |
+| Skill | [`organize-semantic-model`](plugins/semantic-models/skills/organize-semantic-model/) | Organize a model end to end with the house conventions: names, folders, descriptions, formats, UDFs |
+| Skill | [`refresh-semantic-model`](plugins/semantic-models/skills/refresh-semantic-model/) | Enhanced Refresh REST API through `fab api`: partitions, status, cancel, troubleshooting |
+| Skill | [`lineage-analysis`](plugins/semantic-models/skills/lineage-analysis/) | Find the reports and items that consume a semantic model across workspaces, with `fab api` |
+| Skill | [`power-query`](plugins/semantic-models/skills/power-query/) | Run and test M partition expressions through the Fabric Dataflow executeQuery API |
+| Skill | [`dax`](plugins/semantic-models/skills/dax/) | Tune slow DAX with server timings and trace cues. Contributed by [Justin Martin](https://daxnoob.blog) |
+| Agent | [`semantic-model-auditor`](plugins/semantic-models/agents/semantic-model-auditor.agent.md) | Audit a model with `te validate`, `te bpa run`, `te deps` and `te vertipaq` |
 
 </details>
 

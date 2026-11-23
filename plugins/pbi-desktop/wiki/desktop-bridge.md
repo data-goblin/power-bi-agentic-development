@@ -1,5 +1,5 @@
 ---
-title: Desktop Bridge: reload and screenshot the open report
+title: Desktop Bridge for reload and screenshot of the open report
 summary: The local JSON-RPC pipe of Power BI Desktop, the preview setting that enables it, and the pbir commands that wrap it.
 kind: reference
 status: current

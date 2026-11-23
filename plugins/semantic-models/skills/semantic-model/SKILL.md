@@ -33,10 +33,10 @@ te set . -p DirectLakeBehavior=DirectLakeOnly --save
 te refresh --type automatic --execute               # Direct Lake framing; without --execute only the TMSL prints
 te refresh --apply-refresh-policy Orders --execute   # --partition cannot be combined with --table
 te script manage-ai-metadata.csx --save              # files are positional or --file; there is no -S
-te test run --ci github                              # --fail-on belongs to `te bpa run`, not `te test run`
+te test run --ci github                              # the failure threshold flag belongs to `te bpa run`
 ```
 
-`te ls relationships` lists relationships; `te load`, `te incremental-refresh` and `te set -q` do not exist.
+`te ls relationships` lists relationships. There is no load command, no incremental-refresh command and no query flag on `te set`.
 
 ## Review
 

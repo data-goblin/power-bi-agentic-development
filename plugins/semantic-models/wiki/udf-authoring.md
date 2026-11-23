@@ -1,6 +1,6 @@
 ---
 title: DAX user-defined functions with te and TMDL
-summary: Learn is the owner; this page keeps only what it leaves out: te commands, dotted names, documentation tags, and the shipped limits.
+summary: Learn is the owner. This page keeps te commands, dotted names, documentation tags and the shipped limits.
 kind: gotcha
 status: current
 sources:

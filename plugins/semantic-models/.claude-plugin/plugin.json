@@ -1,7 +1,7 @@
 {
   "name": "semantic-models",
   "version": "0.27.0",
-  "description": "Design, build, optimize, and review Power BI semantic models.",
+  "description": "Build, change, tune and review Power BI semantic models with the te CLI; refresh, lineage and Power Query tooling.",
   "author": {
     "name": "Kurt Buhler",
     "url": "https://data-goblins.com"

@@ -1,5 +1,5 @@
 ---
-title: TOM against Desktop: gotchas
+title: TOM against Desktop gotchas
 summary: Package choice, RowNumber columns, explicit columns, batching relationships, Function objects and PowerShell quoting.
 kind: gotcha
 status: current

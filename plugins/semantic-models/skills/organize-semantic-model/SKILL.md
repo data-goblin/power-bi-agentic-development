@@ -1,6 +1,6 @@
 ---
 name: organize-semantic-model
-description: Tidy a semantic model end to end for report authors, Excel and Copilot with Tabular Editor 3 MCP or the `te` CLI, applying the house conventions: names, display folders, descriptions, hiding and Analyze in Excel, sort-by, DAX formatting prefixes, calculated-object justification, UDF extraction. Use for "organize", "clean up", "standardize" or "prepare" a model. Reports per pass what changed or was skipped.
+description: Tidy a semantic model end to end for report authors, Excel and Copilot with Tabular Editor 3 MCP or the `te` CLI, applying the house conventions (names, display folders, descriptions, hiding and Analyze in Excel, sort-by, DAX formatting prefixes, calculated-object justification, UDF extraction). Use for "organize", "clean up", "standardize" or "prepare" a model. Reports per pass what changed or was skipped.
 ---
 
 # Organize a semantic model

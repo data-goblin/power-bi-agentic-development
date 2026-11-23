@@ -18,7 +18,7 @@ skills: [semantic-models/semantic-model, semantic-models/refresh-semantic-model]
 
 # Incremental refresh policy with te
 
-There is no `te incremental-refresh` command. The policy is the `RefreshPolicy` object on a table, set with `te set`.
+There is no dedicated incremental-refresh command. The policy is the `RefreshPolicy` object on a table, set with `te set`.
 
 ```bash
 te set Orders/RefreshPolicy -p RollingWindowPeriods=5 -p RollingWindowGranularity=Year -p IncrementalPeriods=10 -p IncrementalGranularity=Day --save
