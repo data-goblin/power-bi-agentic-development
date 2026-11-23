@@ -296,8 +296,8 @@ Reviewer agents for these visual types (`deneb-reviewer`, `svg-reviewer`, `r-rev
 
 | Type | Name | Description |
 |------|------|-------------|
-| Skill | [`fabric-cli`](plugins/fabric-cli/skills/fabric-cli/) | Fabric CLI (fab) for any remote operation in Power BI or Fabric (works fully on Pro, PPU; Fabric not required) |
-| Command | [`/migrating-fabric-trial-capacities`](plugins/fabric-cli/commands/migrating-fabric-trial-capacities.md) | Migrate workspaces from trial to production capacity |
+| Skill | [`fabric-cli`](plugins/fabric-cli/skills/fabric-cli/) | Fabric CLI (fab) and `fab api` for cloud operations in Power BI or Fabric, with a CU-cost gate before anything that consumes capacity; the CLI works on Pro and PPU, admin and capacity operations need the admin role or a capacity |
+| Command | [`/migrating-fabric-trial-capacities`](plugins/fabric-cli/commands/migrating-fabric-trial-capacities.md) | Move workspaces from a trial capacity to another capacity; prints a plan first, assigns only after approval, never auto-invoked |
 | Mod | [`/fabric-pane`](plugins/fabric-cli/hooks/) | Fabric pane: workspaces and items as a tree that follows `fab`, with live highlights, copy of fab paths, open in Fabric, and open semantic models in `te`. Optional arg: a workspace to reveal. Icons: [FabricSymbols NF](https://github.com/data-goblin/fabric-nf) |
 
 </details>
@@ -307,7 +307,8 @@ Reviewer agents for these visual types (`deneb-reviewer`, `svg-reviewer`, `r-rev
 
 | Type | Name | Description |
 |------|------|-------------|
-| Skill | [`audit-tenant-settings`](plugins/fabric-admin/skills/audit-tenant-settings/) | Audit Fabric and Power BI tenant settings, delegated overrides, and Entra security group membership |
+| Skill | [`audit-tenant-settings`](plugins/fabric-admin/skills/audit-tenant-settings/) | Audit Fabric and Power BI tenant settings (189 in the baseline), delegated overrides, and Entra security group membership; read-only, needs a Fabric admin |
+| Skill | [`fabric-capacity`](plugins/fabric-admin/skills/fabric-capacity/) | Read capacity utilization and per-item CU from the Capacity Metrics app model, repair the app, start and pause a capacity |
 
 </details>
 
@@ -344,8 +345,8 @@ Reviewer agents for these visual types (`deneb-reviewer`, `svg-reviewer`, `r-rev
 
 | Type | Name | Description |
 |------|------|-------------|
-| Skill | [`executing-spark`](plugins/etl/skills/executing-spark/) | Execute arbitrary Python or PySpark code on Fabric Spark compute without creating a notebook artifact; ephemeral Livy sessions with full Delta table access |
-| Skill | [`using-duckdb`](plugins/etl/skills/using-duckdb/) | Query Fabric lakehouse and warehouse data with DuckDB, locally or inside a Fabric notebook; data freshness and quality checks |
+| Skill | [`executing-spark`](plugins/etl/skills/executing-spark/) | Run PySpark or Python on Fabric Spark compute through the Livy API without a notebook item (sessions and batches) |
+| Skill | [`using-duckdb`](plugins/etl/skills/using-duckdb/) | Query Fabric lakehouse and warehouse Delta tables with DuckDB 2.0 over OneLake, locally or inside a Fabric notebook; Delta writes are limited to create and append |
 
 </details>
 
