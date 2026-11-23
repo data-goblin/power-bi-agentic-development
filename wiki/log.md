@@ -39,3 +39,23 @@ One line per check: `YYYY-MM-DD <page> <what was checked against what>`.
 2026-11-23 plugins/semantic-models/wiki/daxlib-formatstring-udfs.md five DaxLib.FormatString functions and four measures pass te validate; a misspelled call and an extra argument each report DAX0002
 2026-11-23 plugins/tabular-editor/wiki/tmdl-model-ci-workflow.md workflow passes actionlint and zizmor; its validate, bpa run and test list commands run on the Bikes example; deploy and test run steps not run
 2026-11-23 plugins/reports/wiki/report-eval-gate-and-rubric.md case loads in claude plugin eval without grader warnings; check-gate.py accepts the reference solution with the released pbir; one real run scored 0 (no pbir and read-only workspace in the eval sandbox), rubric graders unscored
+2026-11-23 plugins/custom-visuals/wiki/svg-measure-gotchas.md string ceiling re-read against Learn data types (about 32,000 characters for text, not stated for measure results); undocumented sort key claim removed
+2026-11-23 plugins/custom-visuals/wiki/svg-measure-wiring-by-visual.md new card image and callout image areas re-read on the Learn card page; unsupported classic card claim removed
+2026-11-23 plugins/dashboards/wiki/dashboard-dax-query-patterns.md four example queries parse with te util format-dax; selection-filter.dax parses once its placeholders are literals
+2026-11-23 plugins/dashboards/wiki/dashboard-crossfilter-parameters.md unsourced Claude Dashboard wiring section removed
+2026-11-23 plugins/paginated-reports/wiki/paginated-limits-and-differences.md undocumented document map claim removed; Learn FAQ re-read
+2026-11-23 plugins/paginated-reports/wiki/rdl-structure-and-order.md unordered choice in the 2016/01 XSD of microsoft/RdlMigration re-read; untested reorder claim removed
+2026-11-23 plugins/paginated-reports/wiki/paginated-publish-and-export.md 20 MB rdl limit confirmed on Learn; Fabric item definition re-read on Learn (rdl part plus optional .platform, create accepts a definition); Git folder layout claim removed
+2026-11-23 plugins/paginated-reports/wiki/pbidataset-connection-and-fields.md earlier 10 minute DirectQuery timeout note removed, Learn FAQ 600 second default kept; identity provider GUID marked undocumented
+2026-11-23 plugins/pbi-desktop/wiki/desktop-bridge.md bridge methods and theme reload note checked in the pbir 0.9.33 source and pbir desktop --help
+2026-11-23 plugins/pbi-desktop/wiki/tom-gotchas.md untested PowerShell loading remark removed
+2026-11-23 plugins/pbi-desktop/wiki/parallels-macos.md prlctl exec and Parallels Tools requirement re-read in the Parallels docs; dead source URL replaced; timeout and port file bullets removed
+2026-11-23 plugins/pbip/wiki/bim-to-tmdl.md model.bim versus definition folder re-read on the Learn semantic model folder page
+2026-11-23 plugins/pbip/wiki/pbip-rename-gaps.md pbir 0.9.33 replace_field and replace_table source searched for the listed locations; DAXQueries location re-read on Learn
+2026-11-23 plugins/pbip/wiki/tmdl-hand-editing-gotchas.md expression named like a table still untested in Desktop, kept as a warning
+2026-11-23 plugins/reports/wiki/pbir-desktop-bridge.md theme reload note taken from the pbir 0.9.33 source
+2026-11-23 plugins/reports/wiki/report-custom-visual-choice.md licensed visual environments re-read on Learn; organizational visuals in Report Server re-read on the Fabric admin page
+2026-11-23 plugins/reports/wiki/report-filter-pane.md publish to web and the filter pane re-read on Learn
+2026-11-23 plugins/reports/wiki/report-usage-sources.md 200 requests per hour re-read on the REST page; 30 and 60 minute lag re-read on Track user activities
+2026-11-23 plugins/semantic-models/wiki/copilot-ai-metadata.md 10,000 character AI instructions limit confirmed; hidden field behaviour re-read on the AI data schema page; undocumented 200 character description limit removed
+2026-11-23 plugins/tabular-editor/wiki/bpa-model-annotations.md object level BestPracticeAnalyzer_IgnoreRules annotation run with te bpa run on examples/bpa/object-ignore: only the annotated measure is skipped
