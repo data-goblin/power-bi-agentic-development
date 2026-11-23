@@ -91,6 +91,14 @@
    "--output_format",
    "--recursive"
   ],
+  "deploy": [
+   "--bulk_publish",
+   "--config",
+   "--force",
+   "--output_format",
+   "--params",
+   "--target_env"
+  ],
   "desc": [
    "--output_format"
   ],
