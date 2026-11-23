@@ -10,7 +10,7 @@ Livy sessions and batches run Spark code against a lakehouse and leave no item b
 ## Rules
 
 - Base URL `https://api.fabric.microsoft.com/v1/workspaces/{wsId}/lakehouses/{lhId}/livyapi/versions/2023-12-01`; ids from `fab get ... -q id`
-- Auth is an Entra token carrying `Lakehouse.Execute.All`, `Lakehouse.Read.All`, `Code.AccessFabric.All` and `Code.AccessStorage.All` (Learn). Without the storage scope the session starts but OneLake reads fail. A `fab` token fails that way; an `az` token is Unverified for storage. Never print or log the token
+- Auth: an Entra token with the four scopes in [livy-api.md](../../wiki/livy-api.md); never print or log it. A `fab` token fails on OneLake reads
 - Always delete the session, in a `finally` block in automation. Idle sessions burn CUs; Learn gives a 20 minute inactivity limit
 - Prefer a batch (`/batches`, file in OneLake, poll to `success`, `dead` or `killed`) for unattended work; use a session for interactive multi-statement work
 - A statement reports its own outcome in `output.status`. A notebook run by `fab job run` does not: `Completed` can hide a caught exception, so read its exit value (`fabric-cli` `notebooks.md`, `scripts/run_notebook_checked.py`)

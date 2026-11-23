@@ -10,7 +10,7 @@ DuckDB is 2.0 (2.0.1 on PyPI, 2026-11); docs live under https://duckdb.org/docs/
 ## Rules
 
 - The `delta` and `azure` extensions autoload on first use from the official repository; no `INSTALL` step
-- Local auth: `az login`, then `CREATE SECRET (TYPE azure, PROVIDER credential_chain, CHAIN 'cli');`. In a Fabric notebook: `notebookutils.credentials.getToken('storage')` into `CREATE OR REPLACE SECRET ... (TYPE AZURE, PROVIDER ACCESS_TOKEN, ACCESS_TOKEN '<token>')`. The extension does not refresh tokens: storage tokens last about 60 minutes, so recreate the secret before then in long sessions ([in-notebook-setup.md](./references/in-notebook-setup.md))
+- Local auth: `az login`, then `CREATE SECRET (TYPE azure, PROVIDER credential_chain, CHAIN 'cli');`. In a Fabric Python notebook use a `PROVIDER ACCESS_TOKEN` secret from `notebookutils.credentials.getToken('storage')` (the DuckDB docs show it with `ACCOUNT_NAME`; the OneLake form is Unverified on 2.0) and recreate it before the 60 minute expiry, since the extension does not refresh tokens
 - OneLake path uses GUIDs, not names (names with spaces break it): `abfss://<workspace-id>@onelake.dfs.fabric.microsoft.com/<item-id>/Tables/<schema>/<table>` and `.../Files/<path>`. Get ids with `fab get "ws.Workspace/LH.Lakehouse" -q id`. Warehouses and SQL databases use the same form
 - Use the wrapper instead of rebuilding the path and secret: the `fabric-cli` skill's `scripts/query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" -q "SELECT * FROM tbl LIMIT 10" -t gold.orders` (run with `uv run`; needs the fabric-cli plugin and the duckdb CLI)
 - Prefer the SQL endpoint (`fabric-cli` `querying-data.md`) when you need `INFORMATION_SCHEMA`, `sys.*` or T-SQL behaviour
