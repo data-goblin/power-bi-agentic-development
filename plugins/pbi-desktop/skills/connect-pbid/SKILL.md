@@ -1,6 +1,6 @@
 ---
 name: connect-pbid
-description: Windows only. Work against a running Power BI Desktop instance when `te --local` or a model MCP cannot: capture traces (EVALUATEANDLOG payloads, visual queries, server timings), find the local msmdsrv port and map it to the open file, run TOM or ADOMD.NET from PowerShell, reload or screenshot the report canvas through the Desktop Bridge, install daxlib packages. Not for service or Direct Lake models, and not the first choice for ordinary model edits.
+description: Windows only. Work against a running Power BI Desktop instance when `te --local` or a model MCP cannot do the job (capture traces such as EVALUATEANDLOG payloads, visual queries and server timings), find the local msmdsrv port and map it to the open file, run TOM or ADOMD.NET from PowerShell, reload or screenshot the report canvas through the Desktop Bridge, install daxlib packages. Not for service or Direct Lake models, and not the first choice for ordinary model edits.
 ---
 
 # Power BI Desktop (local engine)
