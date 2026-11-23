@@ -9,3 +9,8 @@ One line per check: `YYYY-MM-DD <page> <what was checked against what>`.
 2026-11-23 plugins/pbip/wiki/pbip-entry-files.md schemas from microsoft/json-schemas, validate_pbip.py and pbir validate on examples/bikes
 2026-11-23 plugins/pbip/wiki/pbip-rename-gaps.md schemas from microsoft/json-schemas, validate_pbip.py and pbir validate on examples/bikes
 2026-11-23 plugins/pbip/wiki/pbip-copilot-folder.md schemas from microsoft/json-schemas, validate_pbip.py and pbir validate on examples/bikes
+2026-11-23 plugins/pbip/wiki/pbir-schema-map.md semanticQuery 1.4.0, filterConfiguration 1.3.0, page 2.1.0 schemas read; pbir 0.9.33 help
+2026-11-23 plugins/pbip/wiki/pbir-expression-values.md semanticQuery 1.4.0, filterConfiguration 1.3.0, page 2.1.0 schemas read; pbir 0.9.33 help
+2026-11-23 plugins/pbip/wiki/pbir-filters.md semanticQuery 1.4.0, filterConfiguration 1.3.0, page 2.1.0 schemas read; pbir 0.9.33 help
+2026-11-23 plugins/pbip/wiki/pbir-page-json.md semanticQuery 1.4.0, filterConfiguration 1.3.0, page 2.1.0 schemas read; pbir 0.9.33 help
+2026-11-23 plugins/pbip/wiki/pbir-theme-cascade.md semanticQuery 1.4.0, filterConfiguration 1.3.0, page 2.1.0 schemas read; pbir 0.9.33 help
