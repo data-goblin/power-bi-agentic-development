@@ -8,250 +8,341 @@
    "--help"
   ],
   "acl get": [
+   "--json",
    "--output",
    "--output_format",
-   "--query"
+   "--query",
+   "--skill"
   ],
   "acl ls": [
+   "--json",
    "--long",
    "--output_format",
-   "--query"
+   "--query",
+   "--skill"
   ],
   "acl rm": [
    "--force",
    "--identity",
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "acl set": [
    "--force",
    "--identity",
+   "--json",
    "--output_format",
-   "--role"
+   "--role",
+   "--skill"
   ],
   "api": [
    "--audience",
    "--headers",
    "--input",
+   "--json",
    "--method",
    "--output_format",
    "--params",
    "--query",
-   "--show_headers"
+   "--show_headers",
+   "--skill"
   ],
   "assign": [
    "--force",
+   "--json",
    "--output_format",
+   "--skill",
    "--workspace"
   ],
   "auth": [
    "--help"
   ],
   "auth login": [
+   "--azure-cli",
    "--certificate",
    "--federated-token",
    "--identity",
+   "--json",
    "--output_format",
    "--password",
+   "--skill",
    "--tenant",
    "--username"
   ],
   "auth logout": [
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "auth status": [
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "bulk-export": [
    "--force",
+   "--json",
    "--output",
    "--output_format",
-   "--recursive"
+   "--recursive",
+   "--skill"
   ],
   "cd": [
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "config": [
    "--help"
   ],
   "config clear-cache": [
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "config get": [
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "config ls": [
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "config set": [
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "cp": [
    "--block_on_path_collision",
    "--force",
+   "--json",
    "--output_format",
-   "--recursive"
+   "--recursive",
+   "--skill"
   ],
   "deploy": [
    "--bulk_publish",
    "--config",
    "--force",
+   "--json",
    "--output_format",
    "--params",
+   "--skill",
    "--target_env"
   ],
   "desc": [
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "exists": [
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "export": [
    "--all",
    "--force",
    "--format",
+   "--json",
    "--output",
-   "--output_format"
+   "--output_format",
+   "--skill"
   ],
   "find": [
+   "--json",
    "--long",
    "--output_format",
    "--params",
-   "--query"
+   "--query",
+   "--skill"
   ],
   "get": [
    "--force",
+   "--json",
    "--output",
    "--output_format",
    "--query",
+   "--skill",
    "--verbose"
   ],
   "import": [
    "--force",
    "--format",
    "--input",
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "job": [
-   "--help"
+   "--help",
+   "--wait"
   ],
   "job run": [
    "--config",
    "--input",
+   "--json",
    "--output_format",
    "--params",
    "--polling_interval",
+   "--skill",
    "--timeout"
   ],
   "job run-cancel": [
    "--id",
+   "--json",
    "--output_format",
+   "--skill",
    "--wait"
   ],
   "job run-list": [
+   "--json",
    "--output_format",
-   "--schedule"
+   "--schedule",
+   "--skill"
   ],
   "job run-rm": [
    "--force",
    "--id",
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "job run-sch": [
    "--days",
    "--enable",
    "--end",
-   "--id",
    "--input",
    "--interval",
+   "--json",
    "--output_format",
+   "--skill",
    "--start",
    "--type"
   ],
   "job run-status": [
    "--id",
+   "--json",
    "--output_format",
-   "--schedule"
+   "--schedule",
+   "--skill"
   ],
   "job run-update": [
    "--days",
    "--disable",
-   "--disabled",
    "--enable",
    "--end",
    "--id",
    "--input",
    "--interval",
+   "--json",
    "--output_format",
+   "--skill",
    "--start",
    "--type"
   ],
   "job start": [
    "--config",
    "--input",
+   "--json",
    "--output_format",
-   "--params"
+   "--params",
+   "--polling_interval",
+   "--skill",
+   "--timeout",
+   "--wait"
   ],
   "label": [
    "--help"
   ],
   "label list-local": [
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "label rm": [
    "--force",
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "label set": [
    "--force",
+   "--json",
    "--name",
-   "--output_format"
+   "--output_format",
+   "--skill"
   ],
   "ln": [
    "--force",
    "--input",
+   "--json",
    "--output_format",
+   "--skill",
    "--target",
    "--type"
   ],
   "ls": [
    "--all",
+   "--json",
    "--long",
    "--output_format",
-   "--query"
+   "--query",
+   "--skill"
   ],
   "mkdir": [
+   "--json",
    "--output_format",
-   "--params"
+   "--params",
+   "--skill"
   ],
   "mv": [
    "--force",
+   "--json",
    "--output_format",
-   "--recursive"
+   "--recursive",
+   "--skill"
   ],
   "open": [
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "pwd": [
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "rm": [
    "--force",
    "--hard",
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "set": [
    "--force",
    "--input",
+   "--json",
    "--output_format",
-   "--query"
+   "--query",
+   "--skill"
   ],
   "start": [
    "--force",
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "stop": [
    "--force",
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "table": [
    "--help"
@@ -260,27 +351,37 @@
    "--extension",
    "--file",
    "--format",
+   "--json",
    "--mode",
-   "--output_format"
+   "--output_format",
+   "--skill"
   ],
   "table optimize": [
+   "--json",
    "--output_format",
+   "--skill",
    "--vorder",
    "--zorder"
   ],
   "table schema": [
-   "--output_format"
+   "--json",
+   "--output_format",
+   "--skill"
   ],
   "table vacuum": [
+   "--json",
    "--output_format",
-   "--retain_n_hours"
+   "--retain_n_hours",
+   "--skill"
   ],
   "unassign": [
    "--force",
+   "--json",
    "--output_format",
+   "--skill",
    "--workspace"
   ]
  },
  "tool": "fab",
- "version": "1.7.0"
+ "version": "1.9.0"
 }
