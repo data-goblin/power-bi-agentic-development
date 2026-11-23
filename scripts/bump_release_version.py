@@ -1,6 +1,6 @@
-"""Bump the lockstep release version across marketplace, plugins, and skills.
+"""Bump the lockstep release version across the marketplace, every plugin manifest and the README badge.
 
-Usage: python scripts/bump_release_version.py <old> <new>
+Usage: uv run scripts/bump_release_version.py <new>   (new is 0.<minor>.<patch>, optionally a letter hotfix suffix)
 """
 
 import json
@@ -8,33 +8,38 @@ import pathlib
 import re
 import sys
 
-OLD, NEW = sys.argv[1], sys.argv[2]
+VERSION = re.compile(r"^0\.\d+\.\d+[a-z]?$")
+
+if len(sys.argv) != 2 or not VERSION.match(sys.argv[1]):
+    sys.exit("usage: bump_release_version.py 0.<minor>.<patch>[letter]")
+NEW = sys.argv[1]
 root = pathlib.Path(__file__).resolve().parent.parent
-changed = []
+marketplace = root / ".claude-plugin" / "marketplace.json"
+OLD = json.loads(marketplace.read_text(encoding="utf-8"))["metadata"]["version"]
+if OLD == NEW:
+    sys.exit(f"already at {NEW}")
 
-mp = root / ".claude-plugin" / "marketplace.json"
-data = json.loads(mp.read_text(encoding="utf-8"))
-if data["metadata"]["version"] == OLD:
-    text = mp.read_text(encoding="utf-8").replace(f'"version": "{OLD}"', f'"version": "{NEW}"')
-    mp.write_text(text, encoding="utf-8")
-    changed.append(mp)
+targets = [
+    marketplace,
+    *sorted(root.glob("plugins/*/.claude-plugin/plugin.json")),
+    *sorted(root.glob("plugins/*/.github/plugin/plugin.json")),
+]
+changed: list[pathlib.Path] = []
+for path in targets:
+    text = path.read_text(encoding="utf-8")
+    new_text = text.replace(f'"version": "{OLD}"', f'"version": "{NEW}"')
+    if new_text == text:
+        sys.exit(f"{path.relative_to(root)} does not carry {OLD}; versions must move in lockstep")
+    path.write_text(new_text, encoding="utf-8")
+    changed.append(path)
 
-# Copilot CLI reads .github/plugin/plugin.json (where present) ahead of the Claude
-# manifest, so both must carry the same version.
-for pj in [*root.glob("plugins/*/.claude-plugin/plugin.json"), *root.glob("plugins/*/.github/plugin/plugin.json")]:
-    text = pj.read_text(encoding="utf-8")
-    if f'"version": "{OLD}"' in text:
-        pj.write_text(text.replace(f'"version": "{OLD}"', f'"version": "{NEW}"'), encoding="utf-8")
-        changed.append(pj)
-
-for sk in root.glob("plugins/*/skills/*/SKILL.md"):
-    text = sk.read_text(encoding="utf-8")
-    new_text = re.sub(
-        rf"^version: {re.escape(OLD)}$", f"version: {NEW}", text, count=1, flags=re.MULTILINE
-    )
-    if new_text != text:
-        sk.write_text(new_text, encoding="utf-8")
-        changed.append(sk)
+readme = root / "README.md"
+text = readme.read_text(encoding="utf-8")
+badge = re.sub(r"badge/version-[^-]+-blue", f"badge/version-{NEW}-blue", text, count=1)
+if badge == text:
+    sys.exit("README.md has no version badge")
+readme.write_text(badge, encoding="utf-8")
+changed.append(readme)
 
 for path in changed:
     print("bumped:", path.relative_to(root))

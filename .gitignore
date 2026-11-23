@@ -6,7 +6,6 @@ __pycache__/
 *.log
 .claude/
 CLAUDE.md
-AGENTS.md
 *.tmuo
 /tools/*
 tmp/

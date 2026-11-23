@@ -1,6 +1,6 @@
 {
   "name": "paginated-reports",
-  "version": "26.45",
+  "version": "0.27.0",
   "description": "Author, validate, publish, and test print-ready paginated reports.",
   "author": {
     "name": "Kurt Buhler",
