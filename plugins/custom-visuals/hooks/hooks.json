@@ -1,0 +1,73 @@
+{
+  "description": "Lints Deneb spec files and DAX SVG measures after Write or Edit; fails open with a message when Python is missing",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/lint-visuals.sh\"",
+            "timeout": 10,
+            "if": "Edit(**/*.vl.json)"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/lint-visuals.sh\"",
+            "timeout": 10,
+            "if": "Edit(**/*.vega.json)"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/lint-visuals.sh\"",
+            "timeout": 10,
+            "if": "Edit(**/*.dax)"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/lint-visuals.sh\"",
+            "timeout": 10,
+            "if": "Write(**/*.vl.json)"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/lint-visuals.sh\"",
+            "timeout": 10,
+            "if": "Write(**/*.vega.json)"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/lint-visuals.sh\"",
+            "timeout": 10,
+            "if": "Write(**/*.dax)"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,212 +1,37 @@
 ---
 name: r-visuals
-description: R visual creation and ggplot2 patterns for PBIR reports. Automatically invoke when the user mentions "R visual", "ggplot2", "ggplot in Power BI", or asks to "create an R visual", "add an R chart", "write an R visual script", "inject an R script into Power BI".
+description: Maintains and migrates R script visuals (scriptVisual, ggplot2) in PBIR reports; R and Python visuals retire in May 2027, including R-powered custom visuals. Use for "R visual", "scriptVisual", "ggplot2 in Power BI", "inject an R script", "R visual blank in the service", and "what breaks in May 2027" questions. New charts should go to Deneb, a built-in visual, an SVG measure or a pbiviz custom visual instead.
 ---
 
-# R Visuals in Power BI (PBIR)
+# R visuals (retiring May 2027)
 
-> **Use `pbir` for every report mutation.** Read PBIR metadata only for diagnosis. If `pbir` is
-> unavailable or lacks an operation, stop and report the gap; never edit report JSON directly.
+## Rules
 
-R visuals execute R scripts (primarily ggplot2) to render static PNG images on the Power BI canvas. **ggplot2 is the preferred library** -- its grammar of graphics approach produces clean, publication-quality statistical visualizations with less code. R is particularly strong for statistical visualizations.
+- R and Python visuals, including R-powered custom visuals from AppSource, retire in May 2027: the service stops rendering them in published reports and future Desktop versions drop them. Say this before building one. Source and migration options: [retirement page](../../wiki/script-visuals-retirement.md)
+- Build a new R visual only to maintain a report that already has them; otherwise use `deneb-visuals`, `svg-visuals`, a built-in visual or `powerbi-custom-visuals`
+- Finding affected visuals in PBIP sources (`visualType` values, and what the search misses) is on the [retirement page](../../wiki/script-visuals-retirement.md)
+- `dataset` is a data.frame injected by Power BI; ggplot objects must be printed (`print(p)`); the service supports one fixed CRAN list on R 4.3.3: [Learn package list](https://learn.microsoft.com/en-us/power-bi/connect-data/service-r-packages-support)
+- Desktop passes but the service is blank: check, in order, the missing `powerbi_rEnableShowText = 1` first line (text labels), a package outside the list or one needing the network, the 60 second timeout, and HTML/XML-based packages (out of memory in the service; Learn says to move those to a custom visual); the rest is on the traps page. Details: [service traps](../../wiki/r-visual-service-traps.md)
+- Same limits as Python visuals: 150,000 rows, 250 MB input, grouped rows, 72 DPI, no cross-filter source, no tooltips, no Publish to web; Desktop output is capped at 2 MB. See [dataset and limits](../../wiki/script-visual-dataset-and-limits.md)
+- Not supported: DirectQuery for Analysis Services, printing with the report
 
-## Visual Identity
-
-- **visualType:** `scriptVisual`
-- **Data role:** `Values` (columns and measures, multiple allowed)
-- **Data variable:** `dataset` (data.frame, auto-injected)
-- **Row limit:** 150,000 rows
-- **Output:** Static PNG at 72 DPI -- no interactivity
-
-## Workflow: Creating an R Visual
-
-### Step 1: Add the Visual
+## Commands (pbir 0.9.33)
 
 ```bash
-pbir add visual scriptVisual "Report.Report/Page.Page" --name RevenueByDateR \
-  --data "Values:Sales.Date" --data "Values:Sales.Revenue"
-```
-
-### Step 2: Write the Script
-
-```r
-library(ggplot2)
-
-p <- ggplot(dataset, aes(x=Date, y=Sales)) +
-  geom_col(fill="#5B8DBE") +
-  theme_minimal(base_size=12) +
-  theme(panel.grid.major.x=element_blank())
-
-print(p)  # MANDATORY for ggplot2
-```
-
-Critical rules:
-- `print(p)` is **mandatory** for ggplot2 objects -- they do not auto-display in Power BI
-- `dataset` is auto-injected as a data.frame; do not create it
-- Access columns by index (`dataset[,1]`) to avoid name escaping issues
-- Use backticks for column names with spaces: `` dataset$`Order Lines` ``
-
-### Step 2b: Review
-
-Before presenting the script to the user, dispatch the `r-reviewer` agent to validate correctness and provide design feedback.
-
-### Step 3: Inject the Script
-
-```bash
-pbir visuals r "Report.Report/Page.Page/RevenueByDateR.Visual" --script-file chart.r
-```
-
-The CLI handles PBIR string escaping.
-
-### Step 4: Validate
-
-```bash
-pbir visuals bind "Report.Report/Page.Page/RevenueByDateR.Visual" --show
+pbir add visual scriptVisual "Report.Report/Page.Page" --name RChart -d "Values:Sales.Date" -d "Values:Sales.Revenue"
+pbir visuals r "Report.Report/Page.Page/RChart.Visual" --script-file chart.R
+pbir visuals bind "Report.Report/Page.Page/RChart.Visual" --show
 pbir validate "Report.Report" --all
 ```
 
-## PBIR Format
+The `r-reviewer` agent ships with the reports plugin; without that plugin installed, skip the review step and run `pbir validate`.
 
-For read-only diagnosis, scripts are stored in `visual.objects.script[0].properties`:
+## Migrating an R visual
 
-```json
-{
-  "source": {"expr": {"Literal": {"Value": "'library(ggplot2)\\n...\\nprint(p)'"}}},
-  "provider": {"expr": {"Literal": {"Value": "'R'"}}}
-}
+```yaml
+ggplot bar / line / scatter / heatmap / boxplot: Deneb Vega-Lite (deneb-visuals)
+chart with a built-in equivalent: the built-in visual
+small chart inside a table cell: SVG measure (svg-visuals)
+reusable interactive chart or an R-powered custom visual: pbiviz custom visual (powerbi-custom-visuals)
+forecast, regression, ridgeline, correlation matrix: Fabric notebook
 ```
-
-Identical structure to Python visuals except `visualType` is `scriptVisual` and `provider` is `'R'`.
-
-## Supported Packages
-
-### Power BI Service (R 4.3.3)
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| ggplot2 | 3.5.1 | Grammar of graphics |
-| dplyr | 1.1.4 | Data manipulation |
-| tidyr | 1.3.1 | Data tidying |
-| ggrepel | 0.9.5 | Non-overlapping labels |
-| patchwork | 1.2.0 | Compose multiple plots |
-| cowplot | 1.1.3 | Publication-quality plots |
-| corrplot | 0.94 | Correlation matrices |
-| viridis | 0.6.5 | Color scales |
-| RColorBrewer | 1.1-3 | Color palettes |
-| forecast | 8.23.0 | Time series forecasting |
-| pheatmap | 1.0.12 | Heatmaps |
-| treemap | 2.4-4 | Treemaps |
-| lattice | 0.22-6 | Trellis graphics |
-
-~1000 CRAN packages available. **Not supported:** packages requiring networking (RgoogleMaps, mailR).
-
-Full package list: https://learn.microsoft.com/power-bi/connect-data/service-r-packages-support
-
-### Desktop
-
-Any locally installed R package works without restriction. R must be installed separately.
-
-## Best Practices
-
-1. **Always call `print(p)`** -- ggplot2 objects require explicit printing
-2. **Guard against empty data** -- `if (nrow(dataset) == 0) { plot.new(); text(0.5, 0.5, "No data") }`
-3. **Use index-based column access** -- `dataset[,1]` avoids name escaping issues
-4. **Use `theme_minimal()`** -- clean aesthetic that works well with Power BI
-5. **Factor categorical variables** -- control sort order explicitly with `factor()`
-6. **Use hex colors** matching the report theme
-7. **Set margins** -- `plot.margin=margin(t, r, b, l)` to prevent clipping
-8. **Keep scripts concise** -- 5-min timeout Desktop, 1-min Service
-
-## Limitations
-
-| Constraint | Desktop | Service |
-|------------|---------|---------|
-| Output | Static PNG, 72 DPI | Static PNG, 72 DPI |
-| Timeout | 5 minutes | 1 minute |
-| Row limit | 150,000 | 150,000 |
-| Output size | 2 MB | 30 MB |
-| Networking | Unrestricted | Blocked |
-| Gateway | Personal only | Personal only |
-| Cross-filter FROM | Not supported | Not supported |
-| Receive cross-filter | Yes | Yes |
-| Publish to web | Not supported | Not supported |
-| Embed (app-owns-data) | Not supported | Not supported |
-
-## Script Structure Template
-
-```r
-library(ggplot2)
-
-# 1. Guard against empty data
-if (nrow(dataset) == 0) {
-  plot.new()
-  text(0.5, 0.5, "No data available", cex=1.5)
-} else {
-  # 2. Data preparation (index-based access)
-  df <- data.frame(
-    category = dataset[,1],
-    value = dataset[,2]
-  )
-
-  # 3. Create visualization
-  p <- ggplot(df, aes(x=reorder(category, -value), y=value)) +
-    geom_col(fill="#5B8DBE", width=0.7) +
-    theme_minimal(base_size=12) +
-    theme(
-      panel.grid.major.x = element_blank(),
-      axis.title = element_blank()
-    )
-
-  # 4. Render
-  print(p)
-}
-```
-
-## R vs Python Syntax Reference
-
-For the language-choice decision, see the "When to Use a Script Visual" section above. This table covers only mechanical syntax differences for scripts already committed to R:
-
-| Aspect | R (`scriptVisual`) | Python (`pythonVisual`) |
-|--------|-------|--------|
-| Render call | `print(p)` | `plt.show()` |
-| Column access | `dataset[,1]` or `dataset$col` | `dataset.iloc[:,0]` or `dataset["col"]` |
-| Empty guard | `if (nrow(dataset) == 0)` | `if len(dataset) == 0:` |
-| Factor/category order | `factor(x, levels=...)` | `pd.Categorical(x, categories=...)` |
-| Runtime (Service) | R 4.3.3 | Python 3.11 |
-
-## When to Use a Script Visual
-
-Reach for an R visual only when **all** of the following hold:
-
-- The chart has no native equivalent and no reasonable Deneb spec
-- The value is in a statistical computation that must run at render time (model fit, kernel density, forecast band), not just a shape Vega could draw
-- The visual does not need to be a cross-filter source, hover tooltips, publish-to-web, or app-owns-data embed
-- The report is served in a Pro/PPU or higher capacity with a Fabric-enabled region
-
-If interactivity or cross-filtering matters, use **Deneb** (a static PNG cannot be a selection source). If the need is a small inline mark (sparkline, bar, status pill), use an **SVG measure** (no row cap, no timeout, no licensing/region gate, renders under publish-to-web). The script visual's niche is narrow: compute-at-render statistical plots for internal or org consumption.
-
-**R vs Python once a script visual is the right call:** use R for publication-quality statistical defaults and packages with no Python peer (`forecast`, `corrplot`, `pheatmap`, ridgeline/violin). Use Python when the computation leans on scikit-learn, statsmodels, or scipy, or when surrounding report logic is already Python. Where equal, default to whichever language the report's other scripts use; mixing doubles the publish-time package surface to validate.
-
-Do not default to a script visual because a chart type "looks statistical." A box plot, lollipop, or dumbbell is an SVG-measure or Deneb job; reserve scripts for charts that genuinely compute.
-
-## References
-
-- **`references/data-model.md`** -- `dataset` grouping mechanic, row/byte caps, forcing per-row input, and R-specific traps (Time type, text rendering flags, CJK fonts)
-- **`references/community-examples.md`** -- R Graph Gallery examples organized by chart type (distribution, correlation, ranking, evolution, flow)
-- **`references/ggplot2-patterns.md`** -- Common ggplot2 chart patterns (bar, donut, line, heatmap, bullet)
-- **`examples/script/`** -- Standalone R scripts (bar-chart, trend-line) -- ready to inject into visual.json after escaping
-- **`examples/visual/bullet-chart.json`** -- PBIR visual.json: bullet chart with conditional coloring, error handling, and extensive escaping
-- **`examples/visual/bar-chart.json`** -- PBIR visual.json: horizontal bar with PY comparison lines and colored account labels
-- **`examples/visual/trend-line.json`** -- PBIR visual.json: area chart with ribbon plot and month factor handling
-
-## Fetching Docs
-
-To retrieve current R visual / package support docs, search https://learn.microsoft.com and fetch the relevant pages. Search based on the user's request and run multiple searches as needed to ensure sufficient context before proceeding.
-
-## Related Skills
-
-- **`pbi-report-design`** -- Layout and design best practices
-- **`python-visuals`** -- Python Script visuals (same concept, different language)
-- **`deneb-visuals`** -- Vega/Vega-Lite visuals (interactive, vector-based alternative)
-- **`svg-visuals`** -- SVG via DAX measures (lightweight inline graphics)
-- **`pbir-format`** (pbip plugin) -- PBIR JSON format reference

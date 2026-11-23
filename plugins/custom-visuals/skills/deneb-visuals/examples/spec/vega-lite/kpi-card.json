@@ -1,40 +1,87 @@
 {
-  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-  "data": {"name": "dataset"},
+  "data": {
+    "name": "dataset"
+  },
   "transform": [
-    {"calculate": "datum['Value']", "as": "value"},
-    {"calculate": "datum['Target']", "as": "target"},
-    {"calculate": "(datum.value - datum.target) / datum.target", "as": "change"}
+    {
+      "calculate": "datum[\"Order Lines\"]",
+      "as": "value"
+    },
+    {
+      "calculate": "datum[\"Order Lines (PY)\"]",
+      "as": "target"
+    },
+    {
+      "calculate": "(datum.value - datum.target) / datum.target",
+      "as": "change"
+    }
   ],
   "layer": [
     {
-      "mark": {"type": "text", "fontSize": 48, "fontWeight": "bold", "align": "center"},
+      "mark": {
+        "type": "text",
+        "fontSize": 48,
+        "fontWeight": "bold",
+        "align": "center"
+      },
       "encoding": {
-        "text": {"field": "value", "type": "quantitative", "format": ",.0f"},
+        "text": {
+          "field": "value",
+          "type": "quantitative",
+          "format": ",.0f"
+        },
         "color": {
-          "condition": {"test": "datum.change >= 0", "value": "#118DFF"},
+          "condition": {
+            "test": "datum.change >= 0",
+            "value": "#118DFF"
+          },
           "value": "#E66C37"
         },
-        "y": {"value": 90}
+        "y": {
+          "value": 90
+        }
       }
     },
     {
-      "mark": {"type": "text", "fontSize": 14, "align": "center"},
+      "mark": {
+        "type": "text",
+        "fontSize": 14,
+        "align": "center"
+      },
       "encoding": {
-        "text": {"value": "Value vs Target"},
-        "color": {"value": "#666666"},
-        "y": {"value": 30}
+        "text": {
+          "value": "Order Lines vs PY"
+        },
+        "color": {
+          "value": "#666666"
+        },
+        "y": {
+          "value": 30
+        }
       }
     },
     {
-      "mark": {"type": "text", "fontSize": 16, "align": "center"},
+      "mark": {
+        "type": "text",
+        "fontSize": 16,
+        "align": "center"
+      },
       "encoding": {
-        "text": {"field": "change", "type": "quantitative", "format": "+.1%"},
+        "text": {
+          "field": "change",
+          "type": "quantitative",
+          "format": "+.1%"
+        },
         "color": {
-          "condition": {"test": "datum.change >= 0", "value": "#118DFF"},
+          "condition": {
+            "test": "datum.change >= 0",
+            "value": "#118DFF"
+          },
           "value": "#E66C37"
         },
-        "y": {"value": 140}
+        "y": {
+          "value": 140
+        }
       }
     }
   ]

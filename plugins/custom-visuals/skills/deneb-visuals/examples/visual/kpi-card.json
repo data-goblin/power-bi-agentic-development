@@ -1,5 +1,5 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.2.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "kpi_order_lines_vs_py",
   "position": {
     "x": 40,
@@ -61,7 +61,7 @@
             "jsonSpec": {
               "expr": {
                 "Literal": {
-                  "Value": "'{\"$schema\": \"https://vega.github.io/schema/vega-lite/v5.json\", \"data\": {\"name\": \"dataset\"}, \"transform\": [{\"calculate\": \"datum[''Order Lines'']\", \"as\": \"value\"}, {\"calculate\": \"datum[''Order Lines (PY)'']\", \"as\": \"target\"}, {\"calculate\": \"(datum.value - datum.target) / datum.target\", \"as\": \"change\"}], \"layer\": [{\"mark\": {\"type\": \"text\", \"fontSize\": 48, \"fontWeight\": \"bold\", \"align\": \"center\"}, \"encoding\": {\"text\": {\"field\": \"value\", \"type\": \"quantitative\", \"format\": \",.0f\"}, \"color\": {\"condition\": {\"test\": \"datum.change >= 0\", \"value\": \"#118DFF\"}, \"value\": \"#E66C37\"}, \"y\": {\"value\": 90}}}, {\"mark\": {\"type\": \"text\", \"fontSize\": 14, \"align\": \"center\"}, \"encoding\": {\"text\": {\"value\": \"Order Lines vs PY\"}, \"color\": {\"value\": \"#666666\"}, \"y\": {\"value\": 30}}}, {\"mark\": {\"type\": \"text\", \"fontSize\": 16, \"align\": \"center\"}, \"encoding\": {\"text\": {\"field\": \"change\", \"type\": \"quantitative\", \"format\": \"+.1%\"}, \"color\": {\"condition\": {\"test\": \"datum.change >= 0\", \"value\": \"#118DFF\"}, \"value\": \"#E66C37\"}, \"y\": {\"value\": 140}}}]}'"
+                  "Value": "'{\"data\": {\"name\": \"dataset\"},\"transform\": [{\"calculate\": \"datum[\\\"Order Lines\\\"]\",\"as\": \"value\"},{\"calculate\": \"datum[\\\"Order Lines (PY)\\\"]\",\"as\": \"target\"},{\"calculate\": \"(datum.value - datum.target) / datum.target\",\"as\": \"change\"}],\"layer\": [{\"mark\": {\"type\": \"text\",\"fontSize\": 48,\"fontWeight\": \"bold\",\"align\": \"center\"},\"encoding\": {\"text\": {\"field\": \"value\",\"type\": \"quantitative\",\"format\": \",.0f\"},\"color\": {\"condition\": {\"test\": \"datum.change >= 0\",\"value\": \"#118DFF\"},\"value\": \"#E66C37\"},\"y\": {\"value\": 90}}},{\"mark\": {\"type\": \"text\",\"fontSize\": 14,\"align\": \"center\"},\"encoding\": {\"text\": {\"value\": \"Order Lines vs PY\"},\"color\": {\"value\": \"#666666\"},\"y\": {\"value\": 30}}},{\"mark\": {\"type\": \"text\",\"fontSize\": 16,\"align\": \"center\"},\"encoding\": {\"text\": {\"field\": \"change\",\"type\": \"quantitative\",\"format\": \"+.1%\"},\"color\": {\"condition\": {\"test\": \"datum.change >= 0\",\"value\": \"#118DFF\"},\"value\": \"#E66C37\"},\"y\": {\"value\": 140}}}]}'"
                 }
               }
             },
@@ -75,14 +75,7 @@
             "jsonConfig": {
               "expr": {
                 "Literal": {
-                  "Value": "'{\"autosize\":{\"type\":\"fit\",\"contains\":\"padding\"},\"view\":{\"stroke\":\"transparent\"},\"font\":\"Segoe UI\"}'"
-                }
-              }
-            },
-            "isNewDialogOpen": {
-              "expr": {
-                "Literal": {
-                  "Value": "false"
+                  "Value": "'{\"autosize\": {\"type\": \"fit\",\"contains\": \"padding\"},\"view\": {\"stroke\": \"transparent\"},\"font\": \"Segoe UI\",\"axis\": {\"ticks\": false,\"grid\": false,\"domain\": false,\"labelFontSize\": 11,\"titleFontSize\": 12},\"axisQuantitative\": {\"tickCount\": 5,\"grid\": true,\"gridColor\": \"#E8E8E8\",\"gridDash\": [2,4]},\"legend\": {\"orient\": \"top\",\"labelFontSize\": 11},\"title\": {\"fontSize\": 14,\"font\": \"Segoe UI Semibold\",\"anchor\": \"start\"}}'"
                 }
               }
             },
@@ -96,14 +89,14 @@
             "enableHighlight": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
+                  "Value": "false"
                 }
               }
             },
             "enableSelection": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
+                  "Value": "false"
                 }
               }
             },
@@ -124,7 +117,7 @@
             "version": {
               "expr": {
                 "Literal": {
-                  "Value": "'5.20.1'"
+                  "Value": "'6.4.3'"
                 }
               }
             }

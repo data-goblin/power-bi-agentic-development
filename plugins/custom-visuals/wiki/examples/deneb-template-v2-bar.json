@@ -1,0 +1,35 @@
+{
+  "usermeta": {
+    "deneb": {
+      "build": "2.0.1.0",
+      "metaVersion": 2,
+      "provider": "vegaLite",
+      "providerVersion": "6.4.3"
+    },
+    "information": {
+      "name": "Horizontal bar",
+      "description": "One category column against one measure.",
+      "author": "Example",
+      "uuid": "9a1f3c52-6d5e-4b0a-8f4e-2c7d1b3a5e60",
+      "generated": "2026-11-23T00:00:00.000Z"
+    },
+    "datasets": {
+      "dataset": [
+        {"key": "__dataset.0__", "name": "Category", "kind": "column", "type": "text"},
+        {"key": "__dataset.1__", "name": "Value", "kind": "measure", "type": "numeric"}
+      ]
+    },
+    "interactivity": {
+      "tooltip": true,
+      "contextMenu": true,
+      "selection": false,
+      "dataPointLimit": 50
+    }
+  },
+  "data": {"name": "dataset"},
+  "mark": {"type": "bar", "tooltip": true},
+  "encoding": {
+    "y": {"field": "__dataset.0__", "type": "nominal", "sort": "-x"},
+    "x": {"field": "__dataset.1__", "type": "quantitative"}
+  }
+}

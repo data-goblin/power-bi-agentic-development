@@ -1,223 +1,42 @@
 ---
 name: deneb-visuals
-description: Deneb visual creation, Vega/Vega-Lite spec authoring, and Deneb best practices for PBIR reports. Automatically invoke whenever the user mentions "Deneb" in any context, or asks about Vega/Vega-Lite specs in Power BI, Deneb cross-filtering, Deneb interactivity, pbiColor theme integration, Deneb field name escaping, or Deneb rendering issues.
+description: Authors and edits Deneb (Vega and Vega-Lite) visuals in PBIR reports, including Deneb 2.0 changes, field names, theme colors, cross-filtering and importing community templates. Use for "Deneb", "Vega-Lite in Power BI", "Vega spec in a report", jsonSpec, pbiColor, denebContainer, __selected__, or a visual whose visualType starts with deneb. Not for SVG measures, script visuals or pbiviz custom visuals.
 ---
 
-# Deneb Visuals in Power BI (PBIR)
+# Deneb visuals (PBIR)
 
-> **Use `pbir` for every report mutation.** Read PBIR metadata only for diagnosis. If `pbir` is
-> unavailable or lacks an operation, stop and report the gap; never edit report JSON directly.
+## Rules
 
-Deneb is a certified custom visual for Power BI that enables Vega and Vega-Lite declarative visualization specs directly inside reports. Author specs using this skill.
+- Identity: `visualType` `deneb7E15AEF80B9E4D4F8E12924291ECE89A`; one data role `dataset` (columns and measures); Deneb 2.0.1 (2026-10-18) bundles Vega 6.4.0 and Vega-Lite 6.4.3
+- Prefer Vega-Lite. Use Vega only for signals, event streams, force or voronoi layouts and advanced cross-filtering (Vega-only)
+- The spec reads `"data": {"name": "dataset"}` in Vega-Lite and `"data": [{"name": "dataset"}]` in Vega. No `data.url`, no `data.values`, no `usermeta`, no root `$schema` (2.0 warns on it)
+- Sizing signals are `denebContainer.width` and `denebContainer.height`; `pbiContainerWidth` and `pbiContainerHeight` are deprecated
+- Row limit: 30,000 initial rows; override loads more but is not guaranteed for PDF or PowerPoint export. Aggregate in DAX first
+- Field names in the spec are the display names of the bound fields. Spaces stay; `. [ ] \ "` become `_`.
+- Removed in 1.9: `__identity__` and `__key__`; use `__row__`
+- Theme: `pbiColor(index, shade)`, `pbiColor("negative")` (`min middle max negative neutral positive bad good`), schemes `pbiColorNominal pbiColorOrdinal pbiColorLinear pbiColorDivergent`: [theme colors](https://deneb.guide/docs/schemes)
+- Cross-filtering is off by default. With `enableSelection`, Deneb adds `__selected__` (`on`, `off`, `neutral`) to each row and the spec must encode it. Simple mode resolves up to 250 points (default 50); `selectionMode` advanced is Vega-only: [advanced cross-filtering](https://deneb.guide/docs/interactivity-selection-advanced)
+- Supporting fields (`<field>__highlight`, `__highlightStatus`, `__highlightComparator`, `__format`, `__formatted`, `__names`) are per-field switches in 2.0; they exist only when enabled
+- AppSource Deneb cannot fetch remote data; the spec may only read `dataset`
+- Deneb 2.0 changes in full: [Deneb 2.0 changes](../../wiki/deneb-2-migration.md); storage and properties: [visual.json objects](../../wiki/deneb-pbir-objects.md); templates: [template format v2](../../wiki/deneb-templates-v2.md)
 
-## Provider Policy
+## Workflow (pbir 0.9.33)
 
-**Prefer Vega-Lite** for new Deneb visuals unless specific Vega-only features are required (signals, event streams, custom projections, force/voronoi layouts). Vega-Lite is more concise, easier to maintain, and covers most chart types. For advanced Vega features, see `references/vega-patterns.md` and the [Vega documentation](https://vega.github.io/vega/docs/).
-
-## Visual Identity
-
-- **visualType:** `deneb7E15AEF80B9E4D4F8E12924291ECE89A`
-- **Bundled runtime:** Vega 6.2.0 / Vega-Lite 6.4.1 (since Deneb 1.8; use `v6.json` schema URLs)
-- **Data role:** Single `dataset` role (all fields go into one "Values" well)
-- **Default row limit:** 10,000 rows (override via `dataLimit.override`)
-- **Provider:** `vegaLite` (default) or `vega` (when Vega-specific features needed)
-- **Render modes:** `svg` (default, sharp text) or `canvas` (better for large datasets)
-
-## Custom Visual Registration (Required)
-
-Copying a working Deneb visual with `pbir cp` carries its registration. For a new visual, inspect
-`publicCustomVisuals` with `pbir get` and update the complete list through `pbir set --json`,
-preserving any existing ids. Never edit `report.json` directly.
-
-## Workflow: Creating a Deneb Visual
-
-### Step 1: Add the Visual
-
-Create the visual and bindings through `pbir`:
+pbir 0.9.33 has no command to create a Deneb visual, register it in `publicCustomVisuals`, or set `vega.*` properties. Copy a Deneb visual that is already in a report (`pbir cp "A.Report/P.Page/V.Visual" "B.Report/P.Page/New.Visual"` also copies the registration), or copy [examples/visual/kpi-card.json](examples/visual/kpi-card.json) into the page's `visuals/<name>/visual.json` and add the `visualType` to `publicCustomVisuals` in `report.json`. Everything else goes through pbir:
 
 ```bash
-pbir add visual deneb7E15AEF80B9E4D4F8E12924291ECE89A \
-  "Report.Report/Page.Page" --name RevenueByCategoryDeneb
-pbir visuals bind "Report.Report/Page.Page/RevenueByCategoryDeneb.Visual" \
-  --add "dataset:Sales.Category" --type Column
-pbir visuals bind "Report.Report/Page.Page/RevenueByCategoryDeneb.Visual" \
-  --add "dataset:Sales.Revenue" --type Measure
+pbir visuals bind "R.Report/P.Page/Rev.Visual" --add "dataset:Product.Category" --type Column
+pbir visuals bind "R.Report/P.Page/Rev.Visual" --add "dataset:Sales.Revenue" --type Measure
+pbir visuals deneb "R.Report/P.Page/Rev.Visual" --spec-file chart.vl.json --provider vegaLite --config-file examples/standard-config.json
+pbir validate "R.Report" --all
 ```
 
-All fields bind to the single `dataset` role. Use `Table.Column` for columns and `Table.Measure` for measures. Field names in bindings must match those used in the Vega/Vega-Lite spec.
+- Name spec files `*.vl.json` (Vega-Lite) or `*.vega.json` (Vega): the plugin's PostToolUse hook lints those for the rules above and prints what it cannot check
+- `pbir visuals deneb` in 0.9.33 does not double single quotes when it writes the literal: use `datum["Order Lines"]` and no single-quoted strings in specs
+- `enableSelection`, `enableHighlight`, `selectionMode` and `renderMode` have no pbir command in 0.9.33: edit the `visual.objects.vega[0].properties` literals by hand (`"enableSelection": {"expr": {"Literal": {"Value": "true"}}}`; integers end in `D`), then run `pbir validate`
+- Examples that a tool accepted: [kpi-card visual](examples/visual/kpi-card.json), [Vega bar spec](examples/spec/vega/bar-chart.json), [Vega-Lite KPI spec](examples/spec/vega-lite/kpi-card.json), [standard config](examples/standard-config.json)
+- The `deneb-reviewer` agent ships with the reports plugin, not this one; without it, rely on the hook and `pbir validate`
 
-### Step 2: Write the Spec
+## Importing a community template
 
-Create a Vega-Lite (or Vega) JSON spec file. Key difference:
-
-- **Vega-Lite:** `"data": {"name": "dataset"}` (object)
-- **Vega:** `"data": [{"name": "dataset"}]` (array)
-
-```json
-{
-  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
-  "data": {"name": "dataset"},
-  "mark": {"type": "bar", "tooltip": true},
-  "encoding": {
-    "y": {"field": "Category", "type": "nominal"},
-    "x": {"field": "Value", "type": "quantitative"}
-  }
-}
-```
-
-See `examples/spec/` for complete spec files (Vega and Vega-Lite) and `examples/visual/` for full PBIR visual.json files. Field names in the spec must match the `nativeQueryRef` (display name) from the field bindings.
-
-### Step 3: Inject the Spec
-
-```bash
-pbir visuals deneb "Report.Report/Page.Page/RevenueByCategoryDeneb.Visual" \
-  --spec-file chart.vl.json --provider vegaLite
-```
-
-The CLI handles PBIR encoding. Keep ordinary Vega or Vega-Lite JSON in the spec file.
-
-### Step 3b: Review
-
-Before presenting the spec to the user, dispatch the `deneb-reviewer` agent to validate syntax and provide design feedback.
-
-### Step 4: Validate
-
-```bash
-pbir visuals bind "Report.Report/Page.Page/RevenueByCategoryDeneb.Visual" --show
-pbir validate "Report.Report" --all
-```
-
-## Spec Authoring Rules
-
-### Data Binding
-
-- Vega: `"data": [{"name": "dataset"}]` (array form)
-- Vega-Lite: `"data": {"name": "dataset"}` (object form)
-- Fields reference display names. Special characters (`.`, `[`, `]`, `\`, `"`) become `_`
-- Spaces are NOT replaced -- field names keep their spaces (e.g., `"Order Lines"`)
-
-### Field Name Escaping in Expressions (Critical)
-
-Escaping depends on whether the spec is standalone or injected into a PBIR visual.json:
-
-**Standalone spec files** (in `examples/spec/`): use double quotes with JSON escaping:
-
-```json
-{"calculate": "datum[\"Order Lines\"] - datum[\"Order Lines (PY)\"]", "as": "diff"}
-```
-
-**Inside PBIR visual.json** (in `examples/visual/`): the entire spec is a single-quoted DAX literal string. Field names with spaces use doubled single quotes (`''`):
-
-```
-datum[''Order Lines''] - datum[''Order Lines (PY)'']
-```
-
-Single quotes that are NOT part of field name escaping (e.g., string literals in filter expressions like `datum.Series == 'Actuals'`) work as-is because they don't conflict with the outer single-quote wrapper.
-
-### Responsive Sizing (Vega)
-
-Use Deneb's built-in signals for responsive container sizing:
-
-```json
-"width": {"signal": "pbiContainerWidth - 25"},
-"height": {"signal": "pbiContainerHeight - 27"}
-```
-
-The offsets account for padding. For absolute positioning of text marks, use `{"signal": "width"}` instead of hardcoded pixel values.
-
-### Config (Separate from Spec)
-
-Always provide a config file for consistent styling. See the Standard Config section in `references/vega-patterns.md`. Key settings: `autosize: fit`, `view.stroke: transparent`, `font: Segoe UI`.
-
-## Theme Integration
-
-Use Power BI theme colors instead of hardcoded hex values:
-
-| Function/Scheme | Purpose | Usage in Vega |
-|-----------------|---------|---------------|
-| `pbiColor(index)` | Theme color by index (0-based) | `{"signal": "pbiColor(0)"}` |
-| `pbiColor(0, -0.3)` | Darken theme color by 30% | Shade: -1 (dark) to 1 (light) |
-| `pbiColor("negative")` | Sentiment colors | `"min"`, `"middle"`, `"max"`, `"negative"`, `"positive"` |
-| `pbiColor("bad")` | Aliases for sentiment | `"bad"` = `"negative"`, `"good"` = `"positive"`, `"neutral"` = `"middle"` |
-| `pbiColorNominal` | Categorical palette (distinct) | `"range": {"scheme": "pbiColorNominal"}` |
-| `pbiColorOrdinal` | Ordinal palette (ordered categories) | `"range": {"scheme": "pbiColorOrdinal"}` |
-| `pbiColorLinear` | Continuous gradient | `"range": {"scheme": "pbiColorLinear"}` |
-| `pbiColorDivergent` | Divergent gradient | `"range": {"scheme": "pbiColorDivergent"}` |
-
-## Interactivity
-
-Enable interactivity via the `vega` objects in visual.json:
-
-| Feature | Property | Default | Notes |
-|---------|----------|---------|-------|
-| Tooltips | `enableTooltips` | `true` | Use `"tooltip": {"signal": "datum"}` in encode |
-| Context menu | `enableContextMenu` | `true` | Right-click drill-through |
-| Cross-filtering | `enableSelection` | `false` | Requires `__selected__` handling |
-| Cross-highlighting | `enableHighlight` | `false` | Creates `<field>__highlight` fields |
-
-### Cross-Filtering
-
-When `enableSelection` is true, handle `__selected__` (`"on"`, `"off"`, `"neutral"`) in encode blocks. Selection modes: `simple` (auto-resolves, up to 250 data points) or `advanced` (Vega only; required for brush/lasso/region selection, supports up to 2500 via `options.limit`, exposes `pbiCrossFilterApply` and `pbiCrossFilterClear` signals). See `references/vega-patterns.md` for the simple pattern and `references/advanced-patterns.md` for the advanced signal API.
-
-### Cross-Highlighting
-
-Use layered marks -- background at reduced opacity, foreground shows `<field>__highlight` values. See `references/vega-patterns.md` for details.
-
-### Special Runtime Fields
-
-Deneb injects runtime fields into each dataset row. See `references/capabilities.md` for the full table.
-
-Key fields: `__row__` (zero-based row index, replaces removed `__identity__`), `__selected__` (selection state), `<field>__highlight` + `<field>__highlightStatus` + `<field>__highlightComparator` (cross-highlighting), `<field>__formatted` (pre-formatted value string), `<field>__format` (Power BI format string).
-
-> **Breaking change in 1.9:** `__identity__` and `__key__` were removed. Replace any `datum.__identity__` with `datum.__row__`.
-
-## Best Practices
-
-1. **Use Vega-Lite** for new visuals unless Vega-specific features are needed (signals, events, force layouts)
-2. **Always use `autosize: fit`** in config for responsive Power BI sizing
-3. **Use `pbiContainerWidth`/`pbiContainerHeight`** signals for responsive Vega specs
-4. **Use theme colors** (`pbiColor`, `pbiColorNominal`) instead of hex values
-5. **Use `enter`/`update`/`hover`** encode blocks for clean state management (Vega only)
-6. **Enable tooltips** with `"tooltip": {"signal": "datum"}` on marks
-7. **Performance** -- aggregate in DAX first, prefer `renderMode: canvas` for many marks, and only then raise `dataLimit.override`. See `references/advanced-patterns.md` for the full lever order
-8. **Test field names** -- verify `nativeQueryRef` matches spec field references
-9. **Avoid external data** -- AppSource certification prevents loading external URLs
-10. **Escaping depends on context** -- double quotes in standalone specs, doubled single quotes in PBIR visual.json (see escaping rules above)
-
-## When to Use Deneb
-
-Deneb is the preferred choice for **advanced custom visuals** that need interactivity (cross-filtering, tooltips, hover effects) and go beyond what native Power BI visuals offer. Use Deneb when you need:
-
-- Custom chart types not available natively (bullet charts, beeswarms, sankeys, etc.)
-- Fine-grained control over visual encoding, animation, and interactivity
-- Vector-based rendering (crisp at any size)
-
-**Use SVG measures instead** for simple inline graphics in tables/cards (sparklines, data bars, progress bars) where interactivity is not needed. **Use Python/R instead** for statistical visualizations (distribution analysis, regression, correlation) where the focus is analytical rigor over interactivity.
-
-## References
-
-- **`references/community-examples.md`** -- 170+ community templates organized by chart type, with author citations and direct links
-- **`references/vega-patterns.md`** -- Vega chart patterns (bar, line, scatter, donut, stacked, heatmap, area, lollipop, bullet, KPI card), standard config, transforms and scales reference
-- **`references/vega-lite-patterns.md`** -- Vega-Lite chart patterns (for editing existing Vega-Lite visuals only)
-- **`references/pbir-structure.md`** -- PBIR JSON structure (literal encoding, query state, interactivity example)
-- **`references/capabilities.md`** -- Full Deneb object properties reference and template format (`usermeta` schema)
-- **`references/advanced-patterns.md`** -- Advanced cross-filtering signals (Vega `pbiCrossFilterApply`/`pbiCrossFilterClear`), performance engineering lever order, and community template round-trip from the terminal
-- **`examples/visual/bullet-chart.json`** -- PBIR visual.json: faceted bullet chart with conditional indicators and cross-filtering (Vega-Lite)
-- **`examples/visual/kpi-card.json`** -- PBIR visual.json: KPI card with layered text and conditional % change coloring (Vega-Lite)
-- **`examples/visual/trend-line.json`** -- PBIR visual.json: dual-series line chart with fold transform and color/legend mapping (Vega-Lite)
-- **`examples/visual/ytd-comparison.json`** -- PBIR visual.json: YTD vs target with dashed lines, endpoint labels, number formatting, and rank-based filtering (Vega-Lite)
-- **`examples/spec/vega/`** -- Standalone Vega spec files (bar-chart, line-chart) -- ready to inject into visual.json after escaping
-- **`examples/spec/vega-lite/`** -- Standalone Vega-Lite spec files (bullet-chart, kpi-card) -- ready to inject after escaping
-- **`examples/standard-config.json`** -- Standard config for all Deneb specs
-
-## Fetching Docs
-
-To retrieve current Power BI custom visual docs, search https://learn.microsoft.com and fetch the relevant pages. Search based on the user's request and run multiple searches as needed to ensure sufficient context before proceeding. Note: Vega/Vega-Lite docs live at vega.github.io (not MS Learn) -- use `WebFetch` for those.
-
-## Related Skills
-
-- **`pbir-format`** (pbip plugin) -- PBIR JSON format reference
-- **`pbi-report-design`** -- Layout and design best practices
-- **`r-visuals`** -- R Script visuals (ggplot2)
-- **`python-visuals`** -- Python Script visuals (matplotlib)
-- **`svg-visuals`** -- SVG via DAX measures (lightweight inline graphics)
+Templates are mostly format v1 and predate 2.0; read the [v2 page](../../wiki/deneb-templates-v2.md) for the terminal steps and [repositories](../../wiki/deneb-community-templates.md) for sources.

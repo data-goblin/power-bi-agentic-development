@@ -1,0 +1,3 @@
+# Toggles for the custom-visuals lint hook.
+# Master kill-switch: set false to disable the hook.
+all_hooks_enabled: true
