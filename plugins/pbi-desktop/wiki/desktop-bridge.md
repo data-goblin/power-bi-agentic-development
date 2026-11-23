@@ -5,6 +5,7 @@ kind: reference
 status: current
 sources:
   - url: https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-overview
+  - url: https://pypi.org/project/pbir-cli/0.9.33/
 tools:
   pbir: 0.9.32
 last_updated: 2026-11-23
@@ -12,6 +13,7 @@ last_verified: 2026-11-23
 review_cadence_days: 60
 verified_by:
   - pbir desktop refresh --help
+  - pbir desktop --help
 skills: [pbi-desktop/connect-pbid]
 ---
 
@@ -31,7 +33,7 @@ pbir desktop screenshot "Report.Report" --all
 
 - `-m` re-applies on-disk TMDL edits to the open model. Older notes said a TMDL edit needs closing Desktop; that is wrong for current builds. There is no report-only or model-only switch: the report is always reloaded
 - Target a specific instance with `--pid`; `--wait-seconds` retries while an instance is still loading
-- If the instance has unsaved changes, Desktop saves first and may overwrite the on-disk edit. Theme files under `StaticResources` did not hot-reload in earlier notes (Unverified on current builds)
+- If the instance has unsaved changes, Desktop saves first and may overwrite the on-disk edit. Theme files under `StaticResources` are not picked up by a reload: pbir prints "Theme changes aren't applied by reload; close and reopen the report in Power BI Desktop to pick up theme edits"
 - Visual and page edits belong to `pbir-cli`; the bridge reloads and captures only
 
 ## The pipe (only when pbir is not installed)
@@ -39,7 +41,7 @@ pbir desktop screenshot "Report.Report" --all
 ```yaml
 pipe: \\.\pipe\pbi-desktop-bridge-<PID>   # one per PBIDesktop.exe; list with [System.IO.Directory]::GetFiles("\\.\pipe\")
 protocol: JSON-RPC 2.0, LSP Content-Length framing, no handshake
-methods (from pbir desktop, Unverified as a stable contract):
+methods (as implemented in the pbir 0.9.33 Desktop bridge client; the bridge is a Desktop preview feature, so the set can change):
   bridge.manifest: capability manifest, call first
   application.state.get/v1: { currentFilePath, hasUnsavedChanges }
   file.reload/v1: { reloadModelDefinition: bool } -> { success }

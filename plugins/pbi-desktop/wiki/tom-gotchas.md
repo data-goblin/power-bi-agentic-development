@@ -21,7 +21,7 @@ For ordinary CRUD, prefer `te --local` (Windows): `te add`, `te set`, `te valida
 ## Packages
 
 - `Microsoft.AnalysisServices.retail.amd64` and `...AdomdClient.retail.amd64` stopped at 19.84.1 (DLLs under `lib\net45`). They lack types for newer metadata (`Function`, calendars) and compatibility level 1702
-- `Microsoft.AnalysisServices` and `Microsoft.AnalysisServices.AdomdClient` are current (19.120.1 checked 2026-11-23): `lib\net472` for Windows PowerShell 5.1, `lib\net8.0` for PowerShell 7. The Tabular package depends on Microsoft.Identity.Client; install with `nuget install <id> -OutputDirectory <dir>` so dependencies land beside it. Loading these under PowerShell is Unverified here
+- `Microsoft.AnalysisServices` and `Microsoft.AnalysisServices.AdomdClient` are current (19.120.1 checked 2026-11-23): `lib\net472` for Windows PowerShell 5.1, `lib\net8.0` for PowerShell 7. The Tabular package depends on Microsoft.Identity.Client; install with `nuget install <id> -OutputDirectory <dir>` so dependencies land beside it
 
 ## Model behaviour
 
