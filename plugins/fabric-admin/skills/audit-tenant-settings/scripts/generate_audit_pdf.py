@@ -2,8 +2,8 @@
 # /// script
 # requires-python = ">=3.10"
 # dependencies = [
-#   "reportlab>=4.0",
-#   "pyyaml>=6.0",
+#   "reportlab==5.1.0",
+#   "pyyaml==6.0.3",
 # ]
 # ///
 """Render a clean PDF summary of a Fabric tenant settings audit.

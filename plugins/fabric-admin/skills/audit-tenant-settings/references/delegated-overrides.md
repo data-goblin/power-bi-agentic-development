@@ -10,7 +10,7 @@ fab api "admin/domains/delegatedTenantSettingOverrides"
 fab api "admin/workspaces/delegatedTenantSettingOverrides"
 ```
 
-The capacity response ships both `overrides` and `value` arrays (legacy + current schema); domain and workspace ship only `value`. All three page via `continuationUri` / `continuationToken`; stream results for large tenants instead of materialising them all in memory.
+All three tenant-wide endpoints return 200 on the Fabric audience (checked 2026-11-23). The capacity response ships both `overrides` and `value` arrays (legacy + current schema); domain and workspace ship only `value`. All three page via `continuationUri` / `continuationToken`; stream results for large tenants instead of materialising them all in memory.
 
 ## Scoped enumeration
 
@@ -21,24 +21,22 @@ Only `capacity` has a per-id endpoint. Per-domain and per-workspace variants ret
 fab api "admin/capacities/{capacityId}/delegatedTenantSettingOverrides"
 
 # Per-domain (filter the tenant-wide list)
-fab api "admin/domains/delegatedTenantSettingOverrides" \
-  -q "text.value[?id=='{domainId}']"
+fab api "admin/domains/delegatedTenantSettingOverrides" -q "text.value[?id=='{domainId}']"
 
 # Per-workspace (filter the tenant-wide list)
-fab api "admin/workspaces/delegatedTenantSettingOverrides" \
-  -q "text.value[?id=='{workspaceId}']"
+fab api "admin/workspaces/delegatedTenantSettingOverrides" -q "text.value[?id=='{workspaceId}']"
 ```
 
 ## Classification
 
 Tag each override as one of the following before reporting. Never silently omit a compliant override; the user still needs to see effective posture at every scope.
 
-| Tag | Meaning |
-|---|---|
-| `drift-vs-tenant` | Override differs from the tenant-wide posture. The intended case for overrides, but still worth surfacing so the admin sees where scope behavior diverges. |
-| `drift-vs-recommended` | Override differs from the recommended posture in the curated baseline. Treat with the same severity as a tenant-wide drift for the same setting. |
-| `high-risk` | The parent setting has `risk: high` in the metadata, regardless of direction. Surface these at the top of the overrides section. |
-| `orphan` | Override exists for a setting whose parent does NOT delegate. It may not be taking effect but is worth cleaning up. |
+```yaml
+drift-vs-tenant: override differs from the tenant-wide posture (the intended use of overrides, still worth showing)
+drift-vs-recommended: override differs from the curated recommendation; same severity as tenant-wide drift
+high-risk: the parent setting has risk high in the metadata, in either direction; list first
+orphan: the parent does not delegate, so the override may have no effect; flag for cleanup
+```
 
 ## Rendering in audit output
 
