@@ -11,7 +11,7 @@ sources:
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/admin/apps-get-app-users-as-admin
   - url: https://microsoft.github.io/fabric-cli/release-notes/
 tools:
-  fab: 1.7.0
+  fab: 1.9.0
 last_updated: 2026-11-23
 last_verified: 2026-11-23
 review_cadence_days: 90
@@ -31,7 +31,7 @@ workspace app (legacy Power BI app): one per workspace; versioned snapshot; publ
 
 ## Tool reach
 
-- Org app item API (Fabric audience, default `fab api`): create, get, list, update, delete, get and update definition, for example `fab api "workspaces/<ws-id>/orgApps"` (path from the Learn List Org Apps page). fab 1.7.0 defines the `OrgApp` type, but the release notes add OrgApp item support in 1.9.0 ([release notes](https://microsoft.github.io/fabric-cli/release-notes/)), so use REST on 1.7.0.
+- Org app item API (Fabric audience, default `fab api`): create, get, list, update, delete, get and update definition, for example `fab api "workspaces/<ws-id>/orgApps"` (path from the Learn List Org Apps page). fab 1.9.0 also has `OrgApp` and `OrgAppAudience` item types (added in 1.9.0 per the [release notes](https://microsoft.github.io/fabric-cli/release-notes/)): `fab desc .OrgApp` lists `get`, `set`, `mkdir`, `rm`, `cp`, `mv`, `export`, `import` and `acl`, and `.OrgAppAudience` has no `mkdir`. Use the item path for those; use REST for the rest. On fab older than 1.9.0 use REST only.
 - Workspace app API (`-A powerbi`): read-only. `apps`, `apps/<id>`, `apps/<id>/reports`, `apps/<id>/dashboards`, `apps/<id>/dashboards/<id>/tiles`. No create, publish, update, delete or audience endpoints.
 - Admin: `admin/apps` requires `$top` (error without it); `admin/apps/<id>/users` lists users. Both need `Tenant.Read.All` and allow 200 requests per hour ([Get Apps As Admin](https://learn.microsoft.com/en-us/rest/api/power-bi/admin/apps-get-apps-as-admin), [Get App Users As Admin](https://learn.microsoft.com/en-us/rest/api/power-bi/admin/apps-get-app-users-as-admin)).
 - User-scoped workspace app endpoints do not support service principals; admin endpoints do.

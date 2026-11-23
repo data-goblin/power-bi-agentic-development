@@ -70,3 +70,14 @@ One line per check: `YYYY-MM-DD <page> <what was checked against what>`.
 2026-11-23 plugins/fabric-cli/wiki/tags.md tag caps against Learn tags-overview; unsourced cap error behaviour dropped; fab api -i file path against fab docs
 2026-11-23 plugins/fabric-cli/wiki/workspaces.md fab assign F SKU rule from fab 1.7.0 source, Spark settings commands from fab docs; XMLA SKU claim and 202 handling claim dropped
 2026-11-23 plugins/etl/wiki/livy-api.md Code.AccessStorage.All requirement and Runtime 2.0 versions against Learn; cold start and runtime library notes dropped
+2026-11-23 plugins/fabric-cli/wiki/workspaces.md non-F SKU capacity rejection re-read in the fab 1.9.0 source; tools bumped to fab 1.9.0
+2026-11-23 plugins/fabric-cli/wiki/folders.md fab desc .Folder command list checked on 1.9.0; tools bumped to fab 1.9.0
+2026-11-23 plugins/fabric-cli/wiki/connections.md fab mkdir connection parameter keys re-read in the fab 1.9.0 source; tools bumped to fab 1.9.0
+2026-11-23 plugins/fabric-cli/wiki/tags.md no tag command in fab 1.9.0 help; tools bumped to fab 1.9.0
+2026-11-23 plugins/fabric-cli/wiki/org-apps.md OrgApp and OrgAppAudience item types checked with fab desc on 1.9.0; tools bumped to fab 1.9.0
+2026-11-23 plugins/fabric-cli/wiki/gateways.md fab desc .Gateway command list checked on 1.9.0; tools bumped to fab 1.9.0
+2026-11-23 plugins/fabric-cli/wiki/dashboards.md fab commands checked against 1.9.0 help; tools bumped to fab 1.9.0
+2026-11-23 plugins/fabric-cli/wiki/dataflows.md fab commands checked against 1.9.0 help; tools bumped to fab 1.9.0
+2026-11-23 plugins/fabric-cli/wiki/paginated-reports.md fab commands checked against 1.9.0 help; tools bumped to fab 1.9.0
+2026-11-23 plugins/fabric-cli/wiki/scorecards.md fab commands checked against 1.9.0 help; tools bumped to fab 1.9.0
+2026-11-23 plugins/etl/wiki/livy-api.md fab commands checked against 1.9.0 help; tools bumped to fab 1.9.0

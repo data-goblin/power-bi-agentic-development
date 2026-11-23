@@ -9,7 +9,7 @@ sources:
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/imports/post-import-in-group
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/reports/get-export-to-file-status-in-group
 tools:
-  fab: 1.7.0
+  fab: 1.9.0
 last_updated: 2026-11-23
 last_verified: 2026-11-23
 review_cadence_days: 90

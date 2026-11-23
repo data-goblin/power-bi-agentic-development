@@ -9,7 +9,7 @@ sources:
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/goals-status-rules%28preview%29/post
   - url: https://learn.microsoft.com/en-us/power-bi/create-reports/service-goals-introduction
 tools:
-  fab: 1.7.0
+  fab: 1.9.0
 last_updated: 2026-11-23
 last_verified: 2026-11-23
 review_cadence_days: 90

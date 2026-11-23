@@ -10,7 +10,7 @@ sources:
   - url: https://learn.microsoft.com/en-us/fabric/data-engineering/high-concurrency-livy
   - url: https://learn.microsoft.com/en-us/fabric/data-engineering/runtime-2-0
 tools:
-  fab: 1.7.0
+  fab: 1.9.0
 last_updated: 2026-11-23
 last_verified: 2026-11-23
 review_cadence_days: 90

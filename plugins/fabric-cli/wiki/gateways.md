@@ -10,7 +10,7 @@ sources:
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/gateways/update-datasource
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/gateways/get-datasource-status
 tools:
-  fab: 1.7.0
+  fab: 1.9.0
 last_updated: 2026-11-23
 last_verified: 2026-11-23
 review_cadence_days: 90
@@ -21,7 +21,7 @@ skills: [fabric-cli/fabric-cli]
 
 Learn: [Gateways REST API](https://learn.microsoft.com/en-us/rest/api/power-bi/gateways), [Datasets Bind To Gateway](https://learn.microsoft.com/en-us/rest/api/power-bi/datasets/bind-to-gateway), [VNet data gateway](https://learn.microsoft.com/en-us/data-integration/vnet/overview). Credential encryption samples: [PowerBI-Developer-Samples](https://github.com/microsoft/PowerBI-Developer-Samples).
 
-fab has no gateway command except `fab acl`. Every datasource call goes through `fab api -A powerbi`.
+fab reaches gateways through the `.gateways` path (`fab desc .Gateway` lists `ls`, `get`, `mkdir`, `set`, `rm` and `acl`), but has no datasource commands. Every datasource call goes through `fab api -A powerbi`.
 
 ## What can be managed
 

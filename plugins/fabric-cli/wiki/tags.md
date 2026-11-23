@@ -10,7 +10,7 @@ sources:
   - url: https://learn.microsoft.com/en-us/fabric/governance/tags-overview
   - url: https://microsoft.github.io/fabric-cli/commands/api/
 tools:
-  fab: 1.7.0
+  fab: 1.9.0
 last_updated: 2026-11-23
 last_verified: 2026-11-23
 review_cadence_days: 90
@@ -21,7 +21,7 @@ skills: [fabric-cli/fabric-cli]
 
 Learn: [Core Tags (apply, unapply, list)](https://learn.microsoft.com/en-us/rest/api/fabric/core/tags), [Admin Tags (create, update, delete, list)](https://learn.microsoft.com/en-us/rest/api/fabric/admin/tags), [Bulk Create Tags](https://learn.microsoft.com/en-us/rest/api/fabric/admin/tags/bulk-create-tags).
 
-fab 1.7.0 has no tag command; everything goes through `fab api` on the default Fabric audience.
+fab 1.9.0 has no tag command (`fab --help` lists none); everything goes through `fab api` on the default Fabric audience.
 
 ## Endpoints
 
@@ -35,7 +35,7 @@ apply or unapply on an item: POST workspaces/<ws>/items/<item>/applyTags and una
 apply or unapply on a workspace: POST workspaces/<ws>/applyTags and unapplyTags
 ```
 
-## Verified traps (fab 1.7.0, default interactive login)
+## Verified traps (observed on fab 1.7.0, default interactive login)
 
 - `fab api tags` returns status 403 with `errorCode` `InsufficientScopes`; use `admin/tags` as a Fabric admin.
 - `fab api "/v1/admin/tags"` returns 404: fab adds `/v1/` itself, so write `admin/tags`.

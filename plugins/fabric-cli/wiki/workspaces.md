@@ -11,7 +11,7 @@ sources:
   - url: https://microsoft.github.io/fabric-cli/examples/workspace_examples/
   - url: https://github.com/microsoft/fabric-cli
 tools:
-  fab: 1.7.0
+  fab: 1.9.0
 last_updated: 2026-11-23
 last_verified: 2026-11-23
 review_cadence_days: 90
@@ -32,7 +32,7 @@ fab get "Quarterly.Workspace" -q sparkSettings
 ```
 
 - `capacityName` is the only creation parameter the earlier notes found; `capacityname=none` creates it without a capacity. Every other setting is changed after creation with `fab set`, `fab assign` or REST. Do not run `fab mkdir ... -P` with no value to list parameters: it attempts the create.
-- `fab get ws.Workspace -q "."` dumps these top-level fields (observed on 1.7.0): `id`, `displayName`, `description`, `type`, `capacityId`, `capacityRegion`, `oneLakeEndpoints`, `capacityAssignmentProgress`, `licensingInfo`, `managedPrivateEndpoints`, `sparkSettings`.
+- `fab get ws.Workspace -q "."` dumps these top-level fields (observed on fab 1.7.0; the release notes up to 1.9.0 do not mention a change): `id`, `displayName`, `description`, `type`, `capacityId`, `capacityRegion`, `oneLakeEndpoints`, `capacityAssignmentProgress`, `licensingInfo`, `managedPrivateEndpoints`, `sparkSettings`.
 - Writable through `fab set -q <path> -i <value>`: `displayName` (renames in place, id stays), `description`, `sparkSettings.environment.runtimeVersion`, `sparkSettings.pool.defaultPool`. `capacityId` and `roleAssignments` change through `fab assign` and `fab acl`.
 - `fab acl set -I` takes an Entra objectId; roles are `Admin`, `Member`, `Contributor`, `Viewer`.
 - `fab rm "ws.Workspace" -f` deletes the workspace and all its items, and tenant item recovery does not cover a workspace; treat it as permanent.
@@ -40,7 +40,7 @@ fab get "Quarterly.Workspace" -q sparkSettings
 
 ## Capacity
 
-- `fab ls .capacities` shows only Fabric F SKU capacities. `fab assign .capacities/<Name>.Capacity -W "ws.Workspace" -f` is for F SKUs; fab 1.7.0 rejects any non-F SKU capacity path with `[Not a Fabric capacity]`, so Trial and PPU fail ([fab source](https://github.com/microsoft/fabric-cli), `fab_fs.py`).
+- `fab ls .capacities` shows only Fabric F SKU capacities. `fab assign .capacities/<Name>.Capacity -W "ws.Workspace" -f` is for F SKUs; fab rejects any non-F SKU capacity path with `[Not a Fabric capacity]` (a regex check for `F<digits>` in `fab_fs.py`, read in the 1.9.0 source), so Trial and PPU fail ([fab source](https://github.com/microsoft/fabric-cli)).
 - For Trial or PPU use the Power BI API: `fab api -A powerbi "capacities" -q "text.value[].{name:displayName, sku:sku, id:id}"`, then `fab api -A powerbi -X post "groups/$WS_ID/AssignToCapacity" -i '{"capacityId": "<capacity-id>"}'`. An all-zero capacityId unassigns. The earlier notes used `PATCH groups/<id>` with `capacityId`, but Learn's Update Group lists only `name` and `defaultDatasetStorageFormat`; use AssignToCapacity.
 - Without a capacity, XMLA and refresh fail with permission errors such as "does not have permission to call Discover".
 - A missing `-f` in a script fails with `[UnexpectedError] 22` because stdin is not a terminal.

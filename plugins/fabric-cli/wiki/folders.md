@@ -8,7 +8,7 @@ sources:
   - url: https://learn.microsoft.com/en-us/rest/api/fabric/core/items/move-item
   - url: https://learn.microsoft.com/en-us/fabric/cicd/git-integration/git-integration-process
 tools:
-  fab: 1.7.0
+  fab: 1.9.0
 last_updated: 2026-11-23
 last_verified: 2026-11-23
 review_cadence_days: 90
@@ -19,7 +19,7 @@ skills: [fabric-cli/fabric-cli]
 
 Learn: [Folders REST API](https://learn.microsoft.com/en-us/rest/api/fabric/core/folders), [Move Item](https://learn.microsoft.com/en-us/rest/api/fabric/core/items/move-item).
 
-## What fab 1.7.0 does (observed)
+## What fab does (observed on 1.7.0 unless noted)
 
 - `.Folder` is a path type: `fab get "ws.Workspace/ETL.Folder"` returns `id`, `displayName` and `workspaceId`, and `fab ls "ws.Workspace/ETL.Folder"` lists the items inside it.
 - `fab ls "ws.Workspace"` lists every item flat, including items inside folders, and does not list the folders themselves. To list folders use the API:
@@ -32,7 +32,7 @@ fab api "workspaces/$WS_ID/items" -q "text.value[].{name:displayName, folder:fol
 
 - Items without a `folderId` sit at the workspace root.
 - `fab mkdir "ws.Workspace/ETL.Folder"` creates a folder and fails with `[AlreadyExists]` for a duplicate name. `fab mv` has `-r/--recursive` for workspaces and folders.
-- `fab desc .x` prints the valid element types; `Folder` is in the 1.7.0 list.
+- `fab desc .x` prints the valid element types; `Folder` is in the element list, and `fab desc .Folder` lists `cd`, `exists`, `get`, `ls`, `mkdir`, `mv`, `rm`, `set`, `cp` and `bulkexport` (checked on 1.9.0).
 
 ## REST gotchas
 
