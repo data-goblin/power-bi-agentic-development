@@ -20,7 +20,7 @@ sudo pacman -S git                # Arch
 sudo apt install git              # Debian, Ubuntu
 ```
 
-Windows only: the repo has TMDL paths over the 260-character `MAX_PATH`, and `git clone` fails with `Filename too long` until long paths are on. From an elevated PowerShell, then reboot: `Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name LongPathsEnabled -Value 1` and `git config --system core.longpaths true`. The repo ships `useful-stuff/agent-scripts/enable-windows-longpaths.ps1` for this. macOS and Linux need nothing.
+Windows only: long TMDL paths need long path support in the OS and in git; run the repo's `useful-stuff/agent-scripts/enable-windows-longpaths.ps1` elevated, then reboot. macOS and Linux need nothing.
 
 ## 3. uv
 

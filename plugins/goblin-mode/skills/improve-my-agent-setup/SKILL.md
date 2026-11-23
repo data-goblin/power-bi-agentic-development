@@ -11,6 +11,12 @@ The point is not a vanity score. It is to find the two or three changes that wou
 
 Guiding stance, echoed across this marketplace: every installed tool, skill, and line of memory competes for the agent's attention and context. More is not better. The best setup is the smallest one that does the job, owned and tuned by the person using it.
 
+## Built-in measurements to use before guessing
+
+- `/skill-doctor` reports the context cost and invocation frequency of every installed skill (Claude Code 2.1.252 or newer): the first answer to "which skills cost me context and never fire"
+- `claude plugin eval <plugin-dir>` runs a plugin's eval cases with and without the plugin and reports the difference: the answer to "do my plugin's skills actually help"
+- `/doctor` diagnoses the install, `claude plugin validate` checks a plugin manifest, `/usage` and `/insights` show consumption and habits
+
 ## How to use this skill
 
 1. Pick the audit mode from `$ARGUMENTS` (or the user's phrasing); it sets depth, interview cadence, and tone
