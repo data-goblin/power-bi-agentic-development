@@ -51,10 +51,6 @@ When unsure, re-query: only the model knows how a measure behaves for a subset, 
 
 It must not filter itself: leave its own column out of its query and highlight the selected members against the rest. The trend chart owns the date selection the same way: selecting a month filters the other visuals while the trend keeps its whole window.
 
-## Claude Dashboard wiring (Unverified)
-
-Earlier notes say a Claude Dashboard stores each dataset as a connector call, fills `{{name}}` placeholders in its arguments from the page filter state, and updates with `dash.setParams`. The Dashboard type's own instructions were not retrievable when this page was written, so check them before relying on it. Give every parameter a default (`""` or `0`); a parameter with no default is NULL until the page sets one.
-
 ## Test each query three ways
 
 1. All parameters empty: totals match the unfiltered dashboard

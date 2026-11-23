@@ -13,6 +13,7 @@ last_verified: 2026-11-23
 review_cadence_days: 90
 verified_by:
   - python3 plugins/dashboards/skills/querying-fabric/scripts/lint_dax.py plugins/dashboards/wiki/examples/kpi-row.dax plugins/dashboards/wiki/examples/trend.dax plugins/dashboards/wiki/examples/topn-other.dax plugins/dashboards/wiki/examples/windows.dax plugins/dashboards/wiki/examples/selection-filter.dax
+  - for f in kpi-row trend topn-other windows; do te util format-dax "$(cat plugins/dashboards/wiki/examples/$f.dax)" > /dev/null || exit 1; done
 skills: [dashboards/querying-fabric]
 ---
 
@@ -20,7 +21,7 @@ skills: [dashboards/querying-fabric]
 
 [Learn: DAX queries](https://learn.microsoft.com/en-us/dax/dax-queries) covers `EVALUATE`, `DEFINE` and `ORDER BY`. The fuller upstream skill is `dax-authoring` in [microsoft/rayfin](https://github.com/microsoft/rayfin/tree/main/samples/data-app/.agents/skills/dax-authoring) (MIT). The shapes below were adapted from it for dashboards.
 
-The example files pass `lint_dax.py`, which only checks the query rules in the skill. They were not run against a live model in this pass (Unverified): replace table, column and measure names with the target model's, and run each with `run_dax_query` or `te query --file`.
+The example files pass `lint_dax.py`, which only checks the query rules in the skill, and `te util format-dax` parses each one (`selection-filter.dax` once its `@name` placeholders are replaced by literals). They name tables, columns and measures of an imagined model: replace them with the target model's, then run each with `run_dax_query` or `te query --file`.
 
 ## One query per visual grain
 
