@@ -14,7 +14,7 @@ A rule is JSON: an `Expression` (Dynamic LINQ, not C#) that is true for each vio
 - A wrong `Scope` name rejects the whole rule file, not just that rule ("Requested value 'Role' was not found"). The TOM names are listed by `te bpa rules add --help`; `Column` is an alias for the three column scopes
 - Severity: 1 information, 2 warning, 3 or higher error. It is ignored in the TE3 UI and drives the exit code only in the CLI (`te bpa run --fail-on error`, the default, exits 1)
 - `FixExpression` runs through `te bpa run --fix --save`; keep it to a safe property assignment and check the diff before saving
-- LF line endings, `_comment` keys and `"FixExpression": null` all load and evaluate in `te` (tested). Older advice that TE needs CRLF or rejects them applies, if at all, to the TE3 desktop app; Unverified there
+- LF line endings, `_comment` keys and `"FixExpression": null` all load and evaluate in `te` (tested on 0.8.1.1), so ignore older advice that rule files need CRLF
 - Do not run a questionnaire. Read the model (`te list`, `te get <path> --properties`), read the existing rules (`te bpa rules list --model <model>`), propose rules, write them, run them. Ask only for a choice the model cannot answer, such as which severity fails the build
 
 ## Commands

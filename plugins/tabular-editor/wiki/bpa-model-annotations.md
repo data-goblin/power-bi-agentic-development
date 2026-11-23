@@ -12,6 +12,7 @@ last_verified: 2026-11-23
 review_cadence_days: 90
 verified_by:
   - te bpa run --model plugins/tabular-editor/wiki/examples/bpa/embedded/definition --no-defaults --non-interactive --output-format json
+  - te bpa run --model plugins/tabular-editor/wiki/examples/bpa/object-ignore/definition --no-defaults --non-interactive --output-format json
 skills: [tabular-editor/bpa-rules]
 ---
 
@@ -34,6 +35,6 @@ annotation BestPracticeAnalyzer = ```
 - `BestPracticeAnalyzer`: a JSON array of rules, the same shape as a rule file
 - `BestPracticeAnalyzer_IgnoreRules`: `{"RuleIDs": [...]}`; those rules are skipped for the model
 - `BestPracticeAnalyzer_ExternalRuleFiles`: a JSON array of rule file URLs. `te bpa run` fetches them only with `--allow-external-rules`, which is a network call to a URL stored in the model, so read the URL first
-- Annotations on one object (`BestPracticeAnalyzer_IgnoreRules` inside a table or column) ignore a rule for that object only. Unverified: not run for this page
+- Annotations on one object (`BestPracticeAnalyzer_IgnoreRules` inside a measure, table or column) ignore a rule for that object only: in [examples/bpa/object-ignore](examples/bpa/object-ignore/definition/tables/Facts.tmdl) the annotation on `Undocumented_Total` removes its `MEASURE_HAS_DESCRIPTION` finding while `Other_Total` is still reported
 
 Edit annotations through `te` where you can; if you edit `model.tmdl` by hand, the usual TMDL rules apply (see the pbip tmdl skill) and `te validate` checks the result.
