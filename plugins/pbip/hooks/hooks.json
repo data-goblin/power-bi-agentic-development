@@ -1,6 +1,17 @@
 {
-  "description": "Validates PBIP project files (PBIR structure, TMDL syntax, report binding) after Write/Edit and Bash modifications",
+  "description": "Checks PBIR and TMDL edits: te validate for TMDL, pbir validate plus naming rules for PBIR, binding check for definition.pbir; says so when a tool is missing",
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/doctor.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit",
@@ -8,19 +19,19 @@
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-pbir.sh\"",
-            "timeout": 10,
+            "timeout": 30,
             "if": "Edit(**/*.Report/**)"
           },
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-tmdl.sh\"",
-            "timeout": 10,
+            "timeout": 30,
             "if": "Edit(**/*.tmdl)"
           },
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-report-binding.sh\"",
-            "timeout": 10,
+            "timeout": 15,
             "if": "Edit(**/definition.pbir)"
           }
         ]
@@ -31,19 +42,19 @@
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-pbir.sh\"",
-            "timeout": 10,
+            "timeout": 30,
             "if": "Write(**/*.Report/**)"
           },
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-tmdl.sh\"",
-            "timeout": 10,
+            "timeout": 30,
             "if": "Write(**/*.tmdl)"
           },
           {
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-report-binding.sh\"",
-            "timeout": 10,
+            "timeout": 15,
             "if": "Write(**/definition.pbir)"
           }
         ]
