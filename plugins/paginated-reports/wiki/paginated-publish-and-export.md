@@ -46,6 +46,8 @@ export_id: opaque base64; URL-encode it into the path
 parameters: PBI_PARAMS holds a JSON array of report parameters
 ```
 
+Learn's REST pages were not re-read for this edit; the flow below is carried over from the scripts and earlier notes.
+
 A non-empty PDF is the pass condition: check the file size, and `pdftotext file.pdf - | wc -w` greater than zero when poppler is installed.
 
 ## Item types

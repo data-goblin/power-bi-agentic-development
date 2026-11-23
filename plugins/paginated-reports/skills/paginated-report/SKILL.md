@@ -9,12 +9,11 @@ description: Authors, validates, publishes and renders Power BI paginated report
 
 - Copy the closest starter in `assets/` and change data source, query, fields and layout; do not type RDL from scratch. Give the copy a fresh `rd:ReportID`
 - Edit the XML directly; Report Builder is only a GUI over it. Order that Report Builder writes: DataSources, DataSets, ReportSections, ReportParameters, ReportParametersLayout. The 2016 schema does not enforce it, so keep it anyway: [element order and page frame](../../wiki/rdl-structure-and-order.md)
-- PDF width trap: `ReportSection/Width` + `LeftMargin` + `RightMargin` must be at most `PageWidth` or PDF, Image and Word add blank pages on the right. HTML preview never shows it. Landscape Letter with 0.5in margins leaves 10in
-- Preview is HTML; judge pagination only from an export in the delivery format
-- Semantic model source: `DataProvider` PBIDATASET, `Initial Catalog=sobe_wowvirtualserver-<model id>`, `Integrated Security=ClaimsToken`. Column fields are `Table[Column]`, measures `[Measure]` and always `System.String` (cast with `CDbl`). Query parameters carry no `@` in the QueryParameter name for DAX and carry it for SQL; use single-value `TREATAS` rather than hand-written `RSCustomDaxFilter`: [connection, fields, parameters](../../wiki/pbidataset-connection-and-fields.md)
+- `validate_rdl.py` fails the PDF width trap (section `Width` + margins over `PageWidth`); preview is HTML, so judge pagination only from an export in the delivery format
+- Semantic model source (`PBIDATASET`): connect string, `Table[Column]` and `[Measure]` field names, measures arriving as strings, and parameter binding are in [connection, fields, parameters](../../wiki/pbidataset-connection-and-fields.md); prefer single-value `TREATAS` over hand-written `RSCustomDaxFilter`
 - XML-escape query text (`&amp;&amp;` for DAX `&&`, `&lt;=` for `<=`). Dimensions need a unit (`in cm mm pt pc`, never px)
 - Filter and aggregate in the query: dataset and tablix filters run after the full fetch. Move date and string logic out of RDL expressions so the report can run in the optimized environment (Diagnostics button lists the offenders)
-- Volume: about 1,000,000 rows of 15 to 20 columns on the standard environment, about twice that on optimized; a query returning more than 2 GB is aborted. Details and what the service does not support (shared datasets, linked reports, custom fonts and assemblies, US-format DateTime parameters, 250 data sources): [limits](../../wiki/paginated-limits-and-differences.md)
+- Volume: about 1,000,000 rows of 15 to 20 columns on the standard environment, about twice that on optimized; a query returning more than 2 GB is aborted. Unsupported features and the other service limits: [limits](../../wiki/paginated-limits-and-differences.md)
 - Interactive, screen-first reports belong in PBIR (`reports` plugin). Classic SSRS differs: embed every data source and use the 2016 schema
 
 ## Workflow
