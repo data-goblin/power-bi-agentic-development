@@ -3,7 +3,7 @@
 #
 # Usage: Run with -Port <port> (auto-detected if omitted). Add Invoke-DebugQuery
 # calls in the "Run Queries" region, then rerun.
-# Requires TOM + ADOMD.NET NuGet packages (see connect-pbid skill Section 1).
+# Requires TOM + ADOMD.NET NuGet packages (see the connect-pbid skill).
 
 param(
     [int]$Port = 0,
