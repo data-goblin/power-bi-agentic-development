@@ -11,7 +11,7 @@ Usage:
     python validate_tmuo.py --schema-only <file.tmuo>
 
 Requirements:
-    pip install jsonschema
+    uv run --with jsonschema python validate_tmuo.py <file.tmuo>
 """
 
 from __future__ import annotations
@@ -83,7 +83,7 @@ def validate_with_schema(data: dict, schema: dict) -> list[str]:
     """
     if not HAS_JSONSCHEMA:
         print("  [WARN] jsonschema not installed, skipping schema validation")
-        print("         Install with: pip install jsonschema")
+        print("         Run it with: uv run --with jsonschema python validate_tmuo.py <file.tmuo>")
         return []
 
     errors = []

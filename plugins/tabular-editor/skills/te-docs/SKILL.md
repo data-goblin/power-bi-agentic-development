@@ -1,181 +1,27 @@
 ---
 name: te-docs
-description: Tabular Editor documentation search and configuration file guidance (.tmuo, Preferences.json, UiPreferences.json, Layouts.json). Automatically invoke when the user asks about "TE docs", "Tabular Editor features", "TE3 preferences", ".tmuo files", "workspace database settings", "DAX editor settings", "per-model TE3 configuration", or needs to search Tabular Editor documentation for how-to guidance.
+description: Look up Tabular Editor documentation, and work with Tabular Editor 3 per-model .tmuo user option files. Use when asked how a Tabular Editor feature works, where TE3 keeps a setting (workspace database, deployment target, data source overrides), why a .tmuo file is in Git, or to search Tabular Editor, DAX, Power BI or Fabric docs from the terminal.
 ---
 
-# Tabular Editor Documentation & Configuration
+# Tabular Editor documentation and .tmuo files
 
-Guidance for searching Tabular Editor documentation and understanding TE3 configuration files (.tmuo, Preferences.json, etc.).
+## Find an answer
 
-## Pre-flight
+1. `pbi-search` if it is installed (`pbi-search --version`): `pbi-search search "BPA rules" --source te-docs`. It searches Tabular Editor docs, DAX.guide, SQLBI, Learn and the TE blog in one call; run `pbi-search sync` once first. Install notes: `bin/README.md`
+2. Otherwise fetch the page. Tabular Editor docs: https://docs.tabulareditor.com/ (the te CLI is under `/en/cli/`, references under `/en/references/`); DAX: https://dax.guide/<function>/; Learn for everything Microsoft. Old docs URLs now redirect, so follow redirects
+3. Answer from the page you read, not from memory: TE3 settings and the CLI changed in 2026
 
-Before using documentation search, verify `pbi-search` is installed:
+The te CLI commands are the te-cli skill's job; DAX regression tests and BPA are `te test` and `te bpa`.
 
-```bash
-pbi-search --version
-```
+## .tmuo files
 
-If the command is not found, inform the user and offer two options:
+Per-user, per-model TE3 settings (Tabular Model User Options). Reference: [user options](https://docs.tabulareditor.com/en/references/user-options.html).
 
-1. **Install `pbi-search`** (recommended): see `bin/README.md` for install instructions via `cargo install` or GitHub Releases at [data-goblin/pbi-search](https://github.com/data-goblin/pbi-search)
-2. **Search without the CLI**: use `WebFetch` to retrieve docs directly from these sources:
-   - Microsoft Learn: `https://learn.microsoft.com/`
-   - Tabular Editor docs: `https://docs.tabulareditor.com/`
-   - DAX reference: `https://dax.guide/<function>/`
-   - SQLBI articles: `https://www.sqlbi.com/articles/`
-   - Data Goblins: `https://data-goblins.com/`
+- Never commit them. Add `*.tmuo` to `.gitignore`. They hold user-specific values, and stored credentials are encrypted for one Windows user, so they cannot be shared
+- Name and place: `<Model>.<UserName>.tmuo` beside a `.bim`, `.pbit` or `database.json`; `model.<UserName>.tmuo` beside `model.tmdl` or `database.tmdl` and inside a TMDL folder (TMDL always uses the `model` prefix); `database.<UserName>.tmuo` in a database.json folder. A model opened over a connection keeps its file under `%LocalAppData%\TabularEditor3\UserOptions\`
+- Every property is optional and a file is written only when something is stored
+- Top-level properties: `UseWorkspace`, `WorkspaceConnection` (string, or an object with `ConnectionString` and `EncryptedCredentials`), `WorkspaceDatabase`, `Deployment`, `DataSourceOverrides`, `TableImportSettings`, `RefreshOverrides`, `Permissions` (per-model AI grants), plus legacy `WorkspaceConnectionAuthMode` and `AIConsent`
+- A workspace database is overwritten with the loaded model's metadata, so give each developer a unique `WorkspaceDatabase` name
+- Check a file: `uv run --with jsonschema python scripts/validate_tmuo.py <file.tmuo>` (schema in `schema/tmuo-schema.json`)
 
-The CLI is strongly preferred; it searches all sources simultaneously and returns clean markdown. The fallback requires manual URL construction and multiple fetches.
-
-## Documentation Search
-
-Use the `pbi-search` CLI — the preferred way to search Tabular Editor docs and related Power BI/DAX resources. It searches Tabular Editor docs, DAX.guide, SQLBI, Microsoft Learn (Power BI + Fabric), the TE blog, and Data Goblins simultaneously, returning clean markdown.
-
-After install, populate the local manifest cache (once):
-
-```bash
-pbi-search sync        # ~13s
-```
-
-### Searching
-
-```bash
-# Search all sources
-pbi-search search "creating measures"
-
-# Search only Tabular Editor docs
-pbi-search search "BPA rules" --source te-docs
-
-# Search TE blog + TE docs
-pbi-search search "incremental refresh" --source te-docs --source te-blog
-
-# JSON output for structured use in agents
-pbi-search search "workspace mode" --source te-docs --json
-
-# Include content excerpts
-pbi-search search "calculated columns" --source te-docs --excerpts
-```
-
-### Fetching full docs
-
-```bash
-# Tabular Editor doc by bare path (from search results)
-pbi-search fetch features/Best-Practice-Analyzer
-
-# Any supported URL
-pbi-search fetch https://docs.tabulareditor.com/features/workspace-mode
-pbi-search fetch https://dax.guide/calculate/
-
-# Extract a specific section
-pbi-search fetch features/Best-Practice-Analyzer --section "Creating rules"
-
-# Truncate for context budget
-pbi-search fetch features/creating-measures --max-chars 3000 --json
-```
-
-### Agent search workflow
-
-1. `pbi-search search "<topic>" --source te-docs --json` — find relevant docs
-2. Use the `path` or `url` from results: `pbi-search fetch <path>`
-3. No results? Broaden: `pbi-search search "<topic>"` (all sources)
-4. DAX questions: always add `--source dax-guide`
-
-### Available sources
-
-| ID | Content |
-|----|---------|
-| `te-docs` | Tabular Editor docs (features, how-tos, KB, references) |
-| `dax-guide` | ~480 DAX function reference pages |
-| `te-blog` | Tabular Editor blog |
-| `ms-learn` | Microsoft Learn — Power BI + Fabric (live, no sync needed) |
-| `sqlbi` | ~370 SQLBI technical articles |
-| `data-goblins` | Data Goblins Power BI posts |
-
-### Richer search quality (optional)
-
-Default sync builds a fast title-only index. For conceptual queries ("remove filters from column") run once with descriptions:
-
-```bash
-pbi-search sync --descriptions   # fetches meta descriptions; ~30s extra
-```
-
----
-
-## Configuration Files (.tmuo)
-
-TMUO files store developer- and model-specific preferences in Tabular Editor 3.
-
-### Critical
-
-- TMUO files contain user-specific settings -- **never commit to version control**
-- Credentials are encrypted with Windows User Key -- **cannot be shared between users**
-- Add `*.tmuo` to `.gitignore` in all projects
-- File naming: `<ModelFileName>.<WindowsUserName>.tmuo`
-
-### Structure
-
-```json
-{
-  "UseWorkspace": true,
-  "WorkspaceConnection": "localhost",
-  "WorkspaceDatabase": "MyModel_Workspace_JohnDoe",
-  "Deployment": {
-    "TargetConnectionString": "powerbi://api.powerbi.com/v1.0/myorg/Workspace",
-    "TargetDatabase": "MyModel",
-    "DeployPartitions": false,
-    "DeployModelRoles": true
-  },
-  "DataSourceOverrides": {
-    "SQL Server": {
-      "ConnectionString": "Data Source=localhost;Initial Catalog=DevDB"
-    }
-  }
-}
-```
-
-### Sections
-
-| Section | Purpose |
-|---------|---------|
-| `UseWorkspace` | Enable workspace database mode |
-| `WorkspaceConnection` | Server for workspace database |
-| `WorkspaceDatabase` | Workspace database name (unique per dev/model) |
-| `Deployment` | Target server, database, and deploy options |
-| `DataSourceOverrides` | Override connections for workspace |
-| `TableImportSettings` | Settings for Import Tables feature |
-
-### Deployment Options
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `TargetConnectionString` | string | Target server connection |
-| `TargetDatabase` | string | Target database name |
-| `DeployPartitions` | bool | Deploy partition definitions |
-| `DeployModelRoles` | bool | Deploy security roles |
-| `DeployModelRoleMembers` | bool | Deploy role members |
-| `DeploySharedExpressions` | bool | Deploy shared M expressions |
-
-## Application Preferences
-
-TE3 stores application-level preferences in `%LocalAppData%\TabularEditor3\`:
-
-| File | Purpose |
-|------|---------|
-| `Preferences.json` | Application settings (proxy, updates, telemetry) |
-| `UiPreferences.json` | UI state (window positions, panel sizes) |
-| `Layouts.json` | Saved layout configurations |
-
-## References
-
-- **`references/doc-structure.md`** -- Detailed documentation structure
-- **`references/url-redirects.md`** -- Old-to-new URL mapping for broken links
-- **`schema/`** -- JSON schemas for tmuo, preferences, layouts, UI preferences
-- **`scripts/validate_config.py`** -- Validate TE3 config files
-- **`scripts/validate_tmuo.py`** -- Validate TMUO files
-
-## External
-
-- [pbi-search on GitHub](https://github.com/data-goblin/pbi-search)
-- [Tabular Editor User Options](https://docs.tabulareditor.com/references/user-options.html)
-- [Workspace Mode](https://docs.tabulareditor.com/features/workspace-mode.partial.html)
-- [Preferences Reference](https://docs.tabulareditor.com/references/preferences.html)
+Application-wide settings are not per model: `Preferences.json`, `UiPreferences.json` and `Layouts.json` live under `%LocalAppData%\TabularEditor3\`; see [preferences](https://docs.tabulareditor.com/en/references/preferences.html).
