@@ -5,6 +5,8 @@ kind: gotcha
 status: current
 sources:
   - url: https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report
+  - url: https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-dataset
+  - url: https://pypi.org/project/pbir-cli/0.9.33/
 tools:
   te: 0.8.1.1
   pbir: 0.9.33
@@ -19,7 +21,7 @@ skills: [pbip/pbip]
 
 # What a rename leaves behind
 
-Rename the model object with `te mv --save`, then repair each report with `pbir fields replace` or `pbir fields replace-table`. Both validate their own writes. Afterwards search for the old name in the places below; these hold names in free text, not in the structures the tools walk. Unverified against the pbir 0.9.33 source: a tool may already cover one of them, so grep first and edit only what remains.
+Rename the model object with `te mv --save`, then repair each report with `pbir fields replace` or `pbir fields replace-table`. Both validate their own writes. Afterwards search for the old name in the places below; these hold names in free text, not in the structures the tools walk. In the pbir 0.9.33 source, `replace_field` and `replace_table` rewrite field references in visuals, filters and bookmarks of the report only; a search of that source finds no code that reads SparklineData selectors, linguistic metadata, DAX query files, TMDL scripts or the diagram layout, so those stay manual.
 
 ```bash
 grep -rn "Old Name" Project.Report Project.SemanticModel --include="*.json" --include="*.tmdl" --include="*.dax"
@@ -28,7 +30,7 @@ grep -rn "Old Name" Project.Report Project.SemanticModel --include="*.json" --in
 ```yaml
 SparklineData selectors: 'SparklineData(Table.Measure_[Table.Column])' inside selector.metadata; a compact string, not SourceRef.Entity JSON
 culture linguisticMetadata: cultures/<locale>.tmdl embeds JSON whose ConceptualEntity and ConceptualProperty values name tables and columns; the dictionary keys are generated and need no change
-DAX query files: <Name>.SemanticModel/DAXQueries/*.dax (Learn); a copy in the .Report folder is unverified
+DAX query files: <Name>.SemanticModel/DAXQueries/*.dax (Learn)
 semanticModelDiagramLayout.json: table names as keys; not editable outside Desktop, so let Desktop rewrite it
 TMDL scripts: <Name>.SemanticModel/TMDLScripts/*.tmdl
 ```

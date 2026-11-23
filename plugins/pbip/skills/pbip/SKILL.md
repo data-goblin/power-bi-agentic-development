@@ -39,7 +39,7 @@ python3 scripts/validate_pbip.py <project folder> --no-pbir-cli
 thick report: .Report + .SemanticModel in one project, definition.pbir byPath
 thin report: .Report only, definition.pbir byConnection (Fabric model)
 .pbip: optional entry point; definition.pbir opens directly
-DAXQueries/: in .SemanticModel (DAX query view); one beside the report is unverified, so search both on renames
+DAXQueries/: in .SemanticModel (DAX query view, [Learn](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-dataset)); search it on renames
 TMDLScripts/: in .SemanticModel
 .gitignore: **/.pbi/localSettings.json and **/.pbi/cache.abf
 fork a project: rename folders and .pbip, fix byPath, set displayName and a new logicalId in each .platform

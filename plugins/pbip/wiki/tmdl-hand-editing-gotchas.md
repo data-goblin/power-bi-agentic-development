@@ -53,7 +53,7 @@ a ref table line for a table that has no file: accepted, ignored (Learn: missing
 an expression named like a table (expression Product next to table Product): accepted by TOM and te validate
 ```
 
-The last case used to be documented as a Desktop load failure. Unverified: Desktop was not run. If you hit it, rename the expression.
+The last case used to be documented as a Desktop load failure. Kept as a warning: Desktop was not run here, and opening such a model in Desktop would settle it. If you hit it, rename the expression.
 
 ## Where // is legal
 
