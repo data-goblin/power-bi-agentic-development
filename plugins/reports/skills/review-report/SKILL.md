@@ -1,281 +1,60 @@
 ---
 name: review-report
-description: Actionable feedback on the quality, usage, and effectiveness of Power BI reports. Automatically invoke when the user asks to "review a report", "audit a report", "report usage analysis", "report health check", "find unused reports", "check if a report is being used", "assess report performance", "evaluate report quality".
+description: Use when the user asks to review, audit or health-check an existing Power BI report, decide whether a report is used or should be retired, or assess its structure, performance, accessibility, governance or distribution ("review this report", "is this report being used", "who has access", "find unused reports", "report health check"). Runs pbir validation, BPA, usage and access first and interprets the output. Not for building reports (create-pbi-report) or reviewing semantic models.
 ---
 
-# Reviewing Power BI Reports
+# Reviewing a Power BI report
 
-Structured evaluation of Power BI reports to produce actionable feedback for developers and consultants. A report review assesses whether a report is effective, well-built, and actually being used. The output is a prioritized list of findings with concrete recommendations.
+The output is a prioritised list of findings with concrete fixes. Run the deterministic checks first; your job is to interpret them, not to re-derive what a rule already reports. Command rules are in `pbir-cli`, design judgement in `pbi-report-design`.
 
-Note that the skill works on one of three scenarios:
+## Rules
 
-1. Report under development: In this scenario, the focus is more on the report content, structure, organization, and performance based on accurately gathered requirements.
-2. Report in testing: In this scenario, the focus might incorporate user feedback or check basic information about the deployed report in Power BI / Fabric.
-3. Report in use: This is the ideal scenario, where the focus is usage; the ultimate definition of success is whether the report is being used; what percentage of the people who have access to the report have accessed it in the last 28 days, and how much? Bad reports aren't used, or have declining usage. 
+1. **Branch on lifecycle stage before choosing dimensions.** Ask (or infer from a local-only folder): development, testing or production. Development: structure, bindings, performance, accessibility. Testing: add whether testers are actually viewing. Production: add usage, distribution and exports. Usage data exists only for published reports; if the report is local-only, ask where the published copy is.
+2. **Run first, then judge**, from the report folder:
 
-In scenario 2-3 you may still provide feedback on the report content / structure, but prioritizing other things first.
+   ```bash
+   pbir validate "R.Report" --all
+   pbir bpa run "R.Report" --fail-on warning -o json
+   pbir ls "R.Report" --tree -v
+   pbir usage "R.Report"
+   pbir access "R.Report"
+   ```
 
-## When to Use
+   `bpa` already covers overlaps, off-canvas visuals, missing alt text, hard-coded colours, default theme and page names, hidden visuals, visual-level filters, too many pages and non-standard fonts; do not hand-check those. `usage` and `access` need `az login` and a published report.
+3. **You cannot see the canvas.** Say that aesthetics, cognitive load and effectiveness are unverified until a screenshot is looked at ([render verification](../../wiki/pbir-render-verification.md)).
+4. **Usage is the only objective signal of value, and it is easy to misread.** Views are not subscriptions, page views are a floor, the window is 30 days, and non-consumers (developers, service principals, IT) inflate reach: [interpreting usage](../../wiki/report-usage-interpretation.md). Never recommend retiring from one 30-day "no views" signal, and require the owner to confirm.
+5. **No fixed thresholds** for "healthy" usage, load time or visual count. They depend on audience and purpose; Learn publishes none. Visual count is a proxy for query cost ([performance audit](../../wiki/report-performance-audit.md)).
+6. **Ask before `pbir usage --model`**: it generates a hidden model in the workspace and needs Contributor.
+7. **R and Python visuals retire in May 2027** (they stop working in published reports). Report every one found as "replace", never as something to improve; see [custom visual choice](../../wiki/report-custom-visual-choice.md).
 
-Activate when conducting a report review, audit, or health check. Common triggers:
+## Dimensions
 
-- Reviewing report quality before a release or handoff
-- Assessing whether existing reports are worth maintaining
-- Identifying optimization opportunities across a workspace
-- Evaluating report design and data presentation effectiveness
-- Investigating report performance issues
-
-## Review Dimensions
-
-A comprehensive report review evaluates six dimensions. Not every review needs all six -- scope to what the user needs.
-
-### 1. Usage and Adoption
-
-**The most objective signal of report value.** A report that nobody views is a maintenance liability regardless of its design quality.
-
-**Retrieve usage data** with the scripts in `scripts/`:
-
-```bash
-# Workspace overview (views, rank, page views, load times)
-python3 scripts/get_report_usage.py -w <workspace-id>
-
-# Add Tier 3 cross-workspace last-visited timestamps via the undocumented DataHub V2 API
-# Useful for the "is this report being used at all" question without tenant admin role
-python3 scripts/get_report_usage.py -w <workspace-id> --include-datahub
-
-# Single report deep-dive (daily views, per-viewer breakdown, page views by day)
-python3 scripts/get_report_detail.py -w <workspace-id> -r <report-id>
-
-# Distribution audit (who has access, through what channels)
-python3 scripts/get_report_distribution.py -w <workspace-id> -r <report-id>
+```yaml
+usage and adoption:  pbir usage; wiki report-usage-sources, report-usage-interpretation
+design and layout:   bpa and validate --qa first; judgement from pbi-report-design
+model binding:       validate --fields; thin report vs thick; extension measures used sparingly
+performance:         pbir visuals test and visuals query; wiki report-performance-audit
+governance:          pbir access; endorsement, label, pipeline, publish to web: wiki report-governance-audit
+accessibility:       bpa PBIR_NO_ALT_TEXT, validate --qa; wiki report-accessibility-audit
+documentation:       purpose, audience, atypical features, support contact (handover reports)
 ```
 
-**Filtering viewers:** Exclude non-consumer users from adoption metrics. Service principals (type `App`), report developers, and IT / support personnel inflate viewer counts and distort reach. See `references/usage-metrics.md` for identification heuristics and `references/distribution.md` for resolving security groups and distribution lists via the Microsoft Graph API.
+Scope to what the user needs; not every review covers every dimension. If the model is in scope, review it with the `semantic-models` skills in parallel: many report symptoms (slow visuals, blanks, missing fields) start there.
 
-**Evaluate usage signals:**
-
-- **Audience reach** is the most important metric: what percentage of users with access have actually viewed the report in the last 7, 28, and 60 days? See `references/distribution.md` for how to calculate reach and what the numbers mean
-- **View trends:** Is viewership stable, growing, or declining? Use the rolling 7D average (see `references/usage-metrics.md`)
-- **Page view distribution:** Are views concentrated on one page or spread across the report? Before calling a page unused, check whether it is a tooltip/drillthrough target (no direct views expected) and confirm reachability via `pbir pages list`
-- **Last visited:** When was the report last accessed by anyone? Tier 1 (Admin Activity Events, 30-day rolling, admin role required) is the official path. The Tier 3 DataHub V2 `lastVisitedTimeUTC` field (`--include-datahub`) is the non-admin cross-workspace fallback; flag to the user it's undocumented and can break
-- **Load times:** Are P50 and P90 load times acceptable for the audience? See `references/performance.md` for interpretation
-
-Do not use arbitrary thresholds for what constitutes "healthy" or "concerning"; these depend entirely on the report's audience, purpose, and lifecycle stage. A report for 3 analysts has different expectations than one for 300 executives. Match the review window to the report's cadence before drawing conclusions; see `references/usage-interpretation.md` for common misreads of the modern Usage Metrics report and the retire/keep/redesign decision framework.
-
-**Subscriptions are not views.** Email subscriptions deliver report snapshots without generating view events. Check `admin/reports/{id}/subscriptions` (requires Fabric Admin) for active subscribers. A report with 0 views but active subscriptions is being consumed passively.
-
-**Use rolling 7-day averages** for view trends. Raw daily counts are noisy. Compare the current 7D average to the prior 7D to identify trajectory. See `references/usage-metrics.md` for methodology.
-
-**Key insight:** Reports with 0 views are not necessarily bad. They may be new, seasonal, consumed via subscriptions, or used via embedded scenarios not captured in telemetry. Cross-reference with last-visited timestamps. Prefer the Tier 1 admin Activity Events feed where admin access is available; fall back to the Tier 3 DataHub V2 path when it is not, while flagging that it is undocumented.
-
-**Permissions:** Tier 1 (WABI) needs any workspace role. Tier 2 (model) needs workspace Contributor+. Distribution and subscription checks need Fabric Admin (tenant-level). See `references/usage-metrics.md` for the full permission matrix.
-
-For additional context on the usage metrics dataset schema and available tables, see `usage-metrics-dataset/`.
-
-### 2. Design and Layout
-
-Evaluate the visual design and information architecture. Consult the `pbi-report-design` skill for detailed guidelines. Reference: [Data Goblins Report Checklist](https://data-goblins.com/power-bi/report-checklist).
-
-**Checklist:**
-
-- [ ] Page titles present and descriptive
-- [ ] Visual spacing consistent (equal gaps between visuals and margins)
-- [ ] Detail gradient followed (KPIs top-left, detail bottom-right)
-- [ ] Color usage intentional and accessible (no gratuitous color, no red/green for colorblind users)
-- [ ] Font family, size, and formatting consistent throughout
-- [ ] Visual count reasonable (loosely 12-15 max per page, depends on complexity)
-- [ ] No empty visuals (all visuals have field bindings)
-- [ ] Theme applied (not default Power BI theme)
-- [ ] Chart axes begin at zero (unless intentional)
-- [ ] Default sort configured on all visuals
-- [ ] Visual objects labelled clearly in the selection pane (grouped with descriptive names)
-- [ ] Mobile layout provided if relevant audience
-- [ ] Visual headers configured (disable when drill-down/through not needed)
-- [ ] Interactions configured (cross-filtering/highlighting intentional, not default)
-- [ ] Slicer 'Apply' buttons considered for performance-sensitive pages
-- [ ] Synchronized slicers where required across pages
-
-### 3. Data Model Binding
-
-Evaluate the connection between the report and its underlying semantic model.
-
-**Checklist:**
-
-- [ ] Report connects to a published semantic model ("thin report") rather than embedding its own ("thick report")
-- [ ] All field bindings resolve to existing model columns/measures
-- [ ] Extension measures (thin report measures) used sparingly and only for report-specific logic
-- [ ] No broken or orphaned field references
-- [ ] Appropriate use of measures vs. columns in visuals (aggregation context)
-- [ ] Separate filters are not active on visual-level
-
-### 4. Performance
-
-Assess report load time and visual complexity. Run the performance audit script:
-
-```bash
-python3 scripts/performance_audit.py -w <workspace-id> -r <report-id>
-```
-
-See `references/performance.md` for percentile interpretation, DAX query inference from visual field bindings, and common anti-patterns.
-
-**Key indicators:** P50 and P90 load times, visual count per page, extension measure count. Visual count is a proxy; query cost per visual is the real driver. See `references/performance-audit.md` for the full cost model, how to interpret a Performance Analyzer export, DirectQuery report-layer tuning levers, and the interaction/navigation audit. Do not apply rigid visual-count thresholds without reading the cost model first.
-
-### 5. Report Metadata and Governance
-
-Assess the report's governance posture. See `references/report-metadata.md`.
-
-**Checklist:**
-
-- [ ] Thin report (connected to published model, not embedded thick model)
-- [ ] Endorsement status appropriate for its audience (Certified for production, Promoted for team use)
-- [ ] Sensitivity label applied if tenant policy requires it
-- [ ] Part of a deployment pipeline if in a production workspace
-- [ ] Distribution via workspace app or org app (not direct links or publish-to-web)
-- [ ] Access granted via security groups, not individual users
-- [ ] View-only access for consumers (Viewer role), edit access only for developers
-- [ ] Export-to-Excel patterns reviewed for data governance risks (see `references/export-to-excel.md`)
-
-### 6. Accessibility, Standards, and Documentation
-
-Evaluate whether the report meets accessibility, organizational standards, and documentation requirements.
-
-**Accessibility:**
-
-Most accessibility checks can be run statically against PBIR files; only focus traversal and screen-reader readout need a live report. See `references/accessibility-audit.md` for the full procedure: geometry/alignment audit, tab-order reconciliation, static pass (alt text, decorative items, color-only encoding), SVG-measure checks, script visual checks, and mobile readiness.
-
-Summary checklist:
-- [ ] Alt text present on all data visuals (including SVG-measure hosts and script visuals)
-- [ ] Decorative items removed from tab sequence (`tabOrder = -1`)
-- [ ] Tab order matches geometric reading pattern (top-to-bottom, left-to-right)
-- [ ] No color-only encoding (paired with shape, glyph, or text)
-- [ ] Color contrast meets WCAG 2.1 AA (4.5:1 text, 3:1 UI elements)
-- [ ] Font sizes legible (min 9pt data, 12pt labels)
-- [ ] Mobile layout present on consumption-intended pages
-- [ ] Live keyboard Tab traversal verified (cannot be confirmed from files)
-
-**Standards:**
-
-- [ ] Sensitivity labels applied if required by governance policy
-- [ ] Naming conventions followed (report name, page names, visual titles)
-- [ ] Link provided for users to report issues or submit feedback
-- [ ] Filter combinations tested thoroughly
-
-**Documentation (for handover/production):**
-
-- [ ] Purpose statement: what business questions does the report answer?
-- [ ] Intended audience and user segments identified
-- [ ] Atypical features documented (visual-level filters, hidden slicers, bookmarks, custom visuals)
-- [ ] Support personnel and procedures identified
-- [ ] Training/adoption materials available for business users
-
-## Review Workflow
-
-### Step 1: Scope
-
-Clarify what the user wants reviewed. Ask:
-- Single report or workspace-wide audit?
-- Which dimensions matter most? (usage, design, performance, all?)
-- Is there a specific concern prompting the review?
-- Where should findings be documented? (scratchpad, agent-docs, obsidian notebook, wiki, etc.)
-
-### Step 1a: Determine Scope and Access
-
-Ask the user:
-
-- Do they have access to the underlying semantic model?
-- Are they the developer of both the report and model, or only one?
-
-If the semantic model is in scope, use the `semantic-model` skill in parallel. Many report issues (slow visuals, (Blank) values, missing fields) originate in the model. See `references/best-practices.md` for model symptoms that surface in reports.
-
-### Step 1b: Determine Report Lifecycle Stage
-
-If the report is local-only or not yet published, ask the user:
-
-> "Is this a report in development which doesn't yet have users, a report in testing with a subset of the user audience, or a report that's already distributed and should be seeing active usage and value generation?"
-
-This determines which dimensions are applicable:
-
-| Stage | Usage data? | What to review |
-|---|---|---|
-| **Development** | No | Design, data model binding, performance, accessibility, structure |
-| **Testing** | Partial | All of the above + verify testers are actually testing (views from test audience) |
-| **Production** | Yes | All dimensions including full usage, distribution, and export analysis |
-
-Remind the user: a report's success lives and dies on whether it is being used and delivering business value. Design, performance, and structure can be reviewed proactively, but usage data is the only objective measure of whether the report is working. Good requirements gathering helps achieve adoption, but it can never be guaranteed.
-
-If the report is local-only, ask where the published version is (or will be). Usage metrics require a published report in the Power BI service.
-
-### Step 2: Gather Data
-
-Run the usage script for quantitative data. Export or inspect the report definition for qualitative assessment.
-
-### Step 3: Evaluate
-
-Walk through each relevant dimension using the checklists above. Score each finding by severity:
-
-- **Critical**: Broken functionality, security risk, or completely unused report consuming capacity
-- **High**: Performance issues impacting users, major design violations, missing data bindings
-- **Medium**: Design inconsistencies, moderate performance concerns, partial accessibility gaps
-- **Low**: Minor polish items, style preferences, optimization opportunities
-
-### Step 4: Report Findings
-
-Present findings as a structured summary. Lead with the most impactful findings.
-
-**Format:**
+## Findings format
 
 ```
-REPORT REVIEW: <Report Name>
-===============================
-
-USAGE SIGNAL
-  Views (30d): 47  |  Viewers: 8  |  Rank: #3/22
-  Top pages: Overview (60%), Detail (30%), Trends (10%)
-  Load time P50: 3.2s  |  P90: 7.1s
-
-CRITICAL
-  - [Performance] P90 load time exceeds 7s due to 14 visuals on Overview page
-
-HIGH
-  - [Design] No page titles on 2 of 3 pages
-  - [Binding] 3 visuals have broken field references
-
-MEDIUM
-  - [Design] Inconsistent margins (24px left, 32px right)
-  - [Accessibility] Missing alt text on 5 data visuals
-
-LOW
-  - [Design] Default theme applied; consider custom theme
-  - [Standards] Report name uses spaces instead of hyphens
+REPORT REVIEW: <name>   stage: development | testing | production
+USAGE SIGNAL            views 30d, viewers (consumers only), rank, top pages, load P50 / P90 (or "not assessable: <why>")
+CRITICAL                broken functionality, security exposure, unused report consuming capacity
+HIGH                    performance that hurts users, missing bindings, major design violations
+MEDIUM                  inconsistencies, partial accessibility gaps
+LOW                     polish
 ```
 
-## Prerequisites
+Give each finding a path (page and visual) and a command or pattern to fix it. Lead with the most impactful ones.
 
-> Before running usage scripts, ensure:
-> - Azure CLI authenticated: run `az login` if needed
-> - `fab` CLI authenticated: run `fab auth login` if needed (for distribution script)
-> - Python `requests` package: `uv pip install requests`
+## Related skills
 
-## References
-
-- **`references/usage-metrics.md`** -- Full documentation of all usage data APIs (official and undocumented)
-- **`references/usage-interpretation.md`** -- Reading modern Usage Metrics correctly; retire/keep/redesign decision framework
-- **`references/distribution.md`** -- All report access paths and how to audit them
-- **`scripts/get_report_usage.py`** -- Workspace-level usage overview
-- **`scripts/get_report_detail.py`** -- Single report deep-dive (daily, per-viewer, per-page)
-- **`scripts/get_report_distribution.py`** -- Distribution audit (ACL, apps, publish-to-web)
-- **`scripts/performance_audit.py`** -- Load times + visual complexity analysis
-- **`references/performance.md`** -- Percentile interpretation, DAX query inference from visual metadata
-- **`references/performance-audit.md`** -- Query cost model, Performance Analyzer export, DirectQuery tuning, interaction/navigation audit
-- **`references/accessibility-audit.md`** -- Alignment/tab-order audit, static accessibility pass, SVG/script/mobile checks
-- **`references/report-metadata.md`** -- Thick/thin, endorsement, sensitivity, pipeline, model properties
-- **`references/export-to-excel.md`** -- Export activity analysis, data governance implications
-- **`references/best-practices.md`** -- Data visualization principles, chart selection, color, interaction design
-- **`usage-metrics-dataset/`** -- Exported Usage Metrics dataset (TMDL schema + report definition)
-
-## Related Skills
-
-- **`semantic-model`** -- Companion skill for semantic model design and review (run in parallel when model is in scope)
-- **`pbi-report-design`** -- Detailed report design guidelines and layout rules
-- **`modifying-theme-json`** -- Theme authoring, compliance auditing, formatting promotion
-- **`deneb-visuals`**, **`python-visuals`**, **`r-visuals`**, **`svg-visuals`** -- Visual-specific review criteria (now in the **custom-visuals** plugin; add with `claude plugin install custom-visuals@power-bi-agentic-development`)
+- `pbir-cli`, `pbi-report-design`, `modifying-theme-json`
+- `custom-visuals` plugin: review criteria for Deneb and SVG visuals (`claude plugin install custom-visuals@power-bi-agentic-development`)
