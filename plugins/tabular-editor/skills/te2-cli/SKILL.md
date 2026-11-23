@@ -20,7 +20,6 @@ te util migrate --output-format json
 ## Flags that trip people up
 
 - `-S`, `-F` and `-L` change meaning after `-D`: `-S` becomes `-SHARED` (deploy shared expressions), `-F` becomes `-FULL`, `-L` becomes `-LOGIN` (takes a user and a password). Before `-D`, `-L` means `-LOCAL` (connect to a running Power BI Desktop)
-- `-C` deploys data source connections, overwriting existing ones; it does not mean "create". It maps to `te deploy --deploy-connections`
 - `-G` prints GitHub Actions workflow commands; it does not write SARIF. `-V` does the same for Azure DevOps, and `-T <file>` writes a VSTEST `.trx` file that Azure DevOps shows as test results. TMDL output is `-TMDL <folder>`, not `-T`
 - `-LOGIN` (SQL-style user and password on a deploy) has no `te` equivalent. Use `te auth login` or `--auth env` with service principal variables
 - A TE2 input is a `Model.bim` or a `database.json` folder, or a server and database. TMDL as input is not documented for TE2 (Unverified: not run, TE2 is not installed here); `te` reads TMDL, `.bim`, `.pbip` and `.SemanticModel`

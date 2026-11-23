@@ -10,7 +10,6 @@ Run a script with `te script` (te-cli skill). The script API is the Tabular Obje
 ## Rules
 
 - Under `te script`, the model is a dry run until `--save`; there is no Ctrl+Z. Run once without `--save`, read the diff, then add `--save`
-- `Selected.<Plural>` returns nothing and `Selected.<Singular>` throws ("The selection does not contain any objects of type Measure"), because nothing is selected in a terminal. Verified on te 0.8.1.1: `Selected.Measures.Count()` is 0. Rewrite with `Model.AllMeasures`, `Model.AllColumns` or `Model.Tables.Where(...)`, and take the filter from a name, a folder or a property
 - WinForms is not loaded under `te script`: `ShowPrompt`, selection dialogs and any `System.Windows.Forms` type fail to compile. Scripts that need a dialog are TE3 Desktop scripts; `scripts/edit-*-interactive.csx` in the te-cli skill are examples (they fail `te script --validate` with missing `Padding`, `TreeNode` and similar types)
 - In `te script` the symbol `TECLI` is defined and `TE3` is not. A guard written `#if TE3 ... #else (TE2)` takes the TE2 branch under `te`. Write `#if TECLI`, then `#elif TE3`, then `#else` for TE2 (verified: a script printed TECLI)
 - `te script --validate --file x.csx` compiles without running and loads no model; use it on every script you write or edit. The tabular-editor plugin hook does it after each `.csx` edit and reports problems without blocking, since TE3-only scripts fail by design

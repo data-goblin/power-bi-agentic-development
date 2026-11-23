@@ -20,11 +20,8 @@ Learn: [PBIR report folder](https://learn.microsoft.com/en-us/power-bi/developer
 ## Surprises worth knowing
 
 - Every property value is `{"expr": {...}}`. A `Literal.Value` is a string that carries its type: `"'text'"`, `"50D"`, `"8L"`, `"true"`, `"null"`, `"'#1971c2'"`. The D versus L suffix is property specific, so copy it from a real file ([literals](../../wiki/pbir-expression-values.md))
-- `ComparisonKind`: 0 Equal, 1 GreaterThan, 2 GreaterThanOrEqual, 3 LessThan, 4 LessThanOrEqual. Earlier copies of this skill had 3 and 4 swapped, so check the schema before trusting generated conditional formatting
 - `objects` formats a visual's content; `visualContainerObjects` formats the container (title, background, border, tooltip, altText). Unknown names in `visualContainerObjects` are ignored without an error; `pbir validate --semantic` checks them
 - Formatting cascade, weakest to strongest: defaults, theme wildcards, theme visual-type entries, `visual.json` ([cascade](../../wiki/pbir-theme-cascade.md)). Put shared formatting in the theme
-- `page.json` `type` is `Drillthrough` or `Tooltip` only (omit it for a normal page); `pageBinding` holds the drillthrough and tooltip metadata ([page.json](../../wiki/pbir-page-json.md))
-- A filter has one of 11 types (Categorical, Range, Advanced, Passthrough, TopN, Include, Exclude, RelativeDate, Tuple, RelativeTime, VisualTopN) ([filters](../../wiki/pbir-filters.md))
 - `pages.json`: `pageOrder` entries without a page are ignored; `landingPageName` beats `activePageName`
 - `definition.pbir` is `byPath` (local model folder) or `byConnection` (Fabric-hosted model only); see [entry files](../../wiki/pbip-entry-files.md)
 - Phone layout is per visual in `mobile.json` under PBIR; `mobileState.json` is Legacy only

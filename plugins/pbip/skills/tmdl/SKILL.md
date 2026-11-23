@@ -10,7 +10,6 @@ Learn is the grammar reference: [TMDL overview](https://learn.microsoft.com/en-u
 ## Rules
 
 - Validate every edit with `te validate --model <definition folder> --errors-only --non-interactive`. It runs Microsoft's TOM TmdlSerializer on the whole folder plus a DAX analyzer, in under a second, and exits 1 on any error. The pbip plugin runs it as a hook after each `.tmdl` edit when `te` is installed
-- `//` is NOT a comment in TMDL. A `//` line between objects or properties is a parse error ("Unexpected line type" or "Invalid indentation"). `//` is legal only inside a DAX or M expression body. For a note on an object, use a `///` description
 - `///` lines sit directly above the object, with no blank line between the description and the declaration. Several `///` lines join into one description. Only objects that have a Description property accept it; `///` above a `relationship` is a parse error
 - One tab per level. Object at depth 1 (inside a table), its properties at depth 2, multi-line expression body at depth 3. Spaces also parse, but do not mix them in one file
 - Quote a name in single quotes only when it contains a dot, equals sign, colon, single quote or whitespace; double a single quote inside it. Names that start with a digit or contain `$`, `(`, `-` need no quotes. Names in references (`sortByColumn`, `fromColumn`, `perspectiveMeasure`) follow the same rule

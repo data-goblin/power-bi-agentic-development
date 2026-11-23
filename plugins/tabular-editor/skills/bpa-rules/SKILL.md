@@ -1,6 +1,6 @@
 ---
 name: bpa-rules
-description: Write, debug and run Best Practice Analyzer rules for Tabular Editor and the te CLI. Use when asked to create or fix a BPA rule, a Dynamic LINQ expression or FixExpression, set up a rule file or model-embedded rules, explain a te bpa run result, or put BPA in CI.
+description: Write, debug and run Best Practice Analyzer rules for Tabular Editor and the te CLI. Use when asked to create or fix a BPA rule, when a rule expression errors (No property or field exists) or catches nothing, for Dynamic LINQ expressions and FixExpression, rule files and model-embedded rules, te bpa run results, or BPA in CI.
 ---
 
 # BPA rules
@@ -11,8 +11,7 @@ A rule is JSON: an `Expression` (Dynamic LINQ, not C#) that is true for each vio
 
 - Build and test against a model, never from memory: `te bpa run --model <model> -r rules.json --no-defaults --no-model-rules --rule <ID> --non-interactive --output-format json`. Read `ruleErrors` (rules that failed to compile or evaluate; the message carries the Dynamic LINQ error, `findings` with `objectType: BpaRule`) and `violations`. A rule with `ruleErrors` 0 and `violations` 0 on a model that should violate it is a logic bug
 - Dynamic LINQ has no verbatim strings and no `RegexOptions`: `RegEx.IsMatch(Name, @"^M$")` fails with "No property or field '@' exists in type 'Measure'"; write `"^M$"`, and use `(?i)` inline for case-insensitive. Escape backslashes for JSON and again for the pattern
-- A wrong `Scope` name rejects the whole rule file, not just that rule ("Requested value 'Role' was not found"). Use the TOM names: `ModelRole`, `ModelRoleMember`, `NamedExpression`, `ProviderDataSource` or `StructuredDataSource`, `UserDefinedFunction`, `Calendar`; `Column` is an alias for `DataColumn, CalculatedColumn, CalculatedTableColumn`. List: `te bpa rules add --help`
-- Compare enum properties with their string name: `Type = "Calculated"` on a column works; `ObjectType = "CalculatedColumn"` does not compile
+- A wrong `Scope` name rejects the whole rule file, not just that rule ("Requested value 'Role' was not found"). The TOM names are listed by `te bpa rules add --help`; `Column` is an alias for the three column scopes
 - Severity: 1 information, 2 warning, 3 or higher error. It is ignored in the TE3 UI and drives the exit code only in the CLI (`te bpa run --fail-on error`, the default, exits 1)
 - `FixExpression` runs through `te bpa run --fix --save`; keep it to a safe property assignment and check the diff before saving
 - LF line endings, `_comment` keys and `"FixExpression": null` all load and evaluate in `te` (tested). Older advice that TE needs CRLF or rejects them applies, if at all, to the TE3 desktop app; Unverified there
