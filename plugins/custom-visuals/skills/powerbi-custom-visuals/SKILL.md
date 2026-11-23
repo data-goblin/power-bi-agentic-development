@@ -10,12 +10,10 @@ description: Builds, lints, packages and certifies Power BI custom visuals (.pbi
 - Node 20.19 or later is the floor of `powerbi-visuals-tools` 7.x. Run it as `npx -y powerbi-visuals-tools <command>` or install it globally
 - Run the toolchain instead of reciting rules: `pbiviz lint`, `pbiviz package --certification-audit`, and the MCP tools `check_vulnerabilities` and `prepare_certification`. Fix what they print
 - Use the bundled MCP server (`.mcp.json` starts `npx -y powerbi-visuals-tools mcp`) for API lookups: `get_available_apis`, `get_best_practices`, `list_visual_info`. Its tool descriptions load with the client
-- Visual version is four numeric parts without leading zeros (`1.1.0.0`, not `1.01.0.0`); 7.2.0 fails the build otherwise. `pbiviz.json` needs `author` with `name` and `email`
+- `pbiviz.json` needs `author` with `name` and `email`; version parts must not have leading zeros ([build gotchas](../../wiki/pbiviz-7-gotchas.md))
 - 7.0.0 removed the Node polyfills from webpack: `import crypto from 'crypto'`, `buffer`, `stream` and similar fail. Use the browser API or drop the dependency; do not add polyfill config. More in [pbiviz 7 gotchas](../../wiki/pbiviz-7-gotchas.md)
-- A visual that will be certified: no `fetch`, `XMLHttpRequest`, `eval`, `innerHTML`, `D3.html(user data)`, minified JavaScript, empty or omitted `WebAccess` privileges, no console errors for any input, and the Rendering Events API implemented (`pbiviz package --certification-audit` reports a missing one as an error since 7.0.4)
-- Certification also needs a lowercase `certification` branch matching the submitted package, `npm audit` clean at high and moderate, the `eslint` script `npx eslint . --ext .js,.jsx,.ts,.tsx` in `package.json`, and a repo with one visual only. R-based visuals cannot be certified. Full list on Learn: [certified visuals](https://learn.microsoft.com/en-us/power-bi/developer/visuals/power-bi-custom-visuals-certified)
+- Certification: lowercase `certification` branch matching the package, `npm audit` clean at high and moderate, one visual per repository, no network, no minified JavaScript, Rendering Events API implemented; R-based visuals cannot be certified. Full list: [Learn](https://learn.microsoft.com/en-us/power-bi/developer/visuals/power-bi-custom-visuals-certified)
 - Run `pbiviz package --certification-fix` only for forbidden calls inside third-party libraries, never for your own code, then update the `npm run package` script so the package hash matches at review
-- Developer visual: in Power BI Desktop the "Develop a visual" setting lasts one session; in the service developer mode persists (see [environment setup](https://learn.microsoft.com/en-us/power-bi/developer/visuals/environment-setup))
 
 ## Choose first
 
