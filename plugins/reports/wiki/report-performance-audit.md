@@ -1,5 +1,5 @@
 ---
-title: Report performance audit: query cost, Performance Analyzer, DirectQuery levers
+title: "Report performance audit: query cost, Performance Analyzer, DirectQuery levers"
 summary: Why visual count is a weak proxy, how to read a Performance Analyzer export, report-layer DirectQuery fixes and interaction defects validation misses.
 kind: gotcha
 status: current
