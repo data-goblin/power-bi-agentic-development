@@ -1,5 +1,5 @@
 ---
 type: regex
-pattern: fab api|te refresh
+pattern: refresh
 flags: i
 ---

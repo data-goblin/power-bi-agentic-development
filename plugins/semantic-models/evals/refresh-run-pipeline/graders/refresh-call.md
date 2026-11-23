@@ -1,4 +1,0 @@
----
-type: regex
-pattern: refreshes
----

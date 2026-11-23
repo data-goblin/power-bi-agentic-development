@@ -1,6 +1,6 @@
 ---
 name: connect-pbid
-description: Windows only. Work against a running Power BI Desktop instance when `te --local` or a model MCP cannot do the job (capture traces such as EVALUATEANDLOG payloads, visual queries and server timings), find the local msmdsrv port and map it to the open file, run TOM or ADOMD.NET from PowerShell, reload or screenshot the report canvas through the Desktop Bridge, install daxlib packages. Not for service or Direct Lake models, and not the first choice for ordinary model edits.
+description: Windows only. Use with a running Power BI Desktop instance for what `te --local` cannot do, such as applying TMDL edited on disk to the open model (pbir desktop refresh -m), reloading or screenshotting the report canvas through the Desktop Bridge, finding the local msmdsrv port and mapping it to the open file, capturing traces (EVALUATEANDLOG payloads, visual queries, server timings), raw TOM or ADOMD.NET from PowerShell, and daxlib packages. Not for service or Direct Lake models, and not the first choice for ordinary model edits.
 ---
 
 # Power BI Desktop (local engine)
@@ -39,7 +39,6 @@ Change the model with te or TOM, change visuals with `pbir-cli` (never patch rep
 - TOM packages: `Microsoft.AnalysisServices.retail.amd64` is frozen at 19.84.1; use `Microsoft.AnalysisServices` and `Microsoft.AnalysisServices.AdomdClient` (19.120.1) for functions, calendars and compatibility level 1702
 - A table made through TOM needs explicit `DataColumn` objects with `SourceColumn`; a relationship to a table added in the same script needs the column object and one `SaveChanges()`
 - Filter the hidden `RowNumberColumn` out of column lists
-- DMVs reject `JOIN`, `GROUP BY`, `LIKE`, `CAST`, `CONVERT`: use `EVALUATE INFO.STORAGETABLECOLUMNS()` or `te vertipaq` for sizes
 - `VertiPaqSEQueryCacheMatch` accepts only TextData and EventClass columns
 - `EVALUATEANDLOG` events arrive 2 to 3.5 s after the query: poll, do not sleep once ([wiki/trace-capture.md](../../wiki/trace-capture.md))
 - Raising the compatibility level (daxlib add, UDFs need 1702) is one-way and can stop older Desktop or deployment targets opening the model: ask first

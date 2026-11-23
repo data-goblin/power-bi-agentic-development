@@ -1,13 +1,13 @@
 ---
 name: semantic-model
-description: Build, change, review or audit a Power BI / Analysis Services semantic model from the terminal with the `te` CLI. Use for adding or editing measures, relationships, roles and RLS, calculation groups, incremental refresh, storage mode and Direct Lake settings, AI/Copilot metadata, and for model reviews (BPA, unused columns, VertiPaq size, fail-open RLS). Owns the object-reference convention for DAX. Not for report visuals (pbir-cli), query tuning (dax), or TMDL syntax (tmdl).
+description: Build, change, review or audit a Power BI / Analysis Services semantic model from the terminal with the `te` CLI, and diagnose model behaviour. Use for measures, relationships, roles and RLS, calculation groups (including errors after adding one, such as format strings, text measures and the variant type), incremental refresh, storage mode and Direct Lake settings and framing, AI/Copilot metadata, and for model reviews (BPA, unused columns, VertiPaq size, fail-open RLS). Owns the object-reference convention for DAX. Not for report visuals (pbir-cli), query tuning (dax), or TMDL syntax (tmdl).
 ---
 
 # Semantic models with te
 
 ## Rules
 
-- Object references in every expression and metadata text: `'Table'[Column]` (table always present, always single-quoted) and `[Measure]` (never table-prefixed). A measure belongs to the model, so moving it must not change its callers; a bare `[Measure]` is distinguishable from a column; an unqualified column is ambiguous once two tables share a name. This is the only copy of the rule: `dax`, `organize-semantic-model` and `connect-pbid` link here. Check it with `te bpa run -r rules/model-rules.json`
+- Object references in every expression and metadata text: `'Table'[Column]` (table always present, always single-quoted) and `[Measure]` (never table-prefixed). This is the only copy of the rule: `dax`, `organize-semantic-model` and `connect-pbid` link here. Check it with `te bpa run -r rules/model-rules.json`
 - Read before you write: `te get <path> --properties` lists every settable property of the real object. `te` can set far more than older notes claim: relationship `CrossFilteringBehavior` and `SecurityFilteringBehavior`, column `AlternateOf`, KPI, calendars, calculation group precedence and selection expressions, model `DirectLakeBehavior` and `SelectionExpressionBehavior`, incremental refresh policies. Use `te script` only when `--properties` shows no way
 - Every mutation is a dry run until `--save`. Each Bash call is a fresh shell, so pass `--model <path>` (or `-s`/`-d`) every time. Properties are `-p Name=Value`; `-p Name=null` or `--unset Name` clears one
 - Remote writes need the user's approval: `te refresh`, `te deploy` and `te test run` against a service model only act with `--execute` or a live connection. Dry run first and show the TMSL

@@ -9,15 +9,6 @@ description: Run and test Power Query M partition expressions against real data 
 
 - Prove folding with evidence, not a function list: no Microsoft page lists which functions fold. Use View Native Query in Desktop, or the source database's own query history. Do not trust per-function folding claims (older notes contradicted themselves on `Table.TransformColumnTypes` and `Table.Combine`); `Table.Buffer` and M-only `each` logic do break folding, and so does every step after a break. Guidance: https://learn.microsoft.com/en-us/power-bi/guidance/power-query-folding
 - Incremental refresh: filter `>= RangeStart and < RangeEnd` (half-open) on a DateTime column, and the filter must fold. Policy and prerequisites: [wiki/incremental-refresh.md](../../wiki/incremental-refresh.md)
-- Lakehouse navigation as Desktop generates it, not by display name:
-
-```
-Source = Lakehouse.Contents(null),
-Ws = Source{[workspaceId = "<guid>"]}[Data],
-Lh = Ws{[lakehouseId = "<guid>"]}[Data],
-Tbl = Lh{[Id = "orders", ItemKind = "Table"]}[Data]
-```
-
 - `Value.NativeQuery(Source, sql, null, [EnableFolding = true])` lets later steps fold over the native query
 
 ## Run an expression against the source

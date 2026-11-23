@@ -41,8 +41,4 @@ FE time is QueryEnd duration minus the union of overlapping SE intervals, not th
 
 ## Visual queries
 
-Subscribe to `QueryEnd` and read `TextData`, `Duration` and `CpuTime` as events arrive. Do not poll `$SYSTEM.DISCOVER_SESSIONS`: it keeps one last command per session, misses queries shorter than the poll interval, and its CPU column is not elapsed time. Ignore XMLA (`<`), `MDSCHEMA_`, `TMSCHEMA_` and `$SYSTEM` queries. Slicers often issue no model query.
-
-## DMVs
-
-Dynamic management views do not support `JOIN`, `GROUP BY`, `LIKE`, `CAST` or `CONVERT` (Learn). For per-table memory use `EVALUATE INFO.STORAGETABLECOLUMNS()` or `te vertipaq --columns`, and sum client-side. Source: https://learn.microsoft.com/en-us/analysis-services/instances/use-dynamic-management-views-dmvs-to-monitor-analysis-services
+Subscribe to `QueryEnd` and read `TextData`, `Duration` and `CpuTime` as events arrive; ignore XMLA, `MDSCHEMA_`, `TMSCHEMA_` and `$SYSTEM` queries. Polling `$SYSTEM.DISCOVER_SESSIONS` keeps one last command per session and misses short queries.

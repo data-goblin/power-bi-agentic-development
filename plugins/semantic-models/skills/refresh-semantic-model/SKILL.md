@@ -44,7 +44,7 @@ An enhanced refresh in progress shows `Unknown` in the history list and `InProgr
 
 ## Verify data actually changed
 
-Snapshot before and after: `te test snapshot --output-file before.json -s <ws> -d <model>`, refresh, then `te test snapshot --diff before.json`. A successful refresh with an unchanged snapshot means the source is stale: run the upstream job (`fab job run "Workspace.Workspace/Pipeline.DataPipeline"`, synchronous; `fab job start` is asynchronous) and refresh again.
+Snapshot before and after: `te test snapshot --output-file before.json -s <ws> -d <model>`, refresh, then `te test snapshot --diff before.json`. A successful refresh with an unchanged snapshot means the source is stale: run the upstream job (`fab job`) and refresh again.
 
 ## Failures that are not obvious
 
