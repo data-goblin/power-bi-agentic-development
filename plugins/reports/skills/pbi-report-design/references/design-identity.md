@@ -68,7 +68,7 @@ The signature is a contract: once chosen, every page honors it. A header band on
 
 ## Serialize the identity into the theme
 
-The identity belongs in the theme, not in per-visual overrides. A tone expressed as fifty inline hex values is not propagated; it is duplicated, and it will not survive a re-theme. Route execution through the **`modifying-theme-json`** skill:
+The identity belongs in the theme, not in per-visual overrides. A tone expressed as fifty inline hex values is not propagated; it is duplicated, and it will not survive a re-theme. Route execution through the `modifying-theme-json` skill:
 
 - the single-accent rule becomes the theme's `dataColors` ordering (accent first, neutrals after) so emphasis is one decision
 - gridline weight, label density, and accent saturation become theme wildcards (`visualStyles["*"]["*"]`) or visual-type overrides, not per-visual edits
@@ -78,7 +78,7 @@ When a later choice needs a color or a formatting value, it cites the locked ide
 
 ## Route each page to a shape
 
-Tone and signature set the look; **page shapes** set the structure. After locking identity, route every page to exactly one shape by the question it answers. See `references/page-shapes.md`. Shapes sit above the per-visual chart-selection guidance; they decide what belongs on a page before chart selection decides how each value is drawn.
+Tone and signature set the look; **page shapes** set the structure. After locking identity, route every page to exactly one shape by the question it answers. See `references/page-shapes.md`. Shapes decide what belongs on a page before chart choice decides how each value is drawn.
 
 ## Pitfalls
 

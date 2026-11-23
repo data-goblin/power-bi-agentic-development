@@ -2,7 +2,7 @@
 
 Route every page to exactly one **shape**, chosen by the question the page answers, not by a generic dashboard mold. A page is a unit of intent: it exists to answer one question for one reader. Naming the question first decides what belongs, what stays off, and how the page is laid out.
 
-Shapes sit above the per-visual guidance in `references/chart-selection.md`: the shape decides what goes on the page, then chart selection decides how each value is drawn. Each shape reuses the detail-gradient and spacing-tier vocabulary in `references/layout-guidelines.md` rather than inventing new layout rules.
+The shape decides what goes on the page; chart choice then decides how each value is drawn. Each shape reuses the detail gradient (important and summary top-left, detail bottom-right) rather than inventing layout rules.
 
 **Rule: one shape per page.** A page trying to answer two questions is two pages. If a page reads as both a summary and an exploration surface, split it.
 
