@@ -257,22 +257,23 @@ Hook checks can be individually toggled via config files. Set any check to `fals
 | Type | Name | Description |
 |------|------|-------------|
 | Skill | [`paginated-report`](plugins/paginated-reports/skills/paginated-report/) | Author, validate, publish, and test Power BI paginated reports in RDL format (Report Builder, PBIRS/SSRS-compatible); connect to a semantic model, render to PDF/Excel |
-| Hook | RDL validation | Validates `.rdl` structure after Write/Edit and on Bash commands touching `.rdl` files; blocks on structural errors only |
+| Hook | RDL validation | After Write/Edit of an `.rdl` (not Bash), runs `validate_rdl.py`: structure, references, the PDF width trap, `Fields!` and `Parameters!` references; blocks on errors only; needs Python 3.8 or later and says so on stderr when it is missing |
 
 </details>
 
 <details>
-<summary><img src="media/icons/custom-visuals.svg" alt="" height="20"> <strong>custom-visuals</strong> &ensp; Build Deneb, Python, R, SVG, and pbiviz custom visuals for Power BI</summary>
+<summary><img src="media/icons/custom-visuals.svg" alt="" height="20"> <strong>custom-visuals</strong> &ensp; Build Deneb, SVG and pbiviz custom visuals for Power BI; maintain or migrate Python and R visuals, which retire in May 2027</summary>
 
 | Type | Name | Description |
 |------|------|-------------|
-| Skill | [`deneb-visuals`](plugins/custom-visuals/skills/deneb-visuals/) | Deneb visual creation, Vega/Vega-Lite spec authoring, Deneb best practices for PBIR reports |
-| Skill | [`r-visuals`](plugins/custom-visuals/skills/r-visuals/) | Custom R visuals (ggplot2) for Power BI reports |
-| Skill | [`python-visuals`](plugins/custom-visuals/skills/python-visuals/) | Custom Python visuals (matplotlib/seaborn) for Power BI reports |
-| Skill | [`svg-visuals`](plugins/custom-visuals/skills/svg-visuals/) | SVG generation via DAX measures and extension measures for inline chart visualizations (sparklines, bullet charts, KPI indicators, and more) |
-| Skill | [`powerbi-custom-visuals`](plugins/custom-visuals/skills/powerbi-custom-visuals/) | Power BI developer custom visual (`.pbiviz`) development with the `pbiviz` toolchain and its MCP server: scaffold, build, debug, package, certify, publish to AppSource |
+| Skill | [`deneb-visuals`](plugins/custom-visuals/skills/deneb-visuals/) | Deneb 2.0 Vega/Vega-Lite visuals in PBIR reports: spec rules, field names, theme colors, cross-filtering, templates |
+| Skill | [`r-visuals`](plugins/custom-visuals/skills/r-visuals/) | R script visuals (ggplot2): the May 2027 retirement, service traps, migration options |
+| Skill | [`python-visuals`](plugins/custom-visuals/skills/python-visuals/) | Python script visuals (matplotlib/seaborn): the May 2027 retirement, limits, migration options |
+| Skill | [`svg-visuals`](plugins/custom-visuals/skills/svg-visuals/) | DAX measures that return SVG for table and matrix cells, image visuals, new cards and button slicers |
+| Skill | [`powerbi-custom-visuals`](plugins/custom-visuals/skills/powerbi-custom-visuals/) | Power BI developer custom visual (`.pbiviz`) development with the `pbiviz` toolchain and its MCP server: scaffold, lint, package, certify, publish to AppSource, replace R and Python visuals |
+| Hook | Visual lint | After Write/Edit of `*.vl.json`, `*.vega.json` (Deneb specs) and `*.dax` (SVG measures), runs `lint_visuals.py`; blocks on removed Deneb fields and broken SVG data URIs, returns the rest as context; needs Python 3.8 or later and says so on stderr when it is missing |
 
-Reviewer agents for these visual types (`deneb-reviewer`, `svg-reviewer`, `r-reviewer`, `python-reviewer`) ship in the `reports` plugin above.
+The reviewer agents for these visual types (`deneb-reviewer`, `svg-reviewer`, `r-reviewer`, `python-reviewer`) ship in the `reports` plugin, not in `custom-visuals`; install `reports` to use them. R and Python visuals retire in May 2027 ([Learn](https://learn.microsoft.com/en-us/power-bi/create-reports/script-visuals-overview))
 
 </details>
 
