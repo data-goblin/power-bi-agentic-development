@@ -77,7 +77,7 @@ fab label set "ws.Workspace/Sales.Report" -n "Confidential" -f
 fab label rm "ws.Workspace/Sales.Report" -f
 ```
 
-`label set` resolves `-n` against the local file, so configure it first; Unverified: the JSON schema of the labels file (not in `--help`). `fab get`, `fab export` and `fab bulk-export` with `-f` return definitions without the label.
+`label set` resolves `-n` against the local file, so configure it first. The file is `{"labels": [{"name": "Confidential", "id": "<label-guid>"}]}` ([label examples](https://microsoft.github.io/fabric-cli/examples/label_examples/)). `fab get`, `fab export` and `fab bulk-export` with `-f` return definitions without the label.
 
 ## Authentication
 

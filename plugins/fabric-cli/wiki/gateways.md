@@ -7,6 +7,8 @@ sources:
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/gateways
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/datasets/bind-to-gateway
   - url: https://learn.microsoft.com/en-us/data-integration/vnet/overview
+  - url: https://learn.microsoft.com/en-us/rest/api/power-bi/gateways/update-datasource
+  - url: https://learn.microsoft.com/en-us/rest/api/power-bi/gateways/get-datasource-status
 tools:
   fab: 1.7.0
 last_updated: 2026-11-23
@@ -58,4 +60,4 @@ fab api -A powerbi -X patch "gateways/<gw-id>/datasources/<ds-id>" -i '{"credent
 
 Check connectivity before a refresh with `fab api -A powerbi "gateways/<gw-id>/datasources/<ds-id>/status" -q status_code`; a failure returns a code such as `DM_GWPipeline_Client_GatewayUnreachable` (400).
 
-Unverified: the request bodies come from Learn and earlier notes; they were not re-run against a tenant on fab 1.7.0. Take the `<secret>` from `op read`, never hardcode it.
+The request bodies follow the Learn samples for [Update Datasource](https://learn.microsoft.com/en-us/rest/api/power-bi/gateways/update-datasource), Bind To Gateway and [Get Datasource Status](https://learn.microsoft.com/en-us/rest/api/power-bi/gateways/get-datasource-status). Take the `<secret>` from `op read`, never hardcode it.

@@ -47,8 +47,9 @@ fab api -A powerbi "groups/$WS/datasets/$MODEL/users"
 fab api -A powerbi -X post "groups/$WS/datasets/$MODEL/users" -i '{"identifier":"<object-id>","principalType":"User","datasetUserAccessRight":"Read"}'
 ```
 
-- Power BI dataset users endpoints above exist on Learn (Datasets - Get/Post Dataset User In Group); Unverified here: the exact body fields and which `datasetUserAccessRight` values the service accepts today (Read, ReadReshare, ReadExplore, ReadWrite and combinations)
-- Unverified: a Fabric-native item-permissions endpoint (for example `items/{id}/permissions`); check the Fabric REST reference before relying on one
+- The dataset users calls are [Post Dataset User In Group](https://learn.microsoft.com/en-us/rest/api/power-bi/datasets/post-dataset-user-in-group) and Put Dataset User In Group (update an existing grant). Body: `identifier` (UPN for `User`, object id otherwise), `principalType` (`None`, `User`, `Group`, `App`), `datasetUserAccessRight` (`Read`, `ReadReshare`, `ReadExplore`, `ReadReshareExplore`; there is no `ReadWrite`)
+- Limits on Post Dataset User: service principals (`App`) cannot be added, the caller needs ReadReshare on the model, and Write cannot be granted with it
+- The [Fabric Items REST reference](https://learn.microsoft.com/en-us/rest/api/fabric/core/items) has no item-permissions operation; the admin group only reads ([List Item Access Details](https://learn.microsoft.com/en-us/rest/api/fabric/admin/items))
 - Tenant-wide read of who can reach an item: `fab api -A powerbi admin/users/<userGraphId>/artifactAccess` (see [admin.md](./admin.md))
 - Lakehouse and warehouse data access is more granular (ReadData, ReadAll, OneLake data access roles); manage it in the portal or the OneLake security APIs
 

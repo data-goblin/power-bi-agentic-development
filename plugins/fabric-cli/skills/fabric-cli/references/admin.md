@@ -50,7 +50,7 @@ property type: Boolean | Integer | FreeText | Url | MailEnabledSecurityGroup; va
 - Security-group scoping needs `canSpecifySecurityGroups: true` and the group's Entra object id (`graphId`)
 - Updating a parent setting does not rewrite existing capacity, domain or workspace overrides
 - Item recovery is `ConfigureArtifactRetentionPeriod` (property `ArtifactRetentionPeriod`, 7 to 90 days, off by default); it decides whether `fab rm` is recoverable (see [commands.md](./commands.md))
-- Workspace retention is `ConfigureFolderRetentionPeriod` (property `FolderRetentionPeriod`); Unverified: its default and range (earlier text gave both 7 and 90 days), check the portal
+- Workspace retention is `ConfigureFolderRetentionPeriod` (property `FolderRetentionPeriod`); default 7 days, configurable from 7 to 90 ([workspace retention](https://learn.microsoft.com/en-us/fabric/admin/workspace-retention))
 - Personal workspaces keep a fixed 30 days
 
 ### Delegated overrides

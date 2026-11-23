@@ -8,6 +8,8 @@ sources:
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/groups/update-group
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/capacities/groups-assign-to-capacity
   - url: https://learn.microsoft.com/en-us/rest/api/fabric/core/git/get-status
+  - url: https://microsoft.github.io/fabric-cli/examples/workspace_examples/
+  - url: https://github.com/microsoft/fabric-cli
 tools:
   fab: 1.7.0
 last_updated: 2026-11-23
@@ -38,9 +40,9 @@ fab get "Quarterly.Workspace" -q sparkSettings
 
 ## Capacity
 
-- `fab ls .capacities` shows only Fabric F SKU capacities. `fab assign .capacities/<Name>.Capacity -W "ws.Workspace" -f` is for F SKUs; the earlier notes report `[Not a Fabric capacity]` for Trial and PPU (Unverified on 1.7.0).
+- `fab ls .capacities` shows only Fabric F SKU capacities. `fab assign .capacities/<Name>.Capacity -W "ws.Workspace" -f` is for F SKUs; fab 1.7.0 rejects any non-F SKU capacity path with `[Not a Fabric capacity]`, so Trial and PPU fail ([fab source](https://github.com/microsoft/fabric-cli), `fab_fs.py`).
 - For Trial or PPU use the Power BI API: `fab api -A powerbi "capacities" -q "text.value[].{name:displayName, sku:sku, id:id}"`, then `fab api -A powerbi -X post "groups/$WS_ID/AssignToCapacity" -i '{"capacityId": "<capacity-id>"}'`. An all-zero capacityId unassigns. The earlier notes used `PATCH groups/<id>` with `capacityId`, but Learn's Update Group lists only `name` and `defaultDatasetStorageFormat`; use AssignToCapacity.
-- Without a capacity, XMLA and refresh fail with permission errors such as "does not have permission to call Discover"; XMLA needs F64 or higher, PPU or Trial per the earlier notes (Unverified).
+- Without a capacity, XMLA and refresh fail with permission errors such as "does not have permission to call Discover".
 - A missing `-f` in a script fails with `[UnexpectedError] 22` because stdin is not a terminal.
 
 ## Large semantic model storage format
@@ -57,7 +59,7 @@ Existing models are not converted; republish or update each one. Switching back 
 ## Spark settings
 
 - Observed default on a Trial workspace: runtime `1.3`, default pool `Starter Pool` of type `Workspace` with a zero GUID id. Runtime 2.0 (Spark 4.1) is the GA default for new work; 1.3 is end-of-support-announced and 1.2 is retired, so never set `1.2`.
-- Set them with `fab set "ws.Workspace" -q sparkSettings.environment.runtimeVersion -i 2.0` and `fab set "ws.Workspace" -q sparkSettings.pool.defaultPool -i '{"name": "Starter Pool", "type": "Workspace"}'`. A custom pool adds its `id`. Unverified: writing these on 1.7.0.
+- Set them with `fab set "ws.Workspace" -q sparkSettings.environment.runtimeVersion -i 2.0` and `fab set "ws.Workspace" -q sparkSettings.pool.defaultPool -i '{"name": "Starter Pool", "type": "Workspace"}'`. A custom pool adds its `id`. Both commands are in the [fab workspace examples](https://microsoft.github.io/fabric-cli/examples/workspace_examples/).
 
 ## Git sync check before deploying
 
@@ -65,4 +67,4 @@ Existing models are not converted; republish or update each one. Switching back 
 fab api "workspaces/$WS_ID/git/status" -q "text.{head:workspaceHead, remote:remoteCommitHash, changes:length(changes)}"
 ```
 
-In sync means `workspaceHead == remoteCommitHash` and an empty `changes` array. A workspace without Git returns status 400 `WorkspaceNotConnectedToGit` (observed). The call is a long-running operation and needs contributor role. Reconcile with `commitToGit` (push) or `updateFromGit` (pull), both long running. Unverified: how `fab api` handles the `202` of a connected workspace.
+In sync means `workspaceHead == remoteCommitHash` and an empty `changes` array. A workspace without Git returns status 400 `WorkspaceNotConnectedToGit` (observed). The call is a long-running operation and needs contributor role. Reconcile with `commitToGit` (push) or `updateFromGit` (pull), both long running.

@@ -6,6 +6,7 @@ status: current
 sources:
   - url: https://learn.microsoft.com/en-us/rest/api/fabric/core/folders
   - url: https://learn.microsoft.com/en-us/rest/api/fabric/core/items/move-item
+  - url: https://learn.microsoft.com/en-us/fabric/cicd/git-integration/git-integration-process
 tools:
   fab: 1.7.0
 last_updated: 2026-11-23
@@ -39,7 +40,7 @@ fab api "workspaces/$WS_ID/items" -q "text.value[].{name:displayName, folder:fol
 - Move an item with `POST workspaces/<ws>/items/<id>/move` and `targetFolderId`; an empty body moves it to the root. Child items (such as a Lakehouse SQL endpoint) move with the parent; a child cannot move alone (`CannotMoveChildOnly`). Contributor role or higher.
 - Rename with `PATCH workspaces/<ws>/folders/<id>` and `displayName`.
 - Delete only works on an empty folder; move or remove its items first.
-- Git integration does not carry workspace folders; items may land at the root after a sync. Unverified against current Git integration docs.
+- Git integration mirrors the workspace folder structure: items in folders export to same-named Git folders and import back into same-named workspace folders ([Git integration process](https://learn.microsoft.com/en-us/fabric/cicd/git-integration/git-integration-process)).
 - Folders are visible in the Fabric UI, via the API and via `.Folder` paths in fab.
 
 ## Example: move notebooks into a folder
@@ -51,4 +52,4 @@ for ID in $(fab api "workspaces/$WS_ID/items?type=Notebook" -q "text.value[?star
 done
 ```
 
-Unverified: this loop and the `fab mv`, `fab rm` and `fab set -q displayName` equivalents for folders were not run on fab 1.7.0; `fab rm` on an item is permanent unless tenant item recovery is on.
+`fab rm` on an item is permanent unless tenant item recovery is on.

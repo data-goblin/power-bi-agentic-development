@@ -36,7 +36,7 @@ constants: fabric-cicd constant overrides (format not on the fab page)
 - Unpublish deletes target items missing from the source folder; protect items with `unpublish.exclude_regex` before the first run against a real workspace
 - `repository_directory` and `parameter` resolve relative to the config file, not the current directory
 - `--target_env` selects the environment only when the config has per-environment mappings; without mappings omit it
-- The regex and include keys need matching fabric-cicd feature flags; Unverified which; selective deploy is discouraged by the docs because of dependency handling
+- `exclude_regex` needs no flag. `items_to_include`, `folder_path_to_include` and `folder_exclude_regex` need fabric-cicd feature flags (`enable_items_to_include`, `enable_include_folder`, `enable_exclude_folder`, each also needing `enable_experimental_features`; [fabric-cicd flags](https://microsoft.github.io/fabric-cicd/latest/how_to/optional_feature/)); selective deploy is discouraged by the docs because of dependency handling ([fab deploy](https://microsoft.github.io/fabric-cli/commands/fs/deploy/))
 - `--bulk_publish` sets the fabric-cicd experimental and bulk-publish flags and imports all items in one API call
 - Source the folder from Git-integrated item files; `fab export` output has no logical ids, so cross-item references usually need the parameter file
 
@@ -112,7 +112,7 @@ paginated report and mirrored database: data source rule
 notebook: default lakehouse rule
 ```
 
-- No clean Fabric endpoint; set them in the portal, or POST Power BI `pipelines/<id>/stages/<order>/rules` (Unverified schema)
+- Set them in the portal: neither the [Fabric](https://learn.microsoft.com/en-us/rest/api/fabric/core/deployment-pipelines) nor the [Power BI](https://learn.microsoft.com/en-us/rest/api/power-bi/pipelines) deployment pipelines REST reference has a rules operation
 - The rule owner must own the item and be at least Contributor on the target workspace
 - Data source rules only swap sources of the same type; parameters used for rebinding must be `Text`
 

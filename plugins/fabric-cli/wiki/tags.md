@@ -7,6 +7,8 @@ sources:
   - url: https://learn.microsoft.com/en-us/rest/api/fabric/core/tags
   - url: https://learn.microsoft.com/en-us/rest/api/fabric/admin/tags
   - url: https://learn.microsoft.com/en-us/rest/api/fabric/admin/tags/bulk-create-tags
+  - url: https://learn.microsoft.com/en-us/fabric/governance/tags-overview
+  - url: https://microsoft.github.io/fabric-cli/commands/api/
 tools:
   fab: 1.7.0
 last_updated: 2026-11-23
@@ -41,7 +43,7 @@ apply or unapply on a workspace: POST workspaces/<ws>/applyTags and unapplyTags
 
 ## Other gotchas
 
-- Caps: 10,000 tags per tenant, 10 per item, 10 per workspace (independent counts). The earlier note said hitting the cap returns 400 without partial apply; Unverified.
+- Caps: 10,000 tags per tenant, 10 per item, 10 per workspace (independent counts; [tags overview](https://learn.microsoft.com/en-us/fabric/governance/tags-overview)).
 - Bulk create and the other admin writes are limited to 25 requests per minute per principal; creating needs `Tenant.ReadWrite.All`. A `displayName` is at most 40 characters and a duplicate name returns `EntityConflict`.
 - Create body: `{"createTagsRequest": [{"displayName": "Finance FY26"}]}`; add `"scope": {"type": "Domain", "domainId": "<id>"}` for domain tags. Response is `201` with a `tags` array carrying each new id.
 - Apply and unapply take `{"tags": ["<tagId>"]}` and return `200` with an empty body; apply is additive, unapply removes only the listed ids.
@@ -61,4 +63,4 @@ for ITEM_ID in $(fab api "workspaces/$WS_ID/items?type=SemanticModel" -q "text.v
 done
 ```
 
-Find items by tag: `fab api "workspaces/$WS_ID/items" -q "text.value[?tags && contains(tags[].id, '$TAG_ID')].{id:id, name:displayName}"`. Unverified: writes and the file-path form of `-i` were not run on fab 1.7.0.
+Find items by tag: `fab api "workspaces/$WS_ID/items" -q "text.value[?tags && contains(tags[].id, '$TAG_ID')].{id:id, name:displayName}"`. `-i` takes an inline JSON string or a path to a JSON file ([fab api](https://microsoft.github.io/fabric-cli/commands/api/)).

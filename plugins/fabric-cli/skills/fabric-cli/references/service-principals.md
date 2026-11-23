@@ -96,7 +96,7 @@ fab auth status   # should show Logged In: True, Principal ID = the SP's object 
 fab ls "ws.Workspace"
 ```
 
-All three token variables must be set (the docs also list `FAB_TENANT_ID`) or `fab` aborts immediately with `[UnexpectedError] FAB_TOKEN_AZURE` (or whichever is missing) before any network call. This is scoped to the process env, so it is the right one-off "does this SP work" check. From fab 1.8.0 the Azure CLI is also an auth source, so an `az login` as the SP can back `fab` instead; Unverified how it is selected, and the env tokens are ignored when it is in use.
+All three token variables must be set (the docs also list `FAB_TENANT_ID`) or `fab` aborts immediately with `[UnexpectedError] FAB_TOKEN_AZURE` (or whichever is missing) before any network call. This is scoped to the process env, so it is the right one-off "does this SP work" check. From fab 1.8.0 the Azure CLI is also an auth source, so an `az login` as the SP can back `fab` by passing the --azure-cli flag to the login command ([auth command](https://microsoft.github.io/fabric-cli/commands/auth/)); the env tokens are ignored when it is in use ([environment variables](https://microsoft.github.io/fabric-cli/essentials/env_vars/)).
 
 ## Gotchas
 

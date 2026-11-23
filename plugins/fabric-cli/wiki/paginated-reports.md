@@ -6,6 +6,8 @@ status: current
 sources:
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/reports/export-to-file-in-group
   - url: https://learn.microsoft.com/en-us/power-bi/developer/embedded/export-paginated-report
+  - url: https://learn.microsoft.com/en-us/rest/api/power-bi/imports/post-import-in-group
+  - url: https://learn.microsoft.com/en-us/rest/api/power-bi/reports/get-export-to-file-status-in-group
 tools:
   fab: 1.7.0
 last_updated: 2026-11-23
@@ -54,7 +56,7 @@ gateway: POST .../Default.BindToGateway with gatewayObjectId and bindDetails[]; 
 rebind to another semantic model: POST .../Rebind with datasetId
 ```
 
-- Import an .rdl: `datasetDisplayName` must end in `.rdl`, `nameConflict` is only `Abort` or `Overwrite`, 20 MB maximum, asynchronous (`importState` goes Publishing then Succeeded or Failed). `fab api` cannot send multipart, so upload with another HTTP client. Unverified: this was not tested on fab 1.7.0.
+- Import an .rdl: `datasetDisplayName` must end in `.rdl`, `nameConflict` is only `Abort` or `Overwrite`, asynchronous (`importState` is Publishing, Succeeded or Failed; [Post Import In Group](https://learn.microsoft.com/en-us/rest/api/power-bi/imports/post-import-in-group)). The upload is multipart and Learn suggests the C# SDK for .rdl files; `fab api` cannot send multipart, so use another HTTP client.
 - Download the definition: `fab api -A powerbi "groups/$WS_ID/reports/$REPORT_ID/Export" > Report.rdl`.
 
-Unverified: request bodies were not re-run on fab 1.7.0. The status call is `GET .../exports/<id>` per Learn; the earlier reference wrongly appended `/status`.
+The status call is `GET .../exports/<id>` per [Get Export To File Status In Group](https://learn.microsoft.com/en-us/rest/api/power-bi/reports/get-export-to-file-status-in-group); the earlier reference wrongly appended `/status`.

@@ -108,7 +108,7 @@ A report's `definition.pbir` holds `datasetReference.byConnection.connectionStri
 
 ## Access
 
-`fab acl` does not work on a semantic model (workspace, connection and gateway only). Workspace members: `fab acl ls "ws.Workspace"`. Model-level users: `fab api -A powerbi "groups/$WS/datasets/$MODEL/users"` (Unverified on current service behaviour); see [permissions.md](./permissions.md).
+`fab acl` does not work on a semantic model (workspace, connection and gateway only). Workspace members: `fab acl ls "ws.Workspace"`. Model-level users: `fab api -A powerbi "groups/$WS/datasets/$MODEL/users"` ([Get Dataset Users In Group](https://learn.microsoft.com/en-us/rest/api/power-bi/datasets/get-dataset-users-in-group)); see [permissions.md](./permissions.md).
 
 ## Source data checks
 

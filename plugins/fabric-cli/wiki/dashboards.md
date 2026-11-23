@@ -6,6 +6,10 @@ status: current
 sources:
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/dashboards
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/dashboards/clone-tile-in-group
+  - url: https://learn.microsoft.com/en-us/rest/api/power-bi/admin/dashboards-get-dashboards-as-admin
+  - url: https://learn.microsoft.com/en-us/rest/api/power-bi/admin/dashboards-get-dashboard-users-as-admin
+  - url: https://learn.microsoft.com/en-us/rest/api/power-bi/admin/dashboards-get-dashboard-subscriptions-as-admin
+  - url: https://learn.microsoft.com/en-us/rest/api/power-bi/admin/dashboards-get-tiles-as-admin
 tools:
   fab: 1.7.0
 last_updated: 2026-11-23
@@ -32,7 +36,7 @@ edited tile titles: titles changed in the source report before pinning are not r
 
 - The `users` and `subscriptions` arrays on the dashboard payload are being deprecated; use the admin endpoints (`admin/dashboards/<id>/users`, `admin/dashboards/<id>/subscriptions`).
 - Tiles from report visuals and Q&A carry `reportId` and `datasetId`; image, text, video and streaming tiles carry neither.
-- Admin endpoints need `Tenant.Read.All` and are rate limited. Unverified: an earlier note said 50 requests per hour or 5 per minute per tenant.
+- Admin endpoints need `Tenant.Read.All` and are rate limited: [Get Dashboards As Admin](https://learn.microsoft.com/en-us/rest/api/power-bi/admin/dashboards-get-dashboards-as-admin) allows 50 requests per hour or 5 per minute per tenant; [users](https://learn.microsoft.com/en-us/rest/api/power-bi/admin/dashboards-get-dashboard-users-as-admin), [subscriptions](https://learn.microsoft.com/en-us/rest/api/power-bi/admin/dashboards-get-dashboard-subscriptions-as-admin) and [tiles](https://learn.microsoft.com/en-us/rest/api/power-bi/admin/dashboards-get-tiles-as-admin) allow 200 per hour.
 
 ## Clone Tile gotchas
 
@@ -49,5 +53,3 @@ for TILE in $(fab api -A powerbi "groups/$WS_ID/dashboards/<dash-id>/tiles" -q "
   fab api -A powerbi -X post "groups/$WS_ID/dashboards/<dash-id>/tiles/$TILE/Clone" -i '{"targetDashboardId": "<target-dash-id>", "targetWorkspaceId": "<target-ws-id>", "targetReportId": "<report-id>", "targetModelId": "<model-id>"}'
 done
 ```
-
-Unverified: this loop was not re-run on fab 1.7.0 and the `jq` unwrap of the `-q` array output is assumed.

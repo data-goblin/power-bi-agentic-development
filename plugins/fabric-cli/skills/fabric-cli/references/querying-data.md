@@ -88,7 +88,7 @@ DELETE /sessions/{id}: always
 ```
 
 - Always delete the session (use `finally`); an idle session burns capacity units until its idle timeout (default 20 minutes)
-- Token: `az account get-access-token --resource https://api.fabric.microsoft.com`; it expires after about 60 minutes. Unverified whether a `fab` token (fab 1.8.0 or later can also take Azure CLI as an auth source) is accepted for Livy; the older rule was that fab tokens are rejected for storage and OneLake calls
+- Token: `az account get-access-token --resource https://api.fabric.microsoft.com`; it expires after about 60 minutes. Learn's Livy session guide requires an app registration token with the `Code.AccessFabric.All` and `Code.AccessStorage.All` scopes to read and write lakehouse data ([Livy session](https://learn.microsoft.com/en-us/fabric/data-engineering/get-started-api-livy-session)); see the etl plugin `livy-api` page
 - `deltalake` (delta-rs) is not preinstalled in the Spark runtime; use Spark SQL. `notebookutils` has no FUSE mount and no `/lakehouse/default/` here
 - A `spark` session always exists; JDBC reads and `saveAsTable` writes work
 - The `executing-spark` skill (etl plugin) covers this route; the separate `nb` CLI (data-goblin/nb-cli) wraps it as `nb exec code`

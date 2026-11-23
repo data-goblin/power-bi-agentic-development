@@ -20,5 +20,5 @@ fab table schema "ws.Workspace/MyWarehouse.Warehouse/Tables/dbo/orders"
 - Tables are Delta in OneLake, so DuckDB `delta_scan` over `.../MyWarehouse.Warehouse/Tables/dbo/orders` works (read-only)
 - `fab cp` to Files and `fab table load` do not work on warehouses; load with T-SQL (`CREATE TABLE ... AS SELECT * FROM OPENROWSET(BULK ...)` or `COPY INTO`), a Python notebook via `notebookutils.data.connect_to_artifact`, or Spark `synapsesql` (Runtime 1.3 or later; opaque errors through `fab job run`, so check the Spark log with `fab open`)
 - Unlike a lakehouse SQL endpoint, a warehouse accepts full T-SQL DDL and DML
-- Unverified: whether warehouses support shortcuts (earlier text said no); check Learn before relying on it
+- Shortcuts are created in lakehouses and KQL databases, not in a warehouse; a warehouse is only a valid shortcut target, for example from a lakehouse ([OneLake shortcuts](https://learn.microsoft.com/en-us/fabric/onelake/onelake-shortcuts))
 - `fab rm` is permanent unless tenant item recovery is on (see [commands.md](./commands.md)); `WarehouseSnapshot` items need fab 1.9.0 or later

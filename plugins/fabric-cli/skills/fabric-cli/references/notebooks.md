@@ -45,8 +45,6 @@ pyspark:
 cells: each cell repeats microsoft.language_group in its own metadata
 ```
 
-Unverified: `jupyter_kernel_name` values for newer Python versions; copy the block from a notebook exported out of the portal.
-
 ### Attaching data items
 
 Without a `dependencies` block, lakehouse paths and `notebookutils.data` calls fail.

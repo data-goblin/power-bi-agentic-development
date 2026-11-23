@@ -6,6 +6,7 @@ status: current
 sources:
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/scorecards%28preview%29
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/goals%28preview%29/post
+  - url: https://learn.microsoft.com/en-us/rest/api/power-bi/goals-status-rules%28preview%29/post
   - url: https://learn.microsoft.com/en-us/power-bi/create-reports/service-goals-introduction
 tools:
   fab: 1.7.0
@@ -57,4 +58,4 @@ fab api -A powerbi -X post "groups/$WS_ID/scorecards($SC_ID)/goals($GOAL_ID)/sta
 
 The rule above sets On track when Value is at least 90 percent of Target and At risk otherwise. Value types in a condition: `{"number": 90.0}`, `{"percentOf": {...}}`, `{"dateTime": "..."}`, `{"field": "Target"}`.
 
-Unverified: the request bodies come from Learn and earlier notes; they were not re-run on fab 1.7.0.
+The bodies follow the Learn request definitions: Goals Post takes `name` (required) with optional `startDate` and `completionDate`, GoalValues Post takes `timestamp` (required) with `value`, `target` and `status`, and [GoalsStatusRules Post](https://learn.microsoft.com/en-us/rest/api/power-bi/goals-status-rules%28preview%29/post) takes `defaultOutput` (required) and `rules`.

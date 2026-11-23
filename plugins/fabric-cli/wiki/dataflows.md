@@ -7,6 +7,8 @@ sources:
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/dataflows
   - url: https://learn.microsoft.com/en-us/rest/api/fabric/dataflow/items
   - url: https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/run-on-demand-item-job
+  - url: https://learn.microsoft.com/en-us/fabric/data-factory/dataflow-gen2-public-apis
+  - url: https://microsoft.github.io/fabric-cli/commands/api/
 tools:
   fab: 1.7.0
 last_updated: 2026-11-23
@@ -41,18 +43,19 @@ Gen2 uses the Fabric item type `Dataflow`, so `fab ls`, `fab get` and `fab expor
 - Lifecycle is definition, then Publish job, then Refresh job. After `updateDefinition`, a refresh without a completed Publish runs the previous definition.
 - Start jobs with `POST workspaces/<ws>/items/<id>/jobs/instances?jobType=Publish` or `Refresh`. Learn now documents `jobs/<jobType>/instances` and keeps the query form for backward compatibility. Both return `202` with a `Location` and `Retry-After` header; poll the job instance until `Completed` or `Failed`.
 - Gen2 trigger returns the job instance id, so polling is deterministic; Gen1 is not.
-- Service principals are not supported for Gen2 dataflow APIs. Unverified: re-check, this came from an earlier note.
+- Service principals are not supported for Gen2 dataflow APIs ([Dataflow Gen2 public APIs, current limitations](https://learn.microsoft.com/en-us/fabric/data-factory/dataflow-gen2-public-apis); the Create Dataflow reference lists them as supported, so treat the limitations page as the stricter rule).
 - Notifications are not available through the API; use the Monitoring Hub.
 - `getDefinition` is a POST and returns base64 parts. To read one part: `fab api -X post "workspaces/$WS_ID/items/$ITEM_ID/getDefinition" -q "text.definition.parts[?path=='dataflow-content.json'].payload | [0]"`, then base64-decode the output.
-- Do not expect Get Item or List Item Access Details to filter correctly by the Dataflow type (earlier note, Unverified).
+- Get Item and List Item Access Details do not return correct information when filtered on the dataflow item type; without a type the API returns the Dataflow Gen2 (CI/CD) item ([current limitations](https://learn.microsoft.com/en-us/fabric/data-factory/dataflow-gen2-public-apis)).
 
 ## Example: update definition, publish, refresh (Gen2)
 
 ```bash
 fab api -X post "workspaces/$WS_ID/items/$ITEM_ID/updateDefinition" -i definition.json
-PUBLISH_JOB=$(fab api -X post "workspaces/$WS_ID/items/$ITEM_ID/jobs/instances?jobType=Publish" -q "text.id")
+PUBLISH_LOC=$(fab api -X post "workspaces/$WS_ID/items/$ITEM_ID/jobs/instances?jobType=Publish" --show_headers -q "headers.Location")
+PUBLISH_JOB=${PUBLISH_LOC##*/}
 fab api "workspaces/$WS_ID/items/$ITEM_ID/jobs/instances/$PUBLISH_JOB" -q "text.status"
 fab api -X post "workspaces/$WS_ID/items/$ITEM_ID/jobs/instances?jobType=Refresh"
 ```
 
-Repeat the status call until `Completed` before the refresh. Unverified: passing a file path to `-i` for `fab api` and reading the id from the 202 body versus the `Location` header were not tested on fab 1.7.0; if `text.id` is empty, take the instance id from the `Location` header.
+Repeat the status call until `Completed` before the refresh. The 202 response has no body: Learn documents only the `Location` header (the job instance URL) and `Retry-After` ([Run On Demand Item Job](https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/run-on-demand-item-job)), so read the instance id from `Location`. `-i` takes an inline JSON string or a path to a JSON file ([fab api](https://microsoft.github.io/fabric-cli/commands/api/)).

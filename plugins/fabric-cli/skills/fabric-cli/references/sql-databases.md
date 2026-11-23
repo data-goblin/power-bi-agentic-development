@@ -21,5 +21,5 @@ fab table schema "ws.Workspace/MyDB.SQLDatabase/Tables/dbo/customers"
 - `fab ls` on the item shows Audit, Code, Files and Tables
 - Tables auto-mirror to OneLake as Delta with about 15 s delay; DuckDB `delta_scan` reads that snapshot (not real time) and sees an extra `MSSQL_System_Uniquifier` column; the SQL analytics endpoint on the copy is read-only
 - Full T-SQL DDL and DML works from the portal, SSMS, or a Python notebook with `notebookutils.data.connect_to_artifact('SQLDatabaseName')`
-- Unverified: cross-database three-part-name queries from a SQL database (earlier text claimed them within a workspace)
+- Cross-database three-part-name queries work through the SQL analytics endpoint of the database ([limitations](https://learn.microsoft.com/en-us/fabric/database/sql/limitations))
 - `fab rm` is permanent unless tenant item recovery is on (see [commands.md](./commands.md))

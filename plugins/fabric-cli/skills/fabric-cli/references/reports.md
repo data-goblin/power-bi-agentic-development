@@ -38,7 +38,7 @@ fab cp "dev.Workspace/Report.Report" "prod.Workspace" -f
 
 - Import creates or overwrites; a different target name imports the report under a new name
 - Create the export directory first; see [import-download-deploy.md](./import-download-deploy.md)
-- Create a blank thin report with `pbir new report`; `fab mkdir "ws.Workspace/New Report.Report"` creates an empty item (Unverified whether it is bound to a model)
+- Create a blank thin report with `pbir new report`; `fab mkdir "ws.Workspace/New Report.Report" -P semanticModelId=<model-id>` creates a report bound to that model (the parameter is optional; [mkdir](https://microsoft.github.io/fabric-cli/commands/fs/mkdir/))
 - Clone onto another model: `pbir download` the template, `pbir cp`, `pbir report rebind <report> "ws.Workspace/NewModel.SemanticModel"`, `pbir validate <report> --all`, `pbir publish <report> "ws.Workspace/NewReport.Report"`
 
 ## Rebind
@@ -59,14 +59,7 @@ fab set "ws.Workspace/Report.Report" -q semanticModelId -i "<model-id>"
 
 ## Permissions
 
-`fab acl` does not work on reports (workspace, connection and gateway only; `fab acl ls` on a report returns `[UnsupportedCommand]`). Workspace roles: `fab acl ls "ws.Workspace"`. Report-level users go through the Power BI REST API:
-
-```bash
-fab api -A powerbi "groups/$WS/reports/$REPORT/users"
-fab api -A powerbi "groups/$WS/reports/$REPORT/users" -X post -i '{"emailAddress":"user@domain.com","reportUserAccessRight":"View"}'
-```
-
-Unverified: whether these report-user endpoints are available for the current service version and which `reportUserAccessRight` values apply; see [permissions.md](./permissions.md).
+`fab acl` does not work on reports (workspace, connection and gateway only; `fab acl ls` on a report returns `[UnsupportedCommand]`). Workspace roles: `fab acl ls "ws.Workspace"`. The [Power BI Reports REST reference](https://learn.microsoft.com/en-us/rest/api/power-bi/reports) has no report-user operations, so no REST call manages per-report users; see [permissions.md](./permissions.md).
 
 ## Troubleshooting
 
