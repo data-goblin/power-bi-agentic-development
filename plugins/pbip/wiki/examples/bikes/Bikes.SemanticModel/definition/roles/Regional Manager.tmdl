@@ -1,0 +1,4 @@
+role 'Regional Manager'
+	modelPermission: read
+
+	tablePermission Product = Product[Category] = "Road"

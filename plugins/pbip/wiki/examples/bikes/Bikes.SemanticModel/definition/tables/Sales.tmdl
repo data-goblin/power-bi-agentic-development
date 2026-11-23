@@ -1,0 +1,61 @@
+table Sales
+	lineageTag: 3c4d5e6f-7081-4293-8cb4-d5e6f7a8b9c3
+
+	/// Revenue after discounts, in the order currency
+	measure 'Total Sales' = SUM ( Sales[Amount] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: 4d5e6f70-8192-43a4-9dc5-e6f7a8b9cad4
+
+	/// Share of sales that comes back
+	/// Excludes cancelled orders
+	measure 'Return Rate' =
+			// a // comment is legal here, inside the expression body
+			DIVIDE ( [Returned Sales], [Total Sales] )
+		formatString: 0.0%
+		displayFolder: Sales
+		lineageTag: 5e6f7081-92a3-44b5-8ed6-f7a8b9cadbe5
+
+	measure 'Returned Sales' = ```
+			CALCULATE (
+			    SUM ( Sales[Amount] ),
+			    Sales[Returned] = TRUE ()
+			)
+			```
+		formatString: #,0
+		isHidden
+		lineageTag: 6f708192-a3b4-45c6-9fe7-a8b9cadbecf6
+
+	column 'Product Key'
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+	column 'Order Date'
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		summarizeBy: none
+		sourceColumn: OrderDate
+
+	column Amount
+		dataType: decimal
+		isHidden
+		summarizeBy: none
+		sourceColumn: Amount
+
+	column Returned
+		dataType: boolean
+		isHidden
+		summarizeBy: none
+		sourceColumn: Returned
+
+	partition Sales = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents('Source Folder' & "\sales.csv"), [Delimiter=",", Encoding=65001]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true])
+				in
+				    Promoted

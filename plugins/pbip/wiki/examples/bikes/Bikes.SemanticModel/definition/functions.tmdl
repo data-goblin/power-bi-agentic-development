@@ -1,0 +1,13 @@
+function Format.Percent = ```
+		(decimals: INT64) =>
+		    // everything inside an expression body can carry // comments
+		    "0." & REPT ( "0", decimals ) & "%"
+		```
+	lineageTag: 0d4e9c2a-6b3f-4a61-9c86-3f4a5b6c7d83
+
+/// Sum of any column, with the date filter removed
+function Sales.Unfiltered = ```
+		(col: ColumnRef expr, m: MeasureRef expr) =>
+		    CALCULATE ( SUM ( col ) + m, ALL ( 'Order Date' ) )
+		```
+	lineageTag: 1e5f0d3b-7c40-4b72-8da7-4a5b6c7d8e94
