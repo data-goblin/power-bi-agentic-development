@@ -17,7 +17,7 @@ skills: [tabular-editor/bpa-rules]
 
 # Rules embedded in a model with BPA annotations
 
-[examples/bpa/embedded](examples/bpa/embedded/definition/model.tmdl) carries two model annotations. `te bpa run --no-defaults` on it evaluates 1 rule and reports 1 ignored rule and 1 violation (`Undocumented_Total` has no description).
+[examples/bpa/embedded](examples/bpa/embedded/definition/model.tmdl) carries two model annotations. `te bpa run --no-defaults` on it evaluates 1 rule and reports 1 ignored rule and 1 information-level violation (`Undocumented_Total` has no description); severity 1 keeps the exit code 0, which a verification command needs.
 
 ```tmdl
 annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["MEASURE_NAME_NO_UNDERSCORE"]}
@@ -25,7 +25,7 @@ annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["MEASURE_NAME_NO_UNDER
 annotation BestPracticeAnalyzer = ```
 		[
 		  { "ID": "MEASURE_HAS_DESCRIPTION", "Name": "Measures need a description",
-		    "Severity": 3, "Scope": "Measure",
+		    "Severity": 1, "Scope": "Measure",
 		    "Expression": "string.IsNullOrWhitespace(Description)", "CompatibilityLevel": 1200 }
 		]
 		```

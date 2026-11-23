@@ -8,7 +8,7 @@ model Model
 			  {
 			    "ID": "MEASURE_HAS_DESCRIPTION",
 			    "Name": "Measures need a description",
-			    "Severity": 3,
+			    "Severity": 1,
 			    "Scope": "Measure",
 			    "Expression": "string.IsNullOrWhitespace(Description)",
 			    "CompatibilityLevel": 1200
