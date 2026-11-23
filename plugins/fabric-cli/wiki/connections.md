@@ -1,0 +1,51 @@
+---
+title: Fabric connections credential types and OAuth2 limit
+summary: Credential types the Create Connection API accepts, why OAuth2 needs the portal, and the fab paths for list, get, set and rm.
+kind: gotcha
+status: current
+sources:
+  - url: https://learn.microsoft.com/en-us/rest/api/fabric/core/connections
+  - url: https://learn.microsoft.com/en-us/rest/api/fabric/core/connections/create-connection
+  - url: https://learn.microsoft.com/en-us/fabric/data-factory/data-source-management
+tools:
+  fab: 1.7.0
+last_updated: 2026-11-23
+last_verified: 2026-11-23
+review_cadence_days: 90
+skills: [fabric-cli/fabric-cli]
+---
+
+# Fabric connections credential types and OAuth2 limit
+
+Learn: [Connections REST API](https://learn.microsoft.com/en-us/rest/api/fabric/core/connections), [Create Connection](https://learn.microsoft.com/en-us/rest/api/fabric/core/connections/create-connection), [Data source management](https://learn.microsoft.com/en-us/fabric/data-factory/data-source-management).
+
+## fab paths
+
+- `fab ls .connections -l` lists connections; in 1.7.0 some entries appear as `<guid>.Connection`, so find the name or id in the long listing before you address one.
+- `fab get ".connections/<Name>.Connection"` and `-q connectionDetails` read one; `fab set ".connections/<Name>.Connection" -q displayName -i "New Name"` renames. Unverified: updating credentials with `fab set -q credentialDetails`.
+- `fab rm ".connections/<Name>.Connection" -f` deletes it permanently.
+- `fab acl` works on connections: roles `Owner`, `User`, `UserWithReshare`; `fab acl set -I` takes an Entra objectId.
+- Create has no native fab command; use `fab api -X post connections` with the body below. It needs scope `Connection.ReadWrite.All`; a service principal needs the tenant setting that lets it create connections.
+
+## Credential types
+
+```yaml
+accepted by Create Connection (Learn definitions): Anonymous, Basic, Key, KeyPair, ServicePrincipal, SharedAccessSignature, Windows, WindowsWithoutImpersonation, WorkspaceIdentity
+not accepted: OAuth2 (the create API defines no OAuth2 credential)
+```
+
+- OAuth2 needs interactive browser consent. Create it once in the portal and reference its id from automation, or use `WorkspaceIdentity` or `ServicePrincipal`.
+- `WorkspaceIdentity` uses the workspace's managed identity: no secret, for Fabric data sources such as SQL endpoints and ADLS. Unverified: the exact list of supported connectors.
+- Windows credentials belong to on-premises gateway connections; the caller needs permission on the gateway.
+- Update cannot change the credential type, for example OAuth2 to WorkspaceIdentity (earlier note, Unverified).
+- Consequence of the OAuth2 limit: Dataflow executeQuery and semantic model refresh on cloud sources fail when the only credential is an OAuth2 connection that nobody refreshed in the portal (earlier note, Unverified).
+
+## Example: create a SQL connection with WorkspaceIdentity
+
+```bash
+fab api -X post connections -i '{"connectivityType": "ShareableCloud", "displayName": "LakehouseSql", "connectionDetails": {"type": "SQL", "creationMethod": "SQL", "parameters": [{"dataType": "Text", "name": "server", "value": "<endpoint>.datawarehouse.fabric.microsoft.com"}, {"dataType": "Text", "name": "database", "value": "<LakehouseName>"}]}, "privacyLevel": "Organizational", "credentialDetails": {"singleSignOnType": "None", "connectionEncryption": "Encrypted", "skipTestConnection": false, "credentials": {"credentialType": "WorkspaceIdentity"}}}'
+```
+
+For `Basic`, replace `credentials` with `{"credentialType": "Basic", "username": "<user>", "password": "<secret>"}`. For `ServicePrincipal` supply `servicePrincipalClientId`, `servicePrincipalSecret` and `tenantId`. Fetch secrets from 1Password at call time and never hardcode them.
+
+Unverified: this create call was not run on fab 1.7.0; the body follows Learn and earlier notes.
