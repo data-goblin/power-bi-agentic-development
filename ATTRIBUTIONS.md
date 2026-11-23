@@ -10,4 +10,4 @@ Community contributions and suggestions that shaped this project.
   - [@microsoft/powerbi-report-authoring-cli](https://www.npmjs.com/package/@microsoft/powerbi-report-authoring-cli)
   - [@microsoft/powerbi-core-visual-schema](https://www.npmjs.com/package/@microsoft/powerbi-core-visual-schema)
   - [@microsoft/powerbi-modeling-mcp](https://www.npmjs.com/package/@microsoft/powerbi-modeling-mcp)
-- **Claude Dashboards plugin; querying-fabric skill:** Derived from the `dax-authoring` skill that Microsoft ships with Fabric Apps scaffolds (`@microsoft/fabric-app-data-cli`, MIT license), adapted for Fabric MCP tools, measure reuse, KPI targets and trends, and crossfiltering.
+- **Claude Dashboards plugin; querying-fabric skill:** Derived from the `dax-authoring` skill in [microsoft/rayfin](https://github.com/microsoft/rayfin/tree/main/samples/data-app/.agents/skills/dax-authoring) (`samples/data-app/.agents/skills/dax-authoring`, MIT license; the npm package `@microsoft/fabric-app-data-cli` no longer carries it), adapted for Fabric MCP tools, measure reuse, KPI targets and trends, and crossfiltering.

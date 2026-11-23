@@ -1,0 +1,13 @@
+DEFINE
+    VAR _ByProduct = SUMMARIZECOLUMNS ( 'Product'[Name], "Total Sales", [Total Sales] )
+    VAR _Top = TOPN ( 10, _ByProduct, [Total Sales], DESC )
+    VAR _TopNames = SELECTCOLUMNS ( _Top, "Name", 'Product'[Name] )
+    VAR _OtherSales =
+        CALCULATE ( [Total Sales], EXCEPT ( ALL ( 'Product'[Name] ), _TopNames ) )
+
+EVALUATE
+    UNION (
+        SELECTCOLUMNS ( _Top, "Product", 'Product'[Name], "Total Sales", [Total Sales] ),
+        ROW ( "Product", "Other", "Total Sales", _OtherSales )
+    )
+ORDER BY [Total Sales] DESC

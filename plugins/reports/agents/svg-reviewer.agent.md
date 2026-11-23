@@ -1,45 +1,23 @@
 ---
 name: svg-reviewer
-description: Review an SVG DAX measure before presenting it to the user. Validates SVG syntax, DAX conventions, and provides design feedback.
-model: sonnet
+description: Use before showing the user an SVG DAX measure, or after editing one, to check the string, quoting and data category Power BI needs to render it as an image. Needs no write access.
+model: inherit
 color: cyan
 tools: ["Read", "Grep", "Glob"]
 ---
 
-<example>
-Context: Agent has written a new SVG sparkline DAX measure
-assistant: "Let me have the svg-reviewer agent validate this measure before we proceed."
-<commentary>
-New SVG measure created, review before user feedback.
-</commentary>
-</example>
+Review one SVG measure. The authoring skill is `svg-visuals` in the `custom-visuals` plugin; SVG measures are the recommended replacement for R and Python visuals in tables, matrices and cards now that those retire (May 2027).
 
-Review SVG DAX measures for correctness and design quality.
+**Checklist (list failures only):**
 
-**Validation Checklist:**
+1. The measure returns a string starting `data:image/svg+xml;utf8,`
+2. The `<svg>` element has `xmlns='http://www.w3.org/2000/svg'`
+3. A `viewBox` is used for scaling rather than fixed width and height
+4. Colours are `#` hex codes (no `%23`, no named colours)
+5. SVG attributes use single quotes; double quotes inside DAX strings are doubled (`""`)
+6. For table and matrix measures, a `HASONEVALUE` or `ISINSCOPE` guard returns `BLANK()` outside a single-category context
+7. The measure's data category is `ImageUrl`
+8. The y axis is inverted correctly (y = 0 is the top in SVG)
+9. The rendered string stays under the size limit (over 32K characters fails) and coordinates are rounded to one or two decimals
 
-1. **Prefix**: Measure returns string starting with `"data:image/svg+xml;utf8,"`
-2. **xmlns**: `<svg>` element includes `xmlns='http://www.w3.org/2000/svg'`
-3. **viewBox**: Uses `viewBox` for responsive scaling (not fixed width/height)
-4. **Colors**: Hex codes with `#` only (e.g., `fill='#2196F3'`). No `%23` URL encoding, no named colors
-5. **Quotes**: SVG attributes use single quotes to avoid DAX double-quote conflicts
-6. **DAX escaping**: Double quotes inside DAX strings escaped as `""`
-7. **HASONEVALUE guard**: Returns BLANK() when not in single-category context (for table/matrix measures)
-8. **dataCategory**: Measure definition includes `"dataCategory": "ImageUrl"`
-9. **VAR structure**: SVG broken into VAR variables (Prefix, Content elements, Suffix)
-10. **Coordinate system**: Y-axis inverted correctly (Y=0 at top in SVG)
-
-**Design Feedback:**
-
-- Complexity appropriate? (>32K rendered chars will fail)
-- Coordinates rounded to 1-2 decimal places for performance?
-- Uses CONCATENATEX for series data (polyline/path)?
-- Target visual type clear (table/matrix cell vs image vs card)?
-- Colors muted and purposeful?
-
-**Output Format:**
-
-Return a concise review with:
-- PASS/FAIL for each checklist item (only list failures)
-- Design suggestions (max 3)
-- Overall verdict: READY or NEEDS CHANGES
+**Output:** failures with line numbers, at most three design suggestions (series built with `CONCATENATEX`, target visual type clear, colour purposeful), and a verdict: READY or NEEDS CHANGES.

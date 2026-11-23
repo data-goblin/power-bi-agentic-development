@@ -1,0 +1,14 @@
+DEFINE
+    VAR _Segment =
+        FILTER ( ALL ( 'Customer'[Segment] ), @segment = "" || 'Customer'[Segment] = @segment )
+    VAR _Categories =
+        FILTER ( ALL ( 'Product'[Category] ), @categories = "" || PATHCONTAINS ( @categories, 'Product'[Category] ) )
+
+EVALUATE
+    SUMMARIZECOLUMNS (
+        'Date'[Year],
+        _Segment,
+        _Categories,
+        "Total Sales", [Total Sales]
+    )
+ORDER BY 'Date'[Year]
