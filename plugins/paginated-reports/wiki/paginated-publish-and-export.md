@@ -1,10 +1,13 @@
 ---
 title: Publishing an RDL and exporting it to confirm it renders
-summary: The Imports API upload, the three-step export-to-file flow, item-type strings and the Fabric Git folder layout.
+summary: The Imports API upload, the three-step export-to-file flow, item-type strings and the Fabric item definition.
 kind: recipe
 status: current
 sources:
+  - url: https://learn.microsoft.com/en-us/power-bi/paginated-reports/paginated-reports-save-to-power-bi-service
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/imports/post-import-in-group
+  - url: https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/paginatedreport-definition
+  - url: https://learn.microsoft.com/en-us/rest/api/fabric/paginatedreport/items/create-paginated-report
   - url: https://learn.microsoft.com/en-us/rest/api/power-bi/reports/export-to-file-in-group
 last_updated: 2026-11-23
 last_verified: 2026-11-23
@@ -26,7 +29,7 @@ publish_rdl.sh Report.rdl <workspaceId> [Overwrite|Abort] [displayName]
 endpoint: multipart POST to the Imports API, not the Fabric Items API (fab api cannot send the multipart body)
 datasetDisplayName: must end in .rdl
 nameConflict: Abort or Overwrite only; Overwrite on a report that does not exist returns 404 and Abort on an existing name errors, so the script detects which one applies
-size: 20 MB maximum (Unverified)
+size: 20 MB maximum per .rdl; larger files usually carry big embedded images, so use external images or shrink them
 completion: asynchronous; poll the import until Succeeded or Failed
 after_publish: Azure SQL needs its authentication type set in workspace settings; on-premises sources need a gateway bound; a PBIDATASET source with ClaimsToken needs nothing
 capacity: the workspace must be on Premium, Embedded or Fabric capacity; shared capacity accepts the upload and does not render the report
@@ -59,6 +62,6 @@ Power BI REST format: RDL
 Fabric Items API type: PaginatedReport
 ```
 
-## Fabric Git layout (Unverified)
+## Fabric item definition
 
-Earlier notes in this repository describe a folder `<Name>.PaginatedReport/` holding the `.rdl` and a `.platform` file (see `assets/platform-template.json`), no `definition/` folder, and note that the Fabric Items API cannot create a paginated report with a definition payload. The public json-schemas repository has no paginated report item folder to validate the `.platform` against, and the Learn REST definition page was not found on 2026-11-23. Round-trip it in a test workspace before relying on it.
+A Fabric paginated report definition has the format `PaginatedReportDefinition`: one required part `<reportName>.rdl`, Base64-encoded, whose name must match the display name, and an optional `.platform` part that the service usually generates. The Fabric Items API creates a paginated report with a definition payload ([Create Paginated Report](https://learn.microsoft.com/en-us/rest/api/fabric/paginatedreport/items/create-paginated-report), [definition](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/paginatedreport-definition)). Learn does not describe the folder a Git-synced workspace writes for the item, so round-trip it in a test workspace before relying on a layout.

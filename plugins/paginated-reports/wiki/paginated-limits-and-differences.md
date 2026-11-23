@@ -41,7 +41,6 @@ shared_datasets: .rsd files; a semantic model can be the source instead
 linked_reports: no
 custom_fonts: no
 custom_assemblies: no; use embedded code or Azure Functions
-document_maps: Unverified whether the browser view omits them
 pin_to_dashboard: not supported (Learn points to the ideas forum)
 dataset_caches: none; every parameter query reruns when the report opens or a cascade changes
 data_sources_per_report: 250 maximum; above that the report does not publish, and a published one stops rendering

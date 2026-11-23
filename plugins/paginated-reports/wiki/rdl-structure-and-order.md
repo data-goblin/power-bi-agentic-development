@@ -23,7 +23,7 @@ skills: [paginated-reports/paginated-report]
 
 ## Does order matter
 
-The 2016/01 schema (`reportdefinition.xsd` in `microsoft/RdlMigration`) declares the children of `<Report>` and `<ReportSection>` as an unordered choice, so an XSD pass does not catch a reorder. Whether Report Builder or the service rejects a reorder was not tested; Unverified. The validator enforces the order Report Builder writes because that is the only order known to load:
+The 2016/01 schema (`reportdefinition.xsd` in `microsoft/RdlMigration`) declares the children of `<Report>` and `<ReportSection>` as an unordered choice, so an XSD pass does not catch a reorder. The validator enforces the order Report Builder writes, the order Microsoft's own files use:
 
 ```yaml
 structural_order: DataSources, DataSets, ReportSections, ReportParameters, ReportParametersLayout

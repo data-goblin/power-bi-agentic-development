@@ -5,6 +5,7 @@ kind: reference
 status: current
 sources:
   - url: https://learn.microsoft.com/en-us/power-bi/paginated-reports/paginated-reports-data-sources
+  - url: https://learn.microsoft.com/en-us/power-bi/paginated-reports/paginated-reports-faq
   - url: https://github.com/PowerBiDevCamp/App-Owns-Data-Starter-Kit
 last_updated: 2026-11-23
 last_verified: 2026-11-23
@@ -27,7 +28,7 @@ Learn lists [supported data sources](https://learn.microsoft.com/en-us/power-bi/
 
 ```yaml
 Data Source: pbiazure://api.powerbi.com/ exactly
-Identity Provider: authority, then https://analysis.windows.net/powerbi/api, then f0b72488-7082-488a-a7e8-eada97bd842d (the same value in every file seen; Unverified as an app id)
+Identity Provider: authority, then https://analysis.windows.net/powerbi/api, then f0b72488-7082-488a-a7e8-eada97bd842d (the same value in every file seen; it is not documented, so copy it from a Report Builder file)
 authority: https://login.microsoftonline.com/organizations for organization accounts, /common for multi-tenant
 Initial Catalog: sobe_wowvirtualserver-<semantic model item id>; no documented substitute for the prefix
 Integrated Security: ClaimsToken; the report runs as the signed-in user, no credential setup
@@ -61,4 +62,4 @@ multi_value: needs RSCustomDaxFilter(@param, EqualToCondition, [Table].[Column],
 
 ## Timeouts
 
-DirectQuery against a semantic model has a fixed 10 minute query timeout in this repository's earlier notes (Unverified). Learn's FAQ says an embedded dataset's `Timeout` defaults to 600 seconds and can be raised to 2147483646 in Dataset Properties.
+Learn's [FAQ](https://learn.microsoft.com/en-us/power-bi/paginated-reports/paginated-reports-faq) says an embedded dataset's `Timeout` defaults to 600 seconds and can be raised to 2147483646 in Dataset Properties.
