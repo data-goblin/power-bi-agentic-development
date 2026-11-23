@@ -1,0 +1,29 @@
+table Orders
+	lineageTag: 62067f3f-489d-4552-8b18-09a2f1a36d1a
+
+	refreshPolicy
+		policyType: basic
+		rollingWindowGranularity: year
+		rollingWindowPeriods: 5
+		incrementalGranularity: day
+		incrementalPeriods: 10
+
+	column OrderDate
+		dataType: dateTime
+		lineageTag: 1c958c7b-c809-41b7-97d8-cc31ddc1021c
+		sourceColumn: OrderDate
+
+	column Amount
+		dataType: decimal
+		lineageTag: 4b4ddf3a-5145-4136-9dd9-94a253e87edb
+		sourceColumn: Amount
+
+	partition Orders = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [OrderDate = datetime, Amount = number], {}),
+				    Filtered = Table.SelectRows(Source, each [OrderDate] >= RangeStart and [OrderDate] < RangeEnd)
+				in
+				    Filtered
+

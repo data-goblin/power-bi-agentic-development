@@ -1,0 +1,16 @@
+table Sales
+	lineageTag: 329edc92-8982-4c34-b7e1-b3122d6f6f62
+
+	measure 'Total Amount' = SUM ( 'Sales'[Amount] )
+		formatString: #,0
+		lineageTag: 65521f46-5b5f-4a6b-8073-5f2bfe8353ae
+
+	column Amount
+		lineageTag: ad6ce2c2-5b3f-43ac-ad7c-8b61d5953fa3
+		isNameInferred
+		sourceColumn: [Amount]
+
+	partition Sales = calculated
+		mode: import
+		source = DATATABLE("Amount", CURRENCY, {{100}, {250}})
+

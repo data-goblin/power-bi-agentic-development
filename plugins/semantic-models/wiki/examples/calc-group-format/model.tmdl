@@ -1,0 +1,9 @@
+model calc-group-format
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+
+annotation __TEdtr = 1
+
+ref table Sales
+ref table Variants
+

@@ -1,0 +1,4 @@
+database incremental-refresh
+	compatibilityLevel: 1706
+	compatibilityMode: powerBI
+

@@ -1,0 +1,7 @@
+model incremental-refresh
+	defaultPowerBIDataSourceVersion: powerBI_V3
+
+annotation __TEdtr = 1
+
+ref table Orders
+

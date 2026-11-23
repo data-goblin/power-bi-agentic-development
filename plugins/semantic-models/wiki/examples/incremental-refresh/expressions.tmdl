@@ -1,0 +1,6 @@
+expression RangeStart = #datetime(2024, 1, 1, 0, 0, 0) meta [IsParameterQuery = true, Type = "DateTime", IsParameterQueryRequired = true]
+	lineageTag: 21999482-8f2e-4a2e-aa4a-1946935c77ab
+
+expression RangeEnd = #datetime(2024, 1, 2, 0, 0, 0) meta [IsParameterQuery = true, Type = "DateTime", IsParameterQueryRequired = true]
+	lineageTag: 7029ffc1-fd9b-445c-9bf0-5b0a118f16f4
+

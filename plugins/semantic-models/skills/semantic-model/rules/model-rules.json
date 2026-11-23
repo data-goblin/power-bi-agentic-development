@@ -1,0 +1,51 @@
+[
+  {
+    "ID": "KB_DAX_COLUMN_TABLE_UNQUOTED",
+    "Name": "Column reference without a quoted table name",
+    "Category": "DAX Expressions",
+    "Description": "Write 'Table'[Column]: the table is always present and always in single quotes.",
+    "Severity": 2,
+    "Scope": "Measure, CalculatedColumn, CalculatedTable, CalculationItem",
+    "Expression": "RegEx.IsMatch(Expression, \"(?<![\\w'\\]])[A-Za-z_]\\w*\\[\")",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "KB_DAX_MEASURE_TABLE_PREFIX",
+    "Name": "Measure reference with a table prefix",
+    "Category": "DAX Expressions",
+    "Description": "Write measure references as [Measure] with no table prefix.",
+    "Severity": 2,
+    "Scope": "Measure, CalculatedColumn, CalculatedTable, CalculationItem",
+    "Expression": "DependsOn.Any(Key.ObjectType = \"Measure\" and Value.Any(FullyQualified))",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "KB_RLS_FAILS_OPEN",
+    "Name": "Row filter falls open",
+    "Category": "Security",
+    "Description": "A role filter that returns TRUE() on a fallback branch lets every user outside the listed cases see all rows.",
+    "Severity": 3,
+    "Scope": "Table, CalculatedTable",
+    "Expression": "RowLevelSecurity.Any(not string.IsNullOrEmpty(it) and RegEx.IsMatch(it, \"(?i),\\s*TRUE\\s*\\(\\s*\\)\\s*\\)\"))",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "KB_MEASURE_NO_DESCRIPTION",
+    "Name": "Visible measure without a description",
+    "Category": "Documentation",
+    "Description": "Copilot and report authors read descriptions; Copilot truncates them after 200 characters.",
+    "Severity": 1,
+    "Scope": "Measure",
+    "Expression": "not IsHidden and string.IsNullOrWhiteSpace(Description)",
+    "CompatibilityLevel": 1200
+  },
+  {
+    "ID": "KB_MEASURE_NO_DISPLAY_FOLDER",
+    "Name": "Visible measure without a display folder",
+    "Category": "Documentation",
+    "Severity": 1,
+    "Scope": "Measure",
+    "Expression": "not IsHidden and string.IsNullOrWhiteSpace(DisplayFolder)",
+    "CompatibilityLevel": 1200
+  }
+]
