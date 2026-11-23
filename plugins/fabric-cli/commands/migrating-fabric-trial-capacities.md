@@ -1,108 +1,48 @@
 ---
-description: Migrate workspaces from trial capacity to production capacity
-argument-hint: "[target-capacity]"
+description: Move workspaces from a Fabric trial capacity to another capacity (dry run first, assigns only after approval)
+argument-hint: "<target-capacity-name>"
+disable-model-invocation: true
+allowed-tools: Bash(fab ls:*), Bash(fab get:*), Bash(fab exists:*), Bash(fab assign:*)
 ---
 
-# Migrate Trial Capacity Workspaces
+Move the workspaces on the trial capacity to the capacity named in `$ARGUMENTS`. If no target was given, list `fab ls .capacities -l` and ask which one.
 
-Migrate workspaces from Fabric trial capacity to a production capacity: $ARGUMENTS
+`fab assign` changes a live workspace and has no dry-run flag; the dry run below is a printed plan. Never run the assign step before the user has seen the plan and said go.
 
-## Step 1: Audit Trial Workspaces
+## 1. Plan (read only)
+
+Select by capacity, never by splitting `fab ls -l` text: workspace names contain spaces (`AI Testing Workspace`), and `-q` prints one whole name per line.
 
 ```bash
-# List all capacities
-fab ls .capacities
-
-# List workspaces on trial capacity
-fab ls -l | grep "Trial-"
-
-# Count trial workspaces
-fab ls -l | grep "Trial-" | wc -l
+TARGET="$ARGUMENTS"
+fab ls .capacities -l --output_format json -q "[?name=='$TARGET.Capacity'].{sku:sku,region:region,state:state}"
+fab ls .capacities -q "[?starts_with(name, 'Trial')].name"
+fab ls -l -q "[?starts_with(capacityName, 'Trial')].{name:name,region:capacityRegion}"
 ```
 
-## Step 2: Identify Target Capacity
+Show the user a list of `workspace -> target (SKU, region, state)` and stop on any of these:
+
+- the target is not found, is paused (`Inactive`) or is an F SKU that is already throttled (see the `fabric-cli` skill, capacity cost)
+- a workspace region differs from the target region: Learn says a workspace holding Fabric items cannot move across regions without deleting them
+- the trial has expired or expires soon: after expiry, non-Power BI Fabric items are kept for 7 days only (https://learn.microsoft.com/en-us/fabric/fundamentals/fabric-trial)
+
+Moving workspaces adds their background jobs and schedules to the target's CU budget; estimate that before approval.
+
+## 2. Assign (only after approval)
 
 ```bash
-# List available capacities
-fab ls .capacities -l
-
-# Get capacity details
-fab get ".capacities/TargetCapacity.Capacity"
-```
-
-## Step 3: Migrate Single Workspace
-
-```bash
-# Assign workspace to new capacity
-fab assign ".capacities/TargetCapacity.Capacity" -W "WorkspaceName.Workspace" -f
-```
-
-## Step 4: Bulk Migration
-
-```bash
-# Migrate all trial workspaces to target capacity
-TARGET_CAPACITY="ProductionCapacity"
-
-fab ls -l | grep "Trial-" | cut -d' ' -f1 | while read ws; do
-  echo "Migrating: $ws"
-  fab assign ".capacities/$TARGET_CAPACITY.Capacity" -W "$ws" -f
+TARGET="$ARGUMENTS"
+fab ls -l -q "[?starts_with(capacityName, 'Trial')].name" | while IFS= read -r ws; do
+  echo "Assigning: $ws"
+  fab assign ".capacities/$TARGET.Capacity" -W "$ws" -f || echo "FAILED: $ws"
 done
 ```
 
-## Step 5: Verify Migration
+## 3. Verify
 
 ```bash
-# Check workspace capacity assignment
-fab get "WorkspaceName.Workspace" -q "capacityId"
-
-# Verify no workspaces remain on trial
-fab ls -l | grep "Trial-" | wc -l
+fab ls -l -q "[?capacityName=='$ARGUMENTS'].name"
+fab ls -l -q "[?starts_with(capacityName, 'Trial')].name"
 ```
 
-## Migration Script
-
-```bash
-#!/bin/bash
-# migrate-trial-to-prod.sh
-
-TARGET_CAPACITY="${1:-ProductionCapacity}"
-LOG_FILE="migration_$(date +%Y%m%d_%H%M%S).log"
-
-echo "=== Trial Capacity Migration ===" | tee "$LOG_FILE"
-echo "Target: $TARGET_CAPACITY" | tee -a "$LOG_FILE"
-echo "" | tee -a "$LOG_FILE"
-
-# Get trial workspaces
-TRIAL_WORKSPACES=$(fab ls -l | grep "Trial-" | cut -d' ' -f1)
-COUNT=$(echo "$TRIAL_WORKSPACES" | wc -l | tr -d ' ')
-
-echo "Found $COUNT workspaces on trial capacity" | tee -a "$LOG_FILE"
-echo "" | tee -a "$LOG_FILE"
-
-for ws in $TRIAL_WORKSPACES; do
-  echo "Migrating: $ws" | tee -a "$LOG_FILE"
-  if fab assign ".capacities/$TARGET_CAPACITY.Capacity" -W "$ws" -f 2>&1 | tee -a "$LOG_FILE"; then
-    echo "  SUCCESS" | tee -a "$LOG_FILE"
-  else
-    echo "  FAILED" | tee -a "$LOG_FILE"
-  fi
-done
-
-echo "" | tee -a "$LOG_FILE"
-echo "=== Migration Complete ===" | tee -a "$LOG_FILE"
-```
-
-## Pre-Migration Checklist
-
-- [ ] Verify target capacity has sufficient CUs
-- [ ] Check target capacity region matches workspaces
-- [ ] Ensure you have admin permissions on workspaces
-- [ ] Back up critical items before migration
-- [ ] Schedule during low-usage period
-
-## Notes
-
-- Capacity assignment is immediate but may briefly affect running jobs
-- Cross-region migration is not supported
-- Trial capacity expires after 60 days
-- Some features may differ between trial and production capacities
+The second list must be empty. Report any workspace that failed or stayed on the trial capacity.

@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["requests==2.34.2"]
+# ///
 """
-DataHub V2 API Search Script
-datahub_search.py
+Search across workspaces through the DataHub V2 API
 
 Cross-workspace search for Power BI and Fabric items using the internal DataHub V2 API.
 
@@ -37,37 +40,37 @@ IMPORTANT: For semantic models/datasets, use --type Model (not SemanticModel).
 
 COMMON PATTERNS:
   # Find all semantic models
-  python3 datahub_search.py --type Model
+  uv run search_across_workspaces.py --type Model
 
   # Find models by name
-  python3 datahub_search.py --type Model --filter "Sales"
+  uv run search_across_workspaces.py --type Model --filter "Sales"
 
   # Find items not accessed in 6+ months
-  python3 datahub_search.py --type Model --not-visited-since 2024-06-01
+  uv run search_across_workspaces.py --type Model --not-visited-since 2024-06-01
 
   # Find models refreshed in last month
-  python3 datahub_search.py --type Model --refreshed-since 2024-11-01
+  uv run search_across_workspaces.py --type Model --refreshed-since 2024-11-01
 
   # Find stale data (models not refreshed in 30+ days)
-  python3 datahub_search.py --type Model --not-refreshed-since 2024-11-01
+  uv run search_across_workspaces.py --type Model --not-refreshed-since 2024-11-01
 
   # Find recently modified items
-  python3 datahub_search.py --type PowerBIReport --updated-since 2024-11-01
+  uv run search_across_workspaces.py --type PowerBIReport --updated-since 2024-11-01
 
   # Find items by owner
-  python3 datahub_search.py --type PowerBIReport --owner "data-team"
+  uv run search_across_workspaces.py --type PowerBIReport --owner "data-team"
 
   # Find Direct Lake models
-  python3 datahub_search.py --type Model --storage-mode directlake
+  uv run search_across_workspaces.py --type Model --storage-mode directlake
 
   # Find items in specific workspace
-  python3 datahub_search.py --type Lakehouse --workspace "fit-data"
+  uv run search_across_workspaces.py --type Lakehouse --workspace "fit-data"
 
   # Get JSON for programmatic use
-  python3 datahub_search.py --type Model --output json
+  uv run search_across_workspaces.py --type Model --output json
 
   # Sort by last visited (find stale items)
-  python3 datahub_search.py --type Model --sort last-visited --sort-order asc
+  uv run search_across_workspaces.py --type Model --sort last-visited --sort-order asc
 
 DATE FILTERS:
   --visited-since / --not-visited-since    When user last opened item
@@ -87,11 +90,11 @@ UNIQUE DATAHUB FIELDS:
 These fields are NOT available via fab api or admin APIs.
 
 Usage:
-    python3 datahub_search.py --type Model --filter "Sales"
-    python3 datahub_search.py --type PowerBIReport --workspace "Production"
-    python3 datahub_search.py --type Lakehouse --owner "data-team" --output json
-    python3 datahub_search.py --list-types
-    python3 datahub_search.py --list-regions
+    uv run search_across_workspaces.py --type Model --filter "Sales"
+    uv run search_across_workspaces.py --type PowerBIReport --workspace "Production"
+    uv run search_across_workspaces.py --type Lakehouse --owner "data-team" --output json
+    uv run search_across_workspaces.py --list-types
+    uv run search_across_workspaces.py --list-regions
 """
 
 import argparse

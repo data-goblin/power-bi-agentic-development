@@ -5,8 +5,8 @@ Execute DAX queries against Fabric semantic models.
 Uses the same path syntax as fab CLI commands.
 
 Usage:
-    python3 execute_dax.py "Workspace.Workspace/Model.SemanticModel" -q "EVALUATE VALUES(Date[Year])"
-    python3 execute_dax.py "Sales.Workspace/Sales Model.SemanticModel" -q "EVALUATE TOPN(5, 'Orders')"
+    uv run execute_dax.py "Workspace.Workspace/Model.SemanticModel" -q "EVALUATE VALUES(Date[Year])"
+    uv run execute_dax.py "Sales.Workspace/Sales Model.SemanticModel" -q "EVALUATE TOPN(5, 'Orders')"
 
 Requirements:
     - fab CLI installed and authenticated
@@ -220,9 +220,9 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    python3 execute_dax.py "Sales.Workspace/Sales Model.SemanticModel" -q "EVALUATE VALUES('Date'[Year])"
-    python3 execute_dax.py "Production.Workspace/Sales.SemanticModel" -q "EVALUATE TOPN(10, 'Sales')" --format csv
-    python3 execute_dax.py "ws.Workspace/Model.SemanticModel" -q "EVALUATE ROW(\\"Total\\", SUM('Sales'[Amount]))"
+    uv run execute_dax.py "Sales.Workspace/Sales Model.SemanticModel" -q "EVALUATE VALUES('Date'[Year])"
+    uv run execute_dax.py "Production.Workspace/Sales.SemanticModel" -q "EVALUATE TOPN(10, 'Sales')" --format csv
+    uv run execute_dax.py "ws.Workspace/Model.SemanticModel" -q "EVALUATE ROW(\\"Total\\", SUM('Sales'[Amount]))"
 
 DAX Requirements:
     - EVALUATE is mandatory; all queries must start with EVALUATE

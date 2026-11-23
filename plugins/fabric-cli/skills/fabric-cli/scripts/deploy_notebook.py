@@ -26,13 +26,13 @@ notebooks because that is what it is validated against.
 Usage
 -----
     # Auto-detect: update in place if the item exists, else create it
-    python3 deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./ETL.Notebook
-    python3 deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./notebook-content.ipynb
+    uv run deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./ETL.Notebook
+    uv run deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./notebook-content.ipynb
 
     # Force one path, tune the lever, or read JSON output
-    python3 deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./ETL.Notebook --update-only
-    python3 deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./ETL.Notebook --poll-interval 0.5
-    python3 deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./ETL.Notebook --format json
+    uv run deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./ETL.Notebook --update-only
+    uv run deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./ETL.Notebook --poll-interval 0.5
+    uv run deploy_notebook.py "ws.Workspace/ETL.Notebook" -i ./ETL.Notebook --format json
 
 Input may be a folder produced by `fab export` (containing `notebook-content.ipynb`)
 or a bare `.ipynb` file.

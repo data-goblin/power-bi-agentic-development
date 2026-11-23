@@ -9,13 +9,13 @@ reused. No password, SPN secret, or token file is needed.
 Uses the same Fabric path syntax as other fabric-cli skill scripts.
 
 Usage:
-    python3 query_sql_endpoint.py "ws.Workspace/LH.Lakehouse" \
+    uv run query_sql_endpoint.py "ws.Workspace/LH.Lakehouse" \
         -q "SELECT TOP 10 * FROM dbo.orders"
 
-    python3 query_sql_endpoint.py "ws.Workspace/WH.Warehouse" \
+    uv run query_sql_endpoint.py "ws.Workspace/WH.Warehouse" \
         -q "SELECT name FROM sys.tables"
 
-    python3 query_sql_endpoint.py "ws.Workspace/SQLDB.SQLDatabase" \
+    uv run query_sql_endpoint.py "ws.Workspace/SQLDB.SQLDatabase" \
         --file ./analysis.sql --format csv -o results.csv
 
 Requirements:
@@ -266,19 +266,19 @@ def main():
         epilog="""
 Examples:
     # Inline query against a lakehouse SQL endpoint
-    python3 query_sql_endpoint.py "ws.Workspace/LH.Lakehouse" \\
+    uv run query_sql_endpoint.py "ws.Workspace/LH.Lakehouse" \\
         -q "SELECT TOP 10 * FROM dbo.orders"
 
     # Query a warehouse, csv output, save to file
-    python3 query_sql_endpoint.py "ws.Workspace/WH.Warehouse" \\
+    uv run query_sql_endpoint.py "ws.Workspace/WH.Warehouse" \\
         -q "SELECT name FROM sys.tables" --format csv -o tables.csv
 
     # Multi-statement .sql file against a SQL database
-    python3 query_sql_endpoint.py "ws.Workspace/MyDB.SQLDatabase" \\
+    uv run query_sql_endpoint.py "ws.Workspace/MyDB.SQLDatabase" \\
         --file ./migration.sql
 
     # JSON output for piping
-    python3 query_sql_endpoint.py "ws.Workspace/LH.Lakehouse" \\
+    uv run query_sql_endpoint.py "ws.Workspace/LH.Lakehouse" \\
         -q "SELECT TOP 3 Territory, Region FROM dbo.regions" --format json
         """,
     )

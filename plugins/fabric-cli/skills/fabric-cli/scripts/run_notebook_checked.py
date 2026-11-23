@@ -22,10 +22,10 @@ Exit codes:
     3  job Deduped -- skipped because the same job was already running; the notebook did NOT run
 
 Usage:
-    python3 run_notebook_checked.py "Workspace.Workspace/ETL.Notebook"
-    python3 run_notebook_checked.py "ws.Workspace/ETL.Notebook" -P "date:string=2025-01-01,batch:int=500"
-    python3 run_notebook_checked.py "ws.Workspace/ETL.Notebook" --format json
-    python3 run_notebook_checked.py "ws.Workspace/ETL.Notebook" --run-id <instance-id>   # read only, no run
+    uv run run_notebook_checked.py "Workspace.Workspace/ETL.Notebook"
+    uv run run_notebook_checked.py "ws.Workspace/ETL.Notebook" -P "date:string=2025-01-01,batch:int=500"
+    uv run run_notebook_checked.py "ws.Workspace/ETL.Notebook" --format json
+    uv run run_notebook_checked.py "ws.Workspace/ETL.Notebook" --run-id <instance-id>   # read only, no run
 
 Stability note:
     The ?beta=true notebook job-instance route is an officially documented Fabric API, but it

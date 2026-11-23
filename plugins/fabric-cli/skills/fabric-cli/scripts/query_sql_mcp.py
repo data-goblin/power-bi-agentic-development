@@ -12,10 +12,10 @@ come back as CSV.
 Uses the same Fabric path syntax as the other fabric-cli skill scripts.
 
 Usage:
-    python3 query_sql_mcp.py "ws.Workspace/LH.Lakehouse" \
+    uv run query_sql_mcp.py "ws.Workspace/LH.Lakehouse" \
         -q "SELECT TOP 10 * FROM dbo.orders"
 
-    python3 query_sql_mcp.py "ws.Workspace/WH.Warehouse" \
+    uv run query_sql_mcp.py "ws.Workspace/WH.Warehouse" \
         -q "SELECT name FROM sys.tables" --format json
 
 Requirements:
@@ -237,11 +237,11 @@ def main():
         epilog="""
 Examples:
     # Inline query against a lakehouse SQL endpoint (table output)
-    python3 query_sql_mcp.py "ws.Workspace/LH.Lakehouse" \\
+    uv run query_sql_mcp.py "ws.Workspace/LH.Lakehouse" \\
         -q "SELECT TOP 10 * FROM dbo.orders"
 
     # Warehouse, JSON output saved to file
-    python3 query_sql_mcp.py "ws.Workspace/WH.Warehouse" \\
+    uv run query_sql_mcp.py "ws.Workspace/WH.Warehouse" \\
         -q "SELECT name FROM sys.tables" --format json -o tables.json
         """,
     )

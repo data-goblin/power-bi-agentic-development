@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#   "azure-identity==1.27.0",
+#   "requests==2.34.2",
+# ]
+# ///
 """
 Find all reports connected to a semantic model across accessible workspaces.
 
@@ -7,16 +14,16 @@ Scans all workspaces the authenticated user has access to.
 
 Usage:
     # By workspace/model name
-    python3 get-downstream-reports.py "Claude Code's Workspace" "SpaceParts"
+    uv run get-downstream-reports.py "Claude Code's Workspace" "SpaceParts"
 
     # By dataset GUID directly (skips model lookup)
-    python3 get-downstream-reports.py --dataset-id <dataset-guid>
+    uv run get-downstream-reports.py --dataset-id <dataset-guid>
 
     # JSON output for piping
-    python3 get-downstream-reports.py "ws" "model" --json
+    uv run get-downstream-reports.py "ws" "model" --json
 
 Requirements:
-    pip install azure-identity requests
+    dependencies are declared in the script header; run it with uv run
 """
 
 import argparse

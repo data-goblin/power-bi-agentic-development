@@ -20,8 +20,8 @@ All scripts use Fabric path format: `Workspace.Workspace/Item.ItemType`
 Create a Direct Lake semantic model from lakehouse tables. This is the recommended approach for querying lakehouse data via DAX.
 
 ```bash
-python3 create_direct_lake_model.py "src.Workspace/LH.Lakehouse" "dest.Workspace/Model.SemanticModel" -t schema.table
-python3 create_direct_lake_model.py "Sales.Workspace/SalesLH.Lakehouse" "Sales.Workspace/Sales Model.SemanticModel" -t gold.orders
+uv run create_direct_lake_model.py "src.Workspace/LH.Lakehouse" "dest.Workspace/Model.SemanticModel" -t schema.table
+uv run create_direct_lake_model.py "Sales.Workspace/SalesLH.Lakehouse" "Sales.Workspace/Sales Model.SemanticModel" -t gold.orders
 ```
 
 Arguments:
@@ -35,9 +35,9 @@ Arguments:
 Execute DAX queries against semantic models.
 
 ```bash
-python3 execute_dax.py "ws.Workspace/Model.SemanticModel" -q "EVALUATE VALUES('Date'[Year])"
-python3 execute_dax.py "Sales.Workspace/Sales Model.SemanticModel" -q "EVALUATE TOPN(10, 'Orders')" --format csv
-python3 execute_dax.py "ws.Workspace/Model.SemanticModel" -q "EVALUATE ROW(\"Total\", SUM('Sales'[Amount]))" -o results.json
+uv run execute_dax.py "ws.Workspace/Model.SemanticModel" -q "EVALUATE VALUES('Date'[Year])"
+uv run execute_dax.py "Sales.Workspace/Sales Model.SemanticModel" -q "EVALUATE TOPN(10, 'Orders')" --format csv
+uv run execute_dax.py "ws.Workspace/Model.SemanticModel" -q "EVALUATE ROW(\"Total\", SUM('Sales'[Amount]))" -o results.json
 ```
 
 Options:
@@ -53,15 +53,15 @@ Query Delta tables in a Fabric Lakehouse or Warehouse via DuckDB against OneLake
 
 ```bash
 # Single-table query: `tbl` is substituted with delta_scan() of the given table
-python3 query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \
+uv run query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \
     -q "SELECT * FROM tbl LIMIT 10" -t gold.orders
 
 # Raw SQL with your own delta_scan() calls (multi-table joins, Files/* reads)
-python3 query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \
+uv run query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \
     --sql "SELECT count(*) FROM delta_scan('abfss://.../Tables/silver/events')"
 
 # CSV output, save to file
-python3 query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \
+uv run query_lakehouse_duckdb.py "ws.Workspace/LH.Lakehouse" \
     -q "SELECT * FROM tbl" -t regions --format csv -o regions.csv
 ```
 
@@ -82,18 +82,18 @@ Query a Fabric Lakehouse SQL endpoint, Warehouse, or SQL Database via `sqlcmd`. 
 
 ```bash
 # Inline query against a lakehouse SQL endpoint
-python3 query_sql_endpoint.py "ws.Workspace/LH.Lakehouse" \
+uv run query_sql_endpoint.py "ws.Workspace/LH.Lakehouse" \
     -q "SELECT TOP 10 * FROM dbo.orders"
 
 # Warehouse, csv output, save to file
-python3 query_sql_endpoint.py "ws.Workspace/WH.Warehouse" \
+uv run query_sql_endpoint.py "ws.Workspace/WH.Warehouse" \
     -q "SELECT name FROM sys.tables" --format csv -o tables.csv
 
 # SQL Database, multi-statement .sql file
-python3 query_sql_endpoint.py "ws.Workspace/MyDB.SQLDatabase" --file ./migration.sql
+uv run query_sql_endpoint.py "ws.Workspace/MyDB.SQLDatabase" --file ./migration.sql
 
 # JSON output for piping
-python3 query_sql_endpoint.py "ws.Workspace/LH.Lakehouse" \
+uv run query_sql_endpoint.py "ws.Workspace/LH.Lakehouse" \
     -q "SELECT TOP 3 Territory, Region FROM dbo.regions" --format json
 ```
 
@@ -113,11 +113,11 @@ Requires `sqlcmd` (go-sqlcmd >= 1.9; `brew install sqlcmd` or `winget install --
 Retrieve semantic model AI instructions and AI schema using `fab get -q definition -f`. The parser understands both documented Copilot sidecars and TMDL culture `linguisticMetadata`.
 
 ```bash
-python3 get_semantic_model_ai_metadata.py "ws.Workspace/Model.SemanticModel"
-python3 get_semantic_model_ai_metadata.py "ws.Workspace/Model.SemanticModel" \
+uv run get_semantic_model_ai_metadata.py "ws.Workspace/Model.SemanticModel"
+uv run get_semantic_model_ai_metadata.py "ws.Workspace/Model.SemanticModel" \
   --instructions-out instructions.md --schema-out schema.json
 fab get "ws.Workspace/Model.SemanticModel" -q "definition" -f > definition.json
-python3 get_semantic_model_ai_metadata.py --definition-file definition.json
+uv run get_semantic_model_ai_metadata.py --definition-file definition.json
 ```
 
 Options:
@@ -134,10 +134,10 @@ definition. This is the service-definition roundtrip path for metadata managed
 through Tabular Editor or the VS Code extension.
 
 ```bash
-python3 get_semantic_model_ai_metadata.py \
+uv run get_semantic_model_ai_metadata.py \
   "Sales.Workspace/Sales Model.SemanticModel" --format json
 
-python3 get_semantic_model_ai_metadata.py \
+uv run get_semantic_model_ai_metadata.py \
   "Sales.Workspace/Sales Model.SemanticModel" \
   --instructions-out instructions.md --schema-out schema.json
 ```
@@ -146,7 +146,7 @@ For offline parsing of a saved Fabric definition payload:
 
 ```bash
 fab get "Sales.Workspace/Sales Model.SemanticModel" -q definition -f > definition.json
-python3 get_semantic_model_ai_metadata.py --definition-file definition.json --format json
+uv run get_semantic_model_ai_metadata.py --definition-file definition.json --format json
 ```
 
 The script reads friendly Copilot files and culture `linguisticMetadata`,
@@ -158,13 +158,13 @@ Run a Fabric notebook and check its **real** outcome, not just the job status. `
 
 ```bash
 # Run and verify
-python3 run_notebook_checked.py "ws.Workspace/ETL.Notebook"
+uv run run_notebook_checked.py "ws.Workspace/ETL.Notebook"
 
 # With parameters, JSON output
-python3 run_notebook_checked.py "ws.Workspace/ETL.Notebook" -P "date:string=2025-01-01" --format json
+uv run run_notebook_checked.py "ws.Workspace/ETL.Notebook" -P "date:string=2025-01-01" --format json
 
 # Read the exit value of an existing run without starting a new one
-python3 run_notebook_checked.py "ws.Workspace/ETL.Notebook" --run-id <instance-id>
+uv run run_notebook_checked.py "ws.Workspace/ETL.Notebook" --run-id <instance-id>
 ```
 
 Exit codes: `0` completed and exit-value verdict ok; `2` completed but the notebook's `{ok:false}` verdict failed; `1` job Failed/Cancelled or an operational error; `3` `Deduped` (skipped, did not run).
@@ -185,12 +185,12 @@ The `?beta=true` notebook job-instance route is an officially documented but Bet
 Create, update, export and delete a workspace task flow (the canvas at the top of the workspace view). Task flows have no public API and no `fab` command; the script calls the internal Power BI metadata endpoints the Fabric UI uses (`taskflow202602` to list, `taskflow202512` to write, `If-Match` on the etag), so it can break without notice.
 
 ```bash
-python3 task_flow.py list "Sales"
-python3 task_flow.py get "Sales" > flow.json            # current flow as a spec apply takes back
-python3 task_flow.py apply "Sales" -s flow.json          # create, or update the existing flow in place
-python3 task_flow.py apply "Sales" -s flow.json --dry-run
-python3 task_flow.py delete "Sales" --flow "Order to cash"
-python3 task_flow.py types                               # public item type -> internal artifactType
+uv run task_flow.py list "Sales"
+uv run task_flow.py get "Sales" > flow.json            # current flow as a spec apply takes back
+uv run task_flow.py apply "Sales" -s flow.json          # create, or update the existing flow in place
+uv run task_flow.py apply "Sales" -s flow.json --dry-run
+uv run task_flow.py delete "Sales" --flow "Order to cash"
+uv run task_flow.py types                               # public item type -> internal artifactType
 ```
 
 A spec names tasks (`get data`, `store data`, `prepare data`, `develop`, `visualize`, ...), their canvas position, their items as `<displayName>.<Type>`, and edges between task keys; see the script docstring. Fabric items are stored as `<artifactType>:<guid>` with internal type names (Notebook is `SynapseNotebook`, GraphModel is `GraphIndex`); Power BI items keep a classic form the UI requires: report `2:<guid>`, semantic model `3:<numeric model id>`. Dashboards, paginated reports and datamarts are refused because their form has not been observed.
@@ -207,9 +207,9 @@ Options:
 Download complete workspace with all items and lakehouse files.
 
 ```bash
-python3 download_workspace.py "Sales.Workspace"
-python3 download_workspace.py "Production.Workspace" ./backup
-python3 download_workspace.py "Dev.Workspace" --no-lakehouse-files
+uv run download_workspace.py "Sales.Workspace"
+uv run download_workspace.py "Production.Workspace" ./backup
+uv run download_workspace.py "Dev.Workspace" --no-lakehouse-files
 ```
 
 Options:
