@@ -36,4 +36,5 @@ Built-in rules (32 in te 0.8.1.1), rules embedded in the model (`annotation Best
 - [Rule format, scopes, locations](../../wiki/bpa-rule-format.md)
 - [Dynamic LINQ gotchas, verified with te](../../wiki/bpa-dynamic-linq.md)
 - [Rules embedded in a model](../../wiki/bpa-model-annotations.md)
+- [A CI rule set and the script that proves each rule fires](../../wiki/bpa-ci-rule-set.md)
 - `examples/`: four rule files that load with 0 rule errors; the bpa-expression-helper agent and the `/suggest-rule` command build on them

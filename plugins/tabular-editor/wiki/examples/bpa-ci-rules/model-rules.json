@@ -1,0 +1,20 @@
+[
+  {
+    "ID": "MODEL_AUTO_DATE_TIME_DISABLED",
+    "Name": "Auto date/time must be disabled",
+    "Category": "Performance",
+    "Severity": 3,
+    "Scope": "Model",
+    "Expression": "GetAnnotation(\"__PBI_TimeIntelligenceEnabled\") == \"1\"",
+    "Description": "Disable Auto date/time for the current file in Power BI Desktop. The __PBI_TimeIntelligenceEnabled annotation must not be 1."
+  },
+  {
+    "ID": "MODEL_NO_AUTO_DATE_TABLES",
+    "Name": "Auto-generated date tables are not allowed",
+    "Category": "Performance",
+    "Severity": 3,
+    "Scope": "Table, CalculatedTable",
+    "Expression": "Name.StartsWith(\"LocalDateTable_\") or Name.StartsWith(\"DateTableTemplate_\")",
+    "Description": "Remove generated date tables after disabling Auto date/time; use the explicit Date table."
+  }
+]
