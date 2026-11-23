@@ -34,3 +34,8 @@ One line per check: `YYYY-MM-DD <page> <what was checked against what>`.
 2026-11-23 plugins/paginated-reports/wiki/rdl-structure-and-order.md three starters and ten public samples pass validate_rdl.py
 2026-11-23 plugins/fabric-cli/wiki/*.md ten pages condensed from the former references; fab commands checked against fab 1.7.0 help and read-only calls; REST bodies marked Unverified where not run
 2026-11-23 plugins/etl/wiki/livy-api.md Livy token scopes and endpoints against Learn get-started-api-livy-session; session behaviour not run (consumes capacity)
+2026-11-23 plugins/tabular-editor/wiki/bpa-ci-rule-set.md two rules run with te bpa run on the Bikes model (0 violations); prove-rules.py injects each violation and sees exit 1 with the rule ID
+2026-11-23 plugins/tabular-editor/wiki/te-test-reconciliation-suite.md suites parse with te test list; te test run on a deployed service model passed 4 of 4 and failed the deliberate suite with exit 1 (runs not in verified_by, need a deployed model)
+2026-11-23 plugins/semantic-models/wiki/daxlib-formatstring-udfs.md five DaxLib.FormatString functions and four measures pass te validate; a misspelled call and an extra argument each report DAX0002
+2026-11-23 plugins/tabular-editor/wiki/tmdl-model-ci-workflow.md workflow passes actionlint and zizmor; its validate, bpa run and test list commands run on the Bikes example; deploy and test run steps not run
+2026-11-23 plugins/reports/wiki/report-eval-gate-and-rubric.md case loads in claude plugin eval without grader warnings; check-gate.py accepts the reference solution with the released pbir; one real run scored 0 (no pbir and read-only workspace in the eval sandbox), rubric graders unscored
