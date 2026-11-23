@@ -59,3 +59,14 @@ One line per check: `YYYY-MM-DD <page> <what was checked against what>`.
 2026-11-23 plugins/reports/wiki/report-usage-sources.md 200 requests per hour re-read on the REST page; 30 and 60 minute lag re-read on Track user activities
 2026-11-23 plugins/semantic-models/wiki/copilot-ai-metadata.md 10,000 character AI instructions limit confirmed; hidden field behaviour re-read on the AI data schema page; undocumented 200 character description limit removed
 2026-11-23 plugins/tabular-editor/wiki/bpa-model-annotations.md object level BestPracticeAnalyzer_IgnoreRules annotation run with te bpa run on examples/bpa/object-ignore: only the annotated measure is skipped
+2026-11-23 plugins/fabric-cli/wiki/connections.md Update Connection and workspace identity claims against Learn and fab set docs; unrun caveats and unsourced OAuth2 notes removed
+2026-11-23 plugins/fabric-cli/wiki/dashboards.md admin dashboard rate limits (50 per hour or 5 per minute; 200 per hour) against the Power BI admin REST pages
+2026-11-23 plugins/fabric-cli/wiki/dataflows.md Gen2 service principal and item-filter limits against Learn dataflow-gen2-public-apis; job id read from the Location header
+2026-11-23 plugins/fabric-cli/wiki/folders.md Git integration folder behaviour corrected against Learn git-integration-process (folders are mirrored)
+2026-11-23 plugins/fabric-cli/wiki/gateways.md request bodies against Learn update-datasource, bind-to-gateway and get-datasource-status samples
+2026-11-23 plugins/fabric-cli/wiki/org-apps.md OrgApp support in fab (1.9.0 release notes) and admin apps limit of 200 per hour against Learn
+2026-11-23 plugins/fabric-cli/wiki/paginated-reports.md .rdl import rules against Learn post-import-in-group; 20 MB claim dropped (no Learn source)
+2026-11-23 plugins/fabric-cli/wiki/scorecards.md goal, goal value and status rule bodies against Learn request definitions
+2026-11-23 plugins/fabric-cli/wiki/tags.md tag caps against Learn tags-overview; unsourced cap error behaviour dropped; fab api -i file path against fab docs
+2026-11-23 plugins/fabric-cli/wiki/workspaces.md fab assign F SKU rule from fab 1.7.0 source, Spark settings commands from fab docs; XMLA SKU claim and 202 handling claim dropped
+2026-11-23 plugins/etl/wiki/livy-api.md Code.AccessStorage.All requirement and Runtime 2.0 versions against Learn; cold start and runtime library notes dropped
