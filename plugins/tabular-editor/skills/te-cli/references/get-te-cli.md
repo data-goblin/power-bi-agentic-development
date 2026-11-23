@@ -1,55 +1,46 @@
-# Get the `te` CLI binary (agent self-service)
+# Get the `te` CLI binary
 
-The `te` (Tabular Editor CLI) binary is published per platform on a public CDN,
-no account or auth needed:
+Install `te` only when the user asks for it. Official install and update notes: https://docs.tabulareditor.com/en/cli/
+
+The binary is published per platform on a public CDN, no account needed:
 
     https://cdn.tabulareditor.com/files/latest/cli/te-<os>-<arch>.tar.gz   (.zip on Windows)
 
-Pick the asset for the platform:
+Assets: `te-osx-arm64`, `te-osx-x64`, `te-linux-x64`, `te-linux-arm64` (`.tar.gz`), `te-win-x64`, `te-win-arm64` (`.zip`).
 
-- macOS arm64 (Apple Silicon): `te-osx-arm64.tar.gz`
-- macOS x64 (Intel): `te-osx-x64.tar.gz`
-- Linux x64: `te-linux-x64.tar.gz`
-- Linux arm64: `te-linux-arm64.tar.gz`
-- Windows x64: `te-win-x64.zip`
-- Windows arm64: `te-win-arm64.zip`
+The CDN publishes no checksum or signature (`.sha256`, `.sig` and `SHA256SUMS` next to the archive returned 404 on 2026-11-23). Say that to the user before installing; do not pipe the download into `tar` or a shell. Download to a file, print its SHA256, extract, then check the binary runs.
 
-## macOS / Linux: detect, download, put on PATH
+## macOS / Linux
 
 ```bash
 os=$(uname -s | tr 'A-Z' 'a-z'); [ "$os" = darwin ] && os=osx
 arch=$(uname -m); case "$arch" in arm64|aarch64) arch=arm64 ;; x86_64|amd64) arch=x64 ;; esac
+dir=$(mktemp -d)
+curl -fsSL -o "$dir/te.tar.gz" "https://cdn.tabulareditor.com/files/latest/cli/te-$os-$arch.tar.gz"
+sha256sum "$dir/te.tar.gz" 2>/dev/null || shasum -a 256 "$dir/te.tar.gz"
 mkdir -p "$HOME/.local/bin"
-curl -fsSL "https://cdn.tabulareditor.com/files/latest/cli/te-$os-$arch.tar.gz" \
-  | tar xz -C "$HOME/.local/bin" te
-chmod +x "$HOME/.local/bin/te"
-export PATH="$HOME/.local/bin:$PATH"          # this shell
+tar -xzf "$dir/te.tar.gz" -C "$HOME/.local/bin" te
 "$HOME/.local/bin/te" --version
 ```
 
-Persist PATH across shells once (skip if `~/.local/bin` is already on PATH):
+Add `~/.local/bin` to `PATH` in the shell profile if it is not there.
 
-```bash
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc   # or ~/.zshrc
-```
-
-## Windows (PowerShell): download, put on PATH
+## Windows (PowerShell)
 
 ```powershell
 $arch = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { 'x64' }
 $dir  = "$env:LOCALAPPDATA\Programs\te"
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
 Invoke-WebRequest "https://cdn.tabulareditor.com/files/latest/cli/te-win-$arch.zip" -OutFile "$env:TEMP\te.zip"
+(Get-FileHash "$env:TEMP\te.zip" -Algorithm SHA256).Hash
 Expand-Archive -Force "$env:TEMP\te.zip" -DestinationPath $dir
-[Environment]::SetEnvironmentVariable('Path', "$([Environment]::GetEnvironmentVariable('Path','User'));$dir", 'User')
 & "$dir\te.exe" --version
 ```
 
-## Verify and stay current
+Add `$dir` to the user `Path` if it is not there.
 
-`te --version` prints the build. The CDN `latest` path is always the newest at
-download time; for a binary that keeps itself current, use the self-updating
-`te` wrapper instead (`te --update`, plus a daily check on `te --version`).
+## Notes
 
-The CDN serves GET only; HEAD requests return 404. Probe availability with a
-ranged GET (`curl -r 0-99 -o /dev/null -w "%{http_code}"`), never `curl -I`.
+- `te --version` prints the build. `latest` is the newest build at download time
+- The CDN answers GET only; HEAD returns 404. Probe a file with a ranged GET (`curl -r 0-99 -o /dev/null -w "%{http_code}"`)
+- Preview builds stop working after 2026-12-31 (Learn: te-cli-limitations); check the docs for the licence that follows

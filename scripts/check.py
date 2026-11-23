@@ -373,6 +373,16 @@ def check_commands(
     return out
 
 
+def vendored_files() -> set[pathlib.Path]:
+    out: set[pathlib.Path] = set()
+    for marker in (ROOT / "plugins").glob("*/skills/*/UPSTREAM.txt"):
+        for line in marker.read_text(encoding="utf-8").splitlines():
+            if line.startswith("upstream_files:"):
+                for name in line.split(":", 1)[1].split():
+                    out.update(marker.parent.glob(f"**/{name}"))
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--write-index", action="store_true")
@@ -395,6 +405,7 @@ def main() -> int:
     today = dt.date.today()
     evidence = load_evidence()
     findings: list[Finding] = []
+    vendored = vendored_files()
     skills = sorted((ROOT / "plugins").glob("*/skills/*/SKILL.md"))
     docs = sorted(
         {
@@ -411,7 +422,13 @@ def main() -> int:
         if "/evals/" in d.as_posix():
             continue
         findings += check_links(d, d.read_text(encoding="utf-8"))
-        findings += check_commands(d, evidence)
+        found = check_commands(d, evidence)
+        if d in vendored:
+            found = [
+                Finding("warning", f.path, f.line, f"upstream text: {f.message}")
+                for f in found
+            ]
+        findings += found
     if args.verify:
         for p in wiki_pages():
             meta, _ = frontmatter(p.read_text(encoding="utf-8"))

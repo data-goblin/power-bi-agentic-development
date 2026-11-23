@@ -1,0 +1,7 @@
+repo: TabularEditor/CLI
+path: skills/te-cli
+skill_version: 0.5.0
+commit: d63412d846e1b586cd62c15b2aeb713f0dce6753
+commit_date: 2026-10-28
+synced: 2026-11-23
+upstream_files: SKILL.md command-reference.md config-cicd-env.md fabric-cli-tandem.md gotchas.md semantic-modeling-practices.md te2-migration.md testing.md workflows.md
